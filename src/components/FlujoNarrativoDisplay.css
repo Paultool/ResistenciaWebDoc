@@ -1,0 +1,296 @@
+/* Contenedor principal */
+.flujo-narrativo-container {
+    padding: 20px;
+    background-color: #f0f2f5;
+    min-height: calc(100vh - 60px); /* Ajusta según el header de tu admin panel */
+    font-family: 'Arial', sans-serif;
+}
+
+/* Header de la vista */
+.view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.view-header h2 {
+    color: #333;
+    font-size: 1.8em;
+    margin: 0;
+}
+
+.form-select {
+    padding: 10px 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    font-size: 1em;
+    cursor: pointer;
+    min-width: 200px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Estados de carga y error */
+.loading-state, .error-state, .empty-state {
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 30px;
+    font-size: 1.1em;
+    color: #555;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.error-state {
+    color: #d9534f;
+    background-color: #f2dede;
+    border: 1px solid #ebccd1;
+}
+
+/* Lista de pasos (cards) */
+.pasos-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.paso-card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.paso-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+.paso-header {
+    background-color: #e9ecef;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.paso-orden {
+    font-weight: bold;
+    color: #555;
+}
+
+.paso-badge {
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    text-transform: uppercase;
+    font-weight: bold;
+    color: #fff;
+}
+
+.paso-badge-narrativo { background-color: #007bff; }
+.paso-badge-pregunta { background-color: #28a745; }
+/* Añade más tipos si los tienes */
+
+.paso-body {
+    padding: 15px;
+    flex-grow: 1;
+}
+
+.paso-contenido {
+    font-size: 0.95em;
+    line-height: 1.5;
+    color: #444;
+    margin-bottom: 10px;
+    max-height: 100px; /* Limita la altura para evitar cards muy largos */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.paso-recompensa {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: auto; /* Empuja la recompensa al final de la card */
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+
+/* Modal de Previsualización */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.5em;
+}
+
+.close-modal-btn {
+    background: none;
+    border: none;
+    font-size: 1.8em;
+    cursor: pointer;
+    color: #6c757d;
+    transition: color 0.2s ease;
+}
+
+.close-modal-btn:hover {
+    color: #333;
+}
+
+.modal-body {
+    padding: 20px;
+    line-height: 1.6;
+    color: #333;
+    flex-grow: 1;
+}
+
+/* Contenido de previsualización (narrativo y pregunta) */
+.preview-narrativo h4, .preview-pregunta h4 {
+    margin-top: 0;
+    color: #007bff;
+    font-size: 1.2em;
+    margin-bottom: 15px;
+}
+
+.preview-narrativo p, .preview-pregunta p {
+    margin-bottom: 20px;
+}
+
+.media-preview-img,
+.media-preview-video,
+.media-preview-audio {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto 20px auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Opciones de pregunta */
+.opciones-container {
+    display: flex;
+    flex-direction: column; /* Apila las opciones verticalmente */
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.opcion-btn {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    text-align: left; /* Alinea el texto a la izquierda */
+    width: 100%;
+}
+
+.opcion-btn:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+}
+
+.opcion-btn:active {
+    transform: translateY(0);
+}
+
+/* Botón Siguiente */
+.navigation-container {
+    margin-top: 30px;
+    text-align: right;
+}
+
+.siguiente-btn {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 6px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.siguiente-btn:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+.siguiente-btn:active {
+    transform: translateY(0);
+}
+
+.fin-mensaje {
+    text-align: center;
+    font-style: italic;
+    color: #6c757d;
+    margin-top: 20px;
+}
+
+/* Media Queries para responsividad (opcional pero recomendado) */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        max-width: none;
+        margin: 10px;
+    }
+
+    .pasos-list {
+        grid-template-columns: 1fr; /* Columna única en móviles */
+    }
+
+    .view-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .view-header h2 {
+        margin-bottom: 15px;
+    }
+}
