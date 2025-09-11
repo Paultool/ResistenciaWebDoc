@@ -1,0 +1,432 @@
+/* PersonajesView Component Styles */
+.personajes-view {
+  padding: 2rem;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  min-height: 100vh;
+  color: #ffffff;
+}
+
+.view-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.back-btn {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  background: linear-gradient(45deg, #8B4513, #CD853F);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.4);
+}
+
+.view-header h2 {
+  color: #CD853F;
+  margin: 0 0 0.5rem 0;
+  font-size: 2.5rem;
+}
+
+.view-header p {
+  color: #cccccc;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.personajes-stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+  border-radius: 12px;
+  border: 1px solid #4a4a4a;
+}
+
+.personajes-stats .stat {
+  color: #CD853F;
+  font-weight: 600;
+}
+
+/* Grid de Personajes */
+.personajes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.personaje-card {
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+  border: 2px solid #4a4a4a;
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.personaje-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #8B4513, #CD853F);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.personaje-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 32px rgba(139, 69, 19, 0.3);
+  border-color: #8B4513;
+}
+
+.personaje-card:hover::before {
+  transform: scaleX(1);
+}
+
+/* Imagen del Personaje */
+.personaje-image {
+  width: 100%;
+  height: 200px;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(45deg, #3a3a3a, #2a2a2a);
+}
+
+.personaje-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholder-image {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(45deg, #4a4a4a, #3a3a3a);
+}
+
+.avatar-icon {
+  font-size: 4rem;
+  opacity: 0.6;
+}
+
+/* Información del Personaje */
+.personaje-info {
+  margin-bottom: 1.5rem;
+}
+
+.personaje-nombre {
+  color: #CD853F;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.personaje-rol {
+  color: #8B4513;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 1rem 0;
+}
+
+.personaje-descripcion {
+  color: #cccccc;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+}
+
+.personaje-atributo {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.atributo-label {
+  color: #8B4513;
+  font-weight: 600;
+}
+
+/* Acciones del Personaje */
+.personaje-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.personaje-actions .btn {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-info {
+  background: linear-gradient(45deg, #3498db, #2980b9);
+  color: white;
+}
+
+.btn-info:hover {
+  background: linear-gradient(45deg, #2980b9, #1f5f99);
+  transform: translateY(-2px);
+}
+
+.btn-primary {
+  background: linear-gradient(45deg, #8B4513, #CD853F);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(45deg, #A0522D, #D2691E);
+  transform: translateY(-2px);
+}
+
+/* Modal de Personaje */
+.personaje-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 2rem;
+}
+
+.personaje-modal {
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+  border: 2px solid #8B4513;
+  border-radius: 20px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #4a4a4a;
+}
+
+.modal-header h2 {
+  color: #CD853F;
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #CD853F;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+  background: rgba(139, 69, 19, 0.2);
+}
+
+.modal-content {
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 2rem;
+}
+
+.modal-image {
+  width: 200px;
+  height: 250px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(45deg, #3a3a3a, #2a2a2a);
+}
+
+.modal-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholder-image-large {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-icon-large {
+  font-size: 5rem;
+  opacity: 0.6;
+}
+
+.modal-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.info-section h4 {
+  color: #CD853F;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.info-section p {
+  color: #cccccc;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.atributos-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.atributo-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #4a4a4a;
+}
+
+.atributo-key {
+  color: #8B4513;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.atributo-value {
+  color: #cccccc;
+}
+
+.modal-actions {
+  padding: 1.5rem;
+  border-top: 1px solid #4a4a4a;
+  text-align: center;
+}
+
+.btn-large {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+}
+
+/* Loading y Error States */
+.loading, .error {
+  text-align: center;
+  padding: 4rem;
+  color: #cccccc;
+}
+
+.loading p, .error p {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.retry-btn {
+  background: linear-gradient(45deg, #8B4513, #CD853F);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.retry-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .personajes-view {
+    padding: 1rem;
+  }
+  
+  .back-btn {
+    position: static;
+    margin-bottom: 1rem;
+  }
+  
+  .view-header h2 {
+    font-size: 2rem;
+  }
+  
+  .personajes-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .personajes-stats {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .modal-content {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .modal-image {
+    width: 100%;
+    height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .personaje-actions {
+    flex-direction: column;
+  }
+  
+  .personaje-modal {
+    margin: 1rem;
+    max-height: 90vh;
+  }
+}

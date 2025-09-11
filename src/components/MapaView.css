@@ -1,0 +1,524 @@
+/* MapaView Component Styles */
+.mapa-view {
+  padding: 2rem;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  min-height: 100vh;
+  color: #ffffff;
+}
+
+.view-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.back-btn {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  background: linear-gradient(45deg, #8B4513, #CD853F);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.4);
+}
+
+.view-header h2 {
+  color: #CD853F;
+  margin: 0 0 0.5rem 0;
+  font-size: 2.5rem;
+}
+
+.view-header p {
+  color: #cccccc;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Map Controls */
+.map-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+  border-radius: 12px;
+  border: 1px solid #4a4a4a;
+}
+
+.mode-selector {
+  display: flex;
+  gap: 1rem;
+}
+
+.mode-btn {
+  background: linear-gradient(45deg, #4a4a4a, #3a3a3a);
+  color: #cccccc;
+  border: 2px solid #5a5a5a;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.mode-btn.active {
+  background: linear-gradient(45deg, #8B4513, #CD853F);
+  color: white;
+  border-color: #CD853F;
+}
+
+.mode-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+}
+
+.ubicaciones-stats {
+  display: flex;
+  gap: 2rem;
+}
+
+.ubicaciones-stats .stat {
+  color: #CD853F;
+  font-weight: 600;
+}
+
+/* Grid de Ubicaciones */
+.ubicaciones-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.ubicacion-card {
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+  border: 2px solid #4a4a4a;
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.ubicacion-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #10b981, #059669);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.ubicacion-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 32px rgba(16, 185, 129, 0.3);
+  border-color: #10b981;
+}
+
+.ubicacion-card:hover::before {
+  transform: scaleX(1);
+}
+
+.ubicacion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.ubicacion-icon {
+  font-size: 2rem;
+  background: linear-gradient(45deg, #10b981, #059669);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.ubicacion-coords {
+  font-size: 0.85rem;
+  color: #10b981;
+  font-weight: 600;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+
+/* Información de la Ubicación */
+.ubicacion-info {
+  margin-bottom: 1.5rem;
+}
+
+.ubicacion-nombre {
+  color: #CD853F;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.ubicacion-tipo {
+  color: #10b981;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 1rem 0;
+}
+
+.ubicacion-descripcion {
+  color: #cccccc;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Acciones de la Ubicación */
+.ubicacion-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.ubicacion-actions .btn {
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.btn-info {
+  background: linear-gradient(45deg, #3498db, #2980b9);
+  color: white;
+}
+
+.btn-info:hover {
+  background: linear-gradient(45deg, #2980b9, #1f5f99);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: linear-gradient(45deg, #6c757d, #5a6268);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(45deg, #5a6268, #495057);
+  transform: translateY(-2px);
+}
+
+.btn-primary {
+  background: linear-gradient(45deg, #10b981, #059669);
+  color: white;
+  grid-column: 1 / -1;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(45deg, #059669, #047857);
+  transform: translateY(-2px);
+}
+
+/* Map Container */
+.map-container {
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+  border: 2px solid #4a4a4a;
+  border-radius: 16px;
+  padding: 2rem;
+  min-height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-placeholder {
+  text-align: center;
+  max-width: 600px;
+}
+
+.map-placeholder-content h3 {
+  color: #CD853F;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.map-placeholder-content p {
+  color: #cccccc;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.coordinates-list {
+  text-align: left;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.coordinates-list h4 {
+  color: #10b981;
+  margin: 0 0 1rem 0;
+}
+
+.coordinate-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+  color: #cccccc;
+}
+
+.coordinate-item strong {
+  color: #CD853F;
+}
+
+.btn-mini {
+  background: linear-gradient(45deg, #10b981, #059669);
+  color: white;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.3s ease;
+}
+
+.btn-mini:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+}
+
+/* Modal de Ubicación */
+.ubicacion-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 2rem;
+}
+
+.ubicacion-modal {
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+  border: 2px solid #10b981;
+  border-radius: 20px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #4a4a4a;
+}
+
+.modal-header h2 {
+  color: #CD853F;
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #CD853F;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+  background: rgba(205, 133, 63, 0.2);
+}
+
+.modal-content {
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 2rem;
+}
+
+.modal-map-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.coordinates-display {
+  background: rgba(16, 185, 129, 0.1);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  text-align: center;
+}
+
+.coordinates-display h4 {
+  color: #10b981;
+  margin: 0 0 1rem 0;
+}
+
+.coordinates-display p {
+  color: #cccccc;
+  margin: 0.5rem 0;
+  font-weight: 600;
+}
+
+.btn-full {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.modal-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.info-section h4 {
+  color: #CD853F;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.info-section p {
+  color: #cccccc;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.modal-actions {
+  padding: 1.5rem;
+  border-top: 1px solid #4a4a4a;
+  text-align: center;
+}
+
+.btn-large {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+}
+
+/* Loading y Error States */
+.loading, .error {
+  text-align: center;
+  padding: 4rem;
+  color: #cccccc;
+}
+
+.loading p, .error p {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.retry-btn {
+  background: linear-gradient(45deg, #8B4513, #CD853F);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.retry-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mapa-view {
+    padding: 1rem;
+  }
+  
+  .back-btn {
+    position: static;
+    margin-bottom: 1rem;
+  }
+  
+  .view-header h2 {
+    font-size: 2rem;
+  }
+  
+  .map-controls {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .mode-selector {
+    justify-content: center;
+  }
+  
+  .ubicaciones-stats {
+    justify-content: center;
+  }
+  
+  .ubicaciones-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .ubicacion-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .modal-content {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .ubicacion-actions {
+    grid-template-columns: 1fr;
+  }
+  
+  .ubicacion-modal {
+    margin: 1rem;
+    max-height: 90vh;
+  }
+  
+  .coordinate-item {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+}

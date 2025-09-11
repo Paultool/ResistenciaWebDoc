@@ -1,0 +1,406 @@
+/* Historia Detail Modal */
+.historia-detail-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.historia-detail-modal {
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+  border-radius: 20px;
+  border: 1px solid #4a4a4a;
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.historia-detail-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #8B4513, #CD853F);
+  z-index: 1;
+}
+
+/* Modal Header */
+.modal-header {
+  padding: 2rem;
+  border-bottom: 1px solid #4a4a4a;
+  position: relative;
+}
+
+.btn-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: #5a2d2d;
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.btn-close:hover {
+  background: #8B2635;
+  transform: scale(1.1);
+}
+
+.modal-header h2 {
+  color: #CD853F;
+  margin: 0 0 1rem 0;
+  font-size: 1.8rem;
+  padding-right: 3rem;
+}
+
+.historia-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.badge.principal {
+  background: linear-gradient(45deg, #5a4d2d, #8B4513);
+  color: #ffffff;
+}
+
+.badge.secundaria {
+  background: linear-gradient(45deg, #4a2d5a, #6f42c1);
+  color: #ffffff;
+}
+
+.level-badge {
+  background: linear-gradient(45deg, #5a2d2d, #8B2635);
+  color: #ffffff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.date-badge {
+  background: linear-gradient(45deg, #2d4a5a, #4682B4);
+  color: #ffffff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+/* Modal Tabs */
+.modal-tabs {
+  display: flex;
+  border-bottom: 1px solid #4a4a4a;
+  background: #1a1a1a;
+}
+
+.tab {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  background: none;
+  border: none;
+  color: #cccccc;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  border-bottom: 3px solid transparent;
+}
+
+.tab:hover {
+  background: #2a2a2a;
+  color: #CD853F;
+}
+
+.tab.active {
+  color: #CD853F;
+  background: #2a2a2a;
+  border-bottom-color: #8B4513;
+}
+
+/* Modal Content */
+.modal-content {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+/* Content Tab */
+.content-tab .historia-description h3 {
+  color: #CD853F;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.content-tab .historia-description p {
+  color: #cccccc;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.historia-metadata {
+  margin: 2rem 0;
+}
+
+.historia-metadata h3 {
+  color: #CD853F;
+  margin-bottom: 1rem;
+}
+
+.historia-metadata pre {
+  background: #1a1a1a;
+  border: 1px solid #4a4a4a;
+  border-radius: 8px;
+  padding: 1rem;
+  color: #cccccc;
+  font-size: 0.9rem;
+  overflow-x: auto;
+}
+
+.historia-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+/* Personajes Tab */
+.personajes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.personaje-card {
+  background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
+  border: 1px solid #4a4a4a;
+  border-radius: 15px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+}
+
+.personaje-card:hover {
+  transform: translateY(-3px);
+  border-color: #8B4513;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.personaje-avatar {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(45deg, #8B4513, #CD853F);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.personaje-info h4 {
+  color: #CD853F;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.personaje-rol {
+  color: #8B4513;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.personaje-desc {
+  color: #cccccc;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Multimedia Tab */
+.multimedia-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.multimedia-item {
+  background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
+  border: 1px solid #4a4a4a;
+  border-radius: 15px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+}
+
+.multimedia-item:hover {
+  transform: translateY(-3px);
+  border-color: #8B4513;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.multimedia-icon {
+  font-size: 2.5rem;
+  opacity: 0.8;
+}
+
+.multimedia-info h4 {
+  color: #CD853F;
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.multimedia-tipo {
+  color: #8B4513;
+  font-weight: 600;
+  font-size: 0.8rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.multimedia-desc {
+  color: #cccccc;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  margin: 0 0 1rem 0;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.btn-primary {
+  background: linear-gradient(45deg, #8B4513, #CD853F);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(45deg, #A0522D, #DAA520);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(139, 69, 19, 0.4);
+}
+
+.btn-secondary {
+  background: linear-gradient(45deg, #4a4a4a, #5a5a5a);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(45deg, #5a5a5a, #6a6a6a);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.btn-outline {
+  background: transparent;
+  color: #CD853F;
+  border: 2px solid #8B4513;
+}
+
+.btn-outline:hover {
+  background: #8B4513;
+  color: white;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+}
+
+/* No Data */
+.no-data {
+  text-align: center;
+  padding: 3rem;
+  color: #888888;
+  font-size: 1.1rem;
+}
+
+.loading-detail,
+.error-detail {
+  text-align: center;
+  padding: 3rem;
+  color: #cccccc;
+  font-size: 1.1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .historia-detail-modal {
+    margin: 0.5rem;
+  }
+  
+  .modal-header {
+    padding: 1.5rem;
+  }
+  
+  .modal-content {
+    padding: 1.5rem;
+  }
+  
+  .personajes-grid,
+  .multimedia-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .historia-actions {
+    flex-direction: column;
+  }
+  
+  .modal-tabs {
+    flex-direction: column;
+  }
+  
+  .tab {
+    padding: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .historia-meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .modal-header h2 {
+    font-size: 1.4rem;
+  }
+}
