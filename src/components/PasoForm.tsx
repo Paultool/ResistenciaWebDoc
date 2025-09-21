@@ -1,5 +1,5 @@
-import React from 'react';
-import { FlujoNarrativo, OpcionSiguiente, RecursoMultimedia, Personaje, Recompensa } from '../supabaseClient';
+import React, { useState, useEffect } from 'react';
+import { FlujoNarrativo, OpcionSiguiente, RecursoMultimedia, Personaje, Recompensa, Historia } from '../supabaseClient';
 import './AdminPanel.css';
 
 interface PasoFormProps {
@@ -8,10 +8,11 @@ interface PasoFormProps {
   setFormData: React.Dispatch<React.SetStateAction<any>>;
   handleSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
-  historias: any[];
+  historias: Historia[]; // <-- Ahora recibe la lista de historias
   recursosMultimedia: RecursoMultimedia[];
   personajes: Personaje[];
-  recompensas: Recompensa[]; // <-- ¡Nueva prop!
+  recompensas: Recompensa[];
+  allPasos: FlujoNarrativo[];
 }
 
 const PasoForm: React.FC<PasoFormProps> = ({
@@ -22,14 +23,16 @@ const PasoForm: React.FC<PasoFormProps> = ({
   onClose,
   recursosMultimedia,
   personajes,
-  recompensas, // <-- Usando la nueva prop
+  recompensas,
+  historias, // <-- Usando la nueva prop
+  allPasos,
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     let newValue: any = value;
 
-    if (name === 'orden' || name === 'recursomultimedia_id' || name === 'id_personaje' || name === 'id_recompensa') {
-      newValue = value === '' ? null : parseInt(value);
+    if (['orden', 'recursomultimedia_id', 'id_personaje', 'id_recompensa', 'id_siguiente_paso'].includes(name)) {
+      newValue = value === '' ? null : parseInt(value, 10);
     }
 
     setFormData((prev: any) => ({
@@ -40,8 +43,11 @@ const PasoForm: React.FC<PasoFormProps> = ({
 
   const handleOpcionChange = (index: number, field: keyof OpcionSiguiente, value: string) => {
     const newOpciones = [...(formData.metadata?.opciones_siguientes_json || [])];
+    if (!newOpciones[index]) {
+      newOpciones[index] = { texto: '', siguiente_paso_id: null };
+    }
     if (field === 'siguiente_paso_id') {
-      newOpciones[index][field] = parseInt(value) || null;
+      newOpciones[index][field] = value === '' ? null : parseInt(value, 10);
     } else {
       newOpciones[index][field] = value;
     }
@@ -78,6 +84,18 @@ const PasoForm: React.FC<PasoFormProps> = ({
       },
     }));
   };
+
+  useEffect(() => {
+    if (editingPaso) {
+      setFormData({
+        ...editingPaso,
+        metadata: {
+          ...editingPaso.metadata,
+          opciones_siguientes_json: editingPaso.metadata?.opciones_siguientes_json || [],
+        },
+      });
+    }
+  }, [editingPaso, setFormData]);
 
   return (
     <div className="modal-overlay">
@@ -155,7 +173,6 @@ const PasoForm: React.FC<PasoFormProps> = ({
             </select>
           </div>
           
-          {/* Nuevo campo para la recompensa */}
           <div className="form-group">
             <label>Recompensa (opcional)</label>
             <select
@@ -173,6 +190,41 @@ const PasoForm: React.FC<PasoFormProps> = ({
             </select>
           </div>
 
+          {/* Campo para el siguiente paso, visible si NO es una pregunta */}
+          {formData.tipo_paso !== 'pregunta' && (
+            <div className="form-group">
+              {formData.tipo_paso === 'final' ? (
+                <label>Historia a continuar</label>
+              ) : (
+                <label>Siguiente Paso (opcional)</label>
+              )}
+              
+              <select
+                name="id_siguiente_paso"
+                value={formData.id_siguiente_paso || ''}
+                onChange={handleChange}
+                className="form-control"
+              >
+                <option value="">Ninguno</option>
+                {formData.tipo_paso === 'final' ? (
+                  // Si es final, muestra las historias
+                  (historias ?? []).map(historia => (
+                    <option key={historia.id_historia} value={historia.id_historia}>
+                      {historia.titulo}
+                    </option>
+                  ))
+                ) : (
+                  // Si es narrativo, muestra los pasos
+                  (allPasos ?? []).map(paso => (
+                    <option key={paso.id_flujo} value={paso.id_flujo}>
+                      Paso #{paso.orden} ({paso.tipo_paso})
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+          )}
+
           {formData.tipo_paso === 'pregunta' && (
             <div className="options-section">
               <h4>Opciones Siguientes</h4>
@@ -186,14 +238,20 @@ const PasoForm: React.FC<PasoFormProps> = ({
                     className="form-control"
                     required
                   />
-                  <input
-                    type="number"
-                    placeholder="ID del siguiente paso"
+                  <select
+                    name="siguiente_paso_id"
                     value={opcion.siguiente_paso_id || ''}
                     onChange={(e) => handleOpcionChange(index, 'siguiente_paso_id', e.target.value)}
                     className="form-control"
                     required
-                  />
+                  >
+                    <option value="">Seleccionar Paso</option>
+                    {(allPasos ?? []).map(paso => (
+                      <option key={paso.id_flujo} value={paso.id_flujo}>
+                        Paso #{paso.orden} ({paso.tipo_paso})
+                      </option>
+                    ))}
+                  </select>
                   <button type="button" onClick={() => removeOpcion(index)} className="btn btn-sm btn-danger">
                     🗑️
                   </button>

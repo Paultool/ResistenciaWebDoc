@@ -91,7 +91,8 @@ const AdminHistorias: React.FC = () => {
       narrativa: historia.narrativa,
       estado: historia.estado,
       orden: historia.orden,
-      id_ubicacion: historia.id_ubicacion,
+      // Accede al ID de la ubicación, no al objeto completo
+      id_ubicacion: historia.id_ubicacion.id_ubicacion || 1, 
       es_historia_principal: historia.es_historia_principal,
       nivel_acceso_requerido: historia.nivel_acceso_requerido
     })
@@ -279,7 +280,7 @@ const AdminHistorias: React.FC = () => {
                 <th>ID</th>
                 <th>Título</th>
                 <th>Estado</th>
-                <th>Ubicación ID</th>
+                <th>Ubicación</th> {/* Cambiado de 'Ubicación ID' a 'Ubicación' para más claridad */}
                 <th>Tipo</th>
                 <th className="actions-header">Acciones</th>
               </tr>
@@ -294,7 +295,8 @@ const AdminHistorias: React.FC = () => {
                       {historia.estado}
                     </span>
                   </td>
-                  <td>{historia.id_ubicacion}</td>
+                  {/* Aquí está el cambio clave: accedemos a las coordenadas del objeto anidado */}
+                  <td>{historia.id_ubicacion?.coordenadas || 'N/A'}</td>
                   <td>
                     <span className={`type-badge ${historia.es_historia_principal ? 'principal' : 'secundaria'}`}>
                       {historia.es_historia_principal ? '⭐ Principal' : '📝 Secundaria'}

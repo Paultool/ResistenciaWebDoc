@@ -8,21 +8,32 @@ export interface PlayerStats {
   xp_total: number
   historias_completadas: number
   personajes_conocidos: string[]
-  ubicaciones_visitadas: string[]
+  historias_visitadas: string[]
   logros_desbloqueados: string[]
   inventario: InventoryItem[]
   fecha_ultimo_acceso: string
   racha_dias_consecutivos: number
 }
 
+export interface RecompensaData {
+    id_recompensa: number;
+    nombre: string;
+    descripcion: string;
+    tipo: string;
+    valor: number;
+    historia_origen: number;
+}
+
 export interface InventoryItem {
   id: string
   nombre: string
+  valor: number
   descripcion: string
   tipo: 'documento' | 'foto' | 'contacto' | 'evidencia' | 'memoria'
   rareza: 'común' | 'rara' | 'épica' | 'legendaria'
   fecha_obtencion: string
   historia_origen: string
+  cantidad: number; // Nuevo campo para la cantidad
 }
 
 export interface GameLogro {
@@ -57,6 +68,9 @@ class GameService {
     return GameService.instance
   }
 
+
+
+  
   /**
    * Inicializa el perfil de juego para un usuario
    */
@@ -137,7 +151,8 @@ class GameService {
         personajes_conocidos: profile.personajes_conocidos || [],
         ubicaciones_visitadas: profile.ubicaciones_visitadas || [],
         logros_desbloqueados: profile.logros_desbloqueados || [],
-        inventario: profile.inventario || []
+        inventario: profile.inventario || [],
+        xp_total: profile.xp_total || 0
       }
 
       return this.playerStats
@@ -171,11 +186,13 @@ class GameService {
       const stats = await this.getPlayerStats(userId)
       if (!stats) throw new Error('No se pudo obtener el perfil del jugador')
 
-      const xpGanado = esHistoriaPrincipal ? 150 : 75
+      const xpGanado = 25
       const nuevoXP = stats.xp_total + xpGanado
       const nuevoNivel = this.calculateLevel(nuevoXP)
       const historiasCompletadas = stats.historias_completadas + 1
+      console.log(`SCORE ACTUAL :`, stats.xp_total);
 
+      console.log(`Historia ${historiaId} completada por ${userId}. XP ganado: ${xpGanado}. Nuevo XP: ${nuevoXP}, Nuevo Nivel: ${nuevoNivel}`)
       // Actualizar estadísticas
       const { error: updateError } = await supabase
         .from('perfiles_jugador')
@@ -324,34 +341,103 @@ class GameService {
   /**
    * Añade un objeto al inventario
    */
-  async addToInventory(userId: string, item: Omit<InventoryItem, 'fecha_obtencion'>): Promise<void> {
+  async addToInventory(userId: string, item: Omit<InventoryItem, 'fecha_obtencion'>, valorRecompensa: number): Promise<void> {
     try {
-      const stats = await this.getPlayerStats(userId)
-      if (!stats) throw new Error('No se pudo obtener el perfil del jugador')
-
+      const stats = await this.getPlayerStats(userId);
+      if (!stats) throw new Error('No se pudo obtener el perfil del jugador');
+  
       const newItem: InventoryItem = {
         ...item,
         fecha_obtencion: new Date().toISOString()
-      }
-
-      const nuevoInventario = [...stats.inventario, newItem]
-
+      };
+  
+      const nuevoInventario = [...stats.inventario, newItem];
+      const nuevoXP = stats.xp_total + valorRecompensa;
+  
       // Actualizar inventario
       const { error: updateError } = await supabase
         .from('perfiles_jugador')
         .update({
-          inventario: nuevoInventario
+          inventario: nuevoInventario,
+          xp_total: nuevoXP
         })
-        .eq('user_id', userId)
-
-      if (updateError) throw updateError
-
+        .eq('user_id', userId);
+  
+      if (updateError) {
+        // La línea de error ahora está correctamente dentro del 'if'
+        console.error('Error actualizando inventario:', updateError.details);
+        throw updateError;
+      }
+  
       // Actualizar cache
       if (this.playerStats) {
-        this.playerStats.inventario = nuevoInventario
+        this.playerStats.inventario = nuevoInventario;
       }
     } catch (error: any) {
-      console.error('Error añadiendo objeto al inventario:', error)
+      console.error('Error añadiendo objeto al inventario:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Registra una interacción del jugador con el flujo narrativo.
+   * @param userId El ID del usuario.
+   * @param flujoId El ID del paso del flujo narrativo.
+   * @param tipoInteraccion El tipo de interacción ('navegacion', 'decision', etc.).
+   */
+  public async registrarInteraccion(userId: string, flujoId: number, tipoInteraccion: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('interaccionusuario')
+        .insert({
+          user_id: userId,
+          id_flujo: flujoId,
+          tipo: tipoInteraccion,
+          fecha_interaccion: new Date().toISOString()
+        })
+      
+      if (error) throw error
+
+      console.log(`✅ Interacción de ${userId} registrada para el paso ${flujoId}.`)
+    } catch (error) {
+      console.error('Error al registrar interacción:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Otorga una recompensa al jugador.
+   * @param userId El ID del usuario.
+   * @param recompensaId El ID de la recompensa a otorgar.
+   */
+  public async otorgarRecompensa(userId: string, recompensaId: number): Promise<void> {
+    try {
+      
+      const { data: recompensa, error: recompensaError } = await supabase
+        .from('recompensa')
+        .select('*')
+        .eq('id_recompensa', recompensaId) // <-- Corregido para usar la columna correcta
+        .single()
+      
+      if (recompensaError) throw recompensaError
+
+      // Adaptar la recompensa a la interfaz InventoryItem
+      const item: Omit<InventoryItem, 'fecha_obtencion'> = {
+        id: recompensa.id_recompensa.toString(),
+        valor: recompensa.valor,
+        nombre: recompensa.nombre,
+        descripcion: recompensa.descripcion,
+        tipo: recompensa.tipo,
+        rareza: 'común', // <-- Valor fijo, ya que el esquema no lo define
+        historia_origen: recompensa.historia_origen?.toString() || 'unknown' // <-- Manejo de valor nulo
+      }
+
+      await this.addToInventory(userId, item, recompensa.valor)
+            
+
+      console.log(`✅ Recompensa '${recompensa.nombre}' otorgada a ${userId}.`)
+    } catch (error) {
+      console.error('Error al otorgar recompensa:', error)
       throw error
     }
   }
@@ -497,6 +583,8 @@ class GameService {
     this.playerStats = null
   }
 }
+
+
 
 // Exportar instancia singleton
 export const gameService = GameService.getInstance()

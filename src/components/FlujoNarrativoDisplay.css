@@ -1,9 +1,14 @@
 /* Contenedor principal */
 .flujo-narrativo-container {
-    padding: 20px;
-    background-color: #f0f2f5;
-    min-height: calc(100vh - 60px); /* Ajusta según el header de tu admin panel */
-    font-family: 'Arial', sans-serif;
+    position: fixed; /* O `absolute` si es más adecuado a tu layout */
+    top: 0;
+    left: 0;
+    width: 100vw; /* Viewport width */
+    height: 100vh; /* Viewport height */
+    background-color: black; /* O el color que desees para el fondo */
+    display: flex; /* Para centrar el video y el contenido */
+    justify-content: center;
+    align-items: center;
 }
 
 /* Header de la vista */
@@ -293,4 +298,70 @@
     .view-header h2 {
         margin-bottom: 15px;
     }
+}
+
+/* Añade esto a tu archivo CSS principal (p.ej., App.css o FlujoNarrativoDisplay.css) */
+.full-screen-video-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: black; /* Evita que se vea el contenido debajo */
+    z-index: 1000; /* Asegura que esté por encima de todo */
+}
+
+.full-screen-video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Mantiene la relación de aspecto y llena el contenedor */
+}
+
+.media-preview-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Para que el video llene el contenedor sin distorsionarse */
+}
+
+/* Nuevo estilo para el contenido superpuesto */
+.contenido-superpuesto {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    width: 80%;
+    max-width: 600px;
+    background-color: rgba(255, 255, 255, 0.85);
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    
+    /* Configuración para la animación */
+    opacity: 0; /* Inicia invisible */
+    transition: opacity 0.5s ease-in-out; /* Transición de 0.5 segundos */
+}
+
+/* Clase que se añadirá cuando el contenido deba ser visible */
+.contenido-superpuesto.is-visible {
+    opacity: 1;
+}
+
+/* Contenedor de la barra de progreso */
+.progress-bar-container {
+    position: absolute;
+    bottom: 0; /* Colócala en la parte inferior */
+    left: 0;
+    width: 100%;
+    height: 8px; /* Altura de la barra */
+    background-color: rgba(255, 255, 255, 0.3); /* Fondo semitransparente */
+    z-index: 15; /* Asegúrate de que esté sobre el video */
+}
+
+/* La barra de progreso que se llena */
+.progress-bar {
+    height: 100%;
+    width: 0; /* Empieza en 0% */
+    background-color: #007bff; /* Color principal */
+    transition: width 0.1s linear; /* Transición suave del ancho */
 }

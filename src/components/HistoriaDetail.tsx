@@ -1,67 +1,114 @@
 import React, { useState, useEffect } from 'react'
-import { Historia, obtenerHistoriaDetalle } from '../supabaseClient'
+import {
+  supabase,
+  Historia,
+  obtenerHistoriaDetalle,
+  obtenerFlujoNarrativoDeHistoria,
+  obtenerPersonajesPorHistoriaId,
+  obtenerMultimediaPorIds
+} from '../supabaseClient'
 import { gameService } from '../services/GameService'
 import { useAuth } from '../contexts/AuthContext'
+import './HistoriaDetail.css'
 
 interface HistoriaDetailProps {
   historiaId: number
   onClose: () => void
+  onStartNarrative: (historia: Historia) => void
+}
+
+// Interfaces de datos más precisas basadas en el esquema
+interface Personaje {
+  id_personaje: number;
+  nombre: string;
+  imagen: string | null;
+  rol?: string; // Propiedad opcional
+  descripcion?: string; // Propiedad opcional
+}
+
+interface RecursoMultimedia {
+  id_recurso: number;
+  tipo: 'imagen' | 'video' | 'audio' | 'transcripcion' | 'subtitulo';
+  archivo: string;
+  metadatos: string | null;
+  descripcion: string;
+  titulo?: string; // Propiedad opcional
+}
+
+interface FlujoNarrativoPaso {
+  id_flujo: number;
+  contenido: string;
+  id_personaje: number | null;
+  recursomultimedia_id: number | null;
 }
 
 interface HistoriaCompleta extends Historia {
-  recursomultimedia: any[]
-  personaje: any[]
-  ubicacion: any[]
+  narrativa: string;
+  recursomultimedia: RecursoMultimedia[];
+  personaje: Personaje[];
 }
 
-const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose }) => {
+const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, onStartNarrative }) => {
   const { user } = useAuth()
   const [historia, setHistoria] = useState<HistoriaCompleta | null>(null)
+  const [personajes, setPersonajes] = useState<Personaje[]>([]);
+  const [multimedia, setMultimedia] = useState<RecursoMultimedia[]>([]);
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'contenido' | 'personajes' | 'multimedia'>('contenido')
   const [playerStats, setPlayerStats] = useState<any>(null)
   const [canAccess, setCanAccess] = useState(true)
-  const [hasStarted, setHasStarted] = useState(false)
   const [isCompleting, setIsCompleting] = useState(false)
+  const [hasStarted, setHasStarted] = useState(false)
 
   useEffect(() => {
-    cargarHistoriaDetalle()
-    if (user?.id) {
-      cargarEstadisticasJugador()
-    }
-  }, [historiaId, user])
+    const fetchHistoriaData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const historiaData = await obtenerHistoriaDetalle(historiaId);
+        setHistoria(historiaData);
 
-  const cargarEstadisticasJugador = async () => {
-    if (!user?.id) return
-    
-    try {
-      const stats = await gameService.getPlayerStats(user.id)
-      setPlayerStats(stats)
-      
-      // Verificar si el jugador puede acceder a esta historia
-      if (historia && stats) {
-        const nivelRequerido = historia.nivel_acceso_requerido || 1
-        setCanAccess(stats.nivel >= nivelRequerido)
+        const flujoData = await obtenerFlujoNarrativoDeHistoria(historiaId);
+
+        // Obtener IDs de personajes y multimedia únicos
+        const personajeIds = Array.from(new Set(
+          flujoData
+            .map(paso => paso.id_personaje)
+            .filter(id => id !== null) as number[]
+        ));
+
+        const multimediaIds = Array.from(new Set(
+          flujoData
+            .map(paso => paso.recursomultimedia_id)
+            .filter(id => id !== null) as number[]
+        ));
+
+        // Cargar datos por separado
+        const [personajesData, multimediaData] = await Promise.all([
+          obtenerPersonajesPorHistoriaId(historiaId),
+          obtenerMultimediaPorIds(multimediaIds)
+        ]);
+
+        setPersonajes(personajesData);
+        setMultimedia(multimediaData);
+        
+        // Cargar estadísticas del jugador
+        if (user?.id) {
+          const stats = await gameService.getPlayerStats(user.id);
+          setPlayerStats(stats);
+          const nivelRequerido = historiaData?.nivel_acceso_requerido || 1;
+          setCanAccess(stats?.nivel >= nivelRequerido);
+        }
+
+      } catch (err: any) {
+        setError('Error al cargar los detalles de la historia: ' + err.message);
+      } finally {
+        setLoading(false);
       }
-    } catch (error: any) {
-      console.error('Error cargando estadísticas del jugador:', error)
-    }
-  }
-
-  const cargarHistoriaDetalle = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const historiaData = await obtenerHistoriaDetalle(historiaId)
-      setHistoria(historiaData)
-    } catch (err: any) {
-      console.error('Error cargando historia detalle:', err)
-      setError('No se pudo cargar la historia: ' + err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
+    };
+    fetchHistoriaData();
+  }, [historiaId, user]);
 
   const handleComenzarHistoria = async () => {
     if (!user?.id || !historia || isCompleting) return
@@ -78,92 +125,88 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose }) 
       // Marcar historia como comenzada
       setHasStarted(true)
       
-      // Otorgar XP por comenzar la historia
-      console.log('🎮 Comenzando historia...', { userId: user.id, historiaId: historia.id, esPrincipal: historia.es_historia_principal })
-      const gameEvent = await gameService.completeStory(
-        user.id, 
-        historia.id.toString(), 
-        historia.es_historia_principal
-      )
-      console.log('✅ Historia completada, evento:', gameEvent)
-
-      // Agregar objeto al inventario (simulado)
-      const nuevoObjeto = {
-        id: `obj_${Date.now()}`,
-        nombre: `Testimonio: ${historia.titulo}`,
-        descripcion: `Evidencia recolectada durante la exploración de "${historia.titulo}". Este testimonio documenta las experiencias y conocimientos adquiridos.`,
-        tipo: 'documento' as const,
-        rareza: historia.es_historia_principal ? 'épica' as const : 'rara' as const,
-        historia_origen: historia.titulo
-      }
-      
-      await gameService.addToInventory(user.id, nuevoObjeto)
-
-      // Mostrar resultado
-      const nivelAnterior = playerStats?.nivel || 1
-      const xpGanado = gameEvent.xp_ganado
-      const nivelActual = gameService.calculateLevel(gameEvent.xp_ganado)
-      
-      let mensaje = `🎉 ¡Historia completada!\n\n`
-      mensaje += `📈 +${xpGanado} XP ganados\n`
-      mensaje += `📦 +1 objeto añadido al inventario\n\n`
-      
-      if (nivelActual > nivelAnterior) {
-        mensaje += `🎊 ¡SUBISTE DE NIVEL! Ahora eres Nivel ${nivelActual}\n\n`
-      }
-      
-      mensaje += `💡 Explora más historias para continuar tu progreso.`
-      
-      alert(mensaje)
-      
-      // Recargar estadísticas
-      await cargarEstadisticasJugador()
-      
-      // Emitir evento personalizado para actualizar estadísticas globalmente
-      window.dispatchEvent(new CustomEvent('statsUpdated', { 
-        detail: { userId: user.id, xpGanado: gameEvent.xp_ganado } 
-      }))
+      onStartNarrative(historia); // Inicia el flujo narrativo
       
     } catch (error: any) {
-      console.error('Error completando historia:', error)
-      alert('❌ Error al completar la historia. Inténtalo de nuevo.')
+      console.error('Error comenzando historia:', error)
+      alert('❌ Error al comenzar la historia. Inténtalo de nuevo.')
     } finally {
       setIsCompleting(false)
     }
   }
 
+  // Función para renderizar el recurso multimedia
+  const renderRecurso = (recurso: RecursoMultimedia) => {
+    if (!recurso || !recurso.archivo) return null;
+    
+    // Función para obtener el ID de un video de YouTube
+    const getYouTubeId = (url: string) => {
+      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+      const match = url.match(regex);
+      return match ? match[1] : null;
+    };
+
+    const youtubeId = getYouTubeId(recurso.archivo);
+    
+    // Si el video es de YouTube, usa un iframe
+    if (youtubeId) {
+      const embedUrl = `https://www.youtube.com/embed/${youtubeId}`;
+      return (
+        <iframe
+          src={embedUrl}
+          title={recurso.descripcion || "Video de YouTube"}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="multimedia-video"
+        ></iframe>
+      );
+    }
+    
+    // Si no, trata la URL como un archivo de Supabase o externo
+    const url = recurso.archivo.startsWith('http')
+      ? recurso.archivo
+      : `${supabase.storage.from('assets-juego').getPublicUrl(recurso.archivo).data.publicUrl}`;
+    
+    switch (recurso.tipo) {
+      case 'imagen':
+        return <img src={url} alt={recurso.descripcion || "Imagen del recurso"} className="multimedia-image" />;
+      case 'video':
+        return <video src={url} controls className="multimedia-video" />;
+      case 'audio':
+        return <audio src={url} controls className="multimedia-audio" />;
+      default:
+        return <span>Archivo: {recurso.archivo}</span>;
+    }
+  };
+
   if (loading) {
     return (
       <div className="historia-detail-overlay">
         <div className="historia-detail-modal">
-          <div className="loading-detail">
-            <p>⏳ Cargando historia...</p>
-          </div>
+          <p>⏳ Cargando...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !historia) {
     return (
       <div className="historia-detail-overlay">
         <div className="historia-detail-modal">
-          <div className="error-detail">
-            <p>❌ {error || 'Historia no encontrada'}</p>
-            <button onClick={onClose} className="btn btn-secondary">
-              ← Volver
-            </button>
-          </div>
+          <p className="error-message">❌ {error || 'No se encontró la historia.'}</p>
+          <button onClick={onClose} className="btn-secondary mt-3">
+            Cerrar
+          </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="historia-detail-overlay">
       <div className="historia-detail-modal">
         <div className="modal-header">
-          <button onClick={onClose} className="btn-close">✕</button>
+          <button onClick={onClose} className="btn-close">×</button>
           <h2>{historia.titulo}</h2>
           <div className="historia-meta">
             <span className={`badge ${historia.es_historia_principal ? 'principal' : 'secundaria'}`}>
@@ -179,34 +222,34 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose }) 
         </div>
 
         <div className="modal-tabs">
-          <button 
+          <button
             className={`tab ${activeTab === 'contenido' ? 'active' : ''}`}
             onClick={() => setActiveTab('contenido')}
           >
             📜 Contenido
           </button>
-          <button 
+          <button
             className={`tab ${activeTab === 'personajes' ? 'active' : ''}`}
             onClick={() => setActiveTab('personajes')}
           >
-            🎭 Personajes ({historia.personaje?.length || 0})
+            🎭 Personajes ({personajes?.length || 0})
           </button>
-          <button 
+          <button
             className={`tab ${activeTab === 'multimedia' ? 'active' : ''}`}
             onClick={() => setActiveTab('multimedia')}
           >
-            🎥 Multimedia ({historia.recursomultimedia?.length || 0})
+            🎥 Multimedia ({multimedia?.length || 0})
           </button>
         </div>
 
         <div className="modal-content">
           {activeTab === 'contenido' && (
-            <div className="content-tab">
+            <div className="tab-panel">
               <div className="historia-description">
                 <h3>📝 Descripción</h3>
-                <p>{historia.descripcion}</p>
+                <p>{historia.narrativa}</p>
               </div>
-              
+
               {historia.metadata && (
                 <div className="historia-metadata">
                   <h3>🔍 Detalles Adicionales</h3>
@@ -215,7 +258,7 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose }) 
               )}
               
               <div className="historia-actions">
-                <button 
+                <button
                   className={`btn ${canAccess ? 'btn-primary' : 'btn-disabled'}`}
                   onClick={handleComenzarHistoria}
                   disabled={!canAccess || isCompleting}
@@ -223,9 +266,9 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose }) 
                   {isCompleting ? (
                     '⏳ Procesando...'
                   ) : hasStarted ? (
-                    '✅ Historia Completada'
+                    '✅ Historia Comenzada'
                   ) : canAccess ? (
-                    `▶️ Comenzar Historia (+${historia.es_historia_principal ? 150 : 75} XP)`
+                    `▶️ Comenzar Historia`
                   ) : (
                     `🔒 Requiere Nivel ${historia.nivel_acceso_requerido}`
                   )}
@@ -246,13 +289,13 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose }) 
           )}
 
           {activeTab === 'personajes' && (
-            <div className="personajes-tab">
-              {historia.personaje && historia.personaje.length > 0 ? (
+            <div className="tab-panel">
+              {personajes.length > 0 ? (
                 <div className="personajes-grid">
-                  {historia.personaje.map((personaje: any) => (
-                    <div key={personaje.id} className="personaje-card">
+                  {personajes.map(personaje => (
+                    <div key={personaje.id_personaje} className="personaje-card">
                       <div className="personaje-avatar">
-                        {personaje.nombre.charAt(0).toUpperCase()}
+                        {personaje.imagen && <img src={personaje.imagen} alt={personaje.nombre} />}
                       </div>
                       <div className="personaje-info">
                         <h4>{personaje.nombre}</h4>
@@ -271,24 +314,18 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose }) 
           )}
 
           {activeTab === 'multimedia' && (
-            <div className="multimedia-tab">
-              {historia.recursomultimedia && historia.recursomultimedia.length > 0 ? (
+            <div className="tab-panel">
+              {multimedia.length > 0 ? (
                 <div className="multimedia-grid">
-                  {historia.recursomultimedia.map((recurso: any) => (
-                    <div key={recurso.id} className="multimedia-item">
-                      <div className="multimedia-icon">
-                        {recurso.tipo === 'video' && '🎥'}
-                        {recurso.tipo === 'audio' && '🎧'}
-                        {recurso.tipo === 'image' && '🖼️'}
-                        {!['video', 'audio', 'image'].includes(recurso.tipo) && '📎'}
+                  {multimedia.map(recurso => (
+                    <div key={recurso.id_recurso} className="multimedia-item">
+                      <div className="multimedia-preview">
+                        {renderRecurso(recurso)}
                       </div>
                       <div className="multimedia-info">
-                        <h4>{recurso.titulo}</h4>
+                        <h4>{recurso.titulo || recurso.descripcion}</h4>
                         <p className="multimedia-tipo">{recurso.tipo.toUpperCase()}</p>
                         <p className="multimedia-desc">{recurso.descripcion}</p>
-                        <button className="btn btn-sm btn-outline">
-                          👁️ Ver Recurso
-                        </button>
                       </div>
                     </div>
                   ))}
