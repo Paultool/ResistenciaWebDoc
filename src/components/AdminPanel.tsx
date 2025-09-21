@@ -9,8 +9,8 @@ import AdminAnalytics from './AdminAnalytics'
 import AdminFlujoNarrativo from './AdminFlujoNarrativo';
 import AdminRecursosMultimedia from './AdminRecursosMultimedia';
 import AdminRecompensas from './AdminRecompensas';
-import FlujoNarrativoDisplay from './FlujoNarrativoDisplay'; // ¡Importamos el nuevo componente!
-
+import FlujoNarrativoDisplay from './FlujoNarrativoDisplay';
+import FlujoNarrativoUsuario from './FlujoNarrativoUsuario';
 
 
 import './AdminPanel.css'
@@ -20,7 +20,7 @@ interface AdminPanelProps {
 }
 
 // Actualiza el tipo para incluir todas las vistas
-type AdminView = 'dashboard' | 'historias' | 'personajes' | 'ubicaciones' | 'usuarios' | 'config' | 'analytics' | 'flujo_narrativo' | 'recursosMultimedia' | 'recompensas' | 'flujodisplay';
+type AdminView = 'dashboard' | 'historias' | 'personajes' | 'ubicaciones' | 'usuarios' | 'config' | 'analytics' | 'flujo_narrativo' | 'recursosMultimedia' | 'recompensas' | 'flujodisplay' | 'flujousuario';
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   const { isAdmin, adminUser, loading } = useAdmin()
@@ -86,6 +86,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
         return <AdminFlujoNarrativo historiaId={selectedHistoriaId} />
       case 'flujodisplay':
         return <FlujoNarrativoDisplay historiaId={selectedHistoriaId} />; 
+      case 'flujousuario':
+        return <FlujoNarrativoUsuario historiaId={selectedHistoriaId} />; 
       case 'config':
         return <AdminConfig />
       case 'analytics':
@@ -272,7 +274,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
           >
             📜 Ver Flujo Narrativo
           </button>
-               
+          <button 
+            className={`menu-item ${currentView === 'flujousuario' ? 'active' : ''}`}
+            onClick={() => setCurrentView('flujousuario')}
+          >
+            📜 Ver Flujo cinematico
+          </button>     
 
           <button 
             className={`menu-item ${currentView === 'usuarios' ? 'active' : ''}`}

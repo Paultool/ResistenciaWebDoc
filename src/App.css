@@ -530,3 +530,138 @@
   color: #ffc107;
   font-weight: 600;
 }
+
+
+
+.horizontal-navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #1a202c; /* Color de fondo oscuro */
+    color: #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.horizontal-navbar .navbar-brand h1 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #4299e1; /* Color azul claro */
+}
+
+.horizontal-navbar .navbar-nav {
+    display: flex;
+    gap: 1.5rem; /* Espacio entre los botones */
+}
+
+.horizontal-navbar .nav-btn {
+    background: none;
+    border: none;
+    color: #cbd5e0; /* Color gris claro */
+    font-size: 1rem;
+    cursor: pointer;
+    transition: color 0.3s ease-in-out;
+}
+
+.horizontal-navbar .nav-btn:hover,
+.horizontal-navbar .nav-btn.active {
+    color: #63b3ed; /* Color azul al pasar el ratón o activo */
+}
+
+/* --- NUEVOS ESTILOS PARA EL MENÚ ELEGANTE --- */
+.elegant-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap; /* Permite que el menú se envuelva en pantallas pequeñas */
+  padding: 1rem 2rem;
+  background: linear-gradient(90deg, #1f2937, #111827); /* Nuevo degradado */
+  color: #fff;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: all 0.3s ease-in-out;
+}
+
+.navbar-logo h1 {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #a78bfa; /* Morado claro para un toque elegante */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.navbar-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.2rem;
+}
+
+.nav-link-btn {
+  background: none;
+  border: none;
+  color: #d1d5db; /* Gris claro */
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.5rem 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  text-decoration: none;
+}
+
+.nav-link-btn:hover {
+  color: #e5e7eb; /* Gris más claro al pasar el ratón */
+}
+
+.nav-link-btn::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: #a78bfa;
+  bottom: 0;
+  left: 0;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.nav-link-btn:hover::after,
+.nav-link-btn.active::after {
+  transform: scaleX(1);
+}
+
+.navbar-user-info {
+  font-size: 0.9rem;
+  color: #9ca3af;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.4rem 0.8rem;
+  border-radius: 12px;
+  margin-left: 1rem;
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+  .elegant-navbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+    padding: 1rem;
+  }
+  
+  .navbar-links {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
+
+  .nav-link-btn {
+    padding: 0.2rem 0;
+  }
+  
+  .navbar-user-info {
+    margin-top: 1rem;
+    margin-left: 0;
+  }
+}

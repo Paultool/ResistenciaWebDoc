@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flujo Narrativo Avanzado</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c;
+            color: #e2e8f0;
+        }
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .step-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .step-content h2 {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .full-media-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+        }
+        .full-media-container video, .full-media-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        #interactiveCanvas, #threejsCanvas, #audioVisualizerCanvas {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 20;
+        }
+        .nav-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.2);
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: color 0.2s, opacity 0.3s;
+            z-index: 30;
+            padding: 1rem;
+            line-height: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .nav-button.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .nav-button.left {
+            left: 1rem;
+        }
+        .nav-button.right {
+            right: 1rem;
+        }
+        .nav-button:hover {
+            color: rgba(255, 255, 255, 0.8);
+            transform: translateY(-50%) scale(1.1);
+        }
+        .bottom-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: rgba(26, 32, 44, 0.8);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.3);
+            z-index: 20;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-in-out;
+            pointer-events: none;
+        }
+        .bottom-bar.visible {
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .story-timeline {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 0 1rem;
+        }
+        .story-timeline::before {
+            content: '';
+            position: absolute;
+            width: calc(100% - 2rem);
+            height: 2px;
+            background-color: rgba(255, 255, 255, 0.3);
+            z-index: 1;
+        }
+        .story-step {
+            width: 1.5rem;
+            height: 1.5rem;
+            background-color: #4a5568;
+            margin: 0.5rem 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            position: relative;
+            z-index: 2;
+            border-radius: 4px;
+        }
+        .story-step.active {
+            background-color: #63b3ed;
+            transform: scale(1.2);
+            box-shadow: 0 0 8px #63b3ed;
+        }
+        .info-icons {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .info-display {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #e2e8f0;
+            font-size: 1rem;
+            white-space: nowrap;
+        }
+        .tool-icon {
+            cursor: pointer;
+            transition: color 0.2s;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .tool-icon:hover {
+            color: #63b3ed;
+        }
+        .tool-icon span:first-child {
+            font-size: 1.5rem;
+        }
+        .top-left-button {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background-color: rgba(26, 32, 44, 0.8);
+            backdrop-filter: blur(5px);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            color: #e2e8f0;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+            z-index: 40;
+            border: 2px solid transparent;
+        }
+        .top-left-button:hover {
+            background-color: rgba(45, 55, 72, 0.9);
+            transform: translateY(-2px);
+            border-color: #63b3ed;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #2d3748;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+        .close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            color: #aaa;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-button:hover, .close-button:focus {
+            color: #e2e8f0;
+        }
+        .list-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            background-color: #1a202c;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid #63b3ed;
+        }
+        .decision-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            padding: 2rem;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+        }
+        .decision-options {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 2rem;
+            width: 100%;
+            max-width: 400px;
+        }
+        .decision-button {
+            background-color: #4a5568;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s, transform 0.2s;
+            cursor: pointer;
+            text-align: center;
+        }
+        .decision-button:hover {
+            background-color: #63b3ed;
+            transform: translateY(-2px);
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <button class="top-left-button" onclick="console.log('Regresando a la lista de historias...');">Historias</button>
+
+        <button id="backButton" class="nav-button left">&lt;</button>
+        <button id="nextButton" class="nav-button right">&gt;</button>
+
+        <div id="stepContent" class="step-content">
+        </div>
+
+        <div id="bottomBar" class="bottom-bar">
+            <div class="info-display">
+                <span class="text-2xl">💪</span>
+                <span id="resistanceValue">0</span>
+            </div>
+
+            <div id="storyTimeline" class="story-timeline"></div>
+
+            <div class="info-icons">
+                <div class="tool-icon" onclick="showModal('inventory')">
+                    <span>📦</span>
+                    <span id="inventoryCount">0</span>
+                </div>
+                <div class="tool-icon" onclick="showModal('characters')">
+                    <span>👥</span>
+                    <span id="characterCount">0</span>
+                </div>
+                <div class="tool-icon" onclick="showModal('stories')">
+                    <span>📚</span>
+                    <span id="storyCount">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="inventoryModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('inventory')">&times;</span>
+            <h3 class="text-2xl font-bold mb-4">Inventario</h3>
+            <div id="inventoryItems" class="max-h-80 overflow-y-auto"></div>
+        </div>
+    </div>
+    <div id="charactersModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('characters')">&times;</span>
+            <h3 class="text-2xl font-bold mb-4">Personajes Conocidos</h3>
+            <div id="characterItems" class="max-h-80 overflow-y-auto"></div>
+        </div>
+    </div>
+    <div id="storiesModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('stories')">&times;</span>
+            <h3 class="text-2xl font-bold mb-4">Historias Visitadas</h3>
+            <div id="storyItems" class="max-h-80 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <script>
+        const stepContent = document.getElementById('stepContent');
+        const backButton = document.getElementById('backButton');
+        const nextButton = document.getElementById('nextButton');
+        const storyTimeline = document.getElementById('storyTimeline');
+        const bottomBar = document.getElementById('bottomBar');
+        const resistanceValue = document.getElementById('resistanceValue');
+        const inventoryCount = document.getElementById('inventoryCount');
+        const characterCount = document.getElementById('characterCount');
+        const storyCount = document.getElementById('storyCount');
+        
+        const inventoryModal = document.getElementById('inventoryModal');
+        const charactersModal = document.getElementById('charactersModal');
+        const storiesModal = document.getElementById('storiesModal');
+        const inventoryItemsContainer = document.getElementById('inventoryItems');
+        const characterItemsContainer = document.getElementById('characterItems');
+        const storyItemsContainer = document.getElementById('storyItems');
+
+        let currentStep = 0;
+        let threejsScene, threejsCamera, threejsRenderer, threejsMesh;
+        let isDrawing = false;
+        let lastX = 0, lastY = 0;
+        let bottomBarTimeout;
+
+        // --- INICIO DE LAS VARIABLES DE AUDIO (MOVIDAS AL ÁMBITO GLOBAL) ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioContext = null; // Inicializar a null
+        let audioBuffer = null;
+        let sourceNode = null;
+        let isPlaying = false;
+        let isPaused = false;
+        let startTime = 0;
+        let pauseTime = 0;
+        let analyser;
+        let dataArray;
+        let audioDrawLoop;
+        // --- FIN DE LAS VARIABLES DE AUDIO ---
+
+
+        const playerStats = {
+            resistance: 150,
+            charactersKnown: [
+                { name: "Capitán Alex", description: "El valiente líder del equipo de exploración." },
+                { name: "Dra. Lena", description: "Una experta en biología xenomorfa." },
+            ],
+            storiesVisited: [
+                { title: "El Despertar de la Cripta", description: "La primera historia de tu viaje." },
+            ],
+            inventory: [
+                { name: "Medallón Antiguo", description: "Un medallón con un grabado misterioso." },
+            ]
+        };
+
+        const steps = [
+            {
+                type: 'video',
+                title: 'Paso 1: Introducción',
+                content: `
+                    <div class="full-media-container">
+                        <video id="introVideo" autoplay muted playsinline disablepictureinpicture oncontextmenu="return false;">
+                            <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                            Tu navegador no soporta el elemento de video.
+                        </video>
+                    </div>
+                `
+            },
+            {
+                type: 'interactive',
+                title: 'Paso 2: Interactivo - Dibuja tu impresión',
+                content: `
+                    <canvas id="interactiveCanvas"></canvas>
+                    <div class="absolute bottom-20 text-center w-full z-40 p-2">
+                        <h2 class="text-2xl font-bold">Paso 2: Dibuja tu impresión</h2>
+                        <p class="text-sm">¿Qué sentiste? Dibújalo en el lienzo.</p>
+                    </div>
+                `
+            },
+            {
+                type: '3d_model',
+                title: 'Paso 3: Modelo 3D - El artefacto del Líder',
+                content: `
+                    <div id="threejsContainer" class="full-media-container"></div>
+                    <div class="absolute bottom-20 text-center w-full z-40 p-2">
+                        <h2 class="text-2xl font-bold">Paso 3: Modelo 3D</h2>
+                        <p class="text-sm">Examina el artefacto. Usa el ratón para rotarlo.</p>
+                    </div>
+                `
+            },
+            {
+                type: 'decision_image',
+                title: 'Paso 4: Decisión - El cruce del camino',
+                content: `
+                    <div class="full-media-container">
+                        <img src="https://placehold.co/1920x1080/2d3748/e2e8f0?text=Tu+fondo+de+imagen+aqu%C3%AD" alt="Fondo de decisión" class="w-full h-full object-cover">
+                    </div>
+                    <div class="decision-container">
+                        <div class="text-center">
+                            <h2 class="text-3xl md:text-5xl font-bold mb-4">¿Qué camino eliges?</h2>
+                            <p class="text-lg mb-8">Una voz te llama desde la oscuridad. ¿La sigues o esperas a que amanezca?</p>
+                        </div>
+                        <div class="decision-options">
+                            <button class="decision-button" onclick="renderStep(5)">Seguir la voz</button>
+                            <button class="decision-button" onclick="renderStep(6)">Esperar a que amanezca</button>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                type: 'decision_video',
+                title: 'Paso 5: Decisión - ¿Qué le respondes?',
+                content: `
+                    <div class="full-media-container">
+                        <video id="decisionVideo" autoplay loop muted playsinline disablepictureinpicture oncontextmenu="return false;">
+                            <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <div class="decision-container">
+                        <div class="text-center">
+                            <h2 class="text-3xl md:text-5xl font-bold mb-4">¿Confías en él?</h2>
+                            <p class="text-lg mb-8">"El artefacto es peligroso," te dice. "¿Lo entregas o lo mantienes en secreto?"</p>
+                        </div>
+                        <div class="decision-options">
+                            <button class="decision-button" onclick="renderStep(7)">Entregar el artefacto</button>
+                            <button class="decision-button" onclick="renderStep(8)">Mantenerlo en secreto</button>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                type: 'audio',
+                title: 'Paso 6: Audio - El susurro del pasado',
+                content: `
+                    <div class="full-media-container">
+                        <canvas id="audioVisualizerCanvas"></canvas>
+                    </div>
+                    <div class="absolute bottom-20 text-center w-full z-40 p-2">
+                        <h2 class="text-2xl font-bold">Paso 6: El susurro del pasado</h2>
+                        <p id="audioStatus" class="text-sm">...</p>
+                        <div class="mt-4 flex flex-col items-center space-y-2">
+                            <button id="audioControl" class="px-6 py-3 bg-blue-500 rounded-full font-bold">Cargando Audio...</button>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                type: 'text',
+                title: 'Paso 7: Conclusión',
+                content: `
+                    <div class="text-center p-8">
+                        <h2 class="text-4xl font-bold mb-4">Fin de la demo</h2>
+                        <p class="text-lg">¡Gracias por participar en esta historia interactiva!</p>
+                    </div>
+                `
+            }
+        ];
+
+        function renderStep(stepIndex) {
+            currentStep = stepIndex;
+            const step = steps[currentStep];
+            stepContent.innerHTML = '';
+            
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+                cancelAnimationFrame(audioDrawLoop);
+            }
+            if (threejsRenderer && threejsRenderer.domElement) {
+                threejsRenderer.domElement.remove();
+                threejsRenderer.dispose();
+            }
+
+            stepContent.innerHTML += step.content;
+
+            if (step.type === 'video') {
+                const video = document.getElementById('introVideo');
+                if (video) {
+                    video.onended = () => renderStep(currentStep + 1);
+                    video.addEventListener('click', () => {
+                        if (video.paused) {
+                            video.play();
+                        } else {
+                            video.pause();
+                        }
+                    });
+                }
+            } else if (step.type === 'interactive') {
+                const canvas = document.getElementById('interactiveCanvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                ctx.strokeStyle = '#e2e8f0';
+                ctx.lineWidth = 2;
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+
+                canvas.addEventListener('mousedown', (e) => {
+                    isDrawing = true;
+                    [lastX, lastY] = [e.offsetX, e.offsetY];
+                });
+                canvas.addEventListener('mousemove', (e) => {
+                    if (!isDrawing) return;
+                    ctx.beginPath();
+                    ctx.moveTo(lastX, lastY);
+                    ctx.lineTo(e.offsetX, e.offsetY);
+                    ctx.stroke();
+                    [lastX, lastY] = [e.offsetX, e.offsetY];
+                });
+                canvas.addEventListener('mouseup', () => isDrawing = false);
+                canvas.addEventListener('mouseout', () => isDrawing = false);
+            } else if (step.type === '3d_model') {
+                initThreeJS();
+            } else if (step.type === 'audio') {
+                initAudioVisualizer();
+            }
+
+            const isDecisionStep = step.type.startsWith('decision');
+            backButton.classList.toggle('visible', !isDecisionStep && currentStep > 0);
+            nextButton.classList.toggle('visible', !isDecisionStep && currentStep < steps.length - 1);
+            
+            updateStoryNavigation();
+        }
+        
+        function updatePlayerUI() {
+            resistanceValue.textContent = playerStats.resistance;
+            inventoryCount.textContent = playerStats.inventory.length;
+            characterCount.textContent = playerStats.charactersKnown.length;
+            storyCount.textContent = playerStats.storiesVisited.length;
+        }
+
+        function updateStoryNavigation() {
+            storyTimeline.innerHTML = '';
+            steps.forEach((step, index) => {
+                const stepElement = document.createElement('div');
+                stepElement.className = 'story-step';
+                if (index === currentStep) {
+                    stepElement.classList.add('active');
+                }
+                if (!step.type.startsWith('decision')) {
+                     stepElement.onclick = () => renderStep(index);
+                }
+                storyTimeline.appendChild(stepElement);
+            });
+        }
+
+        function showModal(modalType) {
+            const container = modalType === 'inventory' ? inventoryItemsContainer : modalType === 'characters' ? characterItemsContainer : storyItemsContainer;
+            const data = modalType === 'inventory' ? playerStats.inventory : modalType === 'characters' ? playerStats.charactersKnown : playerStats.storiesVisited;
+            
+            container.innerHTML = '';
+            if (data.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-400">No hay elementos para mostrar.</p>';
+            } else {
+                data.forEach(item => {
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'list-item';
+                    itemElement.innerHTML = `
+                        <p class="font-bold">${item.name || item.title}</p>
+                        <p class="text-sm text-gray-400">${item.description}</p>
+                    `;
+                    container.appendChild(itemElement);
+                });
+            }
+            
+            if (modalType === 'inventory') inventoryModal.style.display = 'flex';
+            else if (modalType === 'characters') charactersModal.style.display = 'flex';
+            else if (modalType === 'stories') storiesModal.style.display = 'flex';
+        }
+
+        function closeModal(modalType) {
+            if (modalType === 'inventory') inventoryModal.style.display = 'none';
+            else if (modalType === 'characters') charactersModal.style.display = 'none';
+            else if (modalType === 'stories') storiesModal.style.display = 'none';
+        }
+        
+        backButton.onclick = () => {
+            if (currentStep > 0) renderStep(currentStep - 1);
+        };
+
+        nextButton.onclick = () => {
+            if (currentStep < steps.length - 1) renderStep(currentStep + 1);
+        };
+
+        window.addEventListener('mousemove', (event) => {
+            const margin = 100;
+            const mouseAtBottom = event.clientY > window.innerHeight - margin;
+            const isDecisionStep = steps[currentStep].type.startsWith('decision');
+            const mouseAtLeft = event.clientX < margin && currentStep > 0 && !isDecisionStep;
+            const mouseAtRight = event.clientX > window.innerWidth - margin && currentStep < steps.length - 1 && !isDecisionStep;
+
+            if (mouseAtBottom) {
+                bottomBar.classList.add('visible');
+                clearTimeout(bottomBarTimeout);
+            } else {
+                clearTimeout(bottomBarTimeout);
+                bottomBarTimeout = setTimeout(() => {
+                    bottomBar.classList.remove('visible');
+                }, 1000);
+            }
+
+            backButton.classList.toggle('visible', mouseAtLeft);
+            nextButton.classList.toggle('visible', mouseAtRight);
+        });
+        
+        function initThreeJS() {
+            const container = document.getElementById('threejsContainer');
+            if (!container) return;
+            
+            const oldCanvas = container.querySelector('canvas');
+            if(oldCanvas) oldCanvas.remove();
+
+            threejsScene = new THREE.Scene();
+            threejsCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            threejsCamera.position.z = 5;
+
+            threejsRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            threejsRenderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(threejsRenderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            threejsScene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            directionalLight.position.set(0, 1, 1);
+            threejsScene.add(directionalLight);
+
+            const geometry = new THREE.TorusKnotGeometry(1, 0.4, 100, 16);
+            const material = new THREE.MeshNormalMaterial();
+            threejsMesh = new THREE.Mesh(geometry, material);
+            threejsScene.add(threejsMesh);
+
+            function animate() {
+                requestAnimationFrame(animate);
+                if (threejsMesh) {
+                    threejsMesh.rotation.x += 0.005;
+                    threejsMesh.rotation.y += 0.005;
+                }
+                if (threejsRenderer && threejsScene && threejsCamera) {
+                    threejsRenderer.render(threejsScene, threejsCamera);
+                }
+            }
+            animate();
+
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+            
+            container.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            container.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            container.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+                if (threejsMesh) {
+                    threejsMesh.rotation.y += deltaX * 0.01;
+                    threejsMesh.rotation.x += deltaY * 0.01;
+                }
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            window.addEventListener('resize', onWindowResize, false);
+            function onWindowResize() {
+                if(threejsCamera && threejsRenderer && container) {
+                    threejsCamera.aspect = window.innerWidth / window.innerHeight;
+                    threejsCamera.updateProjectionMatrix();
+                    threejsRenderer.setSize(window.innerWidth, window.innerHeight);
+                }
+            }
+        }
+        
+        function initAudioVisualizer() {
+            // Se inicializa el AudioContext aquí para evitar un error si el usuario no ha interactuado con la página
+            if (!audioContext) {
+                audioContext = new AudioContext();
+            }
+            
+            // Usa una URL de dominio público que permite CORS
+            const audioUrl = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/123941/Yodel_Sound_Effect.mp3';
+
+            const canvas = document.getElementById('audioVisualizerCanvas');
+            const audioControl = document.getElementById('audioControl');
+            const audioStatus = document.getElementById('audioStatus');
+            const ctx = canvas.getContext('2d');
+
+            const loadAudio = async () => {
+                audioControl.textContent = 'Cargando Audio...';
+                audioControl.disabled = true;
+                audioStatus.textContent = 'Por favor, espera...';
+                
+                try {
+                    const response = await fetch(audioUrl);
+                    if (!response.ok) {
+                        throw new Error(`Error al cargar el archivo de audio: ${response.status}`);
+                    }
+                    const arrayBuffer = await response.arrayBuffer();
+                    audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                    
+                    audioControl.textContent = 'Reproducir';
+                    audioStatus.textContent = 'Audio listo.';
+                    audioControl.disabled = false;
+                    
+                    analyser = audioContext.createAnalyser();
+                    analyser.fftSize = 256;
+                    const bufferLength = analyser.frequencyBinCount;
+                    dataArray = new Uint8Array(bufferLength);
+                } catch (error) {
+                    console.error("Error al cargar o decodificar el audio:", error);
+                    audioStatus.textContent = 'Error: No se pudo cargar el audio.';
+                    audioControl.textContent = 'Error';
+                    audioControl.disabled = true;
+                }
+            };
+
+            const playAudio = () => {
+                if (!audioBuffer) return;
+                
+                sourceNode = audioContext.createBufferSource();
+                sourceNode.buffer = audioBuffer;
+                
+                sourceNode.connect(analyser);
+                analyser.connect(audioContext.destination);
+
+                sourceNode.onended = () => {
+                    isPlaying = false;
+                    isPaused = false;
+                    pauseTime = 0;
+                    audioControl.textContent = 'Reproducir';
+                    audioStatus.textContent = 'La reproducción ha terminado.';
+                    cancelAnimationFrame(audioDrawLoop);
+                };
+
+                const offset = isPaused ? pauseTime : 0;
+                sourceNode.start(0, offset);
+                
+                startTime = audioContext.currentTime - offset;
+
+                audioControl.textContent = 'Pausar';
+                audioStatus.textContent = 'Reproduciendo...';
+                isPlaying = true;
+                isPaused = false;
+
+                drawVisualizer();
+            };
+
+            const pauseAudio = () => {
+                if (!isPlaying) return;
+                
+                sourceNode.stop();
+                pauseTime = audioContext.currentTime - startTime;
+
+                audioControl.textContent = 'Reanudar';
+                audioStatus.textContent = 'Pausado.';
+                isPlaying = false;
+                isPaused = true;
+                cancelAnimationFrame(audioDrawLoop);
+            };
+
+            const drawVisualizer = () => {
+                const canvas = document.getElementById('audioVisualizerCanvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                function draw() {
+                    audioDrawLoop = requestAnimationFrame(draw);
+                    analyser.getByteFrequencyData(dataArray);
+                    
+                    ctx.fillStyle = 'rgba(26, 32, 44, 1)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    const barWidth = (canvas.width / bufferLength);
+                    let x = 0;
+                    for (let i = 0; i < bufferLength; i++) {
+                        const barHeight = dataArray[i] * 2.5;
+                        const hue = i * 360 / bufferLength;
+                        
+                        ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+                        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                        x += barWidth;
+                    }
+                }
+                draw();
+            };
+
+            audioControl.addEventListener('click', () => {
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+
+                if (isPlaying) {
+                    pauseAudio();
+                } else {
+                    playAudio();
+                }
+            });
+            
+            // Carga el audio al inicializar
+            loadAudio();
+        }
+
+        window.onload = function() {
+            updatePlayerUI();
+            renderStep(currentStep);
+        };
+    </script>
+</body>
+</html>

@@ -134,6 +134,8 @@ const AdminRecursosMultimedia: React.FC<AdminRecursosMultimediaProps> = () => {
                   <option value="video">Video</option>
                   <option value="transcripcion">Transcripción</option>
                   <option value="subtitulo">Subtítulo</option>
+                  <option value="3d_model">3d_model</option>
+                  <option value="interactive">interactive</option>
                 </select>
               </div>
               <div className="form-group">

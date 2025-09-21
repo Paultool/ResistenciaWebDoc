@@ -100,23 +100,28 @@ export interface FlujoNarrativo {
 
 // --- Operaciones CRUD para HISTORIAS ---
 
+// En el archivo supabaseClient.ts
 export const obtenerHistorias = async (): Promise<Historia[]> => {
   try {
     const { data: historiasRaw, error } = await supabase
       .from('historia')
-      .select('*')
+      .select('*, id_ubicacion(coordenadas)') // <- ¡Cambio clave aquí!
       .order('orden', { ascending: true })
     
     if (error) throw error
     
+    // Mapeamos los datos para que tengan la estructura que necesita la aplicación
     const historias: Historia[] = (historiasRaw || []).map((h: any) => ({
       ...h,
       id: h.id_historia,
       descripcion: h.narrativa,
-      fecha_creacion: '2024-01-01',
+      fecha_creacion: '2024-01-01', // Esto podría ser dinámico si tienes una columna de fecha
       nivel_acceso_requerido: h.orden <= 2 ? 1 : 2,
       es_historia_principal: h.orden <= 2,
-      metadata: { estado: h.estado, ubicacion_id: h.id_ubicacion }
+      // La propiedad id_ubicacion ahora es un objeto con las coordenadas,
+      // que es lo que el componente MapaView necesita.
+      id_ubicacion: h.id_ubicacion, 
+      metadata: { estado: h.estado }
     }))
     
     return historias
@@ -126,37 +131,113 @@ export const obtenerHistorias = async (): Promise<Historia[]> => {
   }
 }
 
-export const obtenerHistoriaDetalle = async (id: number): Promise<any> => {
+// En tu archivo supabaseClient.ts
+export const obtenerFlujoNarrativoDeHistoria = async (idHistoria: number): Promise<any[]> => {
   try {
-    const { data: historiaRaw, error } = await supabase
-      .from('historia')
-      .select('*')
-      .eq('id_historia', id)
-      .single()
-    
-    if (error) throw error
-    
-    const personajes = await obtenerPersonajes()
-    const ubicacion = await obtenerUbicacionPorId(historiaRaw.id_ubicacion)
-    
-    const historia = {
-      ...historiaRaw,
-      id: historiaRaw.id_historia,
-      descripcion: historiaRaw.narrativa,
-      fecha_creacion: '2024-01-01',
-      nivel_acceso_requerido: historiaRaw.orden <= 2 ? 1 : 2,
-      es_historia_principal: historiaRaw.orden <= 2,
-      metadata: { estado: historiaRaw.estado, ubicacion_id: historiaRaw.id_ubicacion },
-      personaje: personajes.slice(0, 2),
-      recursomultimedia: [],
-      ubicacion: ubicacion ? [ubicacion] : []
+    const { data, error } = await supabase
+      .from('flujo_narrativo')
+      .select('id_flujo, contenido, id_personaje, recursomultimedia_id')
+      .eq('id_historia', idHistoria)
+      .order('orden', { ascending: true });
+
+    if (error) {
+      console.error('Error obteniendo el flujo narrativo:', error.message);
+      throw error;
     }
-    
-    return historia
+    return data;
   } catch (error: any) {
-    console.error('Error obteniendo historia detalle:', error.message)
-    throw error
+    console.error('❌ Error en la función obtenerFlujoNarrativoDeHistoria:', error.message);
+    throw error;
   }
+};
+
+//
+// --- FUNCIONES PARA OBTENER DATOS RELACIONADOS ---
+//
+
+// Esta función obtiene todos los personajes únicos de una historia buscando en la tabla flujo_narrativo.
+export const obtenerPersonajesPorHistoriaId = async (historiaId: number) => {
+  try {
+    // Paso 1: Replicar el `SELECT DISTINCT id_personaje` de tu SQL.
+    const { data: flujoData, error: flujoError } = await supabase
+      .from('flujo_narrativo')
+      .select('id_personaje')
+      .eq('id_historia', historiaId)
+      .not('id_personaje', 'is', null);
+
+      console.log(`✅ Historia con ID ${historiaId} personajes.`)
+
+
+    if (flujoError) {
+      console.error('Error al obtener IDs de personajes del flujo:', flujoError);
+      throw flujoError;
+    }
+
+    // Extraer los IDs únicos en un array para el siguiente paso.
+    const personajeIds = Array.from(new Set(flujoData.map(paso => paso.id_personaje)));
+    console.log(`✅ Numero de Personajes   ${personajeIds} `)
+
+    if (personajeIds.length === 0) {
+      return [];
+    }
+
+    // Paso 2: Replicar el `SELECT * WHERE id_personaje IN (...)` de tu SQL.
+    const { data: personajesData, error: personajesError } = await supabase
+      .from('personaje')
+      .select('*')
+      .in('id_personaje', personajeIds as number[]); // Usamos .in() con el array de IDs.
+
+          console.log(`✅ Personaje data   ${personajesData} `)
+
+    if (personajesError) {
+      console.error('Error al obtener detalles de personajes:', personajesError);
+      throw personajesError;
+    }
+
+     
+
+    return personajesData;
+  } catch (err) {
+    console.error('Error en obtenerPersonajesPorHistoriaId:', err);
+    return [];
+  }
+};
+
+
+// Función para obtener recursos multimedia por una lista de IDs
+export const obtenerMultimediaPorIds = async (multimediaIds: number[]) => {
+  if (multimediaIds.length === 0) {
+    return [];
+  }
+  try {
+    const { data, error } = await supabase
+      .from('recursomultimedia')
+      .select('*')
+      .in('id_recurso', multimediaIds);
+
+    if (error) {
+      console.error('Error al obtener recursos multimedia:', error);
+      throw error;
+    }
+    return data;
+  } catch (err) {
+    console.error('Error en obtenerMultimediaPorIds:', err);
+    return [];
+  }
+};
+
+export const obtenerHistoriaDetalle = async (id: number): Promise<any> => {
+  const { data, error } = await supabase
+    .from('historia')
+    .select(`
+      *,
+      id_ubicacion ( nombre, coordenadas )
+    `)
+    .eq('id_historia', id)
+    .single();
+
+  if (error) throw error;
+  return data;
 }
 
 export const crearHistoria = async (historiaData: Partial<Historia>): Promise<Historia> => {
@@ -635,3 +716,584 @@ export const revokeAdmin = async (userEmail: string) => {
     throw err;
   }
 };
+
+export const fetchDashboardStats = async () => {
+  try {
+    // .rpc() es el método para llamar a funciones de la base de datos
+    const { data, error } = await supabase.rpc('get_dashboard_stats');
+
+    if (error) {
+      console.error("Error al llamar a la función get_dashboard_stats:", error);
+      throw error;
+    }
+
+    // La función RPC devuelve un array con un único objeto que contiene las estadísticas.
+    // Si no hay datos (algo muy raro), devolvemos un objeto con ceros para evitar errores.
+    return data[0] || {
+        totalUsuarios: 0,
+        totalHistorias: 0,
+        totalPersonajes: 0,
+        totalUbicaciones: 0,
+        usuariosActivos: 0,
+        sesionesHoy: 0,
+    };
+
+  } catch (error) {
+    console.error("Fallo en la obtención de estadísticas del dashboard:", error);
+    // Devolvemos un objeto con ceros como fallback en caso de un error catastrófico.
+    return {
+        totalUsuarios: 0,
+        totalHistorias: 0,
+        totalPersonajes: 0,
+        totalUbicaciones: 0,
+        sesionesHoy: 0,
+        usuariosActivos: 0,
+    };
+  }
+};
+
+
+// --- Nuevas funciones para Recompensas y Eventos de Juego ---
+
+// Tipos para el sistema de juego
+export interface PlayerStats {
+  id: string;
+  user_id: string;
+  nivel: number;
+  xp_total: number;
+  historias_completadas: number;
+  personajes_conocidos: string[];
+  ubicaciones_visitadas: string[];
+  logros_desbloqueados: string[];
+  inventario: InventoryItem[];
+  fecha_ultimo_acceso: string;
+  racha_dias_consecutivos: number;
+}
+
+export interface InventoryItem {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  tipo: 'documento' | 'foto' | 'contacto' | 'evidencia' | 'memoria';
+  rareza: 'común' | 'rara' | 'épica' | 'legendaria';
+  fecha_obtencion: string;
+  historia_origen: string;
+}
+
+export interface GameLogro {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  tipo: 'progreso' | 'exploración' | 'social' | 'secreto';
+  requisitos: Record<string, any>;
+  recompensa_xp: number;
+  icono: string;
+}
+
+export interface GameEvent {
+  id: string;
+  tipo: 'historia_completada' | 'personaje_conocido' | 'ubicacion_visitada' | 'logro_desbloqueado' | 'recompensa_otorgada' | 'interaccion_registrada';
+  descripcion: string;
+  xp_ganado: number;
+  fecha: string;
+  detalles?: Record<string, any>;
+}
+
+class GameService {
+  private static instance: GameService;
+  private playerStats: PlayerStats | null = null;
+  private logros: GameLogro[] = [];
+
+  private constructor() {}
+
+  static getInstance(): GameService {
+    if (!GameService.instance) {
+      GameService.instance = new GameService();
+    }
+    return GameService.instance;
+  }
+
+  /**
+   * Inicializa el perfil de juego para un usuario
+   */
+  async initializePlayerProfile(userId: string): Promise<PlayerStats> {
+    try {
+      console.log(`⏳ Iniciando perfil para el usuario ${userId}...`);
+      const { data: existingProfile, error: fetchError } = await supabase
+        .from('perfiles_jugador')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (existingProfile && !fetchError) {
+        this.playerStats = {
+          ...existingProfile,
+          personajes_conocidos: existingProfile.personajes_conocidos || [],
+          ubicaciones_visitadas: existingProfile.ubicaciones_visitadas || [],
+          logros_desbloqueados: existingProfile.logros_desbloqueados || [],
+          inventario: existingProfile.inventario || []
+        };
+        console.log(`✅ Perfil existente cargado para ${userId}.`);
+        return this.playerStats;
+      }
+
+      const newProfile: Partial<PlayerStats> = {
+        user_id: userId,
+        nivel: 1,
+        xp_total: 0,
+        historias_completadas: 0,
+        personajes_conocidos: [],
+        ubicaciones_visitadas: [],
+        logros_desbloqueados: [],
+        inventario: [],
+        fecha_ultimo_acceso: new Date().toISOString(),
+        racha_dias_consecutivos: 1
+      };
+
+      const { data: createdProfile, error: createError } = await supabase
+        .from('perfiles_jugador')
+        .insert(newProfile)
+        .select()
+        .single();
+
+      if (createError) {
+        throw new Error(`Error creando perfil: ${createError.message}`);
+      }
+
+      this.playerStats = createdProfile as PlayerStats;
+      console.log(`🎉 Nuevo perfil creado para ${userId}.`);
+      return this.playerStats;
+    } catch (error: any) {
+      console.error('❌ Error inicializando perfil de jugador:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtiene las estadísticas del jugador
+   */
+  async getPlayerStats(userId: string): Promise<PlayerStats | null> {
+    try {
+      if (this.playerStats && this.playerStats.user_id === userId) {
+        console.log('📈 Devolviendo estadísticas desde el caché.');
+        return this.playerStats;
+      }
+
+      const { data: profile, error } = await supabase
+        .from('perfiles_jugador')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error || !profile) {
+        console.log('⚠️ Perfil no encontrado. Iniciando uno nuevo...');
+        return await this.initializePlayerProfile(userId);
+      }
+
+      this.playerStats = {
+        ...profile,
+        personajes_conocidos: profile.personajes_conocidos || [],
+        ubicaciones_visitadas: profile.ubicaciones_visitadas || [],
+        logros_desbloqueados: profile.logros_desbloqueados || [],
+        inventario: profile.inventario || []
+      };
+      console.log('✅ Estadísticas obtenidas desde la base de datos.');
+      return this.playerStats;
+    } catch (error: any) {
+      console.error('❌ Error obteniendo estadísticas:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Registra un evento de juego en la base de datos.
+   * @param userId El ID del usuario.
+   * @param eventType El tipo de evento (ej. 'historia_completada').
+   * @param details Detalles adicionales del evento.
+   */
+  async logGameEvent(userId: string, eventType: string, details: any) {
+    try {
+      console.log(`📡 Registrando evento: ${eventType} para el usuario ${userId}`, details);
+      const { data, error } = await supabase
+        .from('eventos_juego')
+        .insert({ user_id: userId, tipo: eventType, descripcion: details });
+      if (error) throw error;
+      console.log('✅ Evento de juego registrado con éxito.');
+      return data;
+    } catch (err: any) {
+      console.error('❌ Error al registrar evento de juego:', err);
+      throw err;
+    }
+  }
+
+  /**
+   * Otorga una recompensa a un jugador, actualizando su perfil.
+   * @param userId El ID del usuario.
+   * @param rewardId El ID de la recompensa.
+   */
+  async grantReward(userId: string, recompensaId: number) {
+    try {
+      console.log(`🎁 Otorgando recompensa ${recompensaId} al usuario ${userId}`);
+      const { data, error } = await supabase.rpc('otorgar_recompensa', {
+        p_jugador_id: userId,
+        p_recompensa_id: recompensaId,
+      });
+      if (error) throw error;
+      console.log('✅ Recompensa otorgada con éxito.');
+      return data;
+    } catch (err: any) {
+      console.error('❌ Error al otorgar recompensa:', err);
+      throw err;
+    }
+  }
+  
+  /**
+   * Registra una interacción del jugador con un paso narrativo.
+   * @param userId El ID del usuario.
+   * @param pasoId El ID del paso narrativo.
+   * @param interactionType El tipo de interacción (ej. 'avanzar', 'opcion_seleccionada').
+   */
+  async logInteraction(userId: string, pasoId: number, interactionType: string) {
+    try {
+      console.log(`✍️ Registrando interacción '${interactionType}' para el paso ${pasoId} del usuario ${userId}`);
+      const { data, error } = await supabase
+        .from('interacciones_jugador')
+        .insert({ id_jugador: userId, id_flujo_narrativo: pasoId, tipo_interaccion: interactionType });
+      if (error) throw error;
+      console.log('✅ Interacción registrada con éxito.');
+      return data;
+    } catch (err: any) {
+      console.error('❌ Error al registrar interacción:', err);
+      throw err;
+    }
+  }
+
+  /**
+   * Calcula el nivel basado en XP
+   */
+  calculateLevel(xp: number): number {
+    return Math.floor(Math.sqrt(xp / 100)) + 1;
+  }
+
+  /**
+   * Calcula XP requerido para el siguiente nivel
+   */
+  getXPForNextLevel(currentLevel: number): number {
+    return Math.pow(currentLevel, 2) * 100;
+  }
+
+  /**
+   * Otorga XP al jugador por completar una historia
+   */
+  async completeStory(userId: string, historiaId: string, esHistoriaPrincipal: boolean = false): Promise<GameEvent> {
+    try {
+      const stats = await this.getPlayerStats(userId);
+      if (!stats) throw new Error('No se pudo obtener el perfil del jugador');
+
+      const xpGanado = esHistoriaPrincipal ? 150 : 75;
+      const nuevoXP = stats.xp_total + xpGanado;
+      const nuevoNivel = this.calculateLevel(nuevoXP);
+      const historiasCompletadas = stats.historias_completadas + 1;
+
+      const { error: updateError } = await supabase
+        .from('perfiles_jugador')
+        .update({
+          xp_total: nuevoXP,
+          nivel: nuevoNivel,
+          historias_completadas: historiasCompletadas,
+          fecha_ultimo_acceso: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      if (updateError) throw updateError;
+
+      const gameEvent: GameEvent = {
+        id: `${Date.now()}-${Math.random()}`,
+        tipo: 'historia_completada',
+        descripcion: `¡Historia completada! ${esHistoriaPrincipal ? 'Historia Principal' : 'Historia Secundaria'}`,
+        xp_ganado: xpGanado,
+        fecha: new Date().toISOString()
+      };
+
+      if (this.playerStats) {
+        this.playerStats.xp_total = nuevoXP;
+        this.playerStats.nivel = nuevoNivel;
+        this.playerStats.historias_completadas = historiasCompletadas;
+      }
+
+      await this.checkAndUnlockAchievements(userId, stats);
+
+      return gameEvent;
+    } catch (error: any) {
+      console.error('Error completando historia:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Registra que un jugador conoció un personaje
+   */
+  async meetCharacter(userId: string, personajeId: string): Promise<GameEvent | null> {
+    try {
+      const stats = await this.getPlayerStats(userId);
+      if (!stats) throw new Error('No se pudo obtener el perfil del jugador');
+
+      if (stats.personajes_conocidos.includes(personajeId)) {
+        return null;
+      }
+
+      const xpGanado = 25;
+      const nuevoXP = stats.xp_total + xpGanado;
+      const nuevoNivel = this.calculateLevel(nuevoXP);
+      const nuevosPersonajes = [...stats.personajes_conocidos, personajeId];
+
+      const { error: updateError } = await supabase
+        .from('perfiles_jugador')
+        .update({
+          xp_total: nuevoXP,
+          nivel: nuevoNivel,
+          personajes_conocidos: nuevosPersonajes
+        })
+        .eq('user_id', userId);
+
+      if (updateError) throw updateError;
+
+      const gameEvent: GameEvent = {
+        id: `${Date.now()}-${Math.random()}`,
+        tipo: 'personaje_conocido',
+        descripcion: '¡Has conocido a un nuevo personaje!',
+        xp_ganado: xpGanado,
+        fecha: new Date().toISOString()
+      };
+
+      if (this.playerStats) {
+        this.playerStats.xp_total = nuevoXP;
+        this.playerStats.nivel = nuevoNivel;
+        this.playerStats.personajes_conocidos = nuevosPersonajes;
+      }
+
+      return gameEvent;
+    } catch (error: any) {
+      console.error('Error registrando personaje conocido:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Registra que un jugador visitó una ubicación
+   */
+  async visitLocation(userId: string, ubicacionId: string): Promise<GameEvent | null> {
+    try {
+      const stats = await this.getPlayerStats(userId);
+      if (!stats) throw new Error('No se pudo obtener el perfil del jugador');
+
+      if (stats.ubicaciones_visitadas.includes(ubicacionId)) {
+        return null;
+      }
+
+      const xpGanado = 50;
+      const nuevoXP = stats.xp_total + xpGanado;
+      const nuevoNivel = this.calculateLevel(nuevoXP);
+      const nuevasUbicaciones = [...stats.ubicaciones_visitadas, ubicacionId];
+
+      const { error: updateError } = await supabase
+        .from('perfiles_jugador')
+        .update({
+          xp_total: nuevoXP,
+          nivel: nuevoNivel,
+          ubicaciones_visitadas: nuevasUbicaciones
+        })
+        .eq('user_id', userId);
+
+      if (updateError) throw updateError;
+
+      const gameEvent: GameEvent = {
+        id: `${Date.now()}-${Math.random()}`,
+        tipo: 'ubicacion_visitada',
+        descripcion: '¡Has explorado una nueva ubicación!',
+        xp_ganado: xpGanado,
+        fecha: new Date().toISOString()
+      };
+
+      if (this.playerStats) {
+        this.playerStats.xp_total = nuevoXP;
+        this.playerStats.nivel = nuevoNivel;
+        this.playerStats.ubicaciones_visitadas = nuevasUbicaciones;
+      }
+
+      return gameEvent;
+    } catch (error: any) {
+      console.error('Error registrando ubicación visitada:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Añade un objeto al inventario
+   */
+  async addToInventory(userId: string, item: Omit<InventoryItem, 'fecha_obtencion'>): Promise<void> {
+    try {
+      const stats = await this.getPlayerStats(userId);
+      if (!stats) throw new Error('No se pudo obtener el perfil del jugador');
+
+      const newItem: InventoryItem = {
+        ...item,
+        fecha_obtencion: new Date().toISOString()
+      };
+
+      const nuevoInventario = [...stats.inventario, newItem];
+
+      const { error: updateError } = await supabase
+        .from('perfiles_jugador')
+        .update({
+          inventario: nuevoInventario
+        })
+        .eq('user_id', userId);
+
+      if (updateError) throw updateError;
+
+      if (this.playerStats) {
+        this.playerStats.inventario = nuevoInventario;
+      }
+    } catch (error: any) {
+      console.error('Error añadiendo objeto al inventario:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Verifica y desbloquea logros
+   */
+  async checkAndUnlockAchievements(userId: string, currentStats: PlayerStats): Promise<string[]> {
+    const newAchievements: string[] = [];
+
+    if (currentStats.historias_completadas >= 1 && !currentStats.logros_desbloqueados.includes('primera_historia')) {
+      newAchievements.push('primera_historia');
+    }
+    if (currentStats.historias_completadas >= 5 && !currentStats.logros_desbloqueados.includes('explorador_novato')) {
+      newAchievements.push('explorador_novato');
+    }
+    if (currentStats.historias_completadas >= 10 && !currentStats.logros_desbloqueados.includes('narrador_experto')) {
+      newAchievements.push('narrador_experto');
+    }
+
+    if (currentStats.nivel >= 5 && !currentStats.logros_desbloqueados.includes('resistente_veterano')) {
+      newAchievements.push('resistente_veterano');
+    }
+
+    if (currentStats.personajes_conocidos.length >= 5 && !currentStats.logros_desbloqueados.includes('socialite_urbano')) {
+      newAchievements.push('socialite_urbano');
+    }
+
+    if (currentStats.ubicaciones_visitadas.length >= 10 && !currentStats.logros_desbloqueados.includes('explorador_urbano')) {
+      newAchievements.push('explorador_urbano');
+    }
+
+    if (newAchievements.length > 0) {
+      const logrosActualizados = [...currentStats.logros_desbloqueados, ...newAchievements];
+      
+      const { error: updateError } = await supabase
+        .from('perfiles_jugador')
+        .update({
+          logros_desbloqueados: logrosActualizados
+        })
+        .eq('user_id', userId);
+
+      if (!updateError && this.playerStats) {
+        this.playerStats.logros_desbloqueados = logrosActualizados;
+      }
+    }
+
+    return newAchievements;
+  }
+
+  /**
+   * Actualiza la racha de días consecutivos
+   */
+  async updateDailyStreak(userId: string): Promise<void> {
+    try {
+      const stats = await this.getPlayerStats(userId);
+      if (!stats) return;
+
+      const hoy = new Date();
+      const ultimoAcceso = new Date(stats.fecha_ultimo_acceso);
+      const diferenciaDias = Math.floor((hoy.getTime() - ultimoAcceso.getTime()) / (1000 * 60 * 60 * 24));
+
+      let nuevaRacha = stats.racha_dias_consecutivos;
+
+      if (diferenciaDias === 1) {
+        nuevaRacha += 1;
+      } else if (diferenciaDias > 1) {
+        nuevaRacha = 1;
+      }
+
+      if (diferenciaDias >= 1) {
+        const { error: updateError } = await supabase
+          .from('perfiles_jugador')
+          .update({
+            fecha_ultimo_acceso: hoy.toISOString(),
+            racha_dias_consecutivos: nuevaRacha
+          })
+          .eq('user_id', userId);
+
+        if (!updateError && this.playerStats) {
+          this.playerStats.fecha_ultimo_acceso = hoy.toISOString();
+          this.playerStats.racha_dias_consecutivos = nuevaRacha;
+        }
+      }
+    } catch (error: any) {
+      console.error('Error actualizando racha diaria:', error);
+    }
+  }
+
+  /**
+   * Obtiene estadísticas resumidas para el dashboard
+   */
+  async getDashboardStats(userId: string): Promise<{
+    nivel: number
+    xpTotal: number
+    xpParaSiguienteNivel: number
+    historiasCompletadas: number
+    personajesConocidos: number
+    ubicacionesVisitadas: number
+    logrosDesbloqueados: number
+    rachaDias: number
+    inventarioItems: number
+  } | null> {
+    try {
+      const stats = await this.getPlayerStats(userId);
+      if (!stats) return null;
+
+      await this.updateDailyStreak(userId);
+
+      const xpSiguienteNivel = this.getXPForNextLevel(stats.nivel);
+      const xpParaSiguienteNivel = Math.max(0, xpSiguienteNivel - stats.xp_total);
+
+      return {
+        nivel: stats.nivel,
+        xpTotal: stats.xp_total,
+        xpParaSiguienteNivel,
+        historiasCompletadas: stats.historias_completadas,
+        personajesConocidos: stats.personajes_conocidos.length,
+        ubicacionesVisitadas: stats.ubicaciones_visitadas.length,
+        logrosDesbloqueados: stats.logros_desbloqueados.length,
+        rachaDias: stats.racha_dias_consecutivos,
+        inventarioItems: stats.inventario.length
+      };
+    } catch (error: any) {
+      console.error('Error obteniendo estadísticas del dashboard:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Resetea el cache (útil para testing o cuando el usuario cambia)
+   */
+  clearCache(): void {
+    this.playerStats = null;
+  }
+}
+
+// Exportar instancia singleton
+export const gameService = GameService.getInstance();
+export default gameService;

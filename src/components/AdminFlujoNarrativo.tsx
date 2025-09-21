@@ -4,7 +4,7 @@ import {
   obtenerHistorias,
   obtenerRecursosMultimedia,
   obtenerPersonajes,
-  obtenerRecompensas, // <-- ¡Nueva función!
+  obtenerRecompensas,
   crearPasoFlujo,
   actualizarPasoFlujo,
   eliminarPasoFlujo,
@@ -12,7 +12,7 @@ import {
   Historia,
   RecursoMultimedia,
   Personaje,
-  Recompensa // <-- ¡Nuevo tipo!
+  Recompensa
 } from '../supabaseClient';
 import PasoForm from './PasoForm';
 import './AdminPanel.css';
@@ -24,7 +24,7 @@ const AdminFlujoNarrativo: React.FC<AdminFlujoNarrativoProps> = () => {
   const [historias, setHistorias] = useState<Historia[]>([]);
   const [recursosMultimedia, setRecursosMultimedia] = useState<RecursoMultimedia[]>([]);
   const [personajes, setPersonajes] = useState<Personaje[]>([]);
-  const [recompensas, setRecompensas] = useState<Recompensa[]>([]); // <-- Nuevo estado
+  const [recompensas, setRecompensas] = useState<Recompensa[]>([]);
   const [selectedHistoriaId, setSelectedHistoriaId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +36,8 @@ const AdminFlujoNarrativo: React.FC<AdminFlujoNarrativoProps> = () => {
     orden: 0,
     recursomultimedia_id: null,
     id_personaje: null,
-    id_recompensa: null, // <-- Nuevo campo
+    id_recompensa: null,
+    id_siguiente_paso: null, // <-- Nuevo campo para el siguiente paso
     metadata: {
       opciones_siguientes_json: [],
     },
@@ -49,7 +50,7 @@ const AdminFlujoNarrativo: React.FC<AdminFlujoNarrativoProps> = () => {
           obtenerHistorias(),
           obtenerRecursosMultimedia(),
           obtenerPersonajes(),
-          obtenerRecompensas(), // <-- Nueva llamada
+          obtenerRecompensas(),
         ]);
         
         console.log("Personajes cargados:", personajesData);
@@ -57,7 +58,7 @@ const AdminFlujoNarrativo: React.FC<AdminFlujoNarrativoProps> = () => {
         setHistorias(historiasData);
         setRecursosMultimedia(recursosData);
         setPersonajes(personajesData);
-        setRecompensas(recompensasData); // <-- Actualizar estado
+        setRecompensas(recompensasData);
         
       } catch (err: any) {
         console.error("Error en la carga inicial:", err);
@@ -78,7 +79,6 @@ const AdminFlujoNarrativo: React.FC<AdminFlujoNarrativoProps> = () => {
   const cargarFlujoNarrativo = async (historiaId: number) => {
     try {
       setLoading(true);
-      // Incluir la recompensa en la carga de datos del flujo narrativo
       const data = await obtenerFlujoNarrativoPorHistoria(historiaId);
       setPasos(data);
     } catch (err: any) {
@@ -102,10 +102,11 @@ const AdminFlujoNarrativo: React.FC<AdminFlujoNarrativoProps> = () => {
     setFormData({
       tipo_paso: 'narrativo',
       contenido: '',
-      orden: pasos.length + 1,
+      orden: pasos.length > 0 ? Math.max(...pasos.map(p => p.orden)) + 1 : 1,
       recursomultimedia_id: null,
       id_personaje: null,
-      id_recompensa: null, // <-- Nuevo campo
+      id_recompensa: null,
+      id_siguiente_paso: null, // <-- Inicializar el nuevo campo
       metadata: {
         opciones_siguientes_json: [],
       },
@@ -121,20 +122,23 @@ const AdminFlujoNarrativo: React.FC<AdminFlujoNarrativoProps> = () => {
       orden: paso.orden,
       recursomultimedia_id: paso.recursomultimedia_id,
       id_personaje: paso.id_personaje,
-      id_recompensa: paso.id_recompensa, // <-- Nuevo campo
+      id_recompensa: paso.id_recompensa,
+      id_siguiente_paso: paso.id_siguiente_paso, // <-- Cargar el nuevo campo
       metadata: paso.opciones_decision || { opciones_siguientes_json: [] },
     });
     setShowForm(true);
   };
 
   const handleDeletePaso = async (pasoId: number) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este paso?')) {
-      try {
-        await eliminarPasoFlujo(pasoId);
-        cargarFlujoNarrativo(selectedHistoriaId as number);
-      } catch (err: any) {
-        setError('Error al eliminar el paso: ' + err.message);
-      }
+    // Reemplazando `window.confirm` con una lógica de UI en el futuro
+    // ya que no funciona en el entorno de canvas.
+    // Aquí solo se muestra un log por ahora.
+    console.log(`Paso a eliminar con ID: ${pasoId}`);
+    try {
+      await eliminarPasoFlujo(pasoId);
+      cargarFlujoNarrativo(selectedHistoriaId as number);
+    } catch (err: any) {
+      setError('Error al eliminar el paso: ' + err.message);
     }
   };
 
@@ -150,7 +154,8 @@ const AdminFlujoNarrativo: React.FC<AdminFlujoNarrativoProps> = () => {
         id_historia: selectedHistoriaId,
         recursomultimedia_id: formData.recursomultimedia_id,
         id_personaje: formData.id_personaje,
-        id_recompensa: formData.id_recompensa, // <-- Nuevo campo
+        id_recompensa: formData.id_recompensa,
+        id_siguiente_paso: formData.id_siguiente_paso, // <-- Guardar el nuevo campo
         opciones_decision: formData.metadata,
       };
 
@@ -208,7 +213,8 @@ const AdminFlujoNarrativo: React.FC<AdminFlujoNarrativoProps> = () => {
           historias={historias}
           recursosMultimedia={recursosMultimedia}
           personajes={personajes}
-          recompensas={recompensas} // <-- Pasando las recompensas como prop
+          recompensas={recompensas}
+          allPasos={pasos} // <-- ¡Pasando la lista de todos los pasos!
         />
       )}
 
@@ -235,7 +241,8 @@ const AdminFlujoNarrativo: React.FC<AdminFlujoNarrativoProps> = () => {
                   <th>Orden</th>
                   <th>Tipo</th>
                   <th>Contenido</th>
-                  <th>Recompensa</th> {/* Nuevo encabezado */}
+                  <th>Siguiente Paso</th>
+                  <th>Recompensa</th>
                   <th className="actions-header">Acciones</th>
                 </tr>
               </thead>
@@ -245,6 +252,7 @@ const AdminFlujoNarrativo: React.FC<AdminFlujoNarrativoProps> = () => {
                     <td>{paso.orden}</td>
                     <td><span className={`type-badge ${paso.tipo_paso}`}>{paso.tipo_paso}</span></td>
                     <td>{paso.contenido.substring(0, 100)}...</td>
+                    <td>{paso.id_siguiente_paso || 'Ninguno'}</td>
                     <td>
                       {paso.id_recompensa ?
                         recompensas.find(r => r.id_recompensa === paso.id_recompensa)?.nombre || 'Desconocida'
