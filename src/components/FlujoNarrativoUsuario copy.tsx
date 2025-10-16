@@ -6,7 +6,7 @@ import { gameServiceUser, PlayerStats } from '../services/GameServiceUser';
 // Define las interfaces para tipar los datos
 interface RecursoMultimediaData {
     id_recurso: number;
-    tipo: 'imagen' | 'video' | 'audio' | 'transcripcion' | 'subtitulo' | 'interactive' | '3d_model'| 'app';
+    tipo: 'imagen' | 'video' | 'audio' | 'transcripcion' | 'subtitulo' | 'interactive' | '3d_model';
     archivo: string;
     metadatos: string | null;
 }
@@ -723,8 +723,6 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         const isVideo = recursoActual?.tipo === 'video';
         const isAudio = recursoActual?.tipo === 'audio';
         const is3DModel = recursoActual?.tipo === '3d_model';
-        const isApp = recursoActual?.tipo === 'app';
-
 
         // Oculta el contenido del paso al iniciar la carga o reproducción
         setShowStepContent(false);
@@ -1114,9 +1112,7 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         
         // --- Lógica para Tipo APP (NUEVO) ---
         if (step.tipo_paso === 'app') {
-            const recursoActual = getRecurso(currentStep.recursomultimedia_id);
-            const appUrl = recursoActual?.archivo || '';
-            console.log("APP URL:", appUrl);
+            const appUrl = step.app_url || '';
             return (
                 <div className="fixed inset-0 z-50 bg-black">
                     <button

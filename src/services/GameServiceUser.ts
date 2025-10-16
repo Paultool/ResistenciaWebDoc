@@ -147,8 +147,13 @@ class GameServiceUser {
      * @param recompensaId El ID de la recompensa.
      * @param historiaId El ID de la historia que se está completando.
      */
-    async otorgarRecompensa(userId: string, recompensaId: number, historiaId: number) {
+    async otorgarRecompensa(userId: string, recompensaId: number, historiaId: string) {
         try {
+            console.log('🔵 [otorgarRecompensa] INICIO');
+            console.log('🔵 [otorgarRecompensa] userId:', userId, 'tipo:', typeof userId);
+            console.log('🔵 [otorgarRecompensa] recompensaId:', recompensaId, 'tipo:', typeof recompensaId);
+            console.log('🔵 [otorgarRecompensa] historiaId:', historiaId, 'tipo:', typeof historiaId);
+
             const { data: recompensa, error: recompensaError } = await supabase
                 .from('recompensa')
                 .select('*')
@@ -164,6 +169,9 @@ class GameServiceUser {
                 .single();
 
             if (profileError) throw profileError;
+
+            console.log('🔵 [otorgarRecompensa] historias_visitadas actuales:', currentProfile.historias_visitadas);
+            console.log('🔵 [otorgarRecompensa] historias_visitadas tipo:', typeof currentProfile.historias_visitadas);
 
             const newXp = currentProfile.xp_total + (recompensa.valor || 0);
 
@@ -195,23 +203,30 @@ class GameServiceUser {
                 nuevasHistorias.push(historiaId);
             }
 
+            console.log('🔵 [otorgarRecompensa] nuevasHistorias ANTES de update:', nuevasHistorias);
+            console.log('🔵 [otorgarRecompensa] Cada elemento:', nuevasHistorias.map(h => `${h} (${typeof h})`));
+
+            const updateData = {
+                xp_total: newXp,
+                inventario: nuevoInventario,
+                historias_visitadas: nuevasHistorias
+            };
+            console.log('🔵 [otorgarRecompensa] Datos a enviar a Supabase:', JSON.stringify(updateData, null, 2));
+
             const { data, error } = await supabase
                 .from('perfiles_jugador')
-                .update({
-                    xp_total: newXp,
-                    inventario: nuevoInventario,
-                    historias_visitadas: nuevasHistorias
-                })
+                .update(updateData)
                 .eq('user_id', userId);
 
             if (error) {
-                console.error("Error al otorgar recompensa y actualizar inventario:", error);
+                console.error("🔴 [otorgarRecompensa] Error al otorgar recompensa:", error);
                 return { data: null, error };
             }
 
+            console.log('🟢 [otorgarRecompensa] ÉXITO');
             return { data, error: null };
         } catch (error) {
-            console.error('Error en otorgarRecompensa:', error);
+            console.error('🔴 [otorgarRecompensa] Error en otorgarRecompensa:', error);
             return { data: null, error };
         }
     }
@@ -252,8 +267,17 @@ class GameServiceUser {
      */
     async completeStory(userId: string, historiaId: string, esHistoriaPrincipal: boolean = false): Promise<GameEvent> {
         try {
+        console.log('🟡 [completeStory] INICIO');
+        console.log('🟡 [completeStory] userId:', userId, 'tipo:', typeof userId);
+        console.log('🟡 [completeStory] historiaId:', historiaId, 'tipo:', typeof historiaId);
+        console.log('🟡 [completeStory] esHistoriaPrincipal:', esHistoriaPrincipal);
+
         const stats = await this.getPlayerStats(userId)
         if (!stats) throw new Error('No se pudo obtener el perfil del jugador')
+
+        console.log('🟡 [completeStory] historias_visitadas actuales:', stats.historias_visitadas);
+        console.log('🟡 [completeStory] historias_visitadas tipo:', typeof stats.historias_visitadas);
+        console.log('🟡 [completeStory] historias_visitadas.includes(historiaId):', stats.historias_visitadas.includes(historiaId));
 
         const xpGanado = 25
         const nuevoXP = stats.xp_total + xpGanado
@@ -261,22 +285,34 @@ class GameServiceUser {
         const historiasCompletadas = stats.historias_completadas + 1
         const historiasVisitadas = stats.historias_visitadas.includes(historiaId) ? stats.historias_visitadas : [...stats.historias_visitadas, historiaId]
 
+        console.log('🟡 [completeStory] historiasVisitadas DESPUÉS de lógica:', historiasVisitadas);
+        console.log('🟡 [completeStory] Cada elemento:', historiasVisitadas.map(h => `${h} (${typeof h})`));
+
         console.log(`SCORE ACTUAL :`, stats.xp_total);
 
         console.log(`Historia ${historiaId} completada por ${userId}. XP ganado: ${xpGanado}. Nuevo XP: ${nuevoXP}, Nuevo Nivel: ${nuevoNivel}`)
-        // Actualizar estadísticas
-        const { error: updateError } = await supabase
-            .from('perfiles_jugador')
-            .update({
+        
+        const updateData = {
             xp_total: nuevoXP,
             nivel: nuevoNivel,
             historias_completadas: historiasCompletadas,
             fecha_ultimo_acceso: new Date().toISOString(),
             historias_visitadas: historiasVisitadas
-            })
+        };
+        console.log('🟡 [completeStory] Datos a enviar a Supabase:', JSON.stringify(updateData, null, 2));
+
+        // Actualizar estadísticas
+        const { error: updateError } = await supabase
+            .from('perfiles_jugador')
+            .update(updateData)
             .eq('user_id', userId)
 
-        if (updateError) throw updateError
+        if (updateError) {
+            console.error('🔴 [completeStory] Error en update:', updateError);
+            throw updateError;
+        }
+
+        console.log('🟢 [completeStory] ÉXITO');
 
         // Crear evento de juego
         const gameEvent: GameEvent = {
@@ -299,7 +335,7 @@ class GameServiceUser {
 
         return gameEvent
         } catch (error: any) {
-        console.error('Error completando historia:', error)
+        console.error('🔴 [completeStory] Error completando historia:', error)
         throw error
         }
     }
