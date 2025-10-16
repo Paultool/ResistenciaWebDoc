@@ -20,6 +20,7 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void }> = ({ onNa
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false);  
 
   useEffect(() => {
     cargarDatosBasicos()
@@ -59,6 +60,10 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void }> = ({ onNa
       // Inicializar o cargar perfil del jugador
       await gameService.initializePlayerProfile(user.id)
       console.log('✅ Perfil de jugador inicializado')
+      if (user?.email === 'paultool@gmail.com') {
+          setIsAdmin(true);
+ 
+       }
     } catch (error: any) {
       console.error('Error inicializando perfil de jugador:', error)
     }
@@ -148,6 +153,13 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void }> = ({ onNa
         <h3>🎯 Acciones Rápidas</h3>
         <div className="actions-grid">
           <button 
+            className="action-btn inventory-btn"
+            onClick={() => handleNavigate('cine')}
+          >
+            <span className="action-icon">🎬</span>
+            <span className="action-text">Cine</span>
+          </button>
+          <button 
             className="action-btn stories-btn"
             onClick={() => handleNavigate('historias')}
           >
@@ -175,6 +187,17 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void }> = ({ onNa
             <span className="action-icon">🎒</span>
             <span className="action-text">Mi Inventario</span>
           </button>
+
+           {isAdmin && (
+            <button 
+              className="action-btn inventory-btn"
+              onClick={() => handleNavigate('admin')}
+            >
+              <span className="action-icon">🛠️</span>
+              <span className="action-text"> Admin</span>
+            </button>                      
+          )}
+
         </div>
       </div>
     </div>
