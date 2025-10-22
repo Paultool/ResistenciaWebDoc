@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAdmin } from '../hooks/useAdmin'
 import AdminHistorias from './AdminHistorias'
 import AdminPersonajes from './AdminPersonajes'
@@ -11,6 +11,9 @@ import AdminRecursosMultimedia from './AdminRecursosMultimedia';
 import AdminRecompensas from './AdminRecompensas';
 import FlujoNarrativoDisplay from './FlujoNarrativoDisplay';
 import FlujoNarrativoUsuario from './FlujoNarrativoUsuario';
+// Importamos la función de la API y la interfaz de tipos
+// NOTA: Asegúrate de que AdminDashboardStats en supabaseClient.ts use minúsculas
+import { fetchDashboardStats, AdminDashboardStats } from '../supabaseClient';
 
 
 import './AdminPanel.css'
@@ -19,21 +22,46 @@ interface AdminPanelProps {
   onBack?: () => void
 }
 
-// Actualiza el tipo para incluir todas las vistas
 type AdminView = 'dashboard' | 'historias' | 'personajes' | 'ubicaciones' | 'usuarios' | 'config' | 'analytics' | 'flujo_narrativo' | 'recursosMultimedia' | 'recompensas' | 'flujodisplay' | 'flujousuario';
+
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   const { isAdmin, adminUser, loading } = useAdmin()
   const [currentView, setCurrentView] = useState<AdminView>('dashboard')
   const [selectedHistoriaId, setSelectedHistoriaId] = useState<number | null>(null);
-  const [stats, setStats] = useState({
-    totalUsuarios: 0,
-    totalHistorias: 0,
-    totalPersonajes: 0,
-    totalUbicaciones: 0,
-    usuariosActivos: 0,
-    sesionesHoy: 0
+  
+  // Usamos el tipo corregido con minúsculas para coincidir con el RPC de Supabase
+  const [stats, setStats] = useState<AdminDashboardStats>({
+    totalusuarios: 0,
+    totalhistorias: 0,
+    totalpersonajes: 0,
+    totalubicaciones: 0,
+    usuariosactivos: 0,
+    sesioneshoy: 0
   })
+
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  // --- Hook para cargar las estadísticas ---
+  useEffect(() => {
+    const loadStats = async () => {
+      setStatsLoading(true);
+      try {
+        const dashboardStats = await fetchDashboardStats();
+        console.log('✅ Estadísticas del Dashboard cargadas:', dashboardStats);
+        setStats(dashboardStats);
+      } catch (error) {
+        console.error('❌ Error al cargar las estadísticas del dashboard:', error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    
+    if (!loading && isAdmin) {
+      loadStats();
+    }
+  }, [loading, isAdmin]);
+
 
   if (loading) {
     return (
@@ -46,6 +74,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   }
 
   if (!isAdmin) {
+    // ... (Lógica de no autorizado)
     return (
       <div className="admin-panel">
         <div className="admin-unauthorized">
@@ -68,6 +97,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     setCurrentView('flujo_narrativo');
   };
 
+  // Función para renderizar el contenido de la vista actual
   const renderCurrentView = () => {
     switch (currentView) {
       case 'historias':
@@ -93,6 +123,19 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       case 'analytics':
         return <AdminAnalytics />
       default:
+        // Renderizado del Dashboard (currentView === 'dashboard')
+        if (statsLoading) {
+          return (
+             <div className="admin-dashboard">
+                <div className="dashboard-header">
+                  <h2>📊 Panel de Control</h2>
+                  <p>Cargando estadísticas...</p>
+                </div>
+                <div className="admin-loading-spinner"></div> 
+             </div>
+          )
+        }
+
         return (
           <div className="admin-dashboard">
             <div className="dashboard-header">
@@ -100,11 +143,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
               <p>Bienvenido al sistema de administración de WebDoc La Resistencia</p>
             </div>
 
+            {/* Grid de Estadísticas con acceso en minúsculas */}
             <div className="admin-stats-grid">
               <div className="admin-stat-card users">
                 <div className="stat-icon">👥</div>
                 <div className="stat-content">
-                  <h3>{stats.totalUsuarios}</h3>
+                  <h3>{stats.totalusuarios}</h3>
                   <p>Usuarios Totales</p>
                 </div>
               </div>
@@ -112,7 +156,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
               <div className="admin-stat-card stories">
                 <div className="stat-icon">📚</div>
                 <div className="stat-content">
-                  <h3>{stats.totalHistorias}</h3>
+                  <h3>{stats.totalhistorias}</h3>
                   <p>Historias</p>
                 </div>
               </div>
@@ -120,7 +164,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
               <div className="admin-stat-card characters">
                 <div className="stat-icon">🎭</div>
                 <div className="stat-content">
-                  <h3>{stats.totalPersonajes}</h3>
+                  <h3>{stats.totalpersonajes}</h3>
                   <p>Personajes</p>
                 </div>
               </div>
@@ -128,7 +172,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
               <div className="admin-stat-card locations">
                 <div className="stat-icon">🗺️</div>
                 <div className="stat-content">
-                  <h3>{stats.totalUbicaciones}</h3>
+                  <h3>{stats.totalubicaciones}</h3>
                   <p>Ubicaciones</p>
                 </div>
               </div>
@@ -136,55 +180,21 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
               <div className="admin-stat-card active">
                 <div className="stat-icon">🟢</div>
                 <div className="stat-content">
-                  <h3>{stats.usuariosActivos}</h3>
-                  <p>Usuarios Activos</p>
+                  <h3>{stats.usuariosactivos}</h3>
+                  <p>Usuarios Activos (Últimas 24h)</p>
                 </div>
               </div>
 
               <div className="admin-stat-card sessions">
                 <div className="stat-icon">📈</div>
                 <div className="stat-content">
-                  <h3>{stats.sesionesHoy}</h3>
-                  <p>Sesiones Hoy</p>
+                  <h3>{stats.sesioneshoy}</h3>
+                  <p>Interacciones Hoy</p>
                 </div>
               </div>
             </div>
-
-            <div className="quick-actions">
-              <h3>⚡ Acciones Rápidas</h3>
-              <div className="actions-grid">
-                <button 
-                  className="action-btn create-story"
-                  onClick={() => setCurrentView('historias')}
-                >
-                  📝 Crear Nueva Historia
-                </button>
-                <button 
-                  className="action-btn create-character"
-                  onClick={() => setCurrentView('personajes')}
-                >
-                  🎭 Añadir Personaje
-                </button>
-                <button 
-                  className="action-btn create-location"
-                  onClick={() => setCurrentView('ubicaciones')}
-                >
-                  📍 Nueva Ubicación
-                </button>
-                <button
-                  className="action-btn create-resource"
-                  onClick={() => setCurrentView('recursosMultimedia')}
-                >
-                  🖼️ Añadir Recurso
-                </button>
-                <button 
-                  className="action-btn view-analytics"
-                  onClick={() => setCurrentView('analytics')}
-                >
-                  📊 Ver Analíticas
-                </button>
-              </div>
-            </div>
+            
+            {/* Las acciones rápidas de navegación ya NO van aquí, el menú es fijo */}
 
             <div className="recent-activity">
               <h3>📋 Actividad Reciente</h3>
@@ -206,102 +216,112 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
           </div>
         )
       }
+
+      
   }
 
   return (
     <div className="admin-panel">
+      {/* El header ahora es el contenedor fijo que incluye el menú */}
       <div className="admin-header">
         <div className="admin-nav">
+          {/* Botón de "Volver" solo si NO es el dashboard */}
+          {currentView !== 'dashboard' && (
+            <button 
+              className="btn-back-dashboard" 
+              onClick={() => setCurrentView('dashboard')}
+            >
+              ← Dashboard
+            </button>
+          )}
           <h1>⚙️ Administración</h1>
           <div className="admin-user-info">
             <span className="admin-badge">ADMIN</span>
             <span className="admin-email">{adminUser?.email}</span>
           </div>
         </div>
-      </div>
+        
+        {/* 🚀 EL MENÚ DE NAVEGACIÓN FIJO 🚀 */}
+        <div className="admin-menu-bar">
+          <nav className="admin-top-menu">
+            <button 
+                className={`menu-item ${currentView === 'dashboard' ? 'active' : ''}`}
+                onClick={() => setCurrentView('dashboard')}
+              >
+                📊 Dashboard
+            </button>
+            <button 
+              className={`menu-item ${currentView === 'historias' ? 'active' : ''}`}
+              onClick={() => setCurrentView('historias')}
+            >
+              📚 Historias
+            </button>
+            <button 
+              className={`menu-item ${currentView === 'personajes' ? 'active' : ''}`}
+              onClick={() => setCurrentView('personajes')}
+            >
+              🎭 Personajes
+            </button>
+            <button 
+              className={`menu-item ${currentView === 'ubicaciones' ? 'active' : ''}`}
+              onClick={() => setCurrentView('ubicaciones')}
+            >
+              🗺️ Ubicaciones
+            </button>
+            <button
+              className={`menu-item ${currentView === 'recursosMultimedia' ? 'active' : ''}`}
+              onClick={() => setCurrentView('recursosMultimedia')}
+            >
+              🖼️ Recursos Multimedia
+            </button>
+            <button 
+              className={`menu-item ${currentView === 'recompensas' ? 'active' : ''}`}
+              onClick={() => setCurrentView('recompensas')}
+            >
+              🎁 Recompensas
+            </button>
+            <button 
+              className={`menu-item ${currentView === 'flujo_narrativo' ? 'active' : ''}`}
+              onClick={() => setCurrentView('flujo_narrativo')}
+            >
+              📜 Flujo Narrativo
+            </button>
+            <button 
+              className={`menu-item ${currentView === 'flujodisplay' ? 'active' : ''}`}
+              onClick={() => setCurrentView('flujodisplay')}
+            >
+              👁️ Ver Flujo Narrativo
+            </button>
+            <button 
+              className={`menu-item ${currentView === 'flujousuario' ? 'active' : ''}`}
+              onClick={() => setCurrentView('flujousuario')}
+            >
+              🎬 Ver Flujo Cinemático
+            </button>     
+            <button 
+              className={`menu-item ${currentView === 'usuarios' ? 'active' : ''}`}
+              onClick={() => setCurrentView('usuarios')}
+            >
+              👥 Usuarios
+            </button>
+            <button 
+              className={`menu-item ${currentView === 'analytics' ? 'active' : ''}`}
+              onClick={() => setCurrentView('analytics')}
+            >
+              📈 Analíticas
+            </button>
+            <button 
+              className={`menu-item ${currentView === 'config' ? 'active' : ''}`}
+              onClick={() => setCurrentView('config')}
+            >
+              ⚙️ Configuración
+            </button>
+          </nav>
+        </div>
+      </div> {/* Fin de admin-header */}
 
-      <div className="admin-sidebar">
-        <nav className="admin-menu">
-          <button 
-            className={`menu-item ${currentView === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setCurrentView('dashboard')}
-          >
-            📊 Dashboard
-          </button>
-          <button 
-            className={`menu-item ${currentView === 'historias' ? 'active' : ''}`}
-            onClick={() => setCurrentView('historias')}
-          >
-            📚 Historias
-          </button>
-          <button 
-            className={`menu-item ${currentView === 'personajes' ? 'active' : ''}`}
-            onClick={() => setCurrentView('personajes')}
-          >
-            🎭 Personajes
-          </button>
-          <button 
-            className={`menu-item ${currentView === 'ubicaciones' ? 'active' : ''}`}
-            onClick={() => setCurrentView('ubicaciones')}
-          >
-            🗺️ Ubicaciones
-          </button>
-          
-          <button
-            className={`menu-item ${currentView === 'recursosMultimedia' ? 'active' : ''}`}
-            onClick={() => setCurrentView('recursosMultimedia')}
-          >
-            🖼️ Recursos Multimedia
-          </button>
 
-          <button 
-            className={`menu-item ${currentView === 'recompensas' ? 'active' : ''}`}
-            onClick={() => setCurrentView('recompensas')}
-          >
-            🎁 Recompensas
-          </button>
-                    
-          <button 
-            className={`menu-item ${currentView === 'flujo_narrativo' ? 'active' : ''}`}
-            onClick={() => setCurrentView('flujo_narrativo')}
-          >
-            📜 Flujo Narrativo
-          </button>
-         
-          <button 
-            className={`menu-item ${currentView === 'flujodisplay' ? 'active' : ''}`}
-            onClick={() => setCurrentView('flujodisplay')}
-          >
-            📜 Ver Flujo Narrativo
-          </button>
-          <button 
-            className={`menu-item ${currentView === 'flujousuario' ? 'active' : ''}`}
-            onClick={() => setCurrentView('flujousuario')}
-          >
-            📜 Ver Flujo cinematico
-          </button>     
-
-          <button 
-            className={`menu-item ${currentView === 'usuarios' ? 'active' : ''}`}
-            onClick={() => setCurrentView('usuarios')}
-          >
-            👥 Usuarios
-          </button>
-          <button 
-            className={`menu-item ${currentView === 'analytics' ? 'active' : ''}`}
-            onClick={() => setCurrentView('analytics')}
-          >
-            📈 Analíticas
-          </button>
-          <button 
-            className={`menu-item ${currentView === 'config' ? 'active' : ''}`}
-            onClick={() => setCurrentView('config')}
-          >
-            ⚙️ Configuración
-          </button>
-        </nav>
-      </div>
-
+      {/* El contenido principal del panel */}
       <div className="admin-main">
         {renderCurrentView()}
       </div>

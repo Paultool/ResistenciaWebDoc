@@ -60,9 +60,10 @@
 
 /* Grid de Personajes */
 .personajes-grid {
+  /* 🚨 CORRECCIÓN: Grid responsivo con mínimo de 300px */
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem; /* Ajustado para mejor espaciado */
   margin-bottom: 2rem;
 }
 
@@ -74,6 +75,10 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  /* 🚨 CORRECCIÓN: Usamos flexbox para asegurar que los botones queden al pie */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .personaje-card::before {
@@ -101,7 +106,9 @@
 /* Imagen del Personaje */
 .personaje-image {
   width: 100%;
-  height: 200px;
+  /* 🚨 CORRECCIÓN: Usamos aspect-ratio para altura consistente sin importar la imagen */
+  aspect-ratio: 4/3; 
+  height: auto; 
   margin-bottom: 1rem;
   border-radius: 12px;
   overflow: hidden;
@@ -114,6 +121,7 @@
 .personaje-image img {
   width: 100%;
   height: 100%;
+  /* 🚨 CLAVE: 'object-fit: cover' para que la imagen no se distorsione ni se desborde */
   object-fit: cover;
 }
 
@@ -133,7 +141,9 @@
 
 /* Información del Personaje */
 .personaje-info {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+  /* Nuevo: Permite que esta sección ocupe el espacio disponible y empuje las acciones hacia abajo */
+  flex-grow: 1; 
 }
 
 .personaje-nombre {
@@ -153,7 +163,13 @@
   margin: 0 0 1rem 0;
 }
 
-.personaje-descripcion {
+/* 🚨 NUEVO: Regla para truncar texto */
+.personaje-descripcion.truncate-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* Limita a 3 líneas */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-wrap: break-word;
   color: #cccccc;
   font-size: 0.95rem;
   line-height: 1.6;
@@ -176,6 +192,8 @@
 .personaje-actions {
   display: flex;
   gap: 1rem;
+  /* Nuevo: Asegura que los botones estén pegados al final de la tarjeta */
+  margin-top: auto;
 }
 
 .personaje-actions .btn {
@@ -215,21 +233,21 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85); /* Un poco más oscuro */
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 2rem;
+  padding: 1rem; /* Ajustado para mejor manejo en móviles */
 }
 
 .personaje-modal {
   background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
   border: 2px solid #8B4513;
   border-radius: 20px;
-  max-width: 600px;
+  max-width: 650px; /* Un poco más de espacio para la modal */
   width: 100%;
-  max-height: 80vh;
+  max-height: 90vh; /* Permite más altura en pantallas pequeñas */
   overflow-y: auto;
   position: relative;
 }
@@ -270,6 +288,7 @@
 
 .modal-content {
   padding: 1.5rem;
+  /* Aseguramos una estructura clara con el layout de dos columnas */
   display: grid;
   grid-template-columns: 200px 1fr;
   gap: 2rem;
@@ -399,8 +418,9 @@
     font-size: 2rem;
   }
   
+  /* Ajustamos la cuadrícula para permitir dos columnas si es posible, o una si el espacio es muy reducido */
   .personajes-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
   }
   
   .personajes-stats {
@@ -409,9 +429,11 @@
     text-align: center;
   }
   
+  /* Modal: Pasa a una sola columna */
   .modal-content {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 1.5rem;
+    padding: 1rem;
   }
   
   .modal-image {
@@ -426,7 +448,20 @@
   }
   
   .personaje-modal {
-    margin: 1rem;
-    max-height: 90vh;
+    margin: 0.5rem;
+    max-height: 95vh;
+  }
+  
+  .modal-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .modal-actions {
+    padding: 1rem;
+  }
+  
+  .btn-large {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
   }
 }

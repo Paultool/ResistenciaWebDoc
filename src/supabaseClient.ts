@@ -20,6 +20,18 @@ export const testConnection = async (): Promise<boolean> => {
   }
 }
 
+// ----------------------------------------------------
+// NUEVA INTERFAZ PARA EL DASHBOARD DE ADMIN
+// ----------------------------------------------------
+export interface AdminDashboardStats {
+  totalusuarios: number;    // Antes: totalUsuarios
+  totalhistorias: number;   // Antes: totalHistorias
+  totalpersonajes: number;  // Antes: totalPersonajes
+  totalubicaciones: number; // Antes: totalUbicaciones
+  usuariosactivos: number;  // Antes: usuariosActivos
+  sesioneshoy: number;      // Antes: sesionesHoy
+}
+
 // Definir tipos para las entidades
 export interface Historia {
   id_historia: number
@@ -100,26 +112,28 @@ export interface FlujoNarrativo {
 
 // --- Operaciones CRUD para HISTORIAS ---
 
-// En el archivo supabaseClient.ts
+
 export const obtenerHistorias = async (): Promise<Historia[]> => {
   try {
     const { data: historiasRaw, error } = await supabase
       .from('historia')
-      .select('*, id_ubicacion(coordenadas)') // <- ¡Cambio clave aquí!
+      // ✅ CORRECCIÓN CLAVE 1: Pedir el ID y el nombre de la ubicacion en el JOIN
+      // Ahora, el objeto anidado 'id_ubicacion' contendrá: { id_ubicacion: 5, nombre: '...', coordenadas: '...' }
+      .select('*, id_ubicacion(id_ubicacion, nombre, coordenadas)') 
       .order('orden', { ascending: true })
     
     if (error) throw error
     
-    // Mapeamos los datos para que tengan la estructura que necesita la aplicación
+    // Mapeamos los datos, PERO USAMOS LOS VALORES REALES DE LA DB
     const historias: Historia[] = (historiasRaw || []).map((h: any) => ({
       ...h,
       id: h.id_historia,
       descripcion: h.narrativa,
-      fecha_creacion: '2024-01-01', // Esto podría ser dinámico si tienes una columna de fecha
-      nivel_acceso_requerido: h.orden <= 2 ? 1 : 2,
-      es_historia_principal: h.orden <= 2,
-      // La propiedad id_ubicacion ahora es un objeto con las coordenadas,
-      // que es lo que el componente MapaView necesita.
+      // Usar el valor real si existe
+      fecha_creacion: h.fecha_creacion || '2024-01-01', 
+      nivel_acceso_requerido: h.nivel_acceso_requerido, 
+      // ✅ CORRECCIÓN CLAVE 2: Usar el valor REAL de la DB y no una fórmula basada en 'orden'
+      es_historia_principal: h.es_historia_principal, 
       id_ubicacion: h.id_ubicacion, 
       metadata: { estado: h.estado }
     }))
@@ -130,7 +144,6 @@ export const obtenerHistorias = async (): Promise<Historia[]> => {
     throw error
   }
 }
-
 // En tu archivo supabaseClient.ts
 export const obtenerFlujoNarrativoDeHistoria = async (idHistoria: number): Promise<any[]> => {
   try {
@@ -255,7 +268,10 @@ export const crearHistoria = async (historiaData: Partial<Historia>): Promise<Hi
   }
 }
 
-export const actualizarHistoria = async (id: number, historiaData: Partial<Omit<Historia, 'id' | 'id_historia' | 'descripcion' | 'fecha_creacion' | 'nivel_acceso_requerido' | 'es_historia_principal'>>): Promise<Historia> => {
+export const actualizarHistoria = async (
+  id: number, 
+  historiaData: Partial<Omit<Historia, 'id_historia' | 'fecha_creacion'>> // ¡CORREGIDO AQUÍ!
+): Promise<Historia> => {
   try {
     const { data, error } = await supabase
       .from('historia')
@@ -263,8 +279,9 @@ export const actualizarHistoria = async (id: number, historiaData: Partial<Omit<
       .eq('id_historia', id)
       .select()
       .single()
+
     if (error) throw error
-    return data
+    return data as Historia
   } catch (error: any) {
     console.error('❌ Error actualizando historia:', error.message)
     throw error
@@ -717,40 +734,38 @@ export const revokeAdmin = async (userEmail: string) => {
   }
 };
 
-export const fetchDashboardStats = async () => {
-  try {
-    // .rpc() es el método para llamar a funciones de la base de datos
-    const { data, error } = await supabase.rpc('get_dashboard_stats');
+// ----------------------------------------------------
+// FUNCIÓN PARA EL DASHBOARD DE ADMIN
+// ----------------------------------------------------
+export const fetchDashboardStats = async (): Promise<AdminDashboardStats> => {
+    try {
+        // Cambia 'get_admin_dashboard_stats' por el nombre real de tu RPC si es diferente
+        const { data, error } = await supabase.rpc('get_admin_dashboard_stats'); 
+        
+        if (error) {
+            console.error('Error al llamar al RPC get_admin_dashboard_stats:', error);
+            throw new Error(`Error en el servidor de base de datos: ${error.message}`);
+        }
+        
+        if (data && data.length > 0) {
+            // El resultado de un RPC es a menudo un array
+            return data[0] as AdminDashboardStats; 
+        }
 
-    if (error) {
-      console.error("Error al llamar a la función get_dashboard_stats:", error);
-      throw error;
+        return {
+            totalusuarios: 0,
+            totalhistorias: 0,
+            totalpersonajes: 0,
+            totalubicaciones: 0,
+            usuariosactivos: 0,
+            sesioneshoy: 0,
+        };
+
+    } catch (error: any) {
+        console.error('Fallo en la obtención de estadísticas del dashboard:', error);
+        throw new Error(`No se pudieron obtener las estadísticas: ${error.message}`);
     }
-
-    // La función RPC devuelve un array con un único objeto que contiene las estadísticas.
-    // Si no hay datos (algo muy raro), devolvemos un objeto con ceros para evitar errores.
-    return data[0] || {
-        totalUsuarios: 0,
-        totalHistorias: 0,
-        totalPersonajes: 0,
-        totalUbicaciones: 0,
-        usuariosActivos: 0,
-        sesionesHoy: 0,
-    };
-
-  } catch (error) {
-    console.error("Fallo en la obtención de estadísticas del dashboard:", error);
-    // Devolvemos un objeto con ceros como fallback en caso de un error catastrófico.
-    return {
-        totalUsuarios: 0,
-        totalHistorias: 0,
-        totalPersonajes: 0,
-        totalUbicaciones: 0,
-        sesionesHoy: 0,
-        usuariosActivos: 0,
-    };
-  }
-};
+}
 
 
 // --- Nuevas funciones para Recompensas y Eventos de Juego ---
