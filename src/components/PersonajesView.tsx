@@ -38,12 +38,14 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
     if (!user?.id) return
     
     try {
-      const gameEvent = await gameService.meetCharacter(user.id, personaje.id.toString())
+      // Nota: El valor de XP (+25) es solo ilustrativo en la UI. El valor real viene del evento.
+      const gameEvent = await gameService.meetCharacter(user.id, personaje.id.toString()) 
       if (gameEvent) {
         alert(`🎉 ¡Has conocido a ${personaje.nombre}! +${gameEvent.xp_ganado} XP`)
       }
     } catch (error: any) {
       console.error('Error conociendo personaje:', error)
+      alert('Error al intentar conocer al personaje. Intenta de nuevo.')
     }
   }
 
@@ -105,7 +107,12 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
             <div key={personaje.id} className="personaje-card">
               <div className="personaje-image">
                 {personaje.imagen ? (
-                  <img src={personaje.imagen} alt={personaje.nombre} />
+                  <img 
+                    src={personaje.imagen} 
+                    alt={personaje.nombre} 
+                    // Añadido 'loading="lazy"' para optimización de rendimiento.
+                    loading="lazy" 
+                  />
                 ) : (
                   <div className="placeholder-image">
                     <span className="avatar-icon">👤</span>
@@ -116,8 +123,9 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
               <div className="personaje-info">
                 <h3 className="personaje-nombre">{personaje.nombre}</h3>
                 <p className="personaje-rol">{personaje.rol}</p>
-                <p className="personaje-descripcion">
-                  {personaje.descripcion?.substring(0, 120)}...
+                {/* 🚨 CAMBIO CLAVE: Usamos la clase CSS 'truncate-text' para limitar las líneas y evitar desbordamiento */}
+                <p className="personaje-descripcion truncate-text"> 
+                  {personaje.descripcion}
                 </p>
                 
                 {atributos.edad && (
@@ -187,9 +195,11 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
                   <div className="info-section">
                     <h4>📋 Atributos</h4>
                     <div className="atributos-list">
+                      {/* Convertimos las claves a formato legible para el usuario */}
                       {Object.entries(selectedPersonaje.metadata).map(([key, value]) => (
                         <div key={key} className="atributo-item">
-                          <span className="atributo-key">{key}:</span>
+                          {/* capitalizamos la clave para mejor presentación */}
+                          <span className="atributo-key">{key.charAt(0).toUpperCase() + key.slice(1)}:</span>
                           <span className="atributo-value">{String(value)}</span>
                         </div>
                       ))}

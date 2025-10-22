@@ -5,7 +5,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  /* CRÍTICO: Asegura la cobertura total de la pantalla */
+  width: 100vw; 
+  height: 100vh;
+  /* El fondo se hace ligeramente más transparente para que se note el ambiente */
+  background: rgba(26, 26, 26, 0.95); 
   display: flex;
   align-items: center;
   justify-content: center;
@@ -20,6 +24,9 @@
   max-width: 800px;
   width: 100%;
   max-height: 90vh;
+  /* CRÍTICO: Usamos flex para que el scroll del contenido sea independiente */
+  display: flex; 
+  flex-direction: column;
   overflow: hidden;
   position: relative;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
@@ -41,26 +48,33 @@
   padding: 2rem;
   border-bottom: 1px solid #4a4a4a;
   position: relative;
+  flex-shrink: 0; /* Asegura que no se encoja */
 }
 
+/* 🚨 CORRECCIÓN DEFINITIVA: Botón de cierre muy pequeño (24px) */
 .btn-close {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  background: #5a2d2d;
+  background: #8B2635; /* Color guinda fuerte para contraste */
   border: none;
   color: white;
-  width: 40px;
-  height: 40px;
+  width: 24px; 
+  height: 24px; 
   border-radius: 50%;
   cursor: pointer;
-  font-size: 1.2rem;
+  font-size: 0.8rem; 
   font-weight: bold;
   transition: all 0.3s ease;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10; /* Asegura que esté por encima de todo */
 }
 
 .btn-close:hover {
-  background: #8B2635;
+  background: #A03040;
   transform: scale(1.1);
 }
 
@@ -74,42 +88,42 @@
 .historia-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8rem;
+  /* CRÍTICO: Espacio mínimo entre los badges */
+  gap: 0.3rem; 
 }
 
-.badge {
-  padding: 0.4rem 0.8rem;
-  border-radius: 15px;
-  font-size: 0.8rem;
+/* 🚨 CORRECCIÓN DEFINITIVA: Estilos SÚPER compactos para todos los badges */
+.badge, .level-badge, .date-badge {
+  /* MUY poco padding para reducir el "cuadro" */
+  padding: 0.2rem 0.5rem; 
+  border-radius: 10px; 
+  /* Fuente pequeña para que el contenido encaje */
+  font-size: 0.65rem; 
   font-weight: bold;
+  white-space: nowrap;
+  /* Esto asegura que las reglas de color específicas no anulen el tamaño */
+  box-sizing: border-box;
 }
 
+/* Estilos de color específicos (se mantienen) */
 .badge.principal {
   background: linear-gradient(45deg, #5a4d2d, #8B4513);
   color: #ffffff;
 }
 
-.badge.secundaria {
+.badge.secundaria { /* Cuadro Morado */
   background: linear-gradient(45deg, #4a2d5a, #6f42c1);
   color: #ffffff;
 }
 
-.level-badge {
+.level-badge { /* Cuadro Guinda */
   background: linear-gradient(45deg, #5a2d2d, #8B2635);
   color: #ffffff;
-  padding: 0.4rem 0.8rem;
-  border-radius: 15px;
-  font-size: 0.8rem;
-  font-weight: bold;
 }
 
-.date-badge {
+.date-badge { /* Cuadro Azul */
   background: linear-gradient(45deg, #2d4a5a, #4682B4);
   color: #ffffff;
-  padding: 0.4rem 0.8rem;
-  border-radius: 15px;
-  font-size: 0.8rem;
-  font-weight: bold;
 }
 
 /* Modal Tabs */
@@ -117,6 +131,7 @@
   display: flex;
   border-bottom: 1px solid #4a4a4a;
   background: #1a1a1a;
+  flex-shrink: 0;
 }
 
 .tab {
@@ -144,12 +159,16 @@
 
 /* Modal Content */
 .modal-content {
-  max-height: 60vh;
+  flex-grow: 1; 
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
   overflow-y: auto;
   padding: 2rem;
 }
 
-/* Content Tab */
+.tab-panel {
+  min-height: 100%;
+}
+
 .content-tab .historia-description h3 {
   color: #CD853F;
   margin-bottom: 1rem;
@@ -225,6 +244,13 @@
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
+.personaje-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; 
+  border-radius: 50%;
+}
+
 .personaje-info h4 {
   color: #CD853F;
   margin: 0 0 0.5rem 0;
@@ -244,6 +270,15 @@
   line-height: 1.4;
   margin: 0;
 }
+
+.truncate-text { 
+  display: -webkit-box; 
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical; 
+  overflow: hidden;
+  word-wrap: break-word; 
+}
+
 
 /* Multimedia Tab */
 .multimedia-grid {

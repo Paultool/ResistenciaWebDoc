@@ -1,3 +1,4 @@
+import YouTube from 'react-youtube'; 
 import 'aframe';
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
@@ -956,7 +957,52 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         };
     }, [isMobile, selectedHistoriaId]);
 
- 
+
+    const getYoutubeVideoId = (url: string): string | null => {
+        // Regex robusto para URLs normales (watch?v=), acortadas (youtu.be), e incrustadas (embed)
+        const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+        const match = url.match(regex);
+        return match ? match[1] : null;
+    };
+
+    // Función reutilizable para renderizar el reproductor de video
+    const renderVideoPlayer = (url: string, isHotspot: boolean) => {
+        const youtubeId = getYoutubeVideoId(url);
+
+        // ... (Lógica para YouTube que permanece igual) ...
+
+        if (youtubeId) {
+            // ... (Caso A: YouTube) ...
+        } else if (url) {
+            // Caso B: Es un video directo (MP4 de archive.org)
+            return (
+                <video
+                    ref={isHotspot ? null : videoRef}
+                    src={url}
+                    autoPlay={!isHotspot}
+                    loop={false}
+                    controls
+                    className="object-contain max-w-full max-h-full"
+                    style={{ position: 'absolute', zIndex: 11, width: '100%', height: '100%' }}
+                    onEnded={isHotspot ? undefined : handleNextStep}
+                    
+                    // 💡 AGREGAR ESTE MANEJADOR DE ERRORES:
+                    onError={(e) => {
+                        console.error("Error al cargar video nativo. URL:", url);
+                        // Muestra una alerta al usuario y avanza para no bloquear la narración
+                        alert(`¡Error de video! El archivo no se pudo cargar o el formato no es compatible. URL fallida: ${url}`);
+                        
+                        // Asegura que la narración pueda continuar si el video falla (solo para pasos narrativos)
+                        if (!isHotspot) {
+                            handleNextStep(); 
+                        }
+                    }}
+                />
+            );
+        }
+        return null;
+    };
+                
    
     const getRecurso = (recursoId: number | null) => {
         if (!recursoId) return null;
@@ -1472,13 +1518,7 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                 
                 {/* CAMBIO CLAVE para avance automático */}
                 {recursoActual?.tipo === 'video' && (
-                    <video 
-                        ref={videoRef} 
-                        key={mediaSrc} 
-                        src={mediaSrc} 
-                        autoPlay 
-                        onEnded={() => currentStep.id_siguiente_paso && handleNextStep(currentStep.id_siguiente_paso)} 
-                    />
+                    renderVideoPlayer(recursoActual.archivo, false) // isHotspot = false (es un paso narrativo)
                 )}
                 {recursoActual?.tipo === 'interactive' && (
                     <canvas id="interactiveCanvas"></canvas>
@@ -1720,16 +1760,7 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                         {hotspotModal?.contentType === 'imagen' && (
                             <img src={hotspotModal.url} alt={hotspotModal.title} className="max-h-full max-w-full object-contain" />
                         )}
-                        {hotspotModal?.contentType === 'video' && (
-                            <video 
-                                src={hotspotModal.url} 
-                                controls 
-                                autoPlay 
-                                loop 
-                                className="max-h-full max-w-full" 
-                                onCanPlay={(e) => handleMediaAutoplay(e.currentTarget)} 
-                            />
-                        )}
+                        {hotspotModal.contentType === 'video' && renderVideoPlayer(hotspotModal.url, true)}
                         {hotspotModal?.contentType === 'audio' && (
                             <div className="bg-gray-800 p-8 rounded-xl">
                                 <audio 

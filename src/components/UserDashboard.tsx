@@ -119,37 +119,14 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void }> = ({ onNa
           <p>⏳ Cargando información...</p>
         </div>
       ) : (
+
+
+        
         <div className="database-info">
-          <h3 className="section-title">📚 Contenido Disponible</h3>
-          <div className="info-grid">
-            <div className="info-card">
-              <div className="info-icon">📖</div>
-              <div className="info-content">
-                <div className="info-number">{dashboardData.totalHistorias}</div>
-                <div className="info-label">Historias Disponibles</div>
-              </div>
-            </div>
+          
 
-            <div className="info-card">
-              <div className="info-icon">👥</div>
-              <div className="info-content">
-                <div className="info-number">{dashboardData.totalPersonajes}</div>
-                <div className="info-label">Personajes</div>
-              </div>
-            </div>
 
-            <div className="info-card">
-              <div className="info-icon">🗺️</div>
-              <div className="info-content">
-                <div className="info-number">{dashboardData.totalUbicaciones}</div>
-                <div className="info-label">Ubicaciones</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="dashboard-actions">
+          <div className="dashboard-actions">
         <h3>🎯 Acciones Rápidas</h3>
         <div className="actions-grid">
           <button 
@@ -158,13 +135,6 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void }> = ({ onNa
           >
             <span className="action-icon">🎬</span>
             <span className="action-text">Cine</span>
-          </button>
-          <button 
-            className="action-btn stories-btn"
-            onClick={() => handleNavigate('historias')}
-          >
-            <span className="action-icon">📖</span>
-            <span className="action-text">Explorar Historias</span>
           </button>
           <button 
             className="action-btn map-btn"
@@ -199,7 +169,44 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void }> = ({ onNa
           )}
 
         </div>
+        
       </div>
+      
+      
+    <br></br><h3 className="section-title">📚 Contenido Disponible</h3>
+
+
+          <div className="info-grid">
+            <div className="info-card">
+              <div className="info-icon">📖</div>
+              <div className="info-content">
+                <div className="info-number">{dashboardData.totalHistorias}</div>
+                <div className="info-label">Historias Disponibles</div>
+              </div>
+            </div>
+
+            
+
+            <div className="info-card">
+              <div className="info-icon">👥</div>
+              <div className="info-content">
+                <div className="info-number">{dashboardData.totalPersonajes}</div>
+                <div className="info-label">Personajes</div>
+              </div>
+            </div>
+
+            <div className="info-card">
+              <div className="info-icon">🗺️</div>
+              <div className="info-content">
+                <div className="info-number">{dashboardData.totalUbicaciones}</div>
+                <div className="info-label">Ubicaciones</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      
     </div>
   )
 }

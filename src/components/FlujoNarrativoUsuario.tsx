@@ -398,7 +398,7 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             z-index: 10;
         }
         .full-media-container video, .full-media-container img {
-            width: 91%;
+            width: 100%;
             height: 100%;
             
             object-fit: cover;
@@ -1116,7 +1116,7 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         if (step.tipo_paso === 'app') {
             const recursoActual = getRecurso(currentStep.recursomultimedia_id);
             const appUrl = recursoActual?.archivo || '';
-            console.log("APP URL:", appUrl);
+            console.log("APP URL:", appUrl);r
             return (
                 <div className="fixed inset-0 z-50 bg-black">
                     <button
