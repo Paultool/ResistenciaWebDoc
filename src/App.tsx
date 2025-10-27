@@ -72,14 +72,16 @@ const MainContent: React.FC = () => {
   const [view, setView] = useState('dashboard');
   const [historiaId, setHistoriaId] = useState<number | null>(null);
   const supabaseClient = supabase;
+  
+  // ESTADO: Controla la visibilidad de la barra de navegación superior
+  const [showNavBar, setShowNavBar] = useState(true); 
 
   // Estado para controlar el menú hamburguesa en móvil
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleStartNarrative = (historia: Historia) => {
-    // Asumiendo que 'id' es el campo correcto, si es 'id_historia', ajusta aquí.
     setFlujoNarrativoHistoriaId(historia.id); 
-    setCurrentView('cine'); // Cambia a la vista del flujo narrativo
+    setCurrentView('cine'); 
   };
 
   useEffect(() => {
@@ -100,19 +102,17 @@ const MainContent: React.FC = () => {
         setError('No se pudo conectar a la base de datos');
         setLoading(false);
       } else {
-        // Si no hay usuario, igual podemos cargar historias si son públicas
-        // o simplemente terminar la carga.
         setLoading(false);
       }
     };
     
     inicializar();
-  }, [user]); // Depende de 'user' para re-ejecutarse si el usuario cambia
+  }, [user]); 
 
   const cargarHistorias = async () => {
     try {
       setLoading(true);
-      setError(null); // Limpia errores previos
+      setError(null); 
       const historiasData = await obtenerHistorias();
       setHistorias(historiasData);
     } catch (err: any) {
@@ -124,7 +124,7 @@ const MainContent: React.FC = () => {
   };
   
   const setupProfile = async () => {
-    if (!user) return; // No hacer nada si no hay usuario
+    if (!user) return; 
 
     const fixedUserId = user.id; 
     
@@ -141,7 +141,6 @@ const MainContent: React.FC = () => {
     if (profile) {
       setUserProfile(profile);
     } else {
-      // Crear perfil si no existe
       const { data: newProfile, error: createError } = await supabaseClient
         .from('perfiles_jugador')
         .insert({ user_id: fixedUserId })
@@ -188,8 +187,8 @@ const MainContent: React.FC = () => {
 
   const handleBackToDashboard = () => {
     setCurrentView('dashboard');
-    setSelectedHistoriaId(null); // Asegura cerrar detalles
-    setFlujoNarrativoHistoriaId(null); // Asegura salir del flujo narrativo
+    setSelectedHistoriaId(null); 
+    setFlujoNarrativoHistoriaId(null); 
   };
 
   const handleViewDetail = (historiaId: number) => {
@@ -200,207 +199,169 @@ const MainContent: React.FC = () => {
     setSelectedHistoriaId(null);
   };
 
-  // Esta función ahora se usa para iniciar el flujo *desde* el detalle
   const handleStartNarrativeFromDetail = (historiaId: number) => {
      const historiaSeleccionada = historias.find(h => h.id === historiaId);
      if (historiaSeleccionada) {
-        // Usamos la función original, pero asegurándonos de que tiene el objeto 'Historia'
         handleStartNarrative(historiaSeleccionada);
      }
   };
 
-  // Nueva función para manejar clics de navegación Y cerrar el menú móvil
   const handleNavClick = (view: any) => {
     setCurrentView(view);
     setIsMobileMenuOpen(false);
   };
+  
+  const handleToggleNavBar = () => {
+    setShowNavBar(prev => !prev);
+    if (showNavBar) {
+        setIsMobileMenuOpen(false); 
+    }
+  };
 
 
   const renderCurrentView = () => {
-    // Si se está en un flujo narrativo, renderizarlo prioritariamente
-    if (currentView === 'cine') {
-      // Si hay un ID, muestra el flujo.
-      if (flujoNarrativoHistoriaId) {
+    
+      if (currentView === 'cine') {
+        if (flujoNarrativoHistoriaId) {
+          return (
+            <FlujoNarrativoUsuario
+              historiaId={flujoNarrativoHistoriaId}
+              onBack={handleBackToDashboard}
+              onUpdateProfile={handleUpdateProfile} 
+            />
+          );
+        }
+        return <FlujoNarrativoUsuario onBack={handleBackToDashboard} onUpdateProfile={handleUpdateProfile} />;
+      }
+        
+      if (selectedHistoriaId) {
         return (
-          <FlujoNarrativoUsuario
-            historiaId={flujoNarrativoHistoriaId}
-            onBack={handleBackToDashboard}
-            onUpdateProfile={handleUpdateProfile} // Pasar la función de actualizar perfil
+          <HistoriaDetail
+            historiaId={selectedHistoriaId}
+            onClose={closeDetail}
+            onStartNarrative={() => handleStartNarrativeFromDetail(selectedHistoriaId)} 
           />
         );
       }
-      // Si se hace clic en "Cine" pero no hay historiaId, 
-      // mostramos el componente FlujoNarrativoUsuario
-       return <FlujoNarrativoUsuario onBack={handleBackToDashboard} onUpdateProfile={handleUpdateProfile} />;
-    }
-      
-    // Si se está viendo un detalle de historia
-    if (selectedHistoriaId) {
-      return (
-        <HistoriaDetail
-          historiaId={selectedHistoriaId}
-          onClose={closeDetail}
-          // Pasar la nueva función que sabe cómo manejar el ID
-          onStartNarrative={() => handleStartNarrativeFromDetail(selectedHistoriaId)} 
-        />
-      );
-    }
-      
-    // Vistas principales
-    switch (currentView) {
-      case 'dashboard':
-        return <UserDashboard onNavigate={handleNavigateFromDashboard} />;
-      
-      case 'historias':
-        return (
-          <div className="historias-view">
-            <div className="view-header">
-              <button onClick={handleBackToDashboard} className="back-btn">← Volver al Dashboard</button>
-              <h2>📚 Historias Disponibles</h2>
-              <p>Explora las narrativas urbanas de La Resistencia</p>
-            </div>
-            
-            {loading && (
-              <div className="loading">
-                <p>⏳ Cargando historias...</p>
+        
+      switch (currentView) {
+        case 'dashboard':
+          return <UserDashboard onNavigate={handleNavigateFromDashboard} />;
+        
+        case 'historias':
+          return (
+            <div className="historias-view">
+              <div className="view-header">
+                <button onClick={handleBackToDashboard} className="back-btn">← Volver al Dashboard</button>
+                <h2>📚 Historias Disponibles</h2>
+                <p>Explora las narrativas urbanas de La Resistencia</p>
               </div>
-            )}
+              
+              {loading && (<div className="loading"><p>⏳ Cargando historias...</p></div>)}
 
-            {error && (
-              <div className="error">
-                <p>❌ {error}</p>
-                <button onClick={cargarHistorias} className="retry-btn">
-                  🔄 Reintentar
-                </button>
-              </div>
-            )}
-
-            {!loading && !error && (
-              <>
-                <div className="historias-stats">
-                  <span className="stat">📊 Total: {historias.length} historias</span>
-                  <span className="stat">⭐ Principales: {historias.filter(h => h.es_historia_principal).length}</span>
-                  <span className="stat">📖 Secundarias: {historias.filter(h => !h.es_historia_principal).length}</span>
+              {error && (
+                <div className="error">
+                  <p>❌ {error}</p>
+                  <button onClick={cargarHistorias} className="retry-btn">🔄 Reintentar</button>
                 </div>
+              )}
 
-                {historias.length === 0 ? (
-                  <p className="no-data">No hay historias disponibles</p>
-                ) : (
-                  <div className="historias-grid">
-                    {historias.map((historia) => (
-                      <HistoriaCard
-                        key={historia.id}
-                        historia={historia}
-                        onViewDetail={handleViewDetail}
-                      />
-                    ))}
+              {!loading && !error && (
+                <>
+                  <div className="historias-stats">
+                    <span className="stat">📊 Total: {historias.length} historias</span>
+                    <span className="stat">⭐ Principales: {historias.filter(h => h.es_historia_principal).length}</span>
+                    <span className="stat">📖 Secundarias: {historias.filter(h => !h.es_historia_principal).length}</span>
                   </div>
-                )}
-              </>
-            )}
-          </div>
-        );
-      
-      case 'personajes':
-        return <PersonajesView onBack={handleBackToDashboard} />;
-      
-      case 'mapa':
-        return <MapaView onBack={handleBackToDashboard} historias={historias} onViewDetail={handleViewDetail} />;
-      
-      case 'inventario':
-        return <InventarioView onBack={handleBackToDashboard} />;
 
-      case 'admin':
-        // Asegurarse que solo el admin vea esto
-        return isAdmin ? <AdminPanel /> : <p>Acceso denegado.</p>;
-      
-      // La vista 'cine' se maneja arriba
-      default:
-        return <UserDashboard onNavigate={handleNavigateFromDashboard} />;
-    }
+                  {historias.length === 0 ? (
+                    <p className="no-data">No hay historias disponibles</p>
+                  ) : (
+                    <div className="historias-grid">
+                      {historias.map((historia) => (
+                        <HistoriaCard key={historia.id} historia={historia} onViewDetail={handleViewDetail}/>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        
+        case 'personajes':
+          return <PersonajesView onBack={handleBackToDashboard} />;
+        
+        case 'mapa':
+          return <MapaView onBack={handleBackToDashboard} historias={historias} onViewDetail={handleViewDetail} />;
+        
+        case 'inventario':
+          return <InventarioView onBack={handleBackToDashboard} />;
+
+        case 'admin':
+          return isAdmin ? <AdminPanel /> : <p>Acceso denegado.</p>;
+        
+        default:
+          return <UserDashboard onNavigate={handleNavigateFromDashboard} />;
+      }
   };
 
   return (
     <div className="app-authenticated">
-      <nav className="elegant-navbar">
-        <div className="navbar-logo">
-          <h1>LA RESISTENCIA</h1>
-        </div>
+      
+      {showNavBar && (
+        <nav className="elegant-navbar">
+          <div className="navbar-logo">
+            <h1>LA RESISTENCIA</h1>
+          </div>
 
-        {/* Botón de Hamburguesa para móviles */}
-        <button 
-          className="navbar-hamburger-btn" 
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-label="Toggle navigation"
-          aria-expanded={isMobileMenuOpen}
-        >
-          {/* Icono simple de hamburguesa */}
-          <span></span>
-          <span></span>
-          <span></span>
+          <button 
+            className="navbar-hamburger-btn" 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle navigation"
+            aria-expanded={isMobileMenuOpen}
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+
+          <div className={`navbar-menu-container ${isMobileMenuOpen ? 'is-open' : ''}`}>
+            <div className="navbar-links">
+              <button className={`nav-link-btn ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => handleNavClick('dashboard')}>Dashboard</button>
+              <button className={`nav-link-btn ${currentView === 'cine' ? 'active' : ''}`} onClick={() => handleNavClick('cine')}>Cine</button>
+              <button className={`nav-link-btn ${currentView === 'historias' ? 'active' : ''}`} onClick={() => handleNavClick('historias')}>Historias</button>
+              <button className={`nav-link-btn ${currentView === 'personajes' ? 'active' : ''}`} onClick={() => handleNavClick('personajes')}>Personajes</button>
+              <button className={`nav-link-btn ${currentView === 'mapa' ? 'active' : ''}`} onClick={() => handleNavClick('mapa')}>Mapa</button>
+              <button className={`nav-link-btn ${currentView === 'inventario' ? 'active' : ''}`} onClick={() => handleNavClick('inventario')}>Inventario</button>
+              
+              {isAdmin && (
+                <button className={`nav-link-btn ${currentView === 'admin' ? 'active' : ''}`} onClick={() => handleNavClick('admin')}>Admin</button>
+              )}
+            </div>
+            
+            <div className="navbar-user-info">
+              {user?.email}
+            </div>
+            
+            <button 
+                className="navbar-hide-btn" 
+                onClick={handleToggleNavBar}
+                title="Ocultar Menú Superior"
+            >
+                <i className="fas fa-chevron-up"></i>
+            </button>
+
+          </div>
+        </nav>
+      )}
+      
+      {!showNavBar && (
+        <button className="navbar-show-btn" onClick={handleToggleNavBar} title="Mostrar Menú Superior">
+            <i className="fas fa-chevron-down"></i>
         </button>
-
-        {/* Contenedor del Menú (colapsable) */}
-        <div className={`navbar-menu-container ${isMobileMenuOpen ? 'is-open' : ''}`}>
-          <div className="navbar-links">
-            {/* 1. DASHBOARD */}
-            <button 
-              className={`nav-link-btn ${currentView === 'dashboard' ? 'active' : ''}`}
-              onClick={() => handleNavClick('dashboard')}>
-              Dashboard
-            </button>
-            
-            {/* 2. CINE (MOVIDO AQUÍ) */}
-            <button 
-              className={`nav-link-btn ${currentView === 'cine' ? 'active' : ''}`}
-              onClick={() => handleNavClick('cine')}>
-              Cine
-            </button>
-            
-            {/* 3. HISTORIAS */}
-            <button 
-              className={`nav-link-btn ${currentView === 'historias' ? 'active' : ''}`}
-              onClick={() => handleNavClick('historias')}>
-              Historias
-            </button>
-            
-            {/* 4. PERSONAJES */}
-            <button 
-              className={`nav-link-btn ${currentView === 'personajes' ? 'active' : ''}`}
-              onClick={() => handleNavClick('personajes')}>
-              Personajes
-            </button>
-            
-            {/* 5. MAPA */}
-            <button 
-              className={`nav-link-btn ${currentView === 'mapa' ? 'active' : ''}`}
-              onClick={() => handleNavClick('mapa')}>
-              Mapa
-            </button>
-            
-            {/* 6. INVENTARIO */}
-            <button 
-              className={`nav-link-btn ${currentView === 'inventario' ? 'active' : ''}`}
-              onClick={() => handleNavClick('inventario')}>
-              Inventario
-            </button>
-            
-            
-            {isAdmin && (
-               <button 
-               className={`nav-link-btn ${currentView === 'admin' ? 'active' : ''}`}
-               onClick={() => handleNavClick('admin')}>
-               Admin
-             </button>
-            )}
-          </div>
-          <div className="navbar-user-info">
-            {user?.email}
-          </div>
-        </div>
-      </nav>
+      )}
    
-      <main className="app-main">
+      <main className={`app-main ${!showNavBar ? 'navbar-hidden' : ''}`}>
         {renderCurrentView()}
       </main>
     </div>
@@ -415,16 +376,19 @@ const MainContent: React.FC = () => {
 // --- Modal de Login ---
 interface LoginModalProps {
   onClose: () => void;
+  // Propagación de Fullscreen
+  onRequestFullscreen: () => void; 
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
+const LoginModal: React.FC<LoginModalProps> = ({ onClose, onRequestFullscreen }) => {
     return (
         <div className="info-modal-overlay" onClick={onClose}>
             <div className="info-modal-content login-modal-override" onClick={(e) => e.stopPropagation()}>
                 <button onClick={onClose} className="info-modal-close-btn">&times;</button>
                 <h2 className="info-modal-title">ACCESO</h2> 
                 <p className="login-modal-subtitle">Únete a La Resistencia</p>
-                <AuthForm />
+                {/* Pasar la función al AuthForm */}
+                <AuthForm onRequestFullscreen={onRequestFullscreen} />
             </div>
         </div>
     );
@@ -478,13 +442,18 @@ const InfoModal: React.FC<InfoModalProps> = ({ contentKey, onClose }) => {
  */
 interface BottomBarProps {
   onOpenModal: (contentKey: 'acerca' | 'making-off' | 'equipo') => void;
-  // 💥 NUEVA PROP: Función para abrir el modal de Login
   onOpenLogin: () => void;
+  onToggleVisibility: () => void; 
 }
 
-const BottomBar: React.FC<BottomBarProps> = ({ onOpenModal, onOpenLogin }) => {
+const BottomBar: React.FC<BottomBarProps> = ({ onOpenModal, onOpenLogin, onToggleVisibility }) => {
   return (
     <footer className="bottom-bar">
+      {/* Botón de Tache (Ocultar) */}
+      <button onClick={onToggleVisibility} className="bottom-bar-close-btn" title="Ocultar Información">
+        <i className="fas fa-times"></i> 
+      </button>
+
       <button onClick={() => onOpenModal('acerca')} className="bottom-bar-btn">
         ACERCA DEL PROYECTO
       </button>
@@ -494,7 +463,6 @@ const BottomBar: React.FC<BottomBarProps> = ({ onOpenModal, onOpenLogin }) => {
       <button onClick={() => onOpenModal('equipo')} className="bottom-bar-btn">
         EQUIPO
       </button>
-      {/* 💥 NUEVO BOTÓN: Enlace directo a Login */}
       <button onClick={onOpenLogin} className="bottom-bar-btn">
         LOGIN
       </button>
@@ -507,99 +475,80 @@ const BottomBar: React.FC<BottomBarProps> = ({ onOpenModal, onOpenLogin }) => {
  */
 interface LandingPageProps {
   onLoginSuccess: () => void;
+  // Función para solicitar Fullscreen en el contenedor principal
+  onRequestFullscreen: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
-  // CLAVE: Estado para controlar si el contenido (título/botón) debe mostrarse
+const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFullscreen }) => {
   const [showContent, setShowContent] = useState(false);
-  // CLAVE: Controla el muteo. Iniciamos en true para forzar el auto-play.
   const [isMuted, setIsMuted] = useState(true);
+  const [showBottomBar, setShowBottomBar] = useState(true); 
   
   const [infoModalContentKey, setInfoModalContentKey] = useState<'acerca' | 'making-off' | 'equipo' | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   
-  // Referencia al elemento de video (o al contenedor) para control manual
-  const landingRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   
-  // URL de tu video (Asegúrate de que este video tenga audio impactante)
   const videoSrc = "https://ia800103.us.archive.org/12/items/intro_resistencia/intro%20resistencia%20.mp4"; 
 
-  /**
-   * Manejador del evento 'onEnded' del video.
-   * Se ejecuta justo cuando el video termina.
-   */
   const handleVideoEnd = () => {
     setShowContent(true);
-    // Asegura que el estado de muteo refleje el estado final
     if (videoRef.current) {
         setIsMuted(videoRef.current.muted);
     }
   };
 
-  /**
-   * FUNCIÓN ACTUALIZADA: Activa el audio y pide Fullscreen
-   */
   const handleUnmuteClick = () => {
     const video = videoRef.current;
-    const landingContainer = landingRef.current;
 
     if (video) {
-        // 1. Quitar el mute del elemento de video
         video.muted = false;
         video.volume = 0.7; 
         
-        // 2. Intentar poner en pantalla completa el CONTENEDOR PRINCIPAL
-        if (landingContainer) {
-            if (landingContainer.requestFullscreen) {
-                landingContainer.requestFullscreen();
-            } else if ((landingContainer as any).mozRequestFullScreen) { /* Firefox */
-                (landingContainer as any).mozRequestFullScreen();
-            } else if ((landingContainer as any).webkitRequestFullscreen) { /* Chrome, Safari and Opera */
-                (landingContainer as any).webkitRequestFullscreen();
-            } else if ((landingContainer as any).msRequestFullscreen) { /* IE/Edge */
-                (landingContainer as any).msRequestFullscreen();
-            }
-        }
+        // 1. LLAMAMOS A LA FUNCIÓN DEL PADRE para Fullscreen
+        onRequestFullscreen();
         
-        // 3. Actualizar el estado de la UI
         setIsMuted(false);
         video.play().catch(error => console.error("Error al intentar reproducir sin mute:", error));
     }
   };
   
-  /**
-   * Efecto para establecer el volumen inicial y limpiar el Fullscreen si se sale manualmente.
-   */
+  const handleResisteClick = () => {
+    // Reafirma la pantalla completa
+    onRequestFullscreen(); 
+    setIsLoginModalOpen(true);
+  };
+  
    useEffect(() => {
     const video = videoRef.current;
     if (video) {
         video.volume = 0.7;
     }
     
-    // Función de limpieza al desmontar el componente (opcional pero buena práctica)
+    // Función de limpieza al desmontar el componente (opcional)
     return () => {
-        if (document.fullscreenElement) {
-            document.exitFullscreen();
-        }
+        // No salimos de Fullscreen aquí, AppContent lo mantiene
     };
    }, []);
-   
-  // 💥 NUEVA FUNCIÓN: Para ser pasada a la barra inferior
+
   const handleOpenLoginModal = () => {
+    onRequestFullscreen(); 
     setIsLoginModalOpen(true);
+  };
+  
+  const handleToggleBottomBar = () => {
+    setShowBottomBar(prev => !prev);
   };
 
 
   return (
-    // ASIGNAMOS la referencia al contenedor principal para pedir el fullscreen sobre él
-    <div className="landing-page" ref={landingRef}>
+    <div className="landing-page"> 
       <video
         ref={videoRef}
         className="landing-video-bg"
         autoPlay
         loop={false} 
-        muted={isMuted} // Inicia en true para auto-play
+        muted={isMuted} 
         playsInline
         src={videoSrc}
         key={videoSrc}
@@ -622,16 +571,27 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
         <p className="landing-subtitle">
           Narrativa urbana interactiva sobre la resistencia social en Ciudad de México
         </p>
-        <button onClick={() => setIsLoginModalOpen(true)} className="btn btn-primary landing-button">
+        <button onClick={handleResisteClick} className="btn btn-primary landing-button">
           RESISTE
         </button>
       </main>
 
-      {/* 💥 PROP AGREGADA: onOpenLogin */}
-      <BottomBar 
-        onOpenModal={setInfoModalContentKey} 
-        onOpenLogin={handleOpenLoginModal}
-      />
+      {/* RENDERIZADO CONDICIONAL: Solo mostrar si showBottomBar es true */}
+      {showBottomBar && (
+        <BottomBar 
+          onOpenModal={setInfoModalContentKey} 
+          onOpenLogin={handleOpenLoginModal}
+          onToggleVisibility={handleToggleBottomBar}
+        />
+      )}
+      
+      {/* Botón flotante para MOSTRAR (las rayitas) */}
+      {!showBottomBar && (
+          <button className="bottom-bar-show-btn" onClick={handleToggleBottomBar} title="Mostrar Información">
+              <i className="fas fa-bars"></i> 
+          </button>
+      )}
+
 
       {/* Modales */}
       {infoModalContentKey && (
@@ -644,6 +604,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
       {isLoginModalOpen && (
         <LoginModal
           onClose={() => setIsLoginModalOpen(false)}
+          // Pasamos la función al LoginModal
+          onRequestFullscreen={onRequestFullscreen} 
         />
       )}
 
@@ -670,6 +632,27 @@ function App(): JSX.Element {
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth();
   
+  // REFERENCIA: Al contenedor principal que no se desmonta (div.App)
+  const appRef = useRef<HTMLDivElement>(null); 
+  
+  // FUNCIÓN: Se encarga de solicitar Fullscreen en el elemento principal
+  const requestAppFullscreen = () => {
+    const appContainer = appRef.current;
+    if (appContainer) {
+        // Aseguramos la compatibilidad con diferentes navegadores
+        if (appContainer.requestFullscreen) {
+            appContainer.requestFullscreen();
+        } else if ((appContainer as any).mozRequestFullScreen) { /* Firefox */
+            (appContainer as any).mozRequestFullScreen();
+        } else if ((appContainer as any).webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+            (appContainer as any).webkitRequestFullscreen();
+        } else if ((appContainer as any).msRequestFullscreen) { /* IE/Edge */
+            (appContainer as any).msRequestFullscreen();
+        }
+    }
+  };
+
+
   if (loading) {
     return (
       <div className="app-loading">
@@ -682,13 +665,17 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="App">
+    <div className="App" ref={appRef}> {/* ASIGNAMOS LA REFERENCIA AL CONTENEDOR APP */}
       {user ? (
         // --- VISTA AUTENTICADA ---
         <MainContent />
       ) : (
         // --- VISTA PÚBLICA (LANDING CON MODAL) ---
-        <LandingPage onLoginSuccess={() => { /* No es necesario aquí ya que AuthContext se encarga */ }} />
+        <LandingPage 
+            onLoginSuccess={() => { /* No es necesario aquí ya que AuthContext se encarga */ }}
+            // PASAMOS LA FUNCIÓN DE FULLSCREEN A LANDINGPAGE
+            onRequestFullscreen={requestAppFullscreen}
+        />
       )}
     </div>
   );

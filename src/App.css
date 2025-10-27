@@ -4,11 +4,20 @@
 
 /* El contenedor principal de la aplicación, ahora flexible */
 .App {
-  /* Asumo un fondo oscuro por defecto */
   background: #111; 
   color: #ffffff;
   font-family: 'Arial', sans-serif;
-  min-height: 100vh;
+  /* 🔑 CAMBIO CLAVE: Usamos height: 100% para basarnos en el body/root */
+  height: 100%; 
+  min-height: 100vh; /* Se mantiene min-height para asegurar altura mínima */
+}
+
+.app-authenticated {
+    display: flex; 
+    flex-direction: column;
+    /* 🔑 CLAVE: Usamos height: 100% para ocupar toda la altura del .App */
+    height: 100%; 
+    width: 100%; 
 }
 
 /* Estilos para el estado de carga */
@@ -40,7 +49,7 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  padding: 1rem 2rem;
+  padding: .3rem 2rem;
   /* Estilo Cinematográfico Elegante */
   background: linear-gradient(90deg, #1f2937, #111827);
   color: #fff;
@@ -49,10 +58,12 @@
   top: 0;
   z-index: 1000;
   transition: all 0.3s ease-in-out;
+ 
 }
 
+
 .navbar-logo h1 {
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-weight: bold;
   color: #CD853F; /* Color principal de "Resistencia" */
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
@@ -76,7 +87,7 @@
   background: none;
   border: none;
   color: #d1d5db;
-  font-size: 1rem;
+  font-size: .5rem;
   font-weight: 500;
   padding: 0.5rem 0.8rem;
   cursor: pointer;
@@ -107,7 +118,7 @@
 }
 
 .navbar-user-info {
-  font-size: 0.9rem;
+  font-size: 0.4rem;
   color: #d1d5db;
   margin-left: 1.5rem;
 }
@@ -221,8 +232,8 @@
 .landing-subtitle {
     /* Mantiene el tamaño y el color */
     font-size: 1.2rem;
-    color: #f1f1f1;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    color: #131212da;
+    text-shadow: 1px 1px 2px rgba(61, 5, 5, 0.7);
     
     /* 💥 CAMBIOS CLAVE PARA ALINEACIÓN */
     
@@ -245,14 +256,15 @@
   /* CLAVE: Asegura que solo ocupe el ancho del contenido */
   display: inline-block !important; 
   width: auto !important;
+  /* 💥 CAMBIO CLAVE: Usa !important para anular Bootstrap (el morado) */
+    background-color: #CD853F !important; /* Color personalizado: Ocre/Marrón */
+    border-color: #CD853F !important;     /* Borde del mismo color */
   
   font-size: 1.1rem; 
   padding: 0.8rem 2.5rem; 
   text-transform: uppercase;
   letter-spacing: 0.15em; 
   font-weight: bold;
-  background-color: #CD853F;
-  border: 2px solid #CD853F;
   color: #111;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(205, 133, 63, 0.5);
@@ -272,37 +284,76 @@
 /* ========================================================== */
 
 .bottom-bar {
-  position: relative; 
-  z-index: 4;
-  width: 100%;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(5px);
-  padding: 1rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap; 
-  gap: 2rem;
-  border-top: 1px solid rgba(205, 133, 63, 0.3);
+    /* (Asegúrate de que tus estilos base de posición, fondo y z-index están aquí) */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center; /* O space-around, o space-between */
+    align-items: center;
+    background: rgba(0, 0, 0, 0.7); /* Fondo oscuro semitransparente */
+    padding: 0.5rem 1rem;
+    z-index: 10;
 }
 
 .bottom-bar-btn {
-  background: none;
-  border: none;
-  color: #cccccc;
-  font-size: 0.9rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: color 0.3s ease, transform 0.3s ease;
+    background: none;
+    border: none;
+    color: #f1f1f1;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    
+    /* 💥 CAMBIO CLAVE: Fuente más pequeña (antes era 1rem o más) */
+    font-size: 0.55rem; 
+    font-weight: 500;
+    padding: 0.5rem 0.8rem;
+    text-transform: uppercase;
 }
 
 .bottom-bar-btn:hover {
-  color: #CD853F;
-  transform: translateY(-2px);
+    color: #CD853F; /* Ocre/Marrón para el hover */
 }
 
+/* 💥 NUEVO ESTILO: Botón de Cerrar/Ocultar */
+.bottom-bar-close-btn {
+    /* Estilos del botón de ocultar */
+    background: none;
+    border: none;
+    color: #f1f1f1;
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 0.5rem;
+    margin-right: 1rem; /* Separación del resto de botones */
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.bottom-bar-close-btn:hover {
+    color: #CD853F;
+    transform: scale(1.05);
+}
+
+/* 💥 NUEVO ESTILO: Botón Flotante para RE-MOSTRAR la barra (cuando está oculta) */
+.bottom-bar-show-btn {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    /* Estilos estéticos */
+    background: rgba(0, 0, 0, 0.7);
+    color: #f1f1f1;
+    border: 1px solid #CD853F;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.55rem;
+    z-index: 15; /* Asegura que esté por encima de otros elementos */
+    transition: all 0.3s ease;
+}
+
+.bottom-bar-show-btn:hover {
+    background: #CD853F;
+    color: black;
+}
 
 /* ========================================================== */
 /* --- 5. ESTILOS DE MODALES (INFO Y LOGIN UNIFICADOS) --- */
@@ -591,7 +642,10 @@
     flex-direction: row; 
     justify-content: space-between; 
     align-items: center;
-    padding: 1rem;
+    padding: .3rem;
+     font-size: 0.35rem; /* Reducido de 1rem a 0.85rem */
+    font-weight: 500;
+    padding: 0.5rem 0.8rem;
   }
 
   .navbar-hamburger-btn {
@@ -758,7 +812,7 @@
 
 /* Ajuste de la opacidad del overlay para que el botón resalte más */
 .landing-overlay {
-    background: rgba(21, 1, 43, 0.75); 
+    background: rgba(21, 1, 43, 0.15); 
 }
 
 /* ========================================================== */
@@ -795,3 +849,80 @@
     height: 100vh;
     overflow: hidden;
 }
+
+/* 💥 NUEVO ESTILO: Botón de Ocultar/Cerrar la NavBar (dentro de la barra) */
+.navbar-hide-btn {
+    background: none;
+    border: none;
+    color: #d1d5db; /* Color del texto del nav */
+    cursor: pointer;
+    font-size: .3rem;
+    padding: 0.5rem;
+    transition: color 0.3s ease, transform 0.3s ease;
+    margin-left: .3rem; /* Separación del logo */
+    /* Posicionamiento para escritorio (se mostrará junto al logo) */
+}
+
+.navbar-hide-btn:hover {
+    color: #a78bfa; /* Color de acento de tu navbar */
+    transform: translateY(-2px);
+}
+
+/* 💥 NUEVO ESTILO: Botón Flotante para RE-MOSTRAR la NavBar (cuando está oculta) */
+.navbar-show-btn {
+    position: fixed;
+    top: 1rem; /* Posición en la parte superior izquierda */
+    right: 1rem;
+    /* Estilos estéticos */
+    background: rgba(0, 0, 0, 0.7);
+    color: #f1f1f1;
+    border: 1px solid #a78bfa; /* Borde con el color de acento del nav */
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.3rem;
+    z-index: 1001; /* Debe estar por encima de todo */
+    transition: all 0.3s ease;
+}
+
+.navbar-show-btn:hover {
+    background: #a78bfa;
+    color: black;
+}
+
+/* 🔑 CAMBIO CLAVE: Contenido principal (donde debe ocurrir el scroll) */
+.app-main {
+  /* CLAVE 1: Ocupa todo el espacio restante en el layout flexible */
+  flex-grow: 1;
+
+  /* 🔑 CLAVE 2: SOLUCIÓN AL BUG DE SCROLL EN FLEXBOX */
+  /* Este ajuste permite que el elemento se encoja para dejar espacio al scroll. */
+  min-height: 0;
+
+  /* 🔑 CLAVE 3: FORZAR EL SCROLL INTERNO */
+  /* Ahora el contenido se deslizará DENTRO de este contenedor */
+  overflow-y: auto;
+  
+  /* Este padding es para asegurar que el contenido se vea bajo la barra sticky */
+  padding-top: 5rem; 
+  padding-bottom: 2rem; 
+  padding-left: 1rem;
+  padding-right: 1rem;
+  
+}
+
+/* 💥 Ajuste para el contenido principal cuando la barra está OCULTA */
+.app-main.navbar-hidden {
+    /* Ajusta el padding para que el contenido suba cuando la barra no está */
+    padding-top: 1rem; 
+}
+
+/* Puedes añadir media queries si la barra de navegación en móvil necesita más ajustes
+   o si el botón navbar-hide-btn no debe verse en móvil. */
+@media (max-width: 768px) {
+    /* Ocultar el botón de ocultar en móviles, ya que se usa la hamburguesa */
+    .navbar-hide-btn {
+        display: none;
+    }
+}
+
