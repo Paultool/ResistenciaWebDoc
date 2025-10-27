@@ -439,3 +439,30 @@
     font-size: 1.4rem;
   }
 }
+
+
+.historia-detail-map-wrapper .historia-detail-overlay {
+  /* ¡CRÍTICO! Cambiamos fixed por absolute y usamos !important para forzar la anulación */
+  position: absolute !important;
+  
+  /* Usamos % en lugar de vw/vh para respetar el tamaño del padre (MapaView) */
+  width: 100% !important; 
+  height: 100% !important;
+
+  /* Aseguramos que los bordes coincidan con el wrapper */
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+}
+
+/* Opcional: Para asegurar que el contenido del modal esté bien centrado dentro del overlay anidado. */
+.historia-detail-map-wrapper .historia-detail-modal {
+  /* Puedes ajustar max-width/max-height aquí si notas que el modal es demasiado grande */
+  /* max-width: 600px; */ 
+  /* max-height: 80vh; */
+}
+
+
+
+

@@ -2,6 +2,11 @@ import 'aframe';
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { gameServiceUser, PlayerStats } from '../services/GameServiceUser';
+import MapaView from './MapaView';
+//FICHA PERSONAJES
+import { Personaje } from '../supabaseClient'; 
+import { obtenerFichaPersonajePorId } from '../supabaseClient';
+
 
 // Define las interfaces para tipar los datos
 interface RecursoMultimediaData {
@@ -38,6 +43,7 @@ interface HistoriaData {
     id_imagen_historia?: number;
     id_historia_dependencia?: number | null;
     estado?: 'bloqueado' | 'desbloqueado';
+    id_ubicacion: { coordenadas: string } | null;
 }
 
 interface RecompensaData {
@@ -47,9 +53,20 @@ interface RecompensaData {
     descripcion: string | null;
 }
 
+// Interfaz para la data básica (la que ya usas en el estado 'personajesData')
 interface PersonajeData {
     id_personaje: number;
     nombre: string;
+}
+
+// Interfaz para la Ficha Completa personaje (para el modal detallado )
+interface PersonajeFicha {
+    id_personaje: number;
+    nombre: string;
+    descripcion: string | null;
+    imagen: string | null; // Tu campo se llama 'imagen'
+    atributos_json: string | null; // Tu campo es un string JSON
+    rol: string | null;
 }
 
 // Nueva interfaz para definir un Hotspot de Interacción
@@ -91,8 +108,8 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
     const [showCharacters, setShowCharacters] = useState(false);
     const [showStories, setShowStories] = useState(false);
     const [lockedHistoryModal, setLockedHistoryModal] = useState<{ historia: HistoriaData, historiaMadre: HistoriaData } | null>(null);
-
-    const [hotspotModal, setHotspotModal] = useState<HotspotConfig | null>(null);
+    const [selectedCharacterForModal, setSelectedCharacterForModal] = useState<Personaje | null>(null);    const [hotspotModal, setHotspotModal] = useState<HotspotConfig | null>(null);
+    const [loadingCharacter, setLoadingCharacter] = useState(false);
     const [discoveredHotspots, setDiscoveredHotspots] = useState<number>(0);
     const totalHotspotsRef = useRef<number>(0);
     const discoveredHotspotIds = useRef<Set<string>>(new Set());
@@ -100,6 +117,62 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
     const aframeContainerRef = useRef<HTMLDivElement>(null);
 
     const { user, loading: authLoading } = useAuth();
+
+
+   // Función para cerrar el modal de la ficha del personaje
+    const closeCharacterModal = () => {
+        setSelectedCharacterForModal(null);
+    };
+
+    // FUNCIÓN ACTUALIZADA para abrir la ficha del personaje con datos REALES
+    const handleCharacterClickInBar = async (characterName: string) => {
+        // 1. Cierra el modal de la lista
+        setShowCharacters(false);
+        
+        // 2. Busca la información básica (necesitamos el ID)
+        const basicCharacter = personajesData.find(p => p.nombre === characterName);
+        
+        if (!basicCharacter) {
+            console.error(`Personaje '${characterName}' no encontrado en personajesData.`);
+            return;
+        }
+
+        setLoadingCharacter(true); // <--- Muestra el loader
+        setSelectedCharacterForModal(null); // Limpia el modal anterior
+
+        try {
+            // 3. ¡LLAMADA REAL! Llama a la nueva función de supabaseClient
+            const fullDetails = await obtenerFichaPersonajePorId(basicCharacter.id_personaje);
+            
+            if (fullDetails) {
+                // 4. Abre el modal de detalle con la data real
+                setSelectedCharacterForModal(fullDetails); 
+            } else {
+                alert(`No se pudo encontrar la ficha para ${characterName}.`);
+            }
+        } catch (error: any) {
+            console.error('Error cargando ficha de personaje:', error);
+            alert('Error al cargar la ficha: ' + error.message);
+        } finally {
+            setLoadingCharacter(false); // <--- Oculta el loader
+        }
+    };
+    
+    // ESTADO para el modal del mapa
+    const [showMap, setShowMap] = useState(false);
+    
+    // ... (todos los useEffect y funciones existentes) ...
+
+    // NUEVA FUNCIÓN para manejar el inicio desde el mapa
+    // Esta función será llamada por MapaView (a través de HistoriaDetail)
+    const handleStartStoryFromMap = (historiaId: number) => {
+        // 1. Ocultar el modal del mapa
+        setShowMap(false);
+        
+        // 2. Iniciar la narrativa con la historia seleccionada
+        // Reutilizamos la función que ya tienes
+        handleHistoriaSelect(historiaId); 
+    };  
 
     // Nuevo estado para el pop-up de instrucciones inicial del 3D
     const [showInitial3DPopup, setShowInitial3DPopup] = useState(false);
@@ -644,6 +717,10 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             try {
                 const { data, error } = await gameServiceUser.fetchHistorias();
                 if (error) throw error;
+
+                // PUNTO DE DEPURACIÓN
+                console.log("Historias cargadas desde el servicio:", data);
+                
                 setHistorias(data || []);
                 
                 // Pre-cargar recursos multimedia para las imágenes de historias
@@ -1330,12 +1407,7 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
 
         return (
             <div className="relative min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 text-white p-4 md:p-8 overflow-y-auto">
-                <button
-                    className="absolute top-4 right-4 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition-all duration-300 z-40 font-semibold text-sm shadow-lg"
-                    onClick={onBack}
-                >
-                    ← Volver al Dashboard
-                </button>
+              
                 <div className="max-w-7xl mx-auto mt-20">
                     <h1 className="text-5xl font-bold text-center mb-4 bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">Selecciona tu Aventura</h1>
                     <p className="text-center text-gray-400 mb-12">Explora mundos increíbles y desbloquea nuevas historias</p>
@@ -1563,6 +1635,10 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                     </div>
 
                     <div className="info-icons">
+                        <div className="tool-icon" onClick={() => setShowMap(true)}>
+                            <span style={{ fontSize: '1.2rem' }}>🗺️</span>
+                            <span id="mapCount" style={{ fontSize: '0.75rem' }}></span>
+                        </div>
                         <div className="tool-icon" onClick={() => setShowInventory(true)}>
                             <span style={{ fontSize: '1.2rem' }}>📦</span>
                             <span id="inventoryCount" style={{ fontSize: '0.75rem' }}>{playerStats.inventario?.length || 0}</span>
@@ -1757,6 +1833,50 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                     </div>
                 </div>
             </div>
+            {/* Modal del mapa*/}
+            {showMap && (
+            <div 
+                className="modal" 
+                style={{ 
+                    display: 'flex', 
+                    zIndex: 101, // Aseguramos que esté sobre otros modales si es necesario
+                    alignItems: 'center', 
+                    justifyContent: 'center' 
+                }}
+            >
+                <div 
+                    className="modal-content" 
+                    style={{
+                        width: '95vw', 
+                        height: '90vh', 
+                        maxWidth: '1200px', 
+                        padding: '0', // MapaView manejará su propio padding
+                        overflow: 'hidden', // Evita que el mapa se desborde
+                        position: 'relative'
+                    }}
+                >
+                    {/* Botón de cerrar el modal del mapa */}
+                    <span 
+                        className="close-button" 
+                        onClick={() => setShowMap(false)} 
+                        style={{ zIndex: 1000, color: '#fff', background: 'rgba(0,0,0,0.5)', borderRadius: '50%', padding: '0 0.5rem' }}
+                    >
+                        &times;
+                    </span>
+                    
+                    <MapaView
+                        // Pasamos las historias que ya cargamos en este componente
+                        historias={historias} 
+                        // Pasamos las historias visitadas para los colores de pines
+                        historiasVisitadas={historiasVisitadas}
+                        // Pasamos la nueva función de "arranque"
+                        onStartNarrativeFromMap={handleStartStoryFromMap}
+                        // Pasamos la función para cerrar (que es la misma)
+                        onBack={() => setShowMap(false)}
+                    />
+                </div>
+            </div>
+        )}
             
             <div id="inventoryModal" className="modal" style={{ display: showInventory ? 'flex' : 'none' }}>
                 <div className="modal-content">
@@ -1776,23 +1896,31 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                     </div>
                 </div>
             </div>
-            <div id="charactersModal" className="modal" style={{ display: showCharacters ? 'flex' : 'none' }}>
-                <div className="modal-content">
-                    <span className="close-button" onClick={() => setShowCharacters(false)}>&times;</span>
-                    <h3 className="text-2xl font-bold mb-4">Personajes Conocidos</h3>
-                    <div id="characterItems" className="max-h-80 overflow-y-auto">
-                        {playerStats?.personajes_conocidos && playerStats.personajes_conocidos.length > 0 ? (
-                            playerStats.personajes_conocidos.map((char, index) => (
-                                <div key={index} className="list-item">
-                                    <p className="font-bold">{typeof char === 'string' ? char : char.nombre}</p>
+
+            {showCharacters && (
+                <div className="modal" style={{ display: 'flex' }}>
+                    <div className="modal-content">
+                        <span className="close-button" onClick={() => setShowCharacters(false)}>&times;</span>
+                        <h2>👤 Personajes Conocidos</h2>
+                        <p className="mb-4 text-sm text-gray-400">
+                            Haz clic en el nombre para ver la ficha completa.
+                        </p>
+                        <div className="list-container max-h-96 overflow-y-auto pr-2">
+                            {(playerStats?.personajes_conocidos || []).map((name: string, index: number) => (
+                                // ¡AQUÍ ESTÁ EL CAMBIO CLAVE!
+                                <div 
+                                    key={index} 
+                                    className="list-item hover:bg-gray-700 cursor-pointer transition-all"
+                                    onClick={() => handleCharacterClickInBar(name)} // <--- Llama a la nueva función
+                                >
+                                    <p className="font-semibold">{name}</p>
                                 </div>
-                            ))
-                        ) : (
-                            <p className="text-center text-gray-400">Aún no has conocido personajes.</p>
-                        )}
+                            ))}
+                        </div>
+                        {/* ... otros elementos del modal ... */}
                     </div>
                 </div>
-            </div>
+            )}
             <div id="storiesModal" className="modal" style={{ display: showStories ? 'flex' : 'none' }}>
                 <div className="modal-content">
                     <span className="close-button" onClick={() => setShowStories(false)}>&times;</span>
@@ -1830,6 +1958,61 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             {notification && (
                 <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 text-white py-3 px-6 rounded-full shadow-lg transition-all duration-500 ease-in-out animate-fade-in-down">
                     {notification}
+                </div>
+            )}
+
+            {/* Modal de la FICHA del Personaje (Ficha del PersonajeView) */}
+            {selectedCharacterForModal && (
+                <div className="modal" style={{ display: 'flex' }}>
+                    <div className="modal-content max-w-lg">
+                        <span className="close-button" onClick={closeCharacterModal}>&times;</span>
+                        <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-blue-400">
+                            Ficha de {selectedCharacterForModal.nombre}
+                        </h2>
+                        
+                        <div className="flex flex-col gap-4">
+                            {/* Imagen del personaje (si está disponible) */}
+                            {selectedCharacterForModal.imagen && (
+                                <div className="text-center">
+                                    <img 
+                                        src={selectedCharacterForModal.imagen} 
+                                        alt={`Imagen de ${selectedCharacterForModal.nombre}`} 
+                                        className="w-32 h-32 object-cover rounded-full mx-auto border-4 border-blue-400" 
+                                    />
+                                </div>
+                            )}
+
+                            {/* Descripción */}
+                            <div className="info-section">
+                                <h4 className="font-semibold text-lg text-gray-300">📝 Descripción</h4>
+                                <p className="text-sm">{selectedCharacterForModal.descripcion}</p>
+                            </div>
+                            
+                            {/* Metadatos/Atributos */}
+                            {selectedCharacterForModal.metadata && (
+                                <div className="info-section mt-2">
+                                    <h4 className="font-semibold text-lg text-gray-300">📋 Atributos</h4>
+                                    <div className="grid grid-cols-2 gap-2 text-sm">
+                                        {Object.entries(selectedCharacterForModal.metadata).map(([key, value]) => (
+                                            <div key={key} className="p-2 bg-gray-700 rounded-md">
+                                                <span className="font-medium text-blue-300">{key}:</span>{' '}
+                                                <span className="text-white">{String(value)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        
+                        <div className="modal-actions mt-6">
+                            <button 
+                                onClick={closeCharacterModal}
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-semibold transition-all duration-300"
+                            >
+                                Cerrar Ficha
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
             

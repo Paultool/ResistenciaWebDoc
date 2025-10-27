@@ -373,7 +373,7 @@ class GameServiceUser {
         try {
             const { data, error } = await supabase
                 .from('historia')
-                .select('*');
+                .select('*, id_ubicacion ( coordenadas )');
             return { data, error };
         } catch (error: any) {
             console.error("Error fetching historias:", error.message);
