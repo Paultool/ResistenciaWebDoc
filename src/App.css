@@ -1,21 +1,23 @@
-/* App.css */
+/* ========================================================== */
+/* --- 1. ESTILOS BASE Y GENERALES (MÍNIMOS) --- */
+/* ========================================================== */
 
 /* El contenedor principal de la aplicación, ahora flexible */
 .App {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  /* Asumo un fondo oscuro por defecto */
+  background: #111; 
   color: #ffffff;
   font-family: 'Arial', sans-serif;
-  /* CAMBIO CLAVE: Asegura que el App tome la altura mínima de la ventana */
-  min-height: 100vh; 
+  min-height: 100vh;
 }
 
-/* Loading de la aplicación */
+/* Estilos para el estado de carga */
 .app-loading {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  background: #111;
 }
 
 .loading-container {
@@ -24,513 +26,772 @@
 }
 
 .loading-container h1 {
-  color: #CD853F;
-  font-size: 1 rem;
-  margin-bottom: 1rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.loading-container p {
-  font-size: 1rem;
-  color: #cccccc;
-}
-
-/* Hero Section */
-.hero-section {
-  text-align: center;
-  padding: 2rem 1rem 1rem;
-  background: linear-gradient(45deg, #8B4513 0%, #D2691E 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-.hero-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="%23000000" opacity="0.1"><polygon points="0,100 1000,0 1000,100"/></svg>') no-repeat bottom;
-  background-size: cover;
-}
-
-.hero-content {
-  position: relative;
-  z-index: 1;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.hero-content h1 {
-  font-size: 1.5 rem;
-  margin: 0 0 1rem 0;
-  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
-  font-weight: bold;
-}
-
-.hero-subtitle {
-  font-size: 1.1rem;
-  margin: 0 0 2rem 0;
-  opacity: 0.95;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-  line-height: 1.5;
-}
-
-.hero-features {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.8rem;
-  margin-top: 1rem;
-}
-
-.feature {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 0.3rem 0.6rem;
-  border-radius: 25px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-/* Aplicación Autenticada */
-.app-authenticated {
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  min-height: 100vh; /* Asegura el fondo oscuro si el contenido es corto */
-}
-
-/* Navbar */
-.app-navbar {
-  background: linear-gradient(45deg, #8B4513 0%, #D2691E 100%);
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 3px solid #CD853F;
-  box-shadow: 0 4px 20px rgba(139, 69, 19, 0.3);
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.navbar-brand h1 {
-  margin: 0;
+  color: #CD853F; /* Color principal de "Resistencia" */
   font-size: 1.5rem;
-  color: white;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  font-weight: bold;
-}
-
-.navbar-nav {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.nav-btn {
-  background: rgba(255, 255, 255, 0.15);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  padding: 0.5rem 1rem;
-  border-radius: 25px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  font-size: 0.9rem;
-}
-
-.nav-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.4);
-  transform: translateY(-2px);
-}
-
-.nav-btn.active {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.6);
-  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
-}
-
-.navbar-user {
-  color: white;
-  opacity: 0.9;
-  font-weight: 500;
-  font-size: 0.9rem;
-}
-
-.user-email {
-  background: rgba(255, 255, 255, 0.15);
-  padding: 0.4rem 0.8rem;
-  border-radius: 15px;
-  font-size: 0.8rem;
-}
-
-.app-main {
-  flex: 1;
-  padding: 0;  /* Eliminamos el padding para evitar espacio extra que interfiera con alturas absolutas */
-  overflow-y: visible;  /* Cambiamos a visible para que el contenido no se corte ni active scroll innecesario; el componente maneja su propio overflow */
-}
-
-/* Views */
-.historias-view,
-.personajes-view,
-.mapa-view {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.view-header {
-  text-align: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #4a4a4a;
-}
-
-.view-header h2 {
-  color: #CD853F;
-  font-size: 1rem;
-  margin: 0 0 0.5rem 0;
-}
-
-.view-header p {
-  color: #cccccc;
-  font-size: 1rem;
-  margin: 0;
-}
-
-/* Historias Stats */
-.historias-stats {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.stat {
-  background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
-  color: #CD853F;
-  padding: 0.6rem 1rem;
-  border-radius: 20px;
-  font-weight: 600;
-  border: 1px solid #4a4a4a;
-}
-
-/* Historia Grid Actualizado */
-.historias-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-}
-
-.historia-card {
-  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
-  border: 1px solid #4a4a4a;
-  border-radius: 15px;
-  padding: 1rem;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.historia-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #8B4513, #CD853F);
-}
-
-.historia-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(139, 69, 19, 0.2);
-  border-color: #8B4513;
-}
-
-.historia-card h3 {
-  color: #CD853F;
-  font-size: 1.1rem;
-  margin: 0 0 0.8rem 0;
-  line-height: 1.4;
-}
-
-.historia-card .descripcion {
-  color: #cccccc;
-  line-height: 1.5;
-  margin-bottom: 0.8rem;
-  font-size: 0.9rem;
-}
-
-.metadata {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 1rem 0;
-}
-
-.metadata span {
-  padding: 0.2rem 0.6rem;
-  border-radius: 15px;
-  font-size: 0.75rem;
-  font-weight: bold;
-}
-
-.metadata .fecha {
-  background-color: #2d4a5a;
-  color: #a8c8e6;
-  border: 1px solid #4682B4;
-}
-
-.metadata .tipo.principal {
-  background-color: #5a4d2d;
-  color: #e6d8a8;
-  border: 1px solid #DAA520;
-}
-
-.metadata .tipo.secundaria {
-  background-color: #4a2d5a;
-  color: #d8a8e6;
-  border: 1px solid #9370DB;
-}
-
-.metadata .nivel {
-  background-color: #5a2d2d;
-  color: #e6a8a8;
-  border: 1px solid #DC143C;
-}
-
-.card-actions {
-  margin-top: 1rem;
-  padding-top: 0.8rem;
-  border-top: 1px solid #4a4a4a;
-}
-
-/* Coming Soon */
-.coming-soon {
-  text-align: center;
-  padding: 2rem 1rem;
-  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
-  border-radius: 20px;
-  border: 2px dashed #4a4a4a;
-  margin-top: 1rem;
-}
-
-.coming-soon p {
-  color: #8B4513;
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0;
-}
-
-/* Estados */
-.loading,
-.error {
-  text-align: center;
-  padding: 2rem;
-  font-size: 1rem;
-}
-
-.error {
-  background-color: #5a2d2d;
-  border: 2px solid #dc3545;
-  border-radius: 10px;
-  margin: 1.5rem 0;
-}
-
-.retry-btn {
-  background-color: #8B4513;
-  color: white;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 25px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: bold;
-  margin: 0.5rem;
-  transition: all 0.3s ease;
-}
-
-.retry-btn:hover {
-  background-color: #A0522D;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(139, 69, 19, 0.4);
-}
-
-.no-data {
-  text-align: center;
-  font-size: 1rem;
-  color: #888;
-  padding: 2rem;
-  background-color: #2a2a2a;
-  border-radius: 10px;
-  border: 2px dashed #4a4a4a;
-}
-
-/* Botones generales */
-.btn {
-  padding: 0.6rem 1.2rem;
-  border: none;
-  border-radius: 25px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: inline-block;
-  text-align: center;
-  font-size: 0.85rem;
-}
-
-.btn-primary {
-  background: linear-gradient(45deg, #8B4513, #CD853F);
-  color: white;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-.btn-primary:hover {
-  background: linear-gradient(45deg, #A0522D, #DAA520);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(139, 69, 19, 0.4);
-}
-
-.btn-sm {
-  padding: 0.4rem 0.8rem;
-  font-size: 0.8rem;
-}
-
-/* Media Queries para un diseño adaptativo y progresivo */
-@media (min-width: 768px) {
-  .loading-container h1 { font-size: 1.5 rem; }
-  .loading-container p { font-size: 1.2rem; }
-  .hero-section { padding: 4rem 2rem 2rem; }
-  .hero-content h1 { font-size: 1.5 rem; }
-  .hero-subtitle { font-size: 1.3rem; }
-  .hero-features { gap: 1.5rem; }
-  .feature { padding: 0.8rem 1.5rem; font-size: 0.95rem; }
-  .app-navbar { padding: 1rem 2rem; flex-direction: row; justify-content: space-between; }
-  .navbar-brand h1 { font-size: 1rem; }
-  .nav-btn { padding: 0.7rem 1.2rem; }
-  .user-email { padding: 0.5rem 1rem; font-size: 0.9rem; }
-  .app-main { padding: 2rem; }
-  .view-header h2 { font-size: 1.5rem; }
-  .view-header p { font-size: 1.1rem; }
-  .historias-stats { gap: 1rem; }
-  .stat { padding: 0.8rem 1.5rem; }
-  .historias-grid { grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem; }
-  .historia-card { padding: 1.5rem; }
-  .historia-card h3 { font-size: 1.3rem; margin-bottom: 1rem; }
-  .historia-card .descripcion { font-size: 0.95rem; line-height: 1.6; margin-bottom: 1rem; }
-  .metadata span { padding: 0.3rem 0.8rem; font-size: 0.8rem; }
-  .card-actions { margin-top: 1.5rem; padding-top: 1rem; }
-  .coming-soon { padding: 4rem 2rem; margin-top: 2rem; }
-  .coming-soon p { font-size: 1.3rem; }
-  .loading, .error { padding: 3rem; font-size: 1.2rem; }
-}
-
-/* Back Button Global */
-.back-btn {
-  background: linear-gradient(45deg, #8B4513, #CD853F);
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s ease;
   margin-bottom: 1rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
-.back-btn:hover {
-  background: linear-gradient(45deg, #A0522D, #D2691E);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.4);
-}
+/* ========================================================== */
+/* --- 2. ESTILOS DE LA BARRA DE NAVEGACIÓN (AUTENTICADA) --- */
+/* ========================================================== */
 
-/* Enhanced Navigation */
-.nav-btn { position: relative; overflow: hidden; }
-.nav-btn::before {
-  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
-  background: linear-gradient(90deg, #FFD700, #FFA500); transform: scaleX(0); transition: transform 0.3s ease;
-}
-
-.nav-btn.active::before, .nav-btn:hover::before { transform: scaleX(1); }
-
-/* Button Disabled State */
-.btn-disabled {
-  background: linear-gradient(45deg, #6c757d, #5a6268) !important; color: #cccccc !important;
-  cursor: not-allowed !important; opacity: 0.7;
-}
-
-.btn-disabled:hover { transform: none !important; box-shadow: none !important; }
-
-/* Access Info */
-.access-info {
-  background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3);
-  border-radius: 8px; padding: 1rem; margin: 1rem 0; text-align: center;
-}
-
-.access-info p { margin: 0.25rem 0; color: #ffc107; font-weight: 600; }
-
-/* Horizontal Navbar */
-.horizontal-navbar {
-  display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem;
-  background-color: #1a202c; color: #fff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.horizontal-navbar .navbar-brand h1 { font-size: 1 rem; font-weight: bold; color: #4299e1; }
-.horizontal-navbar .navbar-nav { display: flex; gap: 1 rem; }
-.horizontal-navbar .nav-btn {
-  background: none; border: none; color: #cbd5e0; font-size: 1rem; cursor: pointer;
-  transition: color 0.3s ease-in-out;
-}
-
-.horizontal-navbar .nav-btn:hover, .horizontal-navbar .nav-btn.active { color: #63b3ed; }
-
-/* Nuevos Estilos para el menú elegante */
 .elegant-navbar {
-  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
-  padding: 1rem 2rem; background: linear-gradient(90deg, #1f2937, #111827);
-  color: #fff; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); position: sticky; top: 0; z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 1rem 2rem;
+  /* Estilo Cinematográfico Elegante */
+  background: linear-gradient(90deg, #1f2937, #111827);
+  color: #fff;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
   transition: all 0.3s ease-in-out;
 }
 
-.navbar-logo h1 { font-size: 1rem; font-weight: bold; color: #a78bfa; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); }
-.navbar-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.2rem; }
+.navbar-logo h1 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #CD853F; /* Color principal de "Resistencia" */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.navbar-menu-container {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  transition: all 0.3s ease-in-out;
+}
+
+.navbar-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.2rem;
+}
+
 .nav-link-btn {
-  background: none; border: none; color: #d1d5db; font-size: 1rem; font-weight: 500;
-  padding: 0.5rem 0.8rem; cursor: pointer; transition: all 0.3s ease;
-  position: relative; text-decoration: none;
+  background: none;
+  border: none;
+  color: #d1d5db;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.5rem 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  text-decoration: none;
 }
 
-.nav-link-btn:hover { color: #e5e7eb; }
+.nav-link-btn:hover {
+  color: #e5e7eb;
+}
+
+/* Indicador de página activa */
 .nav-link-btn::after {
-  content: ''; position: absolute; width: 100%; height: 2px; background: #a78bfa;
-  bottom: 0; left: 0; transform: scaleX(0); transition: transform 0.3s ease;
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: #CD853F;
+  bottom: 0;
+  left: 0;
+  transform: scaleX(0);
+  transition: transform 0.3s ease-in-out;
 }
 
-.nav-link-btn:hover::after, .nav-link-btn.active::after { transform: scaleX(1); }
+.nav-link-btn.active::after {
+  transform: scaleX(1);
+}
 
 .navbar-user-info {
-  font-size: 0.9rem; color: #9ca3af; background: rgba(255, 255, 255, 0.05);
-  padding: 0.4rem 0.8rem; border-radius: 12px; margin-left: 1rem;
+  font-size: 0.9rem;
+  color: #d1d5db;
+  margin-left: 1.5rem;
 }
 
-/* Responsividad */
+
+/* --- 2.1. Estilos de Hamburguesa (Responsividad) --- */
+
+.navbar-hamburger-btn {
+  display: none; /* Oculto por defecto en escritorio */
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  z-index: 1001; 
+}
+
+.navbar-hamburger-btn span {
+  display: block;
+  width: 25px;
+  height: 3px;
+  background-color: #d1d5db; 
+  margin: 5px 0;
+  border-radius: 3px;
+  transition: all 0.3s ease-in-out;
+}
+
+.navbar-hamburger-btn[aria-expanded="true"] span:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+.navbar-hamburger-btn[aria-expanded="true"] span:nth-child(2) {
+  opacity: 0;
+}
+.navbar-hamburger-btn[aria-expanded="true"] span:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+
+/* ========================================================== */
+/* --- 3. ESTILOS DE LANDING PAGE CINEMATOGRÁFICO --- */
+/* ========================================================== */
+
+.landing-page {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden; 
+  display: flex;
+  flex-direction: column;
+  color: #ffffff;
+}
+
+.landing-video-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; 
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+.landing-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.75); /* Oscurece más para que el texto resalte */
+  z-index: 2;
+}
+
+.landing-content {
+  position: relative;
+  z-index: 3;
+  /* El contenedor está centrado con flex */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* CLAVE: Alinea los elementos (incluyendo el botón) al centro */
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  flex-grow: 1; 
+}
+
+/* --- ANIMACIÓN DE TÍTULO (LA RESISTENCIA) --- */
+.landing-title {
+  font-family: 'Georgia', serif;
+  font-size: 5rem; 
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #CD853F; 
+  letter-spacing: 0.2em;
+  text-shadow: 0 0 10px #CD853F80, 0 0 20px #CD853F50; /* Efecto neón/glow */
+  margin: 0;
+  /* Aplicar animación */
+  animation: flicker 4s infinite alternate;
+}
+
+@keyframes flicker {
+  0%, 18%, 22%, 25%, 53%, 57%, 100% {
+    text-shadow: 0 0 4px #CD853F, 0 0 11px #CD853F, 0 0 19px #CD853F, 0 0 40px #FFD700;
+    opacity: 1;
+  }
+  20%, 24%, 55% {        
+    text-shadow: none;
+    opacity: 0.8;
+  }
+}
+/* ------------------------------------------- */
+.landing-subtitle {
+    /* Mantiene el tamaño y el color */
+    font-size: 1.2rem;
+    color: #f1f1f1;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    
+    /* 💥 CAMBIOS CLAVE PARA ALINEACIÓN */
+    
+    /* 1. Limita el ancho máximo para evitar que sea una línea muy larga */
+    max-width: 650px; 
+    
+    /* 2. Centra el BLOQUE del subtítulo (establece márgenes iguales izquierda/derecha) */
+    margin-left: auto;
+    margin-right: auto;
+    
+    /* 3. Asegura que el texto dentro del bloque limitado esté centrado */
+    text-align: center;
+    
+    /* Opcional: añade espacio debajo si quieres separarlo del botón */
+    margin-bottom: 2rem; 
+}
+
+/* --- CORRECCIÓN FINAL: BOTÓN RESISTE MÁS PEQUEÑO --- */
+.landing-button {
+  /* CLAVE: Asegura que solo ocupe el ancho del contenido */
+  display: inline-block !important; 
+  width: auto !important;
+  
+  font-size: 1.1rem; 
+  padding: 0.8rem 2.5rem; 
+  text-transform: uppercase;
+  letter-spacing: 0.15em; 
+  font-weight: bold;
+  background-color: #CD853F;
+  border: 2px solid #CD853F;
+  color: #111;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(205, 133, 63, 0.5);
+  cursor: pointer; 
+}
+
+.landing-button:hover {
+  background-color: #e69d4d;
+  color: #111;
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(205, 133, 63, 0.7);
+}
+
+
+/* ========================================================== */
+/* --- 4. ESTILOS DE BARRA INFERIOR (BOTTOM BAR) --- */
+/* ========================================================== */
+
+.bottom-bar {
+  position: relative; 
+  z-index: 4;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(5px);
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap; 
+  gap: 2rem;
+  border-top: 1px solid rgba(205, 133, 63, 0.3);
+}
+
+.bottom-bar-btn {
+  background: none;
+  border: none;
+  color: #cccccc;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.bottom-bar-btn:hover {
+  color: #CD853F;
+  transform: translateY(-2px);
+}
+
+
+/* ========================================================== */
+/* --- 5. ESTILOS DE MODALES (INFO Y LOGIN UNIFICADOS) --- */
+/* ========================================================== */
+
+.info-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center; /* Centrado vertical */
+  justify-content: center; /* Centrado horizontal */
+  z-index: 1010; 
+  padding: 1rem;
+}
+
+.info-modal-content {
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+  color: #ffffff;
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 100%;
+  position: relative; /* CLAVE para posicionar el botón 'x' */
+  border: 1px solid #4a4a4a;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+/* ESTILO ESPECÍFICO PARA EL MODAL DE LOGIN (MÁS COMPACTO) */
+.login-modal-override {
+    max-width: 400px; 
+    padding: 2.5rem 2rem;
+}
+
+/* --- BOTÓN CERRAR --- */
+.info-modal-close-btn {
+  position: absolute; 
+  top: 1rem;
+  right: 1.5rem;
+  background: none;
+  border: none;
+  color: #cccccc;
+  font-size: 2rem;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  z-index: 1011; 
+}
+
+.info-modal-close-btn:hover {
+  color: #CD853F;
+}
+
+.info-modal-title {
+  color: #CD853F;
+  margin: 0 0 1rem 0;
+  font-size: 1.8rem;
+  text-align: center;
+}
+
+.info-modal-body {
+  font-size: 1rem;
+  color: #e0e0e0;
+  line-height: 1.7;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.login-modal-subtitle {
+    color: #e0e0e0;
+    text-align: center;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ========================================================== */
+/* --- 6. ESTILOS DE VISTA DE HISTORIAS (HistoriasView) --- */
+/* ========================================================== */
+
+.historias-view {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.view-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #333;
+}
+
+.view-header h2 {
+    color: #CD853F; /* Tono dorado/cobre para resaltar */
+    font-size: 2.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+}
+
+.view-header p {
+    color: #a0a0a0;
+}
+
+.historias-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    color: #ffffff;
+}
+
+.stat {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    background: #1e1e1e;
+    border-radius: 5px;
+    border: 1px solid #333;
+}
+
+.historias-grid {
+    display: grid;
+    /* Ajuste para que se vea bien en diferentes tamaños de pantalla */
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+/* --- Estilos para HistoriaCard (Ficha) --- */
+.historia-card {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    /* Animación de hover sutil */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.historia-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(205, 133, 63, 0.2);
+}
+
+.historia-card h3 {
+    color: #CD853F;
+    font-size: 1.5rem;
+    margin-top: 0;
+    margin-bottom: 0.8rem;
+}
+
+.historia-card .descripcion {
+    font-size: 0.95rem;
+    color: #cccccc;
+    line-height: 1.4;
+    margin-bottom: 1.5rem;
+    /* Limitar a unas pocas líneas para el preview */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 60px; 
+}
+
+.historia-card .metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+}
+
+.historia-card .metadata span {
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    background: #2a2a2a;
+    color: #999;
+}
+
+/* Etiquetas de tipo de historia */
+.historia-card .tipo.principal {
+    background: #503100;
+    color: #FFD700; /* Oro */
+    border: 1px solid #FFD70055;
+}
+
+.historia-card .tipo.secundaria {
+    background: #181c22;
+    color: #7b8593;
+}
+
+.historia-card .nivel {
+    background: #132a13;
+    color: #5cb85c;
+}
+
+.historia-card .card-actions {
+    text-align: right;
+    margin-top: auto; /* Empuja las acciones al fondo */
+}
+
+/* Reutilizar estilos de botón para la acción "Ver Detalle" */
+.historia-card .btn-primary {
+    background-color: #CD853F;
+    border-color: #CD853F;
+    color: #111;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.historia-card .btn-primary:hover {
+    background-color: #e69d4d;
+    border-color: #e69d4d;
+    color: #111;
+}
+
+.historia-card .btn-sm {
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+}
+
+/* Estilo para el botón de volver al dashboard en la vista de historias */
+.historias-view .back-btn {
+    background: none;
+    border: 1px solid #555;
+    color: #cccccc;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    float: left;
+    margin-top: 0.5rem;
+}
+
+.historias-view .back-btn:hover {
+    background: #CD853F;
+    color: #111;
+    border-color: #CD853F;
+}
+
+/* ========================================================== */
+/* --- 7. MEDIA QUERIES (RESPONSIVIDAD) --- */
+/* ========================================================== */
+
 @media (max-width: 768px) {
-  .elegant-navbar { flex-direction: column; align-items: flex-start; gap: 1.5rem; padding: 1rem; }
-  .navbar-links { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
-  .nav-link-btn { padding: 0.2rem 0; }
-  .navbar-user-info { margin-top: 1rem; margin-left: 0; }
+  /* --- LANDING PAGE --- */
+  .landing-title {
+    font-size: 3rem;
+    letter-spacing: 0.15em;
+  }
+
+  .landing-subtitle {
+    font-size: 1.1rem;
+    margin: 1rem 0 2rem 0;
+  }
+  
+  .landing-button {
+    font-size: 1rem; 
+    padding: 0.7rem 2rem; 
+    /* Eliminamos el width forzado en móvil para que siga siendo pequeño */
+    width: auto !important; 
+  }
+
+  /* --- NAVBAR AUTENTICADA (Hamburguesa) --- */
+  .elegant-navbar {
+    flex-direction: row; 
+    justify-content: space-between; 
+    align-items: center;
+    padding: 1rem;
+  }
+
+  .navbar-hamburger-btn {
+    display: block; 
+  }
+
+  .navbar-menu-container {
+    display: none; 
+    position: absolute;
+    top: 100%; 
+    left: 0;
+    width: 100%;
+    background: #111827; 
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
+    padding: 1.5rem;
+    z-index: 1000;
+  }
+
+  .navbar-menu-container.is-open {
+    display: flex;
+    flex-direction: column; 
+    align-items: flex-start; 
+    gap: 1.5rem;
+  }
+
+  .navbar-links {
+    flex-direction: column; 
+    align-items: flex-start;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .nav-link-btn {
+    padding: 0.5rem 0; 
+    font-size: 1.1rem; 
+    width: 100%;
+    text-align: left;
+  }
+  
+  .nav-link-btn::after {
+     transform: scaleX(0) !important; 
+  }
+
+  .nav-link-btn.active::after {
+     transform: scaleX(1) !important;
+     width: 40px; 
+  }
+
+  .navbar-user-info {
+    margin-top: 1rem;
+    margin-left: 0;
+    width: 100%;
+    text-align: left;
+    padding: 0.8rem;
+    border-top: 1px solid #4a4a4a; 
+  }
+  
+  /* --- BOTTOM BAR --- */
+  .bottom-bar {
+    gap: 1rem;
+    padding: 1rem 0.5rem;
+  }
+
+  .bottom-bar-btn {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-title {
+    font-size: 2.5rem;
+  }
+
+  .landing-subtitle {
+    font-size: 1rem;
+  }
+
+  .bottom-bar {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  /* Modales más pequeños en móviles */
+  .info-modal-content {
+      padding: 1.5rem;
+  }
+  
+  .login-modal-override {
+      max-width: 90%;
+  }
+}
+
+/* ========================================================== */
+/* --- 8. ESTILOS DE TRANSICIÓN PARA EL LANDING PAGE --- */
+/* ========================================================== */
+
+.landing-content {
+    /* ... (Estilos existentes, no los borres) ... */
+    
+    /* Reglas de transición para el nuevo efecto */
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out; /* Transición suave de 1.5 segundos */
+    pointer-events: none; /* Asegura que no se pueda hacer clic antes de aparecer */
+}
+
+/* CLASE para ocultar/mostrar */
+.landing-content.show {
+    opacity: 1;
+    pointer-events: auto; /* Permite interacciones cuando es visible */
+}
+
+.landing-content.hide {
+    opacity: 0;
+}
+
+/* ========================================================== */
+/* --- 9. ESTILO DEL BOTÓN DE ACTIVACIÓN DE AUDIO --- */
+/* ========================================================== */
+
+.unmute-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5; /* Por encima del overlay pero debajo del contenido final */
+    
+    background: rgba(205, 133, 63, 0.9); /* Color Resistencia semi-transparente */
+    color: #111;
+    border: 2px solid #fff;
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    /* Animación de pulsación sutil para llamar la atención */
+    animation: pulse 2s infinite; 
+}
+
+.unmute-button:hover {
+    background: #e69d4d;
+    transform: translate(-50%, -50%) scale(1.05);
+    animation: none;
+}
+
+.unmute-button i {
+    margin-right: 0.5rem;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(205, 133, 63, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(205, 133, 63, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(205, 133, 63, 0);
+  }
+}
+
+/* Ajuste de la opacidad del overlay para que el botón resalte más */
+.landing-overlay {
+    background: rgba(21, 1, 43, 0.75); 
+}
+
+/* ========================================================== */
+/* --- 10. ESTILO DEL BOTÓN DE PANTALLA COMPLETA --- */
+/* ========================================================== */
+
+.fullscreen-toggle-button {
+    /* Posicionamiento fijo en la ventana del navegador */
+    position: fixed; 
+    top: 20px; /* Separación de la parte superior */
+    left: 20px; /* Separación de la izquierda */
+    z-index: 10000; /* Asegura que esté por encima de todo */
+    
+    /* Estilos visuales */
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    border: 1px solid #777;
+    border-radius: 5px;
+    padding: 0.7rem 1rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+}
+
+.fullscreen-toggle-button:hover {
+    background: rgba(205, 133, 63, 0.8); /* Color Resistencia al pasar el ratón */
+    color: #111;
+}
+
+/* Opcional: Asegúrate de que el contenedor de la LandingPage esté correcto */
+.landing-page {
+    position: relative; /* Es necesario para contener otros elementos si no usas fixed */
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
 }

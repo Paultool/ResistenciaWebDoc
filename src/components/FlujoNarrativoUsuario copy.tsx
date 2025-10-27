@@ -3,6 +3,8 @@ import 'aframe';
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { gameServiceUser, PlayerStats } from '../services/GameServiceUser';
+import MapaView from './MapaView';
+
 
 // Define las interfaces para tipar los datos
 interface RecursoMultimediaData {
@@ -101,6 +103,22 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
     const aframeContainerRef = useRef<HTMLDivElement>(null);
 
     const { user, loading: authLoading } = useAuth();
+
+    // ESTADO para el modal del mapa
+    const [showMap, setShowMap] = useState(false);
+    
+    // ... (todos los useEffect y funciones existentes) ...
+
+    // NUEVA FUNCIÓN para manejar el inicio desde el mapa
+    // Esta función será llamada por MapaView (a través de HistoriaDetail)
+    const handleStartStoryFromMap = (historiaId: number) => {
+        // 1. Ocultar el modal del mapa
+        setShowMap(false);
+        
+        // 2. Iniciar la narrativa con la historia seleccionada
+        // Reutilizamos la función que ya tienes
+        handleHistoriaSelect(historiaId); 
+    };
 
     // Nuevo estado para el pop-up de instrucciones inicial del 3D
     const [showInitial3DPopup, setShowInitial3DPopup] = useState(false);
@@ -1583,6 +1601,11 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                     >
                         ✕
                     </button>
+
+                    <div className="tool-icon" onClick={() => setShowMap(true)}>
+                            <span style={{ fontSize: '1.2rem' }}>🗺️</span>
+                            <span id="mapCount" style={{ fontSize: '0.75rem' }}>Mapa</span>
+                    </div>
                     
                     <div className="info-display">
                         <span className="text-xl">💪</span>
@@ -1785,6 +1808,51 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                 </div>
             </div>
             
+            {showMap && (
+                <div 
+                    className="modal" 
+                    style={{ 
+                        display: 'flex', 
+                        zIndex: 101, // Aseguramos que esté sobre otros modales si es necesario
+                        alignItems: 'center', 
+                        justifyContent: 'center' 
+                    }}
+                >
+                    <div 
+                        className="modal-content" 
+                        style={{
+                            width: '95vw', 
+                            height: '90vh', 
+                            maxWidth: '1200px', 
+                            padding: '0', // MapaView manejará su propio padding
+                            overflow: 'hidden', // Evita que el mapa se desborde
+                            position: 'relative'
+                        }}
+                    >
+                        {/* Botón de cerrar el modal del mapa */}
+                        <span 
+                            className="close-button" 
+                            onClick={() => setShowMap(false)} 
+                            style={{ zIndex: 1000, color: '#fff', background: 'rgba(0,0,0,0.5)', borderRadius: '50%', padding: '0 0.5rem' }}
+                        >
+                            &times;
+                        </span>
+                        
+                        <MapaView
+                            // Pasamos las historias que ya cargamos en este componente
+                            historias={historias} 
+                            // Pasamos las historias visitadas para los colores de pines
+                            historiasVisitadas={historiasVisitadas}
+                            // Pasamos la nueva función de "arranque"
+                            onStartNarrativeFromMap={handleStartStoryFromMap}
+                            // Pasamos la función para cerrar (que es la misma)
+                            onBack={() => setShowMap(false)}
+                        />
+                    </div>
+                </div>
+            )}
+            
+            
             <div id="inventoryModal" className="modal" style={{ display: showInventory ? 'flex' : 'none' }}>
                 <div className="modal-content">
                     <span className="close-button" onClick={() => setShowInventory(false)}>&times;</span>
@@ -1897,6 +1965,8 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                     </div>
                 </div>
             )}
+
+            
         </div>
     );
 };

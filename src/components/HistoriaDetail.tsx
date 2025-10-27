@@ -312,7 +312,7 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
           {activeTab === 'multimedia' && (
             <div className="tab-panel">
               {/* 🚨 CORRECCIÓN DEL ERROR DE LENGTH: Se verifica si existe 'multimedia' antes de leer 'length' */}
-              {(multimedia && multimedia.length > 0) ? (
+              {(historia?.recursomultimedia?.length ?? 0) > 0 ? (
                 <div className="multimedia-grid">
                   {multimedia.map(recurso => (
                     <div key={recurso.id_recurso} className="multimedia-item">

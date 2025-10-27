@@ -61,7 +61,6 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
     return (
       <div className="personajes-view">
         <div className="view-header">
-          <button onClick={onBack} className="back-btn">← Volver</button>
           <h2>🎭 Galería de Personajes</h2>
         </div>
         <div className="loading">
@@ -75,7 +74,6 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
     return (
       <div className="personajes-view">
         <div className="view-header">
-          <button onClick={onBack} className="back-btn">← Volver</button>
           <h2>🎭 Galería de Personajes</h2>
         </div>
         <div className="error">
@@ -89,7 +87,6 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
   return (
     <div className="personajes-view">
       <div className="view-header">
-        <button onClick={onBack} className="back-btn">← Volver</button>
         <h2>🎭 Galería de Personajes</h2>
         <p>Conoce a los protagonistas de La Resistencia</p>
       </div>

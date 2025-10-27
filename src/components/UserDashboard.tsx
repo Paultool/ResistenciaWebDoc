@@ -136,13 +136,7 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void }> = ({ onNa
             <span className="action-icon">🎬</span>
             <span className="action-text">Cine</span>
           </button>
-          <button 
-            className="action-btn map-btn"
-            onClick={() => handleNavigate('mapa')}
-          >
-            <span className="action-icon">🗺️</span>
-            <span className="action-text">Ver Mapa Interactivo</span>
-          </button>
+          
           <button 
             className="action-btn characters-btn"
             onClick={() => handleNavigate('personajes')}

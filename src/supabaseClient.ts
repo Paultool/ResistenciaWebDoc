@@ -110,8 +110,53 @@ export interface FlujoNarrativo {
   }
 }
 
-// --- Operaciones CRUD para HISTORIAS ---
 
+// --ficha personajes
+
+export const obtenerFichaPersonajePorId = async (id: number): Promise<Personaje | null> => {
+  try {
+    const { data: p, error } = await supabase
+      .from('personaje') // El nombre de tu tabla
+      .select('*')
+      .eq('id_personaje', id)
+      .single();
+
+    if (error) {
+      console.error('Error obteniendo ficha de personaje:', error.message);
+      throw error;
+    }
+
+    if (!p) return null;
+
+    // Replicamos la misma lógica de 'obtenerPersonajes' para ser consistentes
+    // con cómo manejas 'metadata' y 'rol'.
+    let atributos: any = {};
+    try {
+      // Usamos el campo 'atributos_json' de tu DB
+      atributos = JSON.parse(p.atributos_json || '{}');
+    } catch (e) {
+      console.warn('Error parseando atributos_json:', e);
+      atributos = {};
+    }
+
+    // Mapeamos al tipo 'Personaje' que ya tienes definido
+    const personaje: Personaje = {
+      ...p,
+      id: p.id_personaje, // Asignamos 'id'
+      rol: p.rol || (atributos as any).profesion || 'Personaje', // Usamos el 'rol' de la DB
+      metadata: atributos // Asignamos los atributos parseados a 'metadata'
+    };
+
+    return personaje;
+
+  } catch (error: any) {
+    console.error('❌ Error en la función obtenerFichaPersonajePorId:', error.message);
+    return null;
+  }
+};
+
+
+// --- Operaciones CRUD para HISTORIAS ---
 
 export const obtenerHistorias = async (): Promise<Historia[]> => {
   try {
@@ -1260,6 +1305,9 @@ class GameService {
       console.error('Error actualizando racha diaria:', error);
     }
   }
+  
+
+  
 
   /**
    * Obtiene estadísticas resumidas para el dashboard
