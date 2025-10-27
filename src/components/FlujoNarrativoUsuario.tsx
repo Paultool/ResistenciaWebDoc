@@ -1561,7 +1561,7 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                 )}
                 {is3DModel && recursoActual && (
                     <div ref={aframeContainerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
-                        <a-scene embedded vr-mode-ui="enabled: true" renderer="antialias: true">
+                        <a-scene embedded vr-mode-ui="disabled: true" renderer="antialias: true">
                             {/* Modelo GLB con componente de interacción */}
                             {(() => {
                                 const hotspotConfigs = recursoActual.metadatos ? JSON.parse(recursoActual.metadatos) as HotspotConfig[] : [];

@@ -2,7 +2,14 @@ import React, { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import './AuthForm.css'
 
-const AuthForm: React.FC = () => {
+// 1. Añadir la interfaz de props para Fullscreen
+interface AuthFormProps {
+  // Función para reafirmar la pantalla completa
+  onRequestFullscreen?: () => void; 
+}
+
+// 2. Aceptar la prop
+const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen }) => {
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -26,17 +33,30 @@ const AuthForm: React.FC = () => {
         if (error) {
           setError(error.message)
         } else {
+          if (onRequestFullscreen) {
+            // 🔑 FIX CLAVE DE TIEMPO:
+            // 1. Reafirma la solicitud de Fullscreen.
+            onRequestFullscreen()
+            
+            // 2. Espera 50ms antes de que el estado de AuthContext cambie.
+            // Esto asegura que el navegador tenga tiempo de procesar el re-request 
+            // de fullscreen, manteniendo la interfaz en FullScreen al cargar el Dashboard.
+            await new Promise(resolve => setTimeout(resolve, 50)); 
+          }
           setMessage('¡Inicio de sesión exitoso!')
+          // NOTA: El cambio de estado de AuthContext ocurre inmediatamente después de este bloque.
         }
       } else {
         // Registro
         if (password !== confirmPassword) {
           setError('Las contraseñas no coinciden')
+          setLoading(false)
           return
         }
         
         if (password.length < 6) {
           setError('La contraseña debe tener al menos 6 caracteres')
+          setLoading(false)
           return
         }
 
@@ -44,6 +64,11 @@ const AuthForm: React.FC = () => {
         if (error) {
           setError(error.message)
         } else {
+           if (onRequestFullscreen) {
+             // Aplicar la misma espera para el registro
+             onRequestFullscreen()
+             await new Promise(resolve => setTimeout(resolve, 50)); 
+           }
           setMessage('¡Registro exitoso! Revisa tu email para confirmar tu cuenta.')
         }
       }
