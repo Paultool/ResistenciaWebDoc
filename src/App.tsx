@@ -18,6 +18,90 @@ import './components/HistoriaDetail.css';
 
 
 // ==========================================================
+// --- Componente Modal de Video YouTube (NUEVO) ---
+// ==========================================================
+const YouTubeVideoModal: React.FC<{ videoId: string; title: string; onClose: () => void }> = ({ videoId, title, onClose }) => {
+    // URL de embebido de YouTube. El parámetro 'autoplay=1' inicia la reproducción.
+    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+
+    return (
+        <div className="video-modal-overlay" onClick={onClose}>
+            <div className="video-modal-content" onClick={(e) => e.stopPropagation()}>
+                <button onClick={onClose} className="video-modal-close-btn">&times;</button>
+                <h3 className="video-modal-title">{title}</h3>
+                <div className="video-responsive">
+                    <iframe
+                        src={embedUrl}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title={title}
+                    ></iframe>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+// ==========================================================
+// --- Componente de Proceso (WIP) (ACTUALIZADO 2x2) ---
+// ==========================================================
+interface WorkInProgressViewProps {
+    onOpenVideoModal: (videoId: string, title: string) => void;
+}
+
+const WorkInProgressView: React.FC<WorkInProgressViewProps> = ({ onOpenVideoModal }) => {
+  const links = [
+    { name: 'PRIMER CORTE (Video)', type: 'video', videoId: '1MpN0MbBFlA', icon: 'fab fa-youtube' }, 
+    { name: 'GALERIA', type: 'link', url: 'https://pablonieto.jimdofree.com/2025/10/28/la-resistencia-wip/', icon: 'fas fa-camera-retro' },
+    { name: 'CARPETA DE PRODUCCION', type: 'link', url: 'https://drive.google.com/file/d/1MbjrWQTWGnUcngcSb2afQpiZjqqNFtqG/view?usp=sharing', icon: 'fas fa-folder-open' },
+    { name: 'GITHUB', type: 'link', url: 'https://github.com/Paultool/ResistenciaWebDoc', icon: 'fab fa-github' },
+  ];
+
+  return (
+    <div className="wip-container">
+      <h2 className="wip-header">🛠️ Proyecto en Progreso (WIP)</h2>
+      <p className="wip-description">
+        Esta es la documentación y recursos externos del proyecto "WebDoc La Resistencia".
+      </p>
+      
+      {/* 🔑 CLAVE: La clase wip-links-grid define el layout 2x2 en App.css */}
+      <div className="wip-links-grid">
+        {links.map((link) => {
+          if (link.type === 'video') {
+            return (
+              <button
+                key={link.name}
+                onClick={() => onOpenVideoModal(link.videoId, link.name)}
+                className="wip-link-card" 
+              >
+                <i className={`${link.icon} wip-icon`}></i>
+                <span className="wip-link-name">{link.name}</span>
+                <i className="fas fa-video wip-external-icon"></i>
+              </button>
+            );
+          }
+          return (
+            <a
+              key={link.name}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="wip-link-card"
+            >
+              <i className={`${link.icon} wip-icon`}></i>
+              <span className="wip-link-name">{link.name}</span>
+              <i className="fas fa-external-link-alt wip-external-icon"></i>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ==========================================================
 // --- Componente para mostrar una historia individual (Card) ---
 // ==========================================================
 interface HistoriaCardProps {
@@ -60,17 +144,25 @@ const MainContent: React.FC = () => {
 
   const { user } = useAuth();  
   const [isAdmin, setIsAdmin] = useState(false);  
-  const [currentView, setCurrentView] = useState<'dashboard' | 'historias' | 'personajes' | 'mapa' | 'inventario' | 'admin' | 'intro' | 'story-selection' | 'narrative-flow' | 'profile' | 'cine'>('dashboard');
+  
+  // 🔑 ACTUALIZACIÓN: Se agrega 'wip' al tipo de vista
+  type View = 'dashboard' | 'historias' | 'personajes' | 'mapa' | 'inventario' | 'admin' | 'intro' | 'story-selection' | 'narrative-flow' | 'profile' | 'cine' | 'wip';
+  const [currentView, setCurrentView] = useState<View>('dashboard');
+  
   const [historias, setHistorias] = useState<Historia[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [conexionOk, setConexionOk] = useState(false);
   const [selectedHistoriaId, setSelectedHistoriaId] = useState<number | null>(null);
-  const [selectedStory, setSelectedStory] = useState(null);
+  const [selectedStory, setSelectedStory] = useState<any>(null); 
   const [userProfile, setUserProfile] = useState<any>({ user_id: null, xp_total: 0, ubicaciones_visitadas: [] });
   const [flujoNarrativoHistoriaId, setFlujoNarrativoHistoriaId] = useState<number | null>(null);
   const [view, setView] = useState('dashboard');
   const [historiaId, setHistoriaId] = useState<number | null>(null);
+  
+  // 🔑 NUEVO ESTADO: Para el modal de video
+  const [videoModalData, setVideoModalData] = useState<{ videoId: string; title: string } | null>(null); 
+  
   const supabaseClient = supabase;
   
   // ESTADO: Controla la visibilidad de la barra de navegación superior
@@ -206,7 +298,7 @@ const MainContent: React.FC = () => {
      }
   };
 
-  const handleNavClick = (view: any) => {
+  const handleNavClick = (view: View) => {
     setCurrentView(view);
     setIsMobileMenuOpen(false);
   };
@@ -216,6 +308,11 @@ const MainContent: React.FC = () => {
     if (showNavBar) {
         setIsMobileMenuOpen(false); 
     }
+  };
+  
+  // 🔑 NUEVA FUNCIÓN: Abre el modal de video (usado en WIP)
+  const handleOpenVideoModal = (videoId: string, title: string) => {
+        setVideoModalData({ videoId, title });
   };
 
 
@@ -296,6 +393,10 @@ const MainContent: React.FC = () => {
         
         case 'inventario':
           return <InventarioView onBack={handleBackToDashboard} />;
+        
+        // 🔑 NUEVO: Caso para la vista WIP
+        case 'wip':
+            return <WorkInProgressView onOpenVideoModal={handleOpenVideoModal} />;
 
         case 'admin':
           return isAdmin ? <AdminPanel /> : <p>Acceso denegado.</p>;
@@ -327,6 +428,13 @@ const MainContent: React.FC = () => {
 
           <div className={`navbar-menu-container ${isMobileMenuOpen ? 'is-open' : ''}`}>
             <div className="navbar-links">
+              <button 
+                  className="navbar-hide-btn" 
+                  onClick={handleToggleNavBar}
+                  title="Ocultar Menú Superior"
+              >
+                  <i className="fas fa-chevron-up">OCULTAR</i>
+              </button>
               <button className={`nav-link-btn ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => handleNavClick('dashboard')}>Dashboard</button>
               <button className={`nav-link-btn ${currentView === 'cine' ? 'active' : ''}`} onClick={() => handleNavClick('cine')}>Cine</button>
               <button className={`nav-link-btn ${currentView === 'historias' ? 'active' : ''}`} onClick={() => handleNavClick('historias')}>Historias</button>
@@ -334,6 +442,9 @@ const MainContent: React.FC = () => {
               <button className={`nav-link-btn ${currentView === 'mapa' ? 'active' : ''}`} onClick={() => handleNavClick('mapa')}>Mapa</button>
               <button className={`nav-link-btn ${currentView === 'inventario' ? 'active' : ''}`} onClick={() => handleNavClick('inventario')}>Inventario</button>
               
+              {/* 🔑 NUEVO: Botón WIP */}
+              <button className={`nav-link-btn ${currentView === 'wip' ? 'active' : ''}`} onClick={() => handleNavClick('wip')}>WIP</button>
+
               {isAdmin && (
                 <button className={`nav-link-btn ${currentView === 'admin' ? 'active' : ''}`} onClick={() => handleNavClick('admin')}>Admin</button>
               )}
@@ -343,14 +454,6 @@ const MainContent: React.FC = () => {
               {user?.email}
             </div>
             
-            <button 
-                className="navbar-hide-btn" 
-                onClick={handleToggleNavBar}
-                title="Ocultar Menú Superior"
-            >
-                <i className="fas fa-chevron-up"></i>
-            </button>
-
           </div>
         </nav>
       )}
@@ -364,6 +467,16 @@ const MainContent: React.FC = () => {
       <main className={`app-main ${!showNavBar ? 'navbar-hidden' : ''}`}>
         {renderCurrentView()}
       </main>
+      
+      {/* 🔑 NUEVO: Renderizado del modal de video para la sección autenticada */}
+      {videoModalData && (
+          <YouTubeVideoModal 
+              videoId={videoModalData.videoId} 
+              title={videoModalData.title}
+              onClose={() => setVideoModalData(null)} 
+          />
+      )}
+      
     </div>
   );
 };
@@ -396,16 +509,34 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onRequestFullscreen })
 
 
 /**
- * Contenido del Modal de Información
+ * Contenido del Modal de Información (ACTUALIZADO)
  */
 const modalInfoContent = {
   acerca: {
     title: 'Acerca del Proyecto',
     body: 'LA RESISTENCIA es un documental web interactivo que explora las narrativas urbanas de la resistencia social en la Ciudad de México. A través de historias inmersivas, mapas georeferenciados y elementos de RPG, buscamos documentar y preservar la memoria colectiva de la lucha social.'
   },
+  // 🔑 MODIFICACIÓN CLAVE: Cuerpo más limpio y envuelto en div.modal-links-grid
   'making-off': {
-    title: 'Making Off',
-    body: 'Este proyecto fue realizado por un equipo multidisciplinario de cineastas, desarrolladores, diseñadores e investigadores. El proceso implicó una profunda investigación de campo, entrevistas, y el desarrollo de una plataforma tecnológica a medida para soportar la narrativa interactiva.'
+    title: 'Making Off y Recursos',
+    body: `
+    Este proyecto fue realizado por un equipo multidisciplinario de cineastas, desarrolladores, diseñadores e investigadores. El proceso implicó una profunda investigación de campo, entrevistas, y el desarrollo de una plataforma tecnológica a medida para soportar la narrativa interactiva.
+    
+    <div class="modal-links-grid">
+        <button class="modal-link-btn js-open-video" data-video-id="1MpN0MbBFlA" data-video-title="PRIMER CORTE (Video)">
+            <i class="fab fa-youtube"></i> PRIMER CORTE (Video)
+        </button>
+        <a href="https://pablonieto.jimdofree.com/2025/10/28/la-resistencia-wip/" target="_blank" rel="noopener noreferrer" class="modal-link-btn">
+            <i class="fas fa-camera-retro"></i> GALERIA
+        </a>
+        <a href="https://drive.google.com/file/d/1MbjrWQTWGnUcngcSb2afQpiZjqqNFtqG/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="modal-link-btn">
+            <i class="fas fa-folder-open"></i> CARPETA DE PRODUCCION
+        </a>
+        <a href="https://github.com/Paultool/ResistenciaWebDoc" target="_blank" rel="noopener noreferrer" class="modal-link-btn">
+            <i class="fab fa-github"></i> GITHUB
+        </a>
+    </div>
+    `
   },
   equipo: {
     title: 'Equipo',
@@ -414,24 +545,86 @@ const modalInfoContent = {
 };
 
 /**
- * Modal de Información
+ * Modal de Información (ACTUALIZADO)
  */
 interface InfoModalProps {
   contentKey: 'acerca' | 'making-off' | 'equipo';
   onClose: () => void;
+  // 🔑 NUEVA PROP: Handler opcional para abrir el video modal
+  onOpenVideoModal?: (videoId: string, title: string) => void; 
 }
 
-const InfoModal: React.FC<InfoModalProps> = ({ contentKey, onClose }) => {
+const InfoModal: React.FC<InfoModalProps> = ({ contentKey, onClose, onOpenVideoModal }) => {
   const { title, body } = modalInfoContent[contentKey];
+  const modalContentRef = useRef<HTMLDivElement>(null); 
 
+  // Función para convertir texto simple con saltos de línea (\n) a HTML
+  const formatBody = (text: string) => {
+    // Reemplazamos \n por <br/> y aseguramos que no haya espacio en blanco al inicio/fin
+    return text.trim().replace(/\n/g, '<br/>');
+  };
+  
+  // Condicional: si es 'making-off' usamos el body con HTML. Si no, lo formateamos.
+  const renderedBody = contentKey === 'making-off' 
+    ? body 
+    : formatBody(body); 
+    
+  // 🔑 CLAVE: Determina el estilo whiteSpace para evitar saltos de línea no deseados
+  const textStyle = contentKey !== 'making-off' 
+    ? { whiteSpace: 'pre-wrap' as const } // Aplica pre-wrap solo a acerca y equipo
+    : {}; // No aplica white-space a making-off (usa el default: normal)
+
+
+  // 🔑 HOOK: Para manejar el clic del botón de video dentro del HTML inyectado
+  useEffect(() => {
+    if (contentKey === 'making-off' && modalContentRef.current && onOpenVideoModal) {
+      const modal = modalContentRef.current;
+      // Seleccionamos todos los botones con la clase de video
+      const videoButtons = modal.querySelectorAll('.js-open-video'); 
+
+      const handleVideoClick = (e: Event) => {
+        const button = e.currentTarget as HTMLButtonElement;
+        const videoId = button.getAttribute('data-video-id');
+        const title = button.getAttribute('data-video-title') || 'Video';
+        
+        if (videoId) {
+            e.preventDefault();
+            // 1. Cerrar el modal actual
+            onClose(); 
+            // 2. Abrir el modal de video a través del handler
+            onOpenVideoModal(videoId, title);
+        }
+      };
+
+      videoButtons.forEach(button => {
+        button.addEventListener('click', handleVideoClick);
+      });
+
+      return () => {
+        // Limpiamos los event listeners
+        videoButtons.forEach(button => {
+            button.removeEventListener('click', handleVideoClick);
+        });
+      };
+    }
+  }, [contentKey, onClose, onOpenVideoModal]);
+  
   return (
     <div className="info-modal-overlay" onClick={onClose}>
-      <div className="info-modal-content" onClick={(e) => e.stopPropagation()}>
+      <div 
+        className="info-modal-content" 
+        onClick={(e) => e.stopPropagation()}
+        ref={modalContentRef} // Asignamos la referencia
+      >
         <button onClick={onClose} className="info-modal-close-btn">&times;</button>
         <h2 className="info-modal-title">{title}</h2>
-        <p className="info-modal-body" style={{ whiteSpace: 'pre-wrap' }}>
-          {body}
-        </p>
+        
+        <p 
+            className="info-modal-body" 
+            style={textStyle} // 🔑 APLICA EL ESTILO CONDICIONAL
+            // 🔑 USAMOS dangerouslySetInnerHTML AQUÍ
+            dangerouslySetInnerHTML={{ __html: renderedBody }}
+        />
       </div>
     </div>
   );
@@ -471,7 +664,7 @@ const BottomBar: React.FC<BottomBarProps> = ({ onOpenModal, onOpenLogin, onToggl
 };
 
 /**
- * Landing Page - Con introducción cinematográfica
+ * Landing Page - Con introducción cinematográfica (ACTUALIZADO)
  */
 interface LandingPageProps {
   onLoginSuccess: () => void;
@@ -486,6 +679,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
   
   const [infoModalContentKey, setInfoModalContentKey] = useState<'acerca' | 'making-off' | 'equipo' | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  
+  // 🔑 NUEVO ESTADO: Para el modal de video
+  const [videoModalData, setVideoModalData] = useState<{ videoId: string; title: string } | null>(null); 
   
   const videoRef = useRef<HTMLVideoElement>(null);
   
@@ -524,11 +720,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
     if (video) {
         video.volume = 0.7;
     }
-    
-    // Función de limpieza al desmontar el componente (opcional)
-    return () => {
-        // No salimos de Fullscreen aquí, AppContent lo mantiene
-    };
    }, []);
 
   const handleOpenLoginModal = () => {
@@ -538,6 +729,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
   
   const handleToggleBottomBar = () => {
     setShowBottomBar(prev => !prev);
+  };
+
+  // 🔑 NUEVA FUNCIÓN: Manejador para abrir el modal de video
+  const handleOpenVideoModal = (videoId: string, title: string) => {
+      setVideoModalData({ videoId, title });
   };
 
 
@@ -598,6 +794,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
         <InfoModal
           contentKey={infoModalContentKey}
           onClose={() => setInfoModalContentKey(null)}
+          onOpenVideoModal={handleOpenVideoModal} // 🔑 Pasamos el handler
         />
       )}
       
@@ -607,6 +804,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
           // Pasamos la función al LoginModal
           onRequestFullscreen={onRequestFullscreen} 
         />
+      )}
+      
+      {/* 🔑 NUEVO: Renderizado del modal de video en la Landing Page */}
+      {videoModalData && (
+          <YouTubeVideoModal 
+              videoId={videoModalData.videoId} 
+              title={videoModalData.title}
+              onClose={() => setVideoModalData(null)} 
+          />
       )}
 
     </div>
@@ -667,10 +873,10 @@ const AppContent: React.FC = () => {
   return (
     <div className="App" ref={appRef}> {/* ASIGNAMOS LA REFERENCIA AL CONTENEDOR APP */}
       {user ? (
-        // --- VISTA AUTENTICADA ---
+        // --- VISTA AUTENTICADA ---\
         <MainContent />
       ) : (
-        // --- VISTA PÚBLICA (LANDING CON MODAL) ---
+        // --- VISTA PÚBLICA (LANDING CON MODAL) ---\
         <LandingPage 
             onLoginSuccess={() => { /* No es necesario aquí ya que AuthContext se encarga */ }}
             // PASAMOS LA FUNCIÓN DE FULLSCREEN A LANDINGPAGE

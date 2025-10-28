@@ -664,12 +664,31 @@
     z-index: 1000;
   }
 
+  /* El contenedor que se despliega en móvil */
   .navbar-menu-container.is-open {
-    display: flex;
-    flex-direction: column; 
-    align-items: flex-start; 
-    gap: 1.5rem;
+      /* Mantenemos el display flex/block para desplegarlo */
+      display: flex;
+      flex-direction: column;
+      
+
+      /* 🔑 CLAVE 1: Limitar la altura al 100% del viewport */
+      height: 100vh; /* Ocupar toda la altura de la ventana */
+      
+      /* 🔑 CLAVE 2: Forzar el scroll interno si el contenido se desborda */
+      overflow-y: auto; /* ¡Esto permite que el menú móvil tenga scroll! */
+      
+      /* 🔑 CLAVE 3: Añadir padding inferior para que el botón de ocultar no se pegue al fondo */
+      padding-bottom: 2rem; 
+      
+      /* ... (mantener estilos de posición fixed o absolute para el menú abierto) ... */
   }
+
+  /* 💥 Ajuste opcional para el contenedor interno de enlaces (navbar-links) */
+  .navbar-menu-container.is-open .navbar-links {
+      /* Esto permite que los enlaces ocupen el espacio necesario */
+      flex-grow: 1; 
+  }
+
 
   .navbar-links {
     flex-direction: column; 
@@ -851,16 +870,20 @@
 }
 
 /* 💥 NUEVO ESTILO: Botón de Ocultar/Cerrar la NavBar (dentro de la barra) */
+/* El botón de ocultar la barra superior */
 .navbar-hide-btn {
-    background: none;
+    /* 🔑 CLAVE: Forzar visibilidad en móvil */
+    display: block !important; 
+    
+    /* Estilos para que se vea como un botón de menú */
+        font-size: .3rem;
+
+    text-align: center;
+    background: #d70e0e; /* Fondo para destacarlo */
+    color: #fff;
     border: none;
-    color: #d1d5db; /* Color del texto del nav */
     cursor: pointer;
-    font-size: .3rem;
-    padding: 0.5rem;
-    transition: color 0.3s ease, transform 0.3s ease;
-    margin-left: .3rem; /* Separación del logo */
-    /* Posicionamiento para escritorio (se mostrará junto al logo) */
+    order: -1; /* Lo fuerza a ser el primer elemento si usas Flexbox en el padre */
 }
 
 .navbar-hide-btn:hover {
@@ -926,3 +949,210 @@
     }
 }
 
+/* ========================================================== */
+/* --- 4. ESTILOS DE LA VISTA WORK IN PROGRESS (WIP) --- */
+/* ========================================================== */
+
+.wip-container {
+    max-width: 1000px;
+    margin: 2rem auto; /* Añade margen superior e inferior para separarlo del navbar/footer */
+    padding: 2rem;
+    color: #f3f4f6;
+    background-color: #1f2937; /* Fondo oscuro sutil */
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+    border: 1px solid #374151;
+}
+
+.wip-header {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #a78bfa; /* Color de acento (Púrpura) */
+    margin-bottom: 0.5rem;
+    text-align: center;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.wip-description {
+    font-size: 1.1rem;
+    color: #d1d5db;
+    margin-bottom: 2.5rem;
+    text-align: center;
+}
+
+.wip-links-grid {
+    display: grid;
+    /* Adapta la cuadrícula: 3 columnas en escritorio, 1 en móvil */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.wip-link-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #2d3748;
+    padding: 1.5rem;
+    border-radius: 10px;
+    text-decoration: none;
+    color: #e5e7eb;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    border-left: 5px solid #a78bfa; /* Borde de acento */
+}
+
+.wip-link-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+    background-color: #374151;
+    color: #a78bfa;
+}
+
+.wip-icon {
+    font-size: 1.8rem;
+    color: #a78bfa;
+    margin-right: 1rem;
+}
+
+.wip-link-card:hover .wip-icon {
+    color: #ffffff;
+}
+
+.wip-link-name {
+    font-size: 1rem;
+    font-weight: 600;
+    flex-grow: 1;
+}
+
+.wip-external-icon {
+    font-size: 0.9rem;
+    color: #9ca3af;
+}
+
+/* 💻 Estilos para móvil */
+@media (max-width: 600px) {
+    .wip-container {
+        padding: 1rem;
+        margin: 1rem auto;
+    }
+    .wip-header {
+        font-size: 1.8rem;
+    }
+}
+
+/* ========================================================== */
+/* --- 5. ESTILOS DE MODAL DE VIDEO --- */
+/* ========================================================== */
+
+/* Overlay general para el modal */
+.video-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000; /* Alto z-index para estar sobre todo */
+    backdrop-filter: blur(5px);
+}
+
+/* Contenido del modal (el contenedor del video) */
+.video-modal-content {
+    background: #1e1e1e;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 90%;
+    width: 800px; /* Ancho máximo ideal para un video 16:9 */
+    box-shadow: 0 0 30px rgba(167, 139, 250, 0.5); 
+    position: relative;
+}
+
+.video-modal-close-btn {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    background: #a78bfa;
+    color: #111;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 2001;
+    transition: background-color 0.3s;
+}
+
+.video-modal-title {
+    color: #a78bfa;
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+/* 🔑 CLAVE: Estilos para el contenedor responsive del iframe */
+.video-responsive {
+    position: relative;
+    padding-bottom: 56.25%; /* Relación de aspecto 16:9 */
+    height: 0;
+    overflow: hidden;
+}
+
+.video-responsive iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 5px;
+}
+
+/* ========================================================== */
+/* --- ESTILOS PARA BOTONES DENTRO DE InfoModal (LANDING) --- */
+/* ========================================================== */
+.modal-link-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    color: #a78bfa;
+    padding: 0.5rem 0;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    text-decoration: none;
+    margin-bottom: 0.5rem; /* Separación entre enlaces */
+}
+
+.modal-link-btn:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+.modal-link-btn i {
+    margin-right: 8px;
+    width: 20px;
+    text-align: center;
+}
+
+/* Añadir o modificar estas reglas en tu App.css */
+
+.wip-links-grid {
+    display: grid;
+    /* 🔑 CLAVE para el 2x2: define dos columnas de igual tamaño */
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 20px; /* Espacio entre los elementos */
+    margin-top: 20px;
+    padding: 0 20px; /* Opcional: para darle aire en los lados */
+}
+
+/* Puedes añadir media queries si quieres que cambie a 1x4 en móviles */
+@media (max-width: 768px) {
+    .wip-links-grid {
+        grid-template-columns: 1fr; /* Una sola columna en pantallas pequeñas */
+    }
+}
