@@ -1,13 +1,14 @@
 import React, { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import '../styles/resistance-theme.css'
 import './AuthForm.css'
 
 interface AuthFormProps {
-  onRequestFullscreen?: () => void
-  onClose?: () => void
+  onRequestFullscreen?: () => void; 
+  // 1. AGREGAR ESTA LÍNEA
+  onClose?: () => void; 
 }
 
+// 2. AGREGAR onClose AQUÍ
 const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen, onClose }) => {
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
@@ -33,9 +34,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen, onClose }) => 
         } else {
           if (onRequestFullscreen) {
             onRequestFullscreen()
-            await new Promise(resolve => setTimeout(resolve, 50))
+            await new Promise(resolve => setTimeout(resolve, 50)); 
           }
-          setMessage('ACCESO CONCEDIDO...')
+          setMessage('Iniciando sistema...')
         }
       } else {
         if (password !== confirmPassword) {
@@ -53,15 +54,15 @@ const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen, onClose }) => 
         if (error) {
           setError(error.message)
         } else {
-          if (onRequestFullscreen) {
-            onRequestFullscreen()
-            await new Promise(resolve => setTimeout(resolve, 50))
-          }
-          setMessage('REGISTRO EXITOSO. VERIFICA TU EMAIL.')
+           if (onRequestFullscreen) {
+             onRequestFullscreen()
+             await new Promise(resolve => setTimeout(resolve, 50)); 
+           }
+          setMessage('Registro exitoso. Verifica tu email.')
         }
       }
     } catch (err: any) {
-      setError('ERROR DEL SISTEMA: ' + err.message)
+      setError('Error del sistema: ' + err.message)
     } finally {
       setLoading(false)
     }
@@ -77,55 +78,42 @@ const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen, onClose }) => 
   }
 
   return (
-    <div className="auth-container scanlines">
-      {/* Background Matrix Effect */}
-      <div className="matrix-bg"></div>
-
-      <div className="auth-terminal">
-        {/* Close Button */}
+    <div className="af-container">
+      <div className="af-card">
+        
+        {/* 3. AGREGAR ESTE BLOQUE PARA EL BOTÓN */}
         {onClose && (
-          <button className="auth-close-btn terminal-btn" onClick={onClose} type="button">
-            [X]
-          </button>
+            <button className="af-close-btn" onClick={onClose} type="button">
+                ✕
+            </button>
         )}
-
-        {/* Header */}
-        <div className="auth-header">
-          <div className="auth-title mono-text-green">
-            [ SISTEMA DE RESISTENCIA ]
-          </div>
-          <div className="auth-subtitle mono-text-amber">
-            {isLogin ? '&gt;&gt;&gt; ACCESO RESTRINGIDO' : '&gt;&gt;&gt; NUEVO RECLUTA'}
-          </div>
-          <div className="auth-status mono-text-muted">
-            {isLogin ? 'IDENTIFICACIÓN REQUERIDA' : 'REGISTRO DE AGENTE'}
-          </div>
+        
+        <div className="af-header">
+          <h2 className="af-title">{isLogin ? 'ACCESO AL SISTEMA' : 'NUEVO RECLUTA'}</h2>
+          <p className="af-subtitle">
+            {isLogin 
+              ? 'Identifícate para continuar' 
+              : 'Únete a La Resistencia'}
+          </p>
         </div>
 
-        <div className="terminal-separator"></div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label className="form-label mono-text-green" htmlFor="email">
-              &gt; USUARIO:
-            </label>
+        <form onSubmit={handleSubmit} className="af-form">
+          <div className="af-form-group">
+            <label className="af-label" htmlFor="email">Correo Electrónico</label>
             <input
               type="email"
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="form-input mono-text"
+              className="af-input"
               placeholder="agente@resistencia.com"
               autoComplete="email"
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label mono-text-green" htmlFor="password">
-              &gt; CÓDIGO DE ACCESO:
-            </label>
+          <div className="af-form-group">
+            <label className="af-label" htmlFor="password">Código de Acceso</label>
             <input
               type="password"
               id="password"
@@ -133,17 +121,15 @@ const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen, onClose }) => 
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="form-input mono-text"
+              className="af-input"
               placeholder="••••••••"
               autoComplete="current-password"
             />
           </div>
 
           {!isLogin && (
-            <div className="form-group">
-              <label className="form-label mono-text-green" htmlFor="confirmPassword">
-                &gt; CONFIRMAR CÓDIGO:
-              </label>
+            <div className="af-form-group">
+              <label className="af-label" htmlFor="confirmPassword">Confirmar Código</label>
               <input
                 type="password"
                 id="confirmPassword"
@@ -151,52 +137,44 @@ const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen, onClose }) => 
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={6}
-                className="form-input mono-text"
+                className="af-input"
                 placeholder="••••••••"
               />
             </div>
           )}
 
           {error && (
-            <div className="auth-alert alert-error mono-text">
-              [!] {error}
+            <div className="af-alert af-alert-error">
+              ⚠️ {error}
             </div>
           )}
 
           {message && (
-            <div className="auth-alert alert-success mono-text">
-              [✓] {message}
+            <div className="af-alert af-alert-success">
+              🚀 {message}
             </div>
           )}
 
-          <button
-            type="submit"
+          <button 
+            type="submit" 
             disabled={loading}
-            className="auth-submit-btn terminal-btn"
+            className="af-btn-submit"
           >
-            {loading ? '[ PROCESANDO... ]' : (isLogin ? '[ ACCEDER AL SISTEMA ]' : '[ REGISTRAR AGENTE ]')}
+            {loading ? 'PROCESANDO...' : (isLogin ? 'INGRESAR' : 'REGISTRARSE')}
           </button>
         </form>
 
-        <div className="terminal-separator"></div>
-
-        {/* Footer */}
-        <div className="auth-footer">
-          <p className="auth-toggle-text mono-text-muted">
-            {isLogin ? '¿NO TIENES ACCESO?' : '¿YA TIENES CREDENCIALES?'}
+        <div className="af-footer">
+          <p className="af-text">
+            {isLogin ? '¿Aún no eres miembro?' : '¿Ya tienes credenciales?'}
+            <button 
+              type="button" 
+              onClick={toggleMode}
+              className="af-link"
+            >
+              {isLogin ? 'Solicitar Acceso' : 'Ingresar'}
+            </button>
           </p>
-          <button
-            type="button"
-            onClick={toggleMode}
-            className="auth-toggle-btn mono-text-amber"
-          >
-            &gt; {isLogin ? 'SOLICITAR ACCESO' : 'INGRESAR'}
-          </button>
-        </div>
-
-        {/* Version Info */}
-        <div className="auth-version mono-text-muted">
-          v1.0.0 | CLASSIFIED | {new Date().getFullYear()}
         </div>
       </div>
     </div>
