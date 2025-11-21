@@ -1,72 +1,104 @@
 // src/components/Navbar.tsx
-import React from 'react';
+import React from 'react'
+import '../styles/resistance-theme.css'
+import './Navbar.css'
 
 interface NavbarProps {
-  currentView: string;
-  isAdmin: boolean;
-  userEmail: string | undefined;
-  onNavigate: (view: string) => void;
+  currentView: string
+  isAdmin: boolean
+  userEmail: string | undefined
+  onNavigate: (view: string) => void
+  playerLevel?: number
 }
 
-const Navbar: React.FC<NavbarProps> = ({ currentView, isAdmin, userEmail, onNavigate }) => {
+const Navbar: React.FC<NavbarProps> = ({
+  currentView,
+  isAdmin,
+  userEmail,
+  onNavigate,
+  playerLevel = 1
+}) => {
   return (
-    <nav className="elegant-navbar">
-      <div className="navbar-logo">
-        <h1>🏛️ La Resistencia</h1>
+    <nav className="resistance-navbar scanlines">
+      {/* Logo/Brand */}
+      <div className="navbar-brand">
+        <span className="brand-bracket mono-text-green">[</span>
+        <span className="brand-text mono-text-amber">RESISTENCIA</span>
+        <span className="brand-bracket mono-text-green">]</span>
       </div>
+
+      {/* Navigation Links */}
       <div className="navbar-links">
         <button
-          className={`nav-link-btn ${currentView === 'dashboard' ? 'active' : ''}`}
+          className={`nav-link ${currentView === 'dashboard' ? 'active' : ''}`}
           onClick={() => onNavigate('dashboard')}
         >
-          <span>🏠 Dashboard</span>
+          <span className="nav-prefix">&gt;</span>
+          <span className="nav-text">DASHBOARD</span>
         </button>
+
         <button
-          className={`nav-link-btn ${currentView === 'historias' ? 'active' : ''}`}
+          className={`nav-link ${currentView === 'historias' ? 'active' : ''}`}
           onClick={() => onNavigate('historias')}
         >
-          <span>📚 Historias</span>
+          <span className="nav-prefix">&gt;</span>
+          <span className="nav-text">HISTORIAS</span>
         </button>
+
         <button
-          className={`nav-link-btn ${currentView === 'mapa' ? 'active' : ''}`}
+          className={`nav-link ${currentView === 'mapa' ? 'active' : ''}`}
           onClick={() => onNavigate('mapa')}
         >
-          <span>🗺️ Mapa</span>
+          <span className="nav-prefix">&gt;</span>
+          <span className="nav-text">MAPA</span>
         </button>
+
         <button
-          className={`nav-link-btn ${currentView === 'inventario' ? 'active' : ''}`}
+          className={`nav-link ${currentView === 'inventario' ? 'active' : ''}`}
           onClick={() => onNavigate('inventario')}
         >
-          <span>🎒 Inventario</span>
+          <span className="nav-prefix">&gt;</span>
+          <span className="nav-text">INVENTARIO</span>
         </button>
+
         <button
-          className={`nav-link-btn ${currentView === 'personajes' ? 'active' : ''}`}
+          className={`nav-link ${currentView === 'personajes' ? 'active' : ''}`}
           onClick={() => onNavigate('personajes')}
         >
-          <span>🎭 Personajes</span>
+          <span className="nav-prefix">&gt;</span>
+          <span className="nav-text">PERSONAJES</span>
         </button>
-        
-        
+
         {isAdmin && (
           <button
-            className={`nav-link-btn ${currentView === 'admin' ? 'active' : ''}`}
+            className={`nav-link ${currentView === 'admin' ? 'active' : ''}`}
             onClick={() => onNavigate('admin')}
           >
-            <span>🛠️ Admin</span>
+            <span className="nav-prefix">&gt;</span>
+            <span className="nav-text">ADMIN</span>
           </button>
         )}
+
         <button
-          className={`nav-link-btn ${currentView === 'cine' ? 'active' : ''}`}
+          className={`nav-link ${currentView === 'cine' ? 'active' : ''}`}
           onClick={() => onNavigate('cine')}
         >
-          <span>🎬 Cine</span>
+          <span className="nav-prefix">&gt;</span>
+          <span className="nav-text">CINE</span>
         </button>
       </div>
-      <div className="navbar-user-info">
-        <span>{userEmail}</span>
+
+      {/* User Info */}
+      <div className="navbar-user">
+        <div className="user-level terminal-badge">
+          LVL {playerLevel}
+        </div>
+        <div className="user-email mono-text-muted">
+          {userEmail?.split('@')[0] || 'AGENTE'}
+        </div>
       </div>
     </nav>
-  );
-};
+  )
+}
 
-export default Navbar;
+export default Navbar

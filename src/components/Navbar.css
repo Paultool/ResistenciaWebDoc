@@ -1,0 +1,180 @@
+/**
+ * NAVBAR - RESISTANCE TERMINAL
+ * Barra de navegación con estética hacker/terminal
+ */
+
+.resistance-navbar {
+    background: #000000;
+    border-bottom: 2px solid var(--border-primary);
+    padding: 0 var(--spacing-lg);
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-xl);
+    position: relative;
+    z-index: 100;
+}
+
+/* ============================================
+   BRAND/LOGO
+   ============================================ */
+
+.navbar-brand {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    letter-spacing: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.brand-bracket {
+    font-size: var(--font-size-xl);
+}
+
+.brand-text {
+    text-shadow: 0 0 10px var(--glow-amber);
+}
+
+/* ============================================
+   NAVIGATION LINKS
+   ============================================ */
+
+.navbar-links {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex: 1;
+    justify-content: center;
+}
+
+.nav-link {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-xs) var(--spacing-md);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    letter-spacing: 1.5px;
+    position: relative;
+}
+
+.nav-prefix {
+    color: var(--text-primary);
+    font-weight: 700;
+    opacity: 0.6;
+    transition: opacity var(--transition-fast);
+}
+
+.nav-text {
+    text-transform: uppercase;
+}
+
+.nav-link:hover {
+    color: var(--text-secondary);
+    text-shadow: 0 0 8px var(--glow-amber);
+}
+
+.nav-link:hover .nav-prefix {
+    opacity: 1;
+    color: var(--text-secondary);
+}
+
+.nav-link.active {
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-primary);
+}
+
+.nav-link.active .nav-prefix {
+    opacity: 1;
+}
+
+/* ============================================
+   USER INFO
+   ============================================ */
+
+.navbar-user {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-shrink: 0;
+}
+
+.user-level {
+    font-size: var(--font-size-xs);
+    padding: 4px 8px;
+}
+
+.user-email {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1024px) {
+    .navbar-links {
+        gap: var(--spacing-xs);
+    }
+
+    .nav-link {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: 0.7rem;
+    }
+
+    .user-email {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .resistance-navbar {
+        height: auto;
+        flex-direction: column;
+        padding: var(--spacing-sm);
+        gap: var(--spacing-sm);
+    }
+
+    .navbar-brand {
+        font-size: var(--font-size-md);
+    }
+
+    .navbar-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .nav-link {
+        font-size: 0.65rem;
+        padding: 4px 8px;
+    }
+
+    .navbar-user {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-prefix {
+        display: none;
+    }
+
+    .nav-link {
+        font-size: 0.6rem;
+        padding: 4px 6px;
+    }
+}
