@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { obtenerPersonajes, Personaje } from '../supabaseClient'
-import { gameService } from '../services/GameService'
+import { gameServiceUser as gameService } from '../services/GameServiceUser'
 import { useAuth } from '../contexts/AuthContext'
 import './PersonajesView.css'
 
@@ -23,7 +23,6 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
     try {
       setLoading(true)
       setError(null)
-      
       const personajesData = await obtenerPersonajes()
       setPersonajes(personajesData)
     } catch (err: any) {
@@ -36,10 +35,8 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
 
   const handleMeetCharacter = async (personaje: Personaje) => {
     if (!user?.id) return
-    
     try {
-      // Nota: El valor de XP (+25) es solo ilustrativo en la UI. El valor real viene del evento.
-      const gameEvent = await gameService.meetCharacter(user.id, personaje.id.toString()) 
+      const gameEvent = await gameService.meetCharacter(user.id, personaje.id.toString())
       if (gameEvent) {
         alert(`🎉 ¡Has conocido a ${personaje.nombre}! +${gameEvent.xp_ganado} XP`)
       }
@@ -49,22 +46,14 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
     }
   }
 
-  const openModal = (personaje: Personaje) => {
-    setSelectedPersonaje(personaje)
-  }
-
-  const closeModal = () => {
-    setSelectedPersonaje(null)
-  }
-
   if (loading) {
     return (
-      <div className="personajes-view">
-        <div className="view-header">
+      <div className="pv-container">
+        <div className="pv-header">
           <h2>🎭 Galería de Personajes</h2>
         </div>
-        <div className="loading">
-          <p>⏳ Cargando personajes...</p>
+        <div className="pv-status">
+          <p>⏳ Cargando datos...</p>
         </div>
       </div>
     )
@@ -72,84 +61,75 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
 
   if (error) {
     return (
-      <div className="personajes-view">
-        <div className="view-header">
+      <div className="pv-container">
+        <div className="pv-header">
           <h2>🎭 Galería de Personajes</h2>
         </div>
-        <div className="error">
+        <div className="pv-status">
           <p>❌ {error}</p>
-          <button onClick={cargarPersonajes} className="retry-btn">🔄 Reintentar</button>
+          <button onClick={cargarPersonajes} className="pv-btn-retry">🔄 Reintentar</button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="personajes-view">
-      <div className="view-header">
-        <h2>🎭 Galería de Personajes</h2>
-        <p>Conoce a los protagonistas de La Resistencia</p>
+    <div className="pv-container">
+      <div className="pv-header">
+        <h2>Galería de Personajes</h2>
+        <p>Protagonistas de La Resistencia</p>
       </div>
 
-      <div className="personajes-stats">
-        <span className="stat">👥 Total: {personajes.length} personajes</span>
-        <span className="stat">🏛️ Protagonistas de la resistencia urbana</span>
+      <div className="pv-stats">
+        <span className="pv-stat-item">👥 Total: <span className="pv-stat-highlight">{personajes.length}</span></span>
+        <span className="pv-stat-item">🏛️ Fichas disponibles</span>
       </div>
 
-      <div className="personajes-grid">
+      <div className="pv-grid">
         {personajes.map((personaje) => {
           const atributos = personaje.metadata || {}
-          
+
           return (
-            <div key={personaje.id} className="personaje-card">
-              <div className="personaje-image">
+            <div key={personaje.id} className="pv-card">
+              <div className="pv-image-container">
                 {personaje.imagen ? (
-                  <img 
-                    src={personaje.imagen} 
-                    alt={personaje.nombre} 
-                    // Añadido 'loading="lazy"' para optimización de rendimiento.
-                    loading="lazy" 
+                  <img
+                    src={personaje.imagen}
+                    alt={personaje.nombre}
+                    loading="lazy"
                   />
                 ) : (
-                  <div className="placeholder-image">
-                    <span className="avatar-icon">👤</span>
-                  </div>
+                  <div className="pv-placeholder">👤</div>
                 )}
               </div>
-              
-              <div className="personaje-info">
-                <h3 className="personaje-nombre">{personaje.nombre}</h3>
-                <p className="personaje-rol">{personaje.rol}</p>
-                {/* 🚨 CAMBIO CLAVE: Usamos la clase CSS 'truncate-text' para limitar las líneas y evitar desbordamiento */}
-                <p className="personaje-descripcion truncate-text"> 
-                  {personaje.descripcion}
+
+              <div className="pv-info">
+                <h3 className="pv-name">{personaje.nombre}</h3>
+                <p className="pv-rol">{personaje.rol || 'Sin rol definido'}</p>
+                <p className="pv-desc">
+                  {personaje.descripcion || 'Sin descripción disponible.'}
                 </p>
-                
+
                 {atributos.edad && (
-                  <div className="personaje-atributo">
-                    <span className="atributo-label">Edad:</span> {atributos.edad}
+                  <div className="pv-meta-row">
+                    <span className="pv-meta-label">Edad:</span> {atributos.edad}
                   </div>
                 )}
-                
+
                 {atributos.profesion && (
-                  <div className="personaje-atributo">
-                    <span className="atributo-label">Profesión:</span> {atributos.profesion}
+                  <div className="pv-meta-row">
+                    <span className="pv-meta-label">Profesión:</span> {atributos.profesion}
                   </div>
                 )}
               </div>
-              
-              <div className="personaje-actions">
-                <button 
-                  onClick={() => openModal(personaje)}
-                  className="btn btn-info"
+
+              <div className="pv-actions">
+                {/* Botón único que ahora ocupará todo el ancho */}
+                <button
+                  onClick={() => setSelectedPersonaje(personaje)}
+                  className="pv-btn pv-btn-sec"
                 >
-                  👁️ Ver Perfil
-                </button>
-                <button 
-                  onClick={() => handleMeetCharacter(personaje)}
-                  className="btn btn-primary"
-                >
-                  🤝 Conocer (+25 XP)
+                  👁️ Ver Ficha
                 </button>
               </div>
             </div>
@@ -159,45 +139,44 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
 
       {/* Modal de Detalle de Personaje */}
       {selectedPersonaje && (
-        <div className="personaje-modal-overlay" onClick={closeModal}>
-          <div className="personaje-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{selectedPersonaje.nombre}</h2>
-              <button onClick={closeModal} className="modal-close">×</button>
+        <div className="pv-modal-overlay" onClick={() => setSelectedPersonaje(null)}>
+          <div className="pv-modal" onClick={(e) => e.stopPropagation()}>
+
+            <div className="pv-modal-header">
+              <h2 className="pv-modal-title">{selectedPersonaje.nombre}</h2>
+              <button onClick={() => setSelectedPersonaje(null)} className="pv-modal-close">×</button>
             </div>
-            
-            <div className="modal-content">
-              <div className="modal-image">
+
+            <div className="pv-modal-content">
+              {/* Columna Izquierda: Imagen */}
+              <div className="pv-modal-img-container">
                 {selectedPersonaje.imagen ? (
                   <img src={selectedPersonaje.imagen} alt={selectedPersonaje.nombre} />
                 ) : (
-                  <div className="placeholder-image-large">
-                    <span className="avatar-icon-large">👤</span>
-                  </div>
+                  <div className="pv-placeholder">👤</div>
                 )}
               </div>
-              
-              <div className="modal-info">
-                <div className="info-section">
-                  <h4>🎭 Rol</h4>
-                  <p>{selectedPersonaje.rol}</p>
+
+              {/* Columna Derecha: Info */}
+              <div className="pv-modal-info">
+                <div>
+                  <h4 className="pv-section-title">Rol / Ocupación</h4>
+                  <p className="pv-modal-desc" style={{ color: '#63b3ed', fontWeight: 'bold' }}>{selectedPersonaje.rol}</p>
                 </div>
-                
-                <div className="info-section">
-                  <h4>📝 Descripción</h4>
-                  <p>{selectedPersonaje.descripcion}</p>
+
+                <div>
+                  <h4 className="pv-section-title">Descripción</h4>
+                  <p className="pv-modal-desc">{selectedPersonaje.descripcion}</p>
                 </div>
-                
+
                 {selectedPersonaje.metadata && (
-                  <div className="info-section">
-                    <h4>📋 Atributos</h4>
-                    <div className="atributos-list">
-                      {/* Convertimos las claves a formato legible para el usuario */}
+                  <div>
+                    <h4 className="pv-section-title">Atributos</h4>
+                    <div className="pv-attr-grid">
                       {Object.entries(selectedPersonaje.metadata).map(([key, value]) => (
-                        <div key={key} className="atributo-item">
-                          {/* capitalizamos la clave para mejor presentación */}
-                          <span className="atributo-key">{key.charAt(0).toUpperCase() + key.slice(1)}:</span>
-                          <span className="atributo-value">{String(value)}</span>
+                        <div key={key} className="pv-attr-row">
+                          <span className="pv-attr-key">{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                          <span className="pv-attr-val">{String(value)}</span>
                         </div>
                       ))}
                     </div>
@@ -205,13 +184,15 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
                 )}
               </div>
             </div>
-            
-            <div className="modal-actions">
-              <button 
+
+            <div className="pv-modal-actions">
+              {/* Aquí se mantiene el botón para ganar XP */}
+              <button
                 onClick={() => handleMeetCharacter(selectedPersonaje)}
-                className="btn btn-primary btn-large"
+                className="pv-btn pv-btn-pri"
+                style={{ width: 'auto', display: 'inline-flex' }}
               >
-                🤝 Conocer Personaje (+25 XP)
+                🤝 Registrar Encuentro (+25 XP)
               </button>
             </div>
           </div>

@@ -38,5 +38,5 @@
   },
   "include": [
     "src"
-  ]
+, "SEOManager.jsx"  ]
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
-import { gameService } from '../services/GameService';
+import { gameServiceUser as gameService } from '../services/GameServiceUser';
 
 // Interfaces de datos actualizadas para soportar la navegación
 interface FlujoNarrativoData {
@@ -15,10 +15,10 @@ interface FlujoNarrativoData {
     id_siguiente_paso: number | null;
     id_historia: number;
     opciones_decision: {
-      opciones_siguientes_json: {
-        texto: string;
-        siguiente_paso_id: number;
-      }[] | null;
+        opciones_siguientes_json: {
+            texto: string;
+            siguiente_paso_id: number;
+        }[] | null;
     } | null;
 }
 
@@ -31,7 +31,7 @@ interface RecompensaData {
     id_recompensa: number;
     nombre: string;
     valor: number;
-    descripcion: string | null;      
+    descripcion: string | null;
 }
 
 interface RecursoMultimediaData {
@@ -105,7 +105,7 @@ const FlujoNarrativoDisplay: React.FC = () => {
                         .order('orden', { ascending: true });
 
                     if (pasosError) throw pasosError;
-                    
+
                     setPasos(pasosData as FlujoNarrativoData[] || []);
                     setSelectedPaso(pasosData && pasosData.length > 0 ? pasosData[0] as FlujoNarrativoData : null);
 
@@ -133,7 +133,8 @@ const FlujoNarrativoDisplay: React.FC = () => {
         try {
             console.log(`📡 Registrando evento: ${evento}`, detalles);
             if (evento === 'historia_completada') {
-                await gameService.completeStory(user.id, detalles.historia_id, true);
+                const { historia_id } = detalles as { historia_id: string };
+                await gameService.completeStory(user.id, historia_id, true);
                 console.log('✅ Historia completada en Supabase.' + detalles);
             }
             console.log('✅ Evento registrado con éxito.');
@@ -149,13 +150,13 @@ const FlujoNarrativoDisplay: React.FC = () => {
         }
         try {
             console.log(`🔄 Actualizando perfil del jugador con recompensa: ${recompensaId}`);
-            await gameService.otorgarRecompensa(user.id, recompensaId);
+            await gameService.otorgarRecompensa(user.id, recompensaId, selectedHistoriaId ? selectedHistoriaId.toString() : '0');
             console.log('✅ Perfil del jugador actualizado. Recompensa otorgada.');
         } catch (err: any) {
             console.error('❌ Error al actualizar el perfil del jugador:', err);
         }
     };
-    
+
     const registrarInteraccion = async (pasoId: number, tipoInteraccion: string) => {
         if (!user?.id) {
             console.warn('⚠️ No se puede registrar la interacción. Usuario no autenticado.');
@@ -223,7 +224,7 @@ const FlujoNarrativoDisplay: React.FC = () => {
 
         if (selectedPaso.tipo_paso === 'final') {
             try {
-                await gameService.completeStory(user.id, selectedHistoriaId.toString(), true);
+                await gameService.completeStory(user.id, selectedHistoriaId!.toString(), true);
                 console.log(`✅ Historia ${selectedHistoriaId} completada.`);
             } catch (err: any) {
                 console.error('❌ Error al completar la historia:', err.message);
@@ -251,11 +252,11 @@ const FlujoNarrativoDisplay: React.FC = () => {
             }
         }
     };
-    
-    
+
+
     const handleOpcionClick = async (pasoDestinoId: number) => {
         if (!selectedPaso) return;
-        
+
         await registrarInteraccion(selectedPaso.id_flujo, `opcion_seleccionada:${pasoDestinoId}`);
 
         const pasoDestino = pasos.find(p => p.id_flujo === pasoDestinoId);
@@ -277,26 +278,26 @@ const FlujoNarrativoDisplay: React.FC = () => {
             console.warn(`⚠️ Recurso multimedia con ID ${recursoId} no encontrado.`);
             return <p>Recurso multimedia no encontrado.</p>;
         }
-        
+
         // --- Lógica actualizada para manejar videos de forma diferente ---
         if (recurso.tipo === 'video' && !isShowingVideo) {
-             return (
-                 <div className="video-trigger-container">
+            return (
+                <div className="video-trigger-container">
                     <p className="video-info">Este paso contiene un video. Presiona "Reproducir Video" para verlo.</p>
                     <button onClick={handleVideoStart} className="video-play-btn">
                         ▶️ Reproducir Video
                     </button>
-                 </div>
-             );
+                </div>
+            );
         }
         // --------------------------------------------------------------
-        
+
         if (recurso.tipo === 'imagen') {
             return <img src={recurso.archivo} alt="Recurso Multimedia" className="media-preview-img" />;
         } else if (recurso.tipo === 'audio') {
             return <audio controls src={recurso.archivo} className="media-preview-audio" />;
         }
-        
+
         if (recurso.tipo === 'video' && isShowingVideo) {
             return (
                 // Este video se renderiza a pantalla completa
@@ -309,7 +310,7 @@ const FlujoNarrativoDisplay: React.FC = () => {
                 />
             );
         }
-        
+
         return <p>Tipo de contenido no soportado.</p>;
     };
 
@@ -715,14 +716,14 @@ const FlujoNarrativoDisplay: React.FC = () => {
                     }
                 }
             `}</style>
-            
+
             {/* Contenedor del video a pantalla completa */}
             {isShowingVideo && (
                 <div className="full-screen-video-container">
                     {renderMediaPreview(selectedPaso?.recursomultimedia_id)}
                 </div>
             )}
-            
+
             {/* Contenedor del diálogo */}
             {showDialog && (
                 <div className="dialog-overlay is-visible">
@@ -757,7 +758,7 @@ const FlujoNarrativoDisplay: React.FC = () => {
                             </select>
                         </div>
                     </div>
-                    
+
                     {pasos.length === 0 && selectedHistoriaId ? (
                         <p className="empty-state">No hay pasos narrativos definidos para esta historia.</p>
                     ) : !selectedHistoriaId ? (
@@ -766,10 +767,10 @@ const FlujoNarrativoDisplay: React.FC = () => {
                         <div className="pasos-list">
                             {pasos.map((paso) => {
                                 const recompensaAsociada = recompensas.find(r => r.id_recompensa === paso.id_recompensa);
-                                
+
                                 return (
-                                    <div 
-                                        key={paso.id_flujo} 
+                                    <div
+                                        key={paso.id_flujo}
                                         className="paso-card"
                                         onClick={() => handlePasoClick(paso)}
                                     >
@@ -779,7 +780,7 @@ const FlujoNarrativoDisplay: React.FC = () => {
                                                 {paso.tipo_paso}
                                             </span>
                                         </div>
-                                        
+
                                         <div className="paso-body">
                                             <p className="paso-contenido">{paso.contenido}</p>
                                             {paso.id_recompensa && (
@@ -811,7 +812,7 @@ const FlujoNarrativoDisplay: React.FC = () => {
                                             {opciones && opciones.length > 0 ? (
                                                 <div className="opciones-container">
                                                     {opciones.map((opcion, index) => (
-                                                        <button 
+                                                        <button
                                                             key={index}
                                                             className="opcion-btn"
                                                             onClick={() => handleOpcionClick(opcion.siguiente_paso_id)}

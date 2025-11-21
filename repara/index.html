@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taller de Reparación</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+        body, html {
+            font-family: 'Roboto Mono', monospace;
+            background-color: #1a202c;
+            color: #e2e8f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            text-align: center;
+        }
+        #game-container {
+            width: 90%;
+            max-width: 600px;
+            background-color: #2d3748;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border: 2px solid #4a5568;
+        }
+        #timer-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #4a5568;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        #timer-progress {
+            width: 100%;
+            height: 100%;
+            background-color: #63b3ed;
+            transition: width 0.1s linear;
+        }
+        #header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #4a5568;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        #title { font-size: 1.5rem; font-weight: 700; color: #63b3ed; }
+        #client { font-size: 0.9rem; color: #a0aec0; }
+        
+        .stage { display: none; }
+        .stage.active { display: block; }
+        
+        #device-info {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        #device-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #4a5568;
+            background-color: #1a202c;
+        }
+        #device-details { text-align: left; }
+        #device-name { font-size: 1.2rem; font-weight: 700; margin: 0; }
+        #prompt { font-size: 1rem; color: #cbd5e0; margin-top: 0.5rem; }
+        
+        #options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+        .option-btn {
+            background-color: #4a5568;
+            color: white;
+            padding: 1.25rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'Roboto Mono', monospace;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .option-btn:hover { background-color: #63b3ed; }
+        
+        /* Estilos para el Puzzle de Secuencia */
+        #puzzle-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .puzzle-btn {
+            height: 80px;
+            background-color: #4a5568;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.1s;
+        }
+        .puzzle-btn.p-1 { background-color: #e53e3e; } /* Rojo */
+        .puzzle-btn.p-2 { background-color: #38a169; } /* Verde */
+        .puzzle-btn.p-3 { background-color: #3182ce; } /* Azul */
+        .puzzle-btn.p-4 { background-color: #d69e2e; } /* Amarillo */
+        .puzzle-btn.p-5 { background-color: #805ad5; } /* Morado */
+        .puzzle-btn.p-6 { background-color: #319795; } /* Teal */
+        
+        .puzzle-btn.flash {
+            animation: flash 0.3s;
+        }
+        @keyframes flash {
+            0% { opacity: 1; }
+            50% { opacity: 0.2; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="timer-bar"><div id="timer-progress"></div></div>
+        
+        <div id="header">
+            <h2 id="title">Cargando Taller...</h2>
+            <span id="client">Esperando asignación...</span>
+        </div>
+        
+        <div id="stage-diagnosis" class="stage">
+            <div id="device-info">
+                <img id="device-image" src="" alt="Aparato"/>
+                <div id="device-details">
+                    <h3 id="device-name"></h3>
+                    <p id="prompt-diagnosis"></p>
+                </div>
+            </div>
+            <div id="options-grid" class="options-diagnosis">
+                </div>
+        </div>
+
+        <div id="stage-parts" class="stage">
+            <h3 id="prompt-parts"></h3>
+            <div id="options-grid" class="options-parts">
+                </div>
+        </div>
+
+        <div id="stage-puzzle" class="stage">
+            <h3 id="prompt-puzzle"></h3>
+            <div id="puzzle-grid">
+                <div class="puzzle-btn p-1" data-id="1"></div>
+                <div class="puzzle-btn p-2" data-id="2"></div>
+                <div class="puzzle-btn p-3" data-id="3"></div>
+                <div class="puzzle-btn p-4" data-id="4"></div>
+                <div class="puzzle-btn p-5" data-id="5"></div>
+                <div class="puzzle-btn p-6" data-id="6"></div>
+            </div>
+        </div>
+        
+        <div id="stage-loading" class="stage active">
+            <p>Conectando con el sistema del taller...</p>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Variables de Configuración ---
+        let appConfig = {};
+        let successRecompensaId = undefined;
+        let failureRecompensaId = undefined;
+        let isConfigLoaded = false;
+        let gameTimer;
+        let timerInterval;
+
+        // --- 2. Variables del Juego ---
+        let currentStageIndex = 0;
+        let timeRemaining;
+        let totalTime;
+        let puzzleSequence = [];
+        let playerSequence = [];
+        let puzzleLength = 3;
+
+        // --- 3. Elementos del DOM ---
+        const dom = {
+            title: document.getElementById('title'),
+            client: document.getElementById('client'),
+            timerProgress: document.getElementById('timer-progress'),
+            deviceImage: document.getElementById('device-image'),
+            deviceName: document.getElementById('device-name'),
+            stages: {
+                diagnosis: document.getElementById('stage-diagnosis'),
+                parts: document.getElementById('stage-parts'),
+                puzzle: document.getElementById('stage-puzzle'),
+                loading: document.getElementById('stage-loading')
+            },
+            prompts: {
+                diagnosis: document.getElementById('prompt-diagnosis'),
+                parts: document.getElementById('prompt-parts'),
+                puzzle: document.getElementById('prompt-puzzle')
+            },
+            options: {
+                diagnosis: document.querySelector('.options-diagnosis'),
+                parts: document.querySelector('.options-parts')
+            },
+            puzzleGrid: document.getElementById('puzzle-grid')
+        };
+
+        // --- 4. Lógica de Comunicación (Receptor) ---
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.source === 'FlujoNarrativoUsuario' && event.data.appData && !isConfigLoaded) {
+                isConfigLoaded = true;
+                
+                // Parsear la appConfig (enviada como string JSON)
+                appConfig = JSON.parse(event.data.appData);
+                successRecompensaId = event.data.successRecompensaId;
+                failureRecompensaId = event.data.failureRecompensaId;
+
+                console.log("[Taller] Configuración recibida:", appConfig);
+                setupGame();
+            }
+        });
+
+        // --- 5. Configuración del Juego ---
+        function setupGame() {
+            // Aplicar configuración
+            dom.title.innerText = appConfig.title || "Taller";
+            dom.client.innerText = appConfig.clientName || "N/A";
+            dom.deviceImage.src = appConfig.deviceImage || "";
+            dom.deviceName.innerText = appConfig.deviceName || "Aparato";
+            totalTime = appConfig.timeLimit || 30000;
+            timeRemaining = totalTime;
+
+            // Construir etapas dinámicamente
+            appConfig.stages.forEach(stage => {
+                if (stage.type === 'diagnosis') {
+                    dom.prompts.diagnosis.innerText = stage.prompt;
+                    stage.options.forEach(opt => {
+                        dom.options.diagnosis.innerHTML += `<button class="option-btn">${opt}</button>`;
+                    });
+                } else if (stage.type === 'parts') {
+                    dom.prompts.parts.innerText = stage.prompt;
+                    stage.options.forEach(opt => {
+                        dom.options.parts.innerHTML += `<button class="option-btn">${opt}</button>`;
+                    });
+                } else if (stage.type === 'puzzle') {
+                    dom.prompts.puzzle.innerText = stage.prompt;
+                    puzzleLength = stage.sequenceLength || 3;
+                }
+            });
+
+            // Iniciar Event Listeners
+            setupListeners();
+            
+            // Iniciar Juego
+            startTimer();
+            showStage(0);
+        }
+
+        function showStage(stageIndex) {
+            currentStageIndex = stageIndex;
+            const stage = appConfig.stages[stageIndex];
+            
+            // Ocultar todas
+            Object.values(dom.stages).forEach(s => s.classList.remove('active'));
+            
+            // Mostrar la actual
+            if (stage && dom.stages[stage.type]) {
+                dom.stages[stage.type].classList.add('active');
+                
+                // Si es el puzzle, iniciar la secuencia
+                if (stage.type === 'puzzle') {
+                    startPuzzle();
+                }
+            } else if (!stage) {
+                // No hay más etapas = ÉXITO
+                endGame('success');
+            }
+        }
+
+        // --- 6. Lógica de Temporizador ---
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining -= 100;
+                const percent = (timeRemaining / totalTime) * 100;
+                dom.timerProgress.style.width = `${percent}%`;
+                
+                if (percent < 30) {
+                    dom.timerProgress.style.backgroundColor = '#f56565'; // Rojo
+                }
+                
+                if (timeRemaining <= 0) {
+                    endGame('failure');
+                }
+            }, 100);
+        }
+
+        // --- 7. Lógica de Etapas ---
+        function setupListeners() {
+            // Etapa 1: Diagnóstico
+            dom.options.diagnosis.addEventListener('click', (e) => {
+                if (e.target.classList.contains('option-btn')) {
+                    checkAnswer(0, e.target.innerText);
+                }
+            });
+            
+            // Etapa 2: Repuestos
+            dom.options.parts.addEventListener('click', (e) => {
+                if (e.target.classList.contains('option-btn')) {
+                    checkAnswer(1, e.target.innerText);
+                }
+            });
+            
+            // Etapa 3: Puzzle
+            dom.puzzleGrid.addEventListener('click', (e) => {
+                if (e.target.classList.contains('puzzle-btn')) {
+                    const id = e.target.getAttribute('data-id');
+                    handlePuzzleClick(id);
+                }
+            });
+        }
+
+        function checkAnswer(stageIndex, answer) {
+            const correct = appConfig.stages[stageIndex].correct;
+            if (answer === correct) {
+                // Correcto, avanzar a la siguiente etapa
+                showStage(stageIndex + 1);
+            } else {
+                // Incorrecto, fallar
+                endGame('failure');
+            }
+        }
+        
+        // --- 8. Lógica del Puzzle (Simón Dice) ---
+        function startPuzzle() {
+            puzzleSequence = [];
+            playerSequence = [];
+            for (let i = 0; i < puzzleLength; i++) {
+                puzzleSequence.push(Math.floor(Math.random() * 6) + 1);
+            }
+            console.log("Secuencia del puzzle:", puzzleSequence);
+            playSequence();
+        }
+
+        function playSequence() {
+            dom.puzzleGrid.style.pointerEvents = 'none'; // Deshabilitar clics
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i >= puzzleSequence.length) {
+                    clearInterval(interval);
+                    dom.puzzleGrid.style.pointerEvents = 'auto'; // Habilitar clics
+                    return;
+                }
+                const btnId = puzzleSequence[i];
+                const btn = dom.puzzleGrid.querySelector(`[data-id="${btnId}"]`);
+                if (btn) {
+                    btn.classList.add('flash');
+                    setTimeout(() => btn.classList.remove('flash'), 300);
+                }
+                i++;
+            }, 600);
+        }
+
+        function handlePuzzleClick(id) {
+            playerSequence.push(parseInt(id));
+            const btn = dom.puzzleGrid.querySelector(`[data-id="${id}"]`);
+            if (btn) {
+                btn.classList.add('flash');
+                setTimeout(() => btn.classList.remove('flash'), 200);
+            }
+
+            // Checar si el clic es correcto
+            const lastIndex = playerSequence.length - 1;
+            if (playerSequence[lastIndex] !== puzzleSequence[lastIndex]) {
+                endGame('failure'); // Error en la secuencia
+                return;
+            }
+            
+            // Checar si completó la secuencia
+            if (playerSequence.length === puzzleSequence.length) {
+                // Éxito, avanzar a la siguiente (e imaginaria) etapa
+                setTimeout(() => showStage(currentStageIndex + 1), 500);
+            }
+        }
+
+        // --- 9. Lógica de Fin de Juego (Emisor) ---
+        function endGame(status) {
+            clearInterval(timerInterval);
+            
+            let recompensaId;
+            let costoXP = 0;
+
+            if (status === 'success') {
+                recompensaId = successRecompensaId;
+                costoXP = appConfig.costoExito || 0;
+                dom.title.innerText = "¡Reparación Exitosa!";
+                dom.timerProgress.style.backgroundColor = '#48bb78';
+            } else {
+                recompensaId = failureRecompensaId;
+                costoXP = appConfig.costoFracaso || 0;
+                dom.title.innerText = "¡Fallo Crítico!";
+                dom.timerProgress.style.backgroundColor = '#f56565';
+            }
+            
+            // Ocultar todas las etapas
+            Object.values(dom.stages).forEach(s => s.classList.remove('active'));
+
+            window.parent.postMessage({
+                source: 'RentalApp', // 👈 IMPORTANTE: Usamos el mismo source 'RentalApp'
+                type: 'app-result',
+                status: status,
+                recompensaId: recompensaId,
+                costoXP: costoXP
+            }, '*');
+        }
+    </script>
+</body>
+</html>

@@ -2,6 +2,21 @@
 /* --- 1. ESTILOS BASE Y GENERALES (MÍNIMOS) --- */
 /* ========================================================== */
 
+.glitch-overlay {
+  position: fixed;
+  top: 0; 
+  left: 0;
+  width: 100vw; 
+  height: 100vh;
+  object-fit: cover;
+  z-index: 9999;     
+  pointer-events: none; /* IMPORTANTE: Deja pasar los clics */
+  
+  /* 👇 ESTO ES LA CLAVE PARA VER EL INTRO DEBAJO 👇 */
+  mix-blend-mode: screen; /* O prueba 'overlay' si screen es muy blanco */
+  opacity: 0.1;           /* Ajusta esto: 0.2 es sutil, 0.6 es fuerte */
+}
+
 /* El contenedor principal de la aplicación, ahora flexible */
 .App {
   background: #111; 
@@ -11,7 +26,6 @@
   height: 100%; 
   min-height: 100vh; /* Se mantiene min-height para asegurar altura mínima */
 }
-
 .app-authenticated {
     display: flex; 
     flex-direction: column;
@@ -87,7 +101,7 @@
   background: none;
   border: none;
   color: #d1d5db;
-  font-size: .5rem;
+  font-size: .7rem;
   font-weight: 500;
   padding: 0.5rem 0.8rem;
   cursor: pointer;
@@ -284,76 +298,84 @@
 /* ========================================================== */
 
 .bottom-bar {
-    /* (Asegúrate de que tus estilos base de posición, fondo y z-index están aquí) */
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
+    
+    /* Estilo Barra de Estado */
+    background: rgba(10, 10, 10, 0.95);
+    border-top: 1px solid #333;
+    padding: 10px 20px;
+    
     display: flex;
-    justify-content: center; /* O space-around, o space-between */
+    justify-content: center; /* Centrado */
     align-items: center;
-    background: rgba(0, 0, 0, 0.7); /* Fondo oscuro semitransparente */
-    padding: 0.5rem 1rem;
-    z-index: 10;
+    gap: 30px; /* Separación amplia */
+    z-index: 100;
+    
+    box-shadow: 0 -10px 20px rgba(0,0,0,0.8);
 }
 
+/* Botones de la barra inferior */
 .bottom-bar-btn {
-    background: none;
+    background: transparent;
     border: none;
-    color: #f1f1f1;
-    cursor: pointer;
-    transition: color 0.3s ease;
-    
-    /* 💥 CAMBIO CLAVE: Fuente más pequeña (antes era 1rem o más) */
-    font-size: 0.55rem; 
-    font-weight: 500;
-    padding: 0.5rem 0.8rem;
+    color: #555; /* Apagado por defecto */
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
     text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s;
+    padding: 5px 10px;
+}
+
+.bottom-bar-btn::before {
+    content: '[';
+    margin-right: 5px;
+    color: #333;
+    transition: color 0.3s;
+}
+.bottom-bar-btn::after {
+    content: ']';
+    margin-left: 5px;
+    color: #333;
+    transition: color 0.3s;
 }
 
 .bottom-bar-btn:hover {
-    color: #CD853F; /* Ocre/Marrón para el hover */
-}
-
-/* 💥 NUEVO ESTILO: Botón de Cerrar/Ocultar */
-.bottom-bar-close-btn {
-    /* Estilos del botón de ocultar */
-    background: none;
-    border: none;
-    color: #f1f1f1;
-    cursor: pointer;
-    font-size: 0.8rem;
-    padding: 0.5rem;
-    margin-right: 1rem; /* Separación del resto de botones */
-    transition: color 0.3s ease, transform 0.3s ease;
-}
-
-.bottom-bar-close-btn:hover {
     color: #CD853F;
-    transform: scale(1.05);
+    text-shadow: 0 0 8px #CD853F;
+}
+.bottom-bar-btn:hover::before, 
+.bottom-bar-btn:hover::after {
+    color: #CD853F;
 }
 
-/* 💥 NUEVO ESTILO: Botón Flotante para RE-MOSTRAR la barra (cuando está oculta) */
-.bottom-bar-show-btn {
-    position: fixed;
-    bottom: 1rem;
-    left: 1rem;
-    /* Estilos estéticos */
-    background: rgba(0, 0, 0, 0.7);
-    color: #f1f1f1;
-    border: 1px solid #CD853F;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
+/* Botón de Ocultar (La X pequeña) */
+.bottom-bar-close-btn {
+    background: transparent;
+    border: 1px solid #333;
+    color: #444;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    font-size: 0.55rem;
-    z-index: 15; /* Asegura que esté por encima de otros elementos */
-    transition: all 0.3s ease;
+    border-radius: 50%;
+    transition: all 0.3s;
+    margin-right: auto; /* Lo empuja a la izquierda absoluta si usas flex */
+    position: absolute;
+    left: 20px;
+}
+.bottom-bar-close-btn:hover {
+    border-color: #e53e3e;
+    color: #e53e3e;
 }
 
-.bottom-bar-show-btn:hover {
-    background: #CD853F;
-    color: black;
-}
 
 /* ========================================================== */
 /* --- 5. ESTILOS DE MODALES (INFO Y LOGIN UNIFICADOS) --- */
@@ -395,30 +417,23 @@
 
 /* --- BOTÓN CERRAR --- */
 .info-modal-close-btn {
-  position: absolute; 
-  top: 1rem;
-  right: 1.5rem;
-  background: none;
-  border: none;
-  color: #cccccc;
-  font-size: 2rem;
-  font-weight: 300;
-  line-height: 1;
-  cursor: pointer;
-  transition: color 0.3s ease;
-  z-index: 1011; 
+    color: #555;
+    font-family: Arial, sans-serif;
+    top: 15px;
+    right: 20px;
 }
+.info-modal-close-btn:hover { color: #fff; }
 
-.info-modal-close-btn:hover {
-  color: #CD853F;
-}
 
 .info-modal-title {
-  color: #CD853F;
-  margin: 0 0 1rem 0;
-  font-size: 1.8rem;
-  text-align: center;
+    color: #fff;
+    border-bottom: 1px solid #333;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    text-transform: uppercase;
 }
+.info-modal-title::before { content: 'FILE: '; color: #555; }
 
 .info-modal-body {
   font-size: 1rem;
@@ -620,22 +635,61 @@
 
 @media (max-width: 768px) {
   /* --- LANDING PAGE --- */
+  /* 3. TÍTULO PRINCIPAL (LA RESISTENCIA) - ESTILO GLITCH */
   .landing-title {
-    font-size: 3rem;
-    letter-spacing: 0.15em;
+      font-family: 'Arial Black', sans-serif; /* Fuente muy pesada */
+      font-size: 4rem; 
+      font-weight: 900;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: -2px;
+      margin: 0;
+      position: relative;
+      /* Efecto de distorsión */
+      text-shadow: 
+          2px 0 #CD853F, 
+          -2px 0 #0ff;
   }
 
   .landing-subtitle {
-    font-size: 1.1rem;
-    margin: 1rem 0 2rem 0;
+      font-family: 'Courier New', monospace;
+      background-color: #CD853F;
+      color: #000;
+      padding: 2px 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      letter-spacing: 1px;
+      margin-top: 10px;
+      margin-bottom: 30px;
+      display: inline-block;
   }
+
   
+    
+  /* 4. BOTÓN "RESISTE" (Entrada Principal) */
   .landing-button {
-    font-size: 1rem; 
-    padding: 0.7rem 2rem; 
-    /* Eliminamos el width forzado en móvil para que siga siendo pequeño */
-    width: auto !important; 
+      background: transparent !important;
+      border: 2px solid #CD853F !important;
+      color: #CD853F !important;
+      font-family: 'Courier New', monospace;
+      font-size: 1.2rem;
+      padding: 1rem 3rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s;
+      box-shadow: 0 0 15px rgba(205, 133, 63, 0.3);
   }
+
+  .landing-button:hover {
+      background: #CD853F !important;
+      color: #000 !important;
+      box-shadow: 0 0 40px rgba(205, 133, 63, 0.8);
+      transform: scale(1.05);
+  }
+
+
 
   /* --- NAVBAR AUTENTICADA (Hamburguesa) --- */
   .elegant-navbar {
@@ -749,7 +803,14 @@
   
   /* Modales más pequeños en móviles */
   .info-modal-content {
-      padding: 1.5rem;
+    background-color: #0a0a0a;
+    border: 1px solid #333;
+    border-top: 4px solid #CD853F; /* Tope naranja */
+    border-radius: 0; /* Cuadrado */
+    font-family: 'Courier New', monospace;
+    color: #ccc;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+    max-width: 700px;
   }
   
   .login-modal-override {
@@ -927,7 +988,7 @@
   overflow-y: auto;
   
   /* Este padding es para asegurar que el contenido se vea bajo la barra sticky */
-  padding-top: 5rem; 
+  padding-top: .5rem; 
   padding-bottom: 2rem; 
   padding-left: 1rem;
   padding-right: 1rem;
@@ -955,7 +1016,7 @@
 
 .wip-container {
     max-width: 1000px;
-    margin: 2rem auto; /* Añade margen superior e inferior para separarlo del navbar/footer */
+    margin: .3rem auto; /* Añade margen superior e inferior para separarlo del navbar/footer */
     padding: 2rem;
     color: #f3f4f6;
     background-color: #1f2937; /* Fondo oscuro sutil */
@@ -1114,23 +1175,17 @@
 /* --- ESTILOS PARA BOTONES DENTRO DE InfoModal (LANDING) --- */
 /* ========================================================== */
 .modal-link-btn {
-    display: block;
-    width: 100%;
-    text-align: left;
-    background: none;
-    border: none;
-    color: #a78bfa;
-    padding: 0.5rem 0;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: color 0.2s ease;
-    text-decoration: none;
-    margin-bottom: 0.5rem; /* Separación entre enlaces */
+    border: 1px solid #222;
+    background: #111;
+    margin-bottom: 8px;
+    padding: 10px;
+    color: #888;
+    font-size: 0.9rem;
 }
-
 .modal-link-btn:hover {
-    color: #fff;
-    text-decoration: underline;
+    border-color: #CD853F;
+    color: #CD853F;
+    background: rgba(205, 133, 63, 0.05);
 }
 
 .modal-link-btn i {
@@ -1150,9 +1205,262 @@
     padding: 0 20px; /* Opcional: para darle aire en los lados */
 }
 
-/* Puedes añadir media queries si quieres que cambie a 1x4 en móviles */
+/* Responsive */
 @media (max-width: 768px) {
-    .wip-links-grid {
-        grid-template-columns: 1fr; /* Una sola columna en pantallas pequeñas */
-    }
+    .landing-title { font-size: 2.5rem; }
+    .unmute-button { width: 80%; padding: 1rem; font-size: 0.9rem; }
+    .bottom-bar { overflow-x: auto; justify-content: flex-start; } /* Scroll en móvil */
+}
+
+/* 1. BOTÓN DE INICIO (UNMUTE) - ESTILO "SYSTEM BOOT" */
+.unmute-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    
+    /* Estilo Técnico */
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid #CD853F;
+    color: #CD853F;
+    padding: 1.5rem 3rem;
+    
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    
+    cursor: pointer;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 0 20px rgba(205, 133, 63, 0.2);
+    transition: all 0.3s ease;
+    
+    /* Efecto parpadeo de cursor */
+    animation: terminalPulse 2s infinite;
+}
+
+.unmute-button::before {
+    content: '> ';
+}
+.unmute-button::after {
+    content: '_';
+    animation: blink 1s infinite;
+}
+
+.unmute-button:hover {
+    background: #CD853F;
+    color: #000;
+    box-shadow: 0 0 50px rgba(205, 133, 63, 0.6);
+    letter-spacing: 5px; /* Efecto de expansión */
+}
+
+@keyframes terminalPulse {
+    0% { box-shadow: 0 0 10px rgba(205, 133, 63, 0.1); }
+    50% { box-shadow: 0 0 25px rgba(205, 133, 63, 0.4); border-color: #fff; }
+    100% { box-shadow: 0 0 10px rgba(205, 133, 63, 0.1); }
+}
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+/* BOTÓN FLOTANTE (HAMBURGUESA) - ESTILO TERMINAL */
+.bottom-bar-show-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 100; /* Por encima del video */
+    
+    background: rgba(10, 10, 10, 0.9);
+    color: #CD853F; /* Color Cobre */
+    border: 1px solid #CD853F;
+    border-radius: 0; /* Cuadrado para look técnico */
+    
+    padding: 12px 16px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.bottom-bar-show-btn:hover {
+    background: #CD853F;
+    color: #000;
+    box-shadow: 0 0 20px rgba(205, 133, 63, 0.6);
+    transform: scale(1.1);
+}
+
+/* Opcional: Animación de entrada */
+.bottom-bar-show-btn {
+    animation: fadeInBtn 0.5s ease-out;
+}
+
+@keyframes fadeInBtn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ========================================================== */
+/* --- HACKER INTERFACE & GLITCH STYLES (LANDING) --- */
+/* ========================================================== */
+
+/* 1. TÍTULO GLITCH PRINCIPAL */
+.landing-glitch-title {
+  font-family: 'Arial Black', sans-serif; /* Fuente gruesa necesaria */
+  font-weight: 900;
+  font-size: 6rem;
+  color: #e29c05d3;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  -webkit-text-stroke: 1px #000;
+  text-transform: uppercase;
+  position: relative;
+  display: inline-block;
+  letter-spacing: -2px;
+  margin-bottom: 1rem;
+}
+
+/* Capas fantasma para el efecto RGB Split */
+.landing-glitch-title::before,
+.landing-glitch-title::after {
+  content: attr(data-text); /* Copia el texto dinámicamente */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000; /* Fondo negro para ocultar el original tras los cortes */
+}
+
+/* Capa Roja (Izquierda) */
+.landing-glitch-title::before {
+  left: 2px;
+  text-shadow: -1px 0 #ff00c1;
+  clip: rect(44px, 450px, 56px, 0);
+  animation: glitch-anim-1 5s infinite linear alternate-reverse;
+}
+
+/* Capa Azul/Cian (Derecha) */
+.landing-glitch-title::after {
+  left: -2px;
+  text-shadow: -1px 0 #00fff9;
+  clip: rect(44px, 450px, 56px, 0);
+  animation: glitch-anim-2 5s infinite linear alternate-reverse;
+}
+
+/* Subtítulo técnico */
+.landing-tech-subtitle {
+  font-family: 'Courier New', monospace;
+  color: #120c05;
+  font-size: 1rem;
+  letter-spacing: 4px;
+  margin-bottom: 3rem;
+  border-top: 1px solid #1b0e02;
+  border-bottom: 1px solid #130b02;
+  padding: 5px 20px;
+  background: rgba(205, 133, 63, 0.1);
+  text-transform: uppercase;
+  position: relative;
+}
+
+/* Decoración parpadeante al lado del subtítulo */
+.landing-tech-subtitle::after {
+  content: '█';
+  position: absolute;
+  right: -20px;
+  animation: blink 1s infinite;
+  color: rgb(48, 206, 20);
+}
+
+/* 2. BOTÓN DE ACCESO "CYBER BUTTON" */
+.landing-glitch-btn {
+  font-family: 'Courier New', monospace;
+  font-size: 1.2rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: #6f0606;
+  background: transparent;
+  border: 1px solid #ce2525;
+  padding: 1.2rem 3rem;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(7, 7, 7, 0.2);
+}
+
+/* Fondo deslizante al hacer hover */
+.landing-glitch-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: #0fb406;
+  
+  transition: left 0.3s ease-in-out;
+  z-index: -1;
+}
+
+.landing-glitch-btn:hover {
+  color: #000; /* Texto negro sobre fondo naranja */
+  box-shadow: 
+    0 0 20px rgba(205, 133, 63, 0.6),
+    inset 0 0 10px rgba(0,0,0,0.5);
+  text-shadow: 0 0 5px rgba(255,255,255,0.5);
+}
+
+.landing-glitch-btn:hover::before {
+  left: 0;
+}
+
+/* Decoración de esquinas del botón */
+.landing-glitch-btn::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-bottom: 2px solid #CD853F;
+  border-right: 2px solid #CD853F;
+  transition: all 0.3s;
+}
+
+/* 3. ANIMACIONES GLITCH (KEYFRAMES) */
+@keyframes glitch-anim-1 {
+  0% { clip: rect(30px, 9999px, 10px, 0); }
+  5% { clip: rect(70px, 9999px, 90px, 0); }
+  10% { clip: rect(5px, 9999px, 40px, 0); }
+  15% { clip: rect(0px, 9999px, 0px, 0); } /* Pausa */
+  45% { clip: rect(0px, 9999px, 0px, 0); }
+  50% { clip: rect(20px, 9999px, 60px, 0); }
+  55% { clip: rect(80px, 9999px, 100px, 0); }
+  60% { clip: rect(0px, 9999px, 0px, 0); }
+  100% { clip: rect(0px, 9999px, 0px, 0); }
+}
+
+@keyframes glitch-anim-2 {
+  0% { clip: rect(10px, 9999px, 80px, 0); }
+  5% { clip: rect(90px, 9999px, 100px, 0); }
+  10% { clip: rect(15px, 9999px, 30px, 0); }
+  15% { clip: rect(0px, 9999px, 0px, 0); } /* Pausa */
+  45% { clip: rect(0px, 9999px, 0px, 0); }
+  50% { clip: rect(50px, 9999px, 90px, 0); }
+  55% { clip: rect(10px, 9999px, 20px, 0); }
+  60% { clip: rect(0px, 9999px, 0px, 0); }
+  100% { clip: rect(0px, 9999px, 0px, 0); }
+}
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+/* Responsive para el título grande */
+@media (max-width: 768px) {
+  .landing-glitch-title {
+    font-size: 2.5rem;
+  }
+  .landing-tech-subtitle {
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+  }
 }

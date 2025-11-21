@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { gameService, InventoryItem } from '../services/GameService'
+import { gameServiceUser as gameService, InventoryItem } from '../services/GameServiceUser'
 import { useAuth } from '../contexts/AuthContext'
 import './InventarioView.css'
 
@@ -7,13 +7,24 @@ interface InventarioViewProps {
   onBack?: () => void
 }
 
+// Definimos categorías visuales que agrupan posibles valores de la DB
+const CATEGORIAS = [
+  { id: 'todos', label: '📦 Todos' },
+  { id: 'documento', label: '📄 Documentos', types: ['documento', 'nota', 'carta', 'informe', 'papel'] },
+  { id: 'evidencia', label: '🔍 Evidencia', types: ['evidencia', 'pista', 'objeto', 'clave'] },
+  { id: 'foto', label: '📸 Fotos', types: ['foto', 'imagen', 'fotografia', 'polaroid'] },
+  { id: 'otro', label: '🔹 Otros', types: [] } // Fallback
+];
+
 const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
   const { user } = useAuth()
   const [inventario, setInventario] = useState<InventoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
-  const [filterType, setFilterType] = useState<string>('todos')
+
+  // Estado para el filtro activo
+  const [activeCategory, setActiveCategory] = useState<string>('todos')
 
   useEffect(() => {
     if (user?.id) {
@@ -25,10 +36,14 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
     try {
       setLoading(true)
       setError(null)
-      
       const stats = await gameService.getPlayerStats(user?.id!)
-      if (stats) {
-        setInventario(stats.inventario)
+      if (stats && stats.inventario) {
+        // Normalizamos los tipos a minúsculas para evitar errores de 'FOTO' vs 'foto'
+        const itemsNormalizados = stats.inventario.map(item => ({
+          ...item,
+          tipo: item.tipo ? item.tipo.toLowerCase() : 'otro'
+        }));
+        setInventario(itemsNormalizados)
       }
     } catch (err: any) {
       console.error('Error cargando inventario:', err)
@@ -38,48 +53,75 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
     }
   }
 
-  const openModal = (item: InventoryItem) => {
-    setSelectedItem(item)
-  }
-
-  const closeModal = () => {
-    setSelectedItem(null)
-  }
-
-  const filteredItems = inventario.filter(item => 
-    filterType === 'todos' || item.tipo === filterType
-  )
-
-  const getItemIcon = (tipo: string): string => {
-    const icons: Record<string, string> = {
-      'documento': '📄',
-      'foto': '📸',
-      'contacto': '👤',
-      'evidencia': '🔍',
-      'memoria': '💭'
+  // --- LÓGICA DE FILTRADO ROBUSTA ---
+  const getCategoryForItem = (tipo: string): string => {
+    for (const cat of CATEGORIAS) {
+      if (cat.types && cat.types.includes(tipo)) {
+        return cat.id;
+      }
     }
-    return icons[tipo] || '📦'
+    return 'otro';
+  };
+
+  const filteredItems = inventario.filter(item => {
+    if (activeCategory === 'todos') return true;
+    const itemCat = getCategoryForItem(item.tipo);
+
+    // Si la categoría es 'otro', incluimos todo lo que no coincida con las otras cats
+    if (activeCategory === 'otro') {
+      const knownTypes = CATEGORIAS.flatMap(c => c.types || []);
+      return !knownTypes.includes(item.tipo);
+    }
+
+    return itemCat === activeCategory;
+  });
+
+  // Helper para contar items por categoría visual
+  const countByCategory = (catId: string) => {
+    if (catId === 'todos') return inventario.length;
+    if (catId === 'otro') {
+      const knownTypes = CATEGORIAS.flatMap(c => c.types || []);
+      return inventario.filter(i => !knownTypes.includes(i.tipo)).length;
+    }
+    const targetTypes = CATEGORIAS.find(c => c.id === catId)?.types || [];
+    return inventario.filter(i => targetTypes.includes(i.tipo)).length;
+  };
+
+  // --- HELPERS VISUALES ---
+  const getItemIcon = (tipo: string): string => {
+    const map: Record<string, string> = {
+      'documento': '📄', 'nota': '📝', 'carta': '✉️',
+      'foto': '📸', 'imagen': '🖼️',
+      'evidencia': '🔍', 'pista': '🧩',
+      'llave': '🔑', 'usb': '💾'
+    };
+    // Búsqueda parcial (ej: si tipo es 'documento_secreto', devuelve documento)
+    for (const key in map) {
+      if (tipo.includes(key)) return map[key];
+    }
+    return '📦';
   }
 
   const getRarityColor = (rareza: string): string => {
+    const r = rareza ? rareza.toLowerCase() : 'comun';
     const colors: Record<string, string> = {
-      'común': '#6b7280',
-      'rara': '#3b82f6',
-      'épica': '#8b5cf6',
-      'legendaria': '#f59e0b'
+      'común': '#718096', 'comun': '#718096',
+      'rara': '#63b3ed', 'raro': '#63b3ed',
+      'épica': '#9f7aea', 'epico': '#9f7aea',
+      'legendaria': '#f6ad55', 'legendario': '#f6ad55',
+      'clave': '#f56565' // Objetos clave en rojo
     }
-    return colors[rareza] || colors.común
+    return colors[r] || '#718096';
   }
 
   if (loading) {
     return (
-      <div className="inventario-view">
-        <div className="view-header">
-          <button onClick={onBack} className="back-btn">← Volver</button>
+      <div className="iv-container">
+        <div className="iv-header">
           <h2>🎒 Mi Inventario</h2>
         </div>
-        <div className="loading">
-          <p>⏳ Cargando inventario...</p>
+        <div className="iv-status">
+          <p>⏳ Cargando objetos...</p>
         </div>
       </div>
     )
@@ -87,187 +129,153 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
 
   if (error) {
     return (
-      <div className="inventario-view">
-        <div className="view-header">
-          <button onClick={onBack} className="back-btn">← Volver</button>
+      <div className="iv-container">
+        <div className="iv-header">
           <h2>🎒 Mi Inventario</h2>
         </div>
-        <div className="error">
+        <div className="iv-status">
           <p>❌ {error}</p>
-          <button onClick={cargarInventario} className="retry-btn">🔄 Reintentar</button>
+          <button onClick={cargarInventario} className="iv-btn-retry">🔄 Reintentar</button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="inventario-view">
-      <div className="view-header">
-        <button onClick={onBack} className="back-btn">← Volver</button>
-        <h2>🎒 Mi Inventario</h2>
-        <p>Objetos recolectados durante tu participación en La Resistencia</p>
+    <div className="iv-container">
+      <div className="iv-header">
+        <h2>Mi Inventario</h2>
+        <p>Objetos y evidencias recolectadas</p>
       </div>
 
-      <div className="inventario-controls">
-        <div className="filter-selector">
-          <button 
-            className={`filter-btn ${filterType === 'todos' ? 'active' : ''}`}
-            onClick={() => setFilterType('todos')}
-          >
-            📦 Todos ({inventario.length})
-          </button>
-          <button 
-            className={`filter-btn ${filterType === 'documento' ? 'active' : ''}`}
-            onClick={() => setFilterType('documento')}
-          >
-            📄 Documentos ({inventario.filter(i => i.tipo === 'documento').length})
-          </button>
-          <button 
-            className={`filter-btn ${filterType === 'foto' ? 'active' : ''}`}
-            onClick={() => setFilterType('foto')}
-          >
-            📸 Fotos ({inventario.filter(i => i.tipo === 'foto').length})
-          </button>
-          <button 
-            className={`filter-btn ${filterType === 'contacto' ? 'active' : ''}`}
-            onClick={() => setFilterType('contacto')}
-          >
-            👤 Contactos ({inventario.filter(i => i.tipo === 'contacto').length})
-          </button>
-          <button 
-            className={`filter-btn ${filterType === 'evidencia' ? 'active' : ''}`}
-            onClick={() => setFilterType('evidencia')}
-          >
-            🔍 Evidencias ({inventario.filter(i => i.tipo === 'evidencia').length})
-          </button>
+      <div className="iv-controls">
+        {/* Filtros Generados Dinámicamente */}
+        <div className="iv-filter-bar">
+          {CATEGORIAS.map(cat => {
+            const count = countByCategory(cat.id);
+            // Solo mostrar categorías que tengan items (o Todos)
+            if (cat.id !== 'todos' && count === 0) return null;
+
+            return (
+              <button
+                key={cat.id}
+                className={`iv-filter-btn ${activeCategory === cat.id ? 'active' : ''}`}
+                onClick={() => setActiveCategory(cat.id)}
+              >
+                {cat.label} ({count})
+              </button>
+            );
+          })}
         </div>
-        
-        <div className="inventario-stats">
-          <span className="stat">📊 Total: {inventario.length} objetos</span>
-          <span className="stat">⭐ Objetos únicos recolectados</span>
+
+        <div className="iv-stats">
+          <span className="iv-stat-item">Total: <span className="iv-stat-val">{inventario.length}</span></span>
+          <span className="iv-stat-item">Mostrando: <span className="iv-stat-val">{filteredItems.length}</span></span>
         </div>
       </div>
 
       {filteredItems.length === 0 ? (
-        <div className="empty-inventory">
-          <div className="empty-icon">📦</div>
-          <h3>Inventario Vacío</h3>
-          <p>{filterType === 'todos' 
-            ? 'Aún no has recolectado objetos. Explora historias para encontrar elementos únicos.'
-            : `No tienes objetos de tipo '${filterType}' en tu inventario.`}
-          </p>
+        <div className="iv-empty">
+          <span className="iv-empty-icon">📭</span>
+          <p>No hay objetos en esta categoría.</p>
         </div>
       ) : (
-        <div className="inventario-grid">
-          {filteredItems.map((item, index) => (
-            <div 
-              key={index} 
-              className="item-card"
-              style={{
-                borderColor: getRarityColor(item.rareza),
-                boxShadow: `0 4px 12px ${getRarityColor(item.rareza)}33`
-              }}
-            >
-              <div className="item-header">
-                <div className="item-icon">{getItemIcon(item.tipo)}</div>
-                <div className="item-rarity" style={{ color: getRarityColor(item.rareza) }}>
-                  {item.rareza.toUpperCase()}
-                </div>
-              </div>
-              
-              <div className="item-info">
-                <h3 className="item-nombre">{item.nombre}</h3>
-                <p className="item-tipo">{item.tipo}</p>
-                <p className="item-descripcion">
-                  {item.descripcion?.substring(0, 100)}...
-                </p>
-                <div className="item-meta">
-                  <span className="item-fecha">
-                    📅 {new Date(item.fecha_obtencion).toLocaleDateString('es-MX')}
-                  </span>
-                  <span className="item-historia">
-                    📖 {item.historia_origen}
+        <div className="iv-grid">
+          {filteredItems.map((item, index) => {
+            const color = getRarityColor(item.rareza);
+            return (
+              <div
+                key={index}
+                className="iv-card"
+                style={{ borderColor: activeCategory === 'todos' ? '#333' : color }} // Sutil detalle de color
+              >
+                <div className="iv-card-header">
+                  <div className="iv-icon-box">{getItemIcon(item.tipo)}</div>
+                  <span className="iv-rarity-badge" style={{ color: color }}>
+                    {item.rareza || 'COMÚN'}
                   </span>
                 </div>
+
+                <div className="iv-card-body">
+                  <h3 className="iv-card-title">{item.nombre}</h3>
+                  <span className="iv-card-type">{item.tipo}</span>
+                  <p className="iv-card-desc">
+                    {item.descripcion || 'Sin descripción disponible.'}
+                  </p>
+                </div>
+
+                <div className="iv-card-footer">
+                  <span className="iv-card-date">
+                    {new Date(item.fecha_obtencion).toLocaleDateString('es-MX')}
+                  </span>
+                  <button
+                    onClick={() => setSelectedItem(item)}
+                    className="iv-btn-view"
+                  >
+                    Ver Detalles
+                  </button>
+                </div>
               </div>
-              
-              <div className="item-actions">
-                <button 
-                  onClick={() => openModal(item)}
-                  className="btn btn-primary"
-                >
-                  👁️ Ver Detalle
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* Modal de Detalle de Objeto */}
+      {/* Modal de Detalle (Namespaced iv-) */}
       {selectedItem && (
-        <div className="item-modal-overlay" onClick={closeModal}>
-          <div className="item-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <div className="modal-title">
-                <span className="modal-icon">{getItemIcon(selectedItem.tipo)}</span>
-                <h2>{selectedItem.nombre}</h2>
+        <div className="iv-modal-overlay" onClick={() => setSelectedItem(null)}>
+          <div className="iv-modal" onClick={(e) => e.stopPropagation()}>
+
+            <div className="iv-modal-header">
+              <div className="iv-modal-title-group">
+                <span className="iv-modal-icon">{getItemIcon(selectedItem.tipo)}</span>
+                <h2 className="iv-modal-h2">{selectedItem.nombre}</h2>
               </div>
-              <button onClick={closeModal} className="modal-close">×</button>
+              <button onClick={() => setSelectedItem(null)} className="iv-modal-close">×</button>
             </div>
-            
-            <div className="modal-content">
-              <div className="item-details">
-                <div className="detail-section">
-                  <h4>🏷️ Tipo</h4>
-                  <p>{selectedItem.tipo}</p>
-                </div>
-                
-                <div className="detail-section">
-                  <h4>⭐ Rareza</h4>
-                  <p style={{ color: getRarityColor(selectedItem.rareza) }}>
-                    {selectedItem.rareza.toUpperCase()}
-                  </p>
-                </div>
-                
-                <div className="detail-section">
-                  <h4>📝 Descripción</h4>
-                  <p>{selectedItem.descripcion}</p>
-                </div>
-                
-                <div className="detail-section">
-                  <h4>📅 Fecha de Obtención</h4>
-                  <p>{new Date(selectedItem.fecha_obtencion).toLocaleString('es-MX')}</p>
-                </div>
-                
-                <div className="detail-section">
-                  <h4>📖 Historia de Origen</h4>
-                  <p>{selectedItem.historia_origen}</p>
-                </div>
-                
-                <div className="detail-section rarity-info">
-                  <h4>ℹ️ Información de Rareza</h4>
-                  <div className="rarity-description">
-                    {selectedItem.rareza === 'común' && (
-                      <p>Objetos frecuentes encontrados durante la exploración urbana.</p>
-                    )}
-                    {selectedItem.rareza === 'rara' && (
-                      <p>Elementos especiales que requieren investigación profunda.</p>
-                    )}
-                    {selectedItem.rareza === 'épica' && (
-                      <p>Objetos únicos con gran valor histórico y narrativo.</p>
-                    )}
-                    {selectedItem.rareza === 'legendaria' && (
-                      <p>Elementos extremadamente raros con poder transformador.</p>
-                    )}
-                  </div>
+
+            <div className="iv-modal-content">
+              <div className="iv-detail-row">
+                <div className="iv-detail-label">Tipo & Rareza</div>
+                <div className="iv-detail-value" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <span style={{ textTransform: 'capitalize' }}>{selectedItem.tipo}</span>
+                  <span className="iv-rarity-badge" style={{ color: getRarityColor(selectedItem.rareza) }}>
+                    {selectedItem.rareza}
+                  </span>
                 </div>
               </div>
+
+              <div className="iv-detail-row">
+                <div className="iv-detail-label">Descripción</div>
+                <div className="iv-detail-value">{selectedItem.descripcion}</div>
+              </div>
+
+              <div className="iv-detail-row">
+                <div className="iv-detail-label">Origen</div>
+                <div className="iv-detail-value">
+                  {selectedItem.historia_origen || 'Desconocido'}
+                  <span style={{ color: '#718096', fontSize: '0.8rem', marginLeft: '8px' }}>
+                    ({new Date(selectedItem.fecha_obtencion).toLocaleDateString()})
+                  </span>
+                </div>
+              </div>
+
+              {/* Sección explicativa de rareza */}
+              <div className="iv-detail-row" style={{ background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '6px', border: 'none' }}>
+                <div className="iv-detail-label" style={{ marginBottom: '0' }}>Información</div>
+                <p style={{ fontSize: '0.85rem', color: '#a0aec0', fontStyle: 'italic', margin: '4px 0 0 0' }}>
+                  {selectedItem.rareza === 'común' && 'Objeto estándar encontrado frecuentemente.'}
+                  {selectedItem.rareza === 'rara' && 'Objeto poco común, útil para ciertas interacciones.'}
+                  {selectedItem.rareza === 'épica' && 'Objeto valioso con gran importancia narrativa.'}
+                  {selectedItem.rareza === 'legendaria' && 'Reliquia única. Define el curso de la historia.'}
+                  {selectedItem.rareza === 'clave' && 'Necesario para desbloquear nuevas áreas.'}
+                </p>
+              </div>
             </div>
-            
-            <div className="modal-actions">
-              <button onClick={closeModal} className="btn btn-secondary btn-large">
-                ✅ Entendido
+
+            <div className="iv-modal-footer">
+              <button onClick={() => setSelectedItem(null)} className="iv-btn-close-modal">
+                Cerrar
               </button>
             </div>
           </div>

@@ -25,16 +25,22 @@ const AdminUbicaciones: React.FC = () => {
 
   // Tipos de ubicaciones permitidos
   const tiposUbicaciones = [
+    'Exterior',
+    'Interior',
+    'Histórico',
     'Plaza',
     'Mercado',
     'Barrio',
     'Centro',
     'Parque',
     'Cultural',
-    'Histórico',
     'Comunidad',
+    'Punto_Interes',
+    'Region',
     'Resistencia'
   ]
+
+  
 
   useEffect(() => {
     cargarUbicaciones()

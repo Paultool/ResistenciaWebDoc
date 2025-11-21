@@ -1,175 +1,253 @@
-.auth-container {
-  min-height: 100vh;
+/* ============================================================
+   AUTH FORM - ESTILO "RESISTANCE TERMINAL" (Namespaced: af-)
+   ============================================================ */
+
+.af-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  padding: 1rem;
+  background-color: rgba(0, 0, 0, 0.9); /* Fondo muy oscuro */
+  /* Efecto de rejilla de fondo sutil */
+  background-image: 
+    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(255, 0, 0, 0.02));
+  background-size: 100% 2px, 3px 100%;
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  font-family: 'Courier New', Courier, monospace; /* Fuente Hacker */
 }
 
-.auth-card {
-  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
-  border-radius: 20px;
-  padding: 2rem;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-  border: 1px solid #4a4a4a;
-  max-width: 400px;
+/* TARJETA DE TERMINAL */
+.af-card {
+  background-color: #050505;
+  border: 1px solid #CD853F; /* Borde color Resistencia */
+  padding: 40px;
   width: 100%;
+  max-width: 500px;
+  position: relative;
+  box-shadow: 0 0 30px rgba(205, 133, 63, 0.15);
+  animation: afGlitchIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Efecto de esquina tecnológica */
+.af-card::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  width: 20px;
+  height: 20px;
+  border-bottom: 2px solid #CD853F;
+  border-right: 2px solid #CD853F;
+}
+
+/* 🚨 SOLUCIÓN BOTÓN CERRAR 🚨 */
+af-close-btn {
+    position: absolute;
+    top: 10px;      /* Pegado arriba */
+    right: 10px;    /* Pegado a la derecha */
+    width: 40px;
+    height: 40px;
+    z-index: 20;    /* Muy importante: encima del formulario */
+    
+    background: transparent;
+    border: 1px solid #444; /* Borde sutil */
+    color: #718096;
+    
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    
+    /* Reset de estilos de botón */
+    padding: 0;
+    line-height: 1;
+}
+.af-close-btn:hover {
+    border-color: #e53e3e; /* Rojo al pasar el mouse */
+    color: #e53e3e;
+    background: rgba(229, 62, 62, 0.1);
+    transform: rotate(90deg); /* Pequeña animación técnica */
+}
+
+/* Header */
+.af-header {
+  text-align: center;
+  margin-bottom: 30px;
+  border-bottom: 1px dashed #333;
+  padding-bottom: 20px;
+}
+
+.af-title {
+  color: #CD853F;
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin: 0;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(205, 133, 63, 0.5);
+}
+
+.af-subtitle {
+  color: #718096;
+  font-size: 0.8rem;
+  margin-top: 5px;
+  font-family: sans-serif; /* Contraste de fuente */
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Formulario */
+.af-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.af-label {
+  display: block;
+  color: #a0aec0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+}
+
+.af-input {
+  width: 100%;
+  padding: 12px 15px;
+  background-color: #0a0a0a;
+  border: 1px solid #333;
+  border-left: 3px solid #333;
+  color: #CD853F; /* Texto color cobre */
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.af-input:focus {
+  outline: none;
+  border-color: #CD853F;
+  border-left-width: 6px;
+  background-color: #111;
+  box-shadow: 0 0 15px rgba(205, 133, 63, 0.1);
+}
+
+/* Botón de Acción */
+.af-btn-submit {
+  width: 100%;
+  padding: 15px;
+  margin-top: 15px;
+  background: transparent;
+  color: #CD853F;
+  border: 1px solid #CD853F;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-family: 'Courier New', monospace;
+  cursor: pointer;
+  transition: all 0.2s;
   position: relative;
   overflow: hidden;
 }
 
-.auth-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #8B4513, #CD853F);
+.af-btn-submit:hover:not(:disabled) {
+  background-color: #CD853F;
+  color: #000;
+  box-shadow: 0 0 20px #CD853F;
 }
 
-.auth-header {
+/* Alertas Estilo Consola */
+.af-alert {
+  padding: 10px;
+  border-left: 3px solid;
+  font-size: 0.8rem;
+  background: rgba(0,0,0,0.3);
+  margin-top: 10px;
+}
+.af-alert-error { border-color: #ff4444; color: #ff4444; }
+.af-alert-success { border-color: #00ff00; color: #00ff00; }
+
+/* Footer */
+.af-footer {
+  margin-top: 20px;
   text-align: center;
-  margin-bottom: 2rem;
+  font-size: 0.8rem;
+  color: #555;
 }
 
-.auth-header h2 {
-  color: #CD853F;
-  font-size: 1.8rem;
-  margin-bottom: 0.5rem;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.auth-subtitle {
-  color: #cccccc;
-  font-size: 0.95rem;
-  opacity: 0.9;
-}
-
-.auth-form .form-group {
-  margin-bottom: 1.5rem;
-}
-
-.auth-form label {
-  display: block;
-  color: #CD853F;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-}
-
-.form-control {
-  width: 100%;
-  padding: 0.8rem 1rem;
-  background-color: #1a1a1a;
-  border: 2px solid #4a4a4a;
-  border-radius: 10px;
-  color: #ffffff;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: #8B4513;
-  box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.2);
-  background-color: #222222;
-}
-
-.form-control::placeholder {
-  color: #888888;
-}
-
-.alert {
-  padding: 0.8rem 1rem;
-  border-radius: 8px;
-  margin: 1rem 0;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.alert-error {
-  background-color: #5a2d2d;
-  border: 1px solid #dc3545;
-  color: #ffcccb;
-}
-
-.alert-success {
-  background-color: #2d5a2d;
-  border: 1px solid #28a745;
-  color: #c8e6c9;
-}
-
-.btn {
-  padding: 0.8rem 1.5rem;
-  border: none;
-  border-radius: 25px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: inline-block;
-  text-align: center;
-  font-size: 1rem;
-}
-
-.btn-primary {
-  background: linear-gradient(45deg, #8B4513, #CD853F);
-  color: white;
-  width: 100%;
-  font-size: 1.1rem;
-  padding: 1rem;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: linear-gradient(45deg, #A0522D, #DAA520);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(139, 69, 19, 0.4);
-}
-
-.btn-primary:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-link {
+.af-link {
   background: transparent;
-  color: #CD853F;
   border: none;
-  padding: 0.2rem 0.5rem;
-  font-weight: 600;
+  color: #888;
   text-decoration: underline;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  margin-left: 5px;
 }
+.af-link:hover { color: #CD853F; }
 
-.btn-link:hover {
-  color: #DAA520;
-  text-decoration: none;
-}
-
-.auth-switch {
-  text-align: center;
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #4a4a4a;
-}
-
-.auth-switch p {
-  color: #cccccc;
-  margin: 0;
-  font-size: 0.9rem;
+@keyframes afGlitchIn {
+  0% { transform: scale(1.1); opacity: 0; }
+  50% { transform: scale(0.98); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 /* Responsive */
 @media (max-width: 480px) {
-  .auth-card {
-    padding: 1.5rem;
-    margin: 1rem;
-  }
-  
-  .auth-header h2 {
-    font-size: 1.5rem;
-  }
+    /* Aseguramos que la tarjeta tenga espacio para el botón */
+    .af-card {
+    /* ... tus otros estilos ... */
+    position: relative; /* Necesario para el absolute del botón */
+    padding-top: 50px;  /* Espacio extra arriba para que el botón no tape el título */
+}
+  .af-close-btn { top: 10px; right: 10px; border-radius: 50%; }
+}
+
+/* BOTÓN CERRAR DEL LOGIN (Asegurado) */
+.af-close-btn {
+    position: absolute;
+    top: 10px;      /* Pegado arriba */
+    right: 10px;    /* Pegado a la derecha */
+    width: 40px;
+    height: 40px;
+    z-index: 20;    /* Muy importante: encima del formulario */
+    
+    background: transparent;
+    border: 1px solid #444; /* Borde sutil */
+    color: #718096;
+    
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    
+    /* Reset de estilos de botón */
+    padding: 0;
+    line-height: 1;
+}
+
+.af-close-btn:hover {
+    border-color: #e53e3e; /* Rojo al pasar el mouse */
+    color: #e53e3e;
+    background: rgba(229, 62, 62, 0.1);
+    transform: rotate(90deg); /* Pequeña animación técnica */
+}
+
+/* Aseguramos que la tarjeta tenga espacio para el botón */
+.af-card {
+    /* ... tus otros estilos ... */
+    position: relative; /* Necesario para el absolute del botón */
+    padding-top: 50px;  /* Espacio extra arriba para que el botón no tape el título */
 }

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Ganancias</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display.swap');
+        body, html {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c;
+            color: #e2e8f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            text-align: center;
+        }
+        #game-container {
+            width: 90%;
+            max-width: 500px;
+            background-color: #2d3748;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .stat-bar {
+            background-color: #4a5568;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            height: 40px;
+            border: 2px solid #718096;
+            position: relative;
+        }
+        #balance-bar {
+            width: 50%; 
+            height: 100%;
+            background-color: #63b3ed;
+            transition: width 0.5s ease;
+        }
+        .stat-label {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: white;
+            text-shadow: 1px 1px 2px #1a202c;
+        }
+        #message {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            height: 40px;
+            font-weight: 700;
+        }
+        #click-area {
+            background-color: #63b3ed;
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
+            user-select: none;
+        }
+        #click-area:hover {
+            background-color: #4299e1;
+        }
+        #click-area:active {
+            transform: scale(0.95);
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h2 id="title">Cargando...</h2>
+        <div class="stat-bar">
+            <div id="balance-bar"></div>
+            <div class="stat-label" id="balance-text">Balance: $0</div>
+        </div>
+        <p id="message">Esperando configuración...</p>
+        <div id="click-area" class="hidden">Haz Clic</div>
+    </div>
+
+    <script>
+        // --- 1. Variables de Configuración (se llenarán desde el parent) ---
+        let appConfig = {};
+        let successRecompensaId = undefined;
+        let failureRecompensaId = undefined;
+        let isConfigLoaded = false;
+        let gameLoop; // Intervalo del juego
+
+        // --- 2. Variables del Juego (con valores por defecto) ---
+        let balance = 0;
+        let GASTOS_POR_SEGUNDO = 400;
+        let FONDOS_POR_CLICK = 80;
+        let MAX_BALANCE = 10000;
+        let MIN_BALANCE = -5000;
+        let MIN_SURVIVAL_BALANCE = -1000;
+        let DURACION_JUEGO_MS = 20000;
+
+        // --- 3. Elementos del DOM ---
+        const balanceBar = document.getElementById('balance-bar');
+        const balanceText = document.getElementById('balance-text');
+        const clickArea = document.getElementById('click-area');
+        const messageEl = document.getElementById('message');
+        const titleEl = document.getElementById('title');
+
+  
+        // --- 4. Lógica de Comunicación (Receptor) ---
+        // Se ejecuta INMEDIATAMENTE para "escuchar" la configuración
+        window.addEventListener('message', (event) => {
+            // Asegurarnos que es el mensaje de configuración y que no lo hemos cargado ya
+            if (event.data && event.data.source === 'FlujoNarrativoUsuario' && event.data.appData && !isConfigLoaded) {
+                
+                isConfigLoaded = true; // Prevenir doble carga
+                console.log("[Simulador] Configuración recibida:", event.data);
+                
+                // Parsear la configuración del hotspot (enviada como string JSON)
+                // Aquí definimos la "dificultad" de este minijuego
+                appConfig = JSON.parse(event.data.appData);
+                
+                //IDs de recompensa
+                successRecompensaId = event.data.successRecompensaId;
+                failureRecompensaId = event.data.failureRecompensaId;
+
+                // --- 5. APLICAR CONFIGURACIÓN DINÁMICA ---
+                // Usamos los valores de appConfig o los valores por defecto
+                GASTOS_POR_SEGUNDO = appConfig.gastos || GASTOS_POR_SEGUNDO;
+                FONDOS_POR_CLICK = appConfig.ganancia || FONDOS_POR_CLICK;
+                MAX_BALANCE = appConfig.maxBalance || MAX_BALANCE;
+                MIN_BALANCE = appConfig.minBalance || MIN_BALANCE;
+                MIN_SURVIVAL_BALANCE = appConfig.minSurvival || MIN_SURVIVAL_BALANCE;
+                DURACION_JUEGO_MS = appConfig.duracion || DURACION_JUEGO_MS;
+                balance = appConfig.balanceInicial || 0;
+
+                // Actualizar UI con textos de la configuración
+                titleEl.innerText = appConfig.title || "Simulador de Ganancias";
+                messageEl.innerText = appConfig.message || "¡Haz clic para ganar fondos!";
+                clickArea.innerText = appConfig.buttonText || "Buscar Beca / Tocar";
+                clickArea.classList.remove('hidden');
+
+                // Iniciar la UI y el juego
+                updateUI();
+                startGame();
+            }
+        });
+
+        // --- 6. Lógica de Comunicación (Emisor) ---
+        function endGame(status) {
+            // Detiene el juego
+            clearInterval(gameLoop);
+            clickArea.classList.add('hidden');
+
+            let recompensaId;
+            let costoXP = 0; // Por defecto 0
+
+            if (status === 'success') {
+                recompensaId = successRecompensaId;
+                costoXP = appConfig.costoExito || 0; // Ej: 100 (ganas 100 XP) o -50 (te cuesta 50 XP)
+                
+                titleEl.innerText = appConfig.successTitle || "¡Sobreviviste!";
+                messageEl.innerText = appConfig.successMessage || "Lograste aguantar... por ahora.";
+                balanceBar.style.backgroundColor = "#48bb78";
+
+            } else { // 'failure'
+                recompensaId = failureRecompensaId;
+                costoXP = appConfig.costoFracaso || 0; // Ej: 0 (no pasa nada) o -10 (pierdes 10 XP)
+
+                titleEl.innerText = appConfig.failureTitle || "¡Desalojado!";
+                messageEl.innerText = appConfig.failureMessage || "La ciudad te ha expulsado.";
+                balanceBar.style.backgroundColor = "#f56565";
+            }
+            
+            // --- ⚠️ SOLUCIÓN IMPORTANTE ---
+            // ENVÍA EL MENSAJE AL PADRE CON LA ESTRUCTURA CORRECTA
+            window.parent.postMessage({
+                source: 'RentalApp', // 1. Debe coincidir con lo que FlujoNarrativo espera
+                type: 'app-result',
+                status: status,
+                recompensaId: recompensaId, // 2. Enviar la recompensa ID
+                costoXP: costoXP            // 3. Enviar el costo/ganancia de XP
+            }, '*');
+        }
+
+        // --- 7. Lógica del Juego ---
+        
+        clickArea.addEventListener('click', () => {
+            balance += FONDOS_POR_CLICK;
+            if (balance > MAX_BALANCE) balance = MAX_BALANCE;
+            updateUI();
+        });
+
+        // Esta función ahora se llama DESPUÉS de recibir la configuración
+        function startGame() {
+            // Bucle principal: Drenaje de dinero y chequeo de Fracaso Absoluto
+            gameLoop = setInterval(() => {
+                // Pierde dinero con el tiempo
+                balance -= GASTOS_POR_SEGUNDO / 20; // Drenaje por frame
+                
+                // Revisa si perdió (LLEGÓ AL LÍMITE DE DESALOJO)
+                if (balance <= MIN_BALANCE) {
+                    balance = MIN_BALANCE;
+                    updateUI();
+                    endGame('failure'); // FRACASO: DESALOJO INMEDIATO
+                }
+                
+                updateUI();
+            }, 50);
+
+            // Temporizador para ganar: Chequeo de Éxito Mínimo
+            setTimeout(() => {
+                // Solo se ejecuta si el juego no terminó ya por el 'gameLoop' (desalojo)
+                if (balance > MIN_BALANCE) {
+                    
+                    console.log(`[SIMULATOR LOG] Tiempo terminado. Balance final: ${balance}. Mínimo requerido: ${MIN_SURVIVAL_BALANCE}`);
+                    
+                    // Solo es un éxito si el balance está por encima del umbral de supervivencia.
+                    if (balance >= MIN_SURVIVAL_BALANCE) {
+                        endGame('success');
+                    } else {
+                        endGame('failure');
+                    }
+                }
+            }, DURACION_JUEGO_MS);
+        }
+
+        // Función para actualizar la UI
+        function updateUI() {
+            balanceText.innerText = `Balance: $${Math.round(balance)}`;
+            const totalRange = MAX_BALANCE - MIN_BALANCE;
+            const currentPosition = balance - MIN_BALANCE;
+            const percent = totalRange === 0 ? 0 : (currentPosition / totalRange) * 100;
+
+            balanceBar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+            
+            // Cambiar color de la barra
+            if (balance < MIN_SURVIVAL_BALANCE) {
+                balanceBar.style.backgroundColor = '#f56565'; // Rojo (fallando)
+            } else if (balance < 0) {
+                balanceBar.style.backgroundColor = '#ecc94b'; // Amarillo (en peligro)
+            } else {
+                balanceBar.style.backgroundColor = '#48bb78'; // Verde (seguro)
+            }
+        }
+        
+        // Inicia la UI (con valores por defecto, se actualizará al recibir config)
+        updateUI();
+    </script>
+</body>
+</html>

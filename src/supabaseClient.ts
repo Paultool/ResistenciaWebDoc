@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
 // URL y clave pública de Supabase
-const supabaseUrl = 'https://atogaijnlssrgkvilsyp.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0b2dhaWpubHNzcmdrdmlsc3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4NTU3NDQsImV4cCI6MjA3MjQzMTc0NH0.4wwaY-aOZMMHstVkSh3uh3awRhv14pPJW9Xv6jGDZ98'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Crear y exportar el cliente de Supabase
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
@@ -110,6 +110,21 @@ export interface FlujoNarrativo {
   }
 }
 
+export const obtenerPersonajesPorIds = async (ids: number[]) => {
+  if (!ids || ids.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('personaje') // Asegúrate que tu tabla se llame 'personaje' o 'personajes'
+    .select('*')
+    .in('id_personaje', ids);
+
+  if (error) {
+    console.error('Error obteniendo personajes por IDs:', error);
+    return [];
+  }
+  return data;
+};
+
 
 // --ficha personajes
 
@@ -164,25 +179,25 @@ export const obtenerHistorias = async (): Promise<Historia[]> => {
       .from('historia')
       // ✅ CORRECCIÓN CLAVE 1: Pedir el ID y el nombre de la ubicacion en el JOIN
       // Ahora, el objeto anidado 'id_ubicacion' contendrá: { id_ubicacion: 5, nombre: '...', coordenadas: '...' }
-      .select('*, id_ubicacion(id_ubicacion, nombre, coordenadas)') 
+      .select('*, id_ubicacion(id_ubicacion, nombre, coordenadas)')
       .order('orden', { ascending: true })
-    
+
     if (error) throw error
-    
+
     // Mapeamos los datos, PERO USAMOS LOS VALORES REALES DE LA DB
     const historias: Historia[] = (historiasRaw || []).map((h: any) => ({
       ...h,
       id: h.id_historia,
       descripcion: h.narrativa,
       // Usar el valor real si existe
-      fecha_creacion: h.fecha_creacion || '2024-01-01', 
-      nivel_acceso_requerido: h.nivel_acceso_requerido, 
+      fecha_creacion: h.fecha_creacion || '2024-01-01',
+      nivel_acceso_requerido: h.nivel_acceso_requerido,
       // ✅ CORRECCIÓN CLAVE 2: Usar el valor REAL de la DB y no una fórmula basada en 'orden'
-      es_historia_principal: h.es_historia_principal, 
-      id_ubicacion: h.id_ubicacion, 
+      es_historia_principal: h.es_historia_principal,
+      id_ubicacion: h.id_ubicacion,
       metadata: { estado: h.estado }
     }))
-    
+
     return historias
   } catch (error: any) {
     console.error('Error obteniendo historias:', error.message)
@@ -223,7 +238,7 @@ export const obtenerPersonajesPorHistoriaId = async (historiaId: number) => {
       .eq('id_historia', historiaId)
       .not('id_personaje', 'is', null);
 
-      console.log(`✅ Historia con ID ${historiaId} personajes.`)
+    console.log(`✅ Historia con ID ${historiaId} personajes.`)
 
 
     if (flujoError) {
@@ -245,14 +260,14 @@ export const obtenerPersonajesPorHistoriaId = async (historiaId: number) => {
       .select('*')
       .in('id_personaje', personajeIds as number[]); // Usamos .in() con el array de IDs.
 
-          console.log(`✅ Personaje data   ${personajesData} `)
+    console.log(`✅ Personaje data   ${personajesData} `)
 
     if (personajesError) {
       console.error('Error al obtener detalles de personajes:', personajesError);
       throw personajesError;
     }
 
-     
+
 
     return personajesData;
   } catch (err) {
@@ -314,7 +329,7 @@ export const crearHistoria = async (historiaData: Partial<Historia>): Promise<Hi
 }
 
 export const actualizarHistoria = async (
-  id: number, 
+  id: number,
   historiaData: Partial<Omit<Historia, 'id_historia' | 'fecha_creacion'>> // ¡CORREGIDO AQUÍ!
 ): Promise<Historia> => {
   try {
@@ -355,9 +370,9 @@ export const obtenerPersonajes = async (): Promise<Personaje[]> => {
       .from('personaje')
       .select('*')
       .order('nombre', { ascending: true })
-    
+
     if (error) throw error
-    
+
     const personajes: Personaje[] = (personajesRaw || []).map((p: any) => {
       let atributos: any = {}
       try {
@@ -365,7 +380,7 @@ export const obtenerPersonajes = async (): Promise<Personaje[]> => {
       } catch (e) {
         atributos = {}
       }
-      
+
       return {
         ...p,
         id: p.id_personaje,
@@ -373,7 +388,7 @@ export const obtenerPersonajes = async (): Promise<Personaje[]> => {
         metadata: atributos
       }
     })
-    
+
     return personajes
   } catch (error: any) {
     console.error('Error obteniendo personajes:', error.message)
@@ -436,9 +451,9 @@ export const obtenerUbicaciones = async (): Promise<Ubicacion[]> => {
       .from('ubicacion')
       .select('*')
       .order('nombre', { ascending: true })
-    
+
     if (error) throw error
-    
+
     const ubicaciones: Ubicacion[] = (ubicacionesRaw || []).map((u: any) => {
       const [lat, lng] = (u.coordenadas || '0,0').split(',').map(parseFloat)
       return {
@@ -449,7 +464,7 @@ export const obtenerUbicaciones = async (): Promise<Ubicacion[]> => {
         metadata: { tipo: u.tipo }
       }
     })
-    
+
     return ubicaciones
   } catch (error: any) {
     console.error('Error obteniendo ubicaciones:', error.message)
@@ -464,9 +479,9 @@ export const obtenerUbicacionPorId = async (id: number): Promise<Ubicacion | nul
       .select('*')
       .eq('id_ubicacion', id)
       .single()
-    
+
     if (error) return null
-    
+
     const [lat, lng] = (ubicacionRaw.coordenadas || '0,0').split(',').map(parseFloat)
     return {
       ...ubicacionRaw,
@@ -490,7 +505,7 @@ export const crearUbicacion = async (ubicacionData: Partial<Ubicacion>): Promise
       .single()
 
     if (error) throw error
-    
+
     // Convertir coordenadas para el tipo `Ubicacion`
     const [lat, lng] = (data.coordenadas || '0,0').split(',').map(parseFloat)
     return {
@@ -516,7 +531,7 @@ export const actualizarUbicacion = async (id: number, ubicacionData: Partial<Ubi
       .single()
 
     if (error) throw error
-    
+
     // Convertir coordenadas para el tipo `Ubicacion`
     const [lat, lng] = (data.coordenadas || '0,0').split(',').map(parseFloat)
     return {
@@ -662,7 +677,7 @@ export const obtenerFlujoNarrativoPorHistoria = async (historiaId: number): Prom
       .order('orden', { ascending: true });
 
     if (error) throw error;
-    
+
     return data as FlujoNarrativo[];
   } catch (error: any) {
     console.error('Error obteniendo flujo narrativo:', error.message);
@@ -677,8 +692,8 @@ export const crearPasoFlujo = async (paso: {
   tipo_paso: string;
   contenido: string;
   recursomultimedia_id: number | null;
-  id_personaje: number | null; 
-  id_recompensa: number | null; 
+  id_personaje: number | null;
+  id_recompensa: number | null;
   id_siguiente_paso: number | null;
   opciones_decision: any;
 }) => {
@@ -690,8 +705,8 @@ export const crearPasoFlujo = async (paso: {
         tipo_paso: paso.tipo_paso,
         contenido: paso.contenido,
         recursomultimedia_id: paso.recursomultimedia_id ?? null,
-        id_personaje: paso.id_personaje ?? null, 
-        id_recompensa: paso.id_recompensa ?? null, 
+        id_personaje: paso.id_personaje ?? null,
+        id_recompensa: paso.id_recompensa ?? null,
         id_siguiente_paso: paso.id_siguiente_paso ?? null,
         opciones_decision: paso.opciones_decision,
       },
@@ -711,7 +726,7 @@ export const actualizarPasoFlujo = async (paso: {
   tipo_paso: string;
   contenido: string;
   recursomultimedia_id: number | null;
-  id_personaje: number | null; 
+  id_personaje: number | null;
   id_recompensa: number | null;
   id_siguiente_paso: number | null;
   opciones_decision: any;
@@ -724,7 +739,7 @@ export const actualizarPasoFlujo = async (paso: {
         tipo_paso: paso.tipo_paso,
         contenido: paso.contenido,
         recursomultimedia_id: paso.recursomultimedia_id ?? null,
-        id_personaje: paso.id_personaje ?? null, 
+        id_personaje: paso.id_personaje ?? null,
         id_recompensa: paso.id_recompensa ?? null,
         id_siguiente_paso: paso.id_siguiente_paso ?? null,
         opciones_decision: paso.opciones_decision,
@@ -783,33 +798,33 @@ export const revokeAdmin = async (userEmail: string) => {
 // FUNCIÓN PARA EL DASHBOARD DE ADMIN
 // ----------------------------------------------------
 export const fetchDashboardStats = async (): Promise<AdminDashboardStats> => {
-    try {
-        // Cambia 'get_admin_dashboard_stats' por el nombre real de tu RPC si es diferente
-        const { data, error } = await supabase.rpc('get_admin_dashboard_stats'); 
-        
-        if (error) {
-            console.error('Error al llamar al RPC get_admin_dashboard_stats:', error);
-            throw new Error(`Error en el servidor de base de datos: ${error.message}`);
-        }
-        
-        if (data && data.length > 0) {
-            // El resultado de un RPC es a menudo un array
-            return data[0] as AdminDashboardStats; 
-        }
+  try {
+    // Cambia 'get_admin_dashboard_stats' por el nombre real de tu RPC si es diferente
+    const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
 
-        return {
-            totalusuarios: 0,
-            totalhistorias: 0,
-            totalpersonajes: 0,
-            totalubicaciones: 0,
-            usuariosactivos: 0,
-            sesioneshoy: 0,
-        };
-
-    } catch (error: any) {
-        console.error('Fallo en la obtención de estadísticas del dashboard:', error);
-        throw new Error(`No se pudieron obtener las estadísticas: ${error.message}`);
+    if (error) {
+      console.error('Error al llamar al RPC get_admin_dashboard_stats:', error);
+      throw new Error(`Error en el servidor de base de datos: ${error.message}`);
     }
+
+    if (data && data.length > 0) {
+      // El resultado de un RPC es a menudo un array
+      return data[0] as AdminDashboardStats;
+    }
+
+    return {
+      totalusuarios: 0,
+      totalhistorias: 0,
+      totalpersonajes: 0,
+      totalubicaciones: 0,
+      usuariosactivos: 0,
+      sesioneshoy: 0,
+    };
+
+  } catch (error: any) {
+    console.error('Fallo en la obtención de estadísticas del dashboard:', error);
+    throw new Error(`No se pudieron obtener las estadísticas: ${error.message}`);
+  }
 }
 
 
@@ -822,6 +837,7 @@ export interface PlayerStats {
   nivel: number;
   xp_total: number;
   historias_completadas: number;
+  historias_visitadas: string[];
   personajes_conocidos: string[];
   ubicaciones_visitadas: string[];
   logros_desbloqueados: string[];
@@ -864,7 +880,7 @@ class GameService {
   private playerStats: PlayerStats | null = null;
   private logros: GameLogro[] = [];
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): GameService {
     if (!GameService.instance) {
@@ -1006,7 +1022,7 @@ class GameService {
       throw err;
     }
   }
-  
+
   /**
    * Registra una interacción del jugador con un paso narrativo.
    * @param userId El ID del usuario.
@@ -1251,7 +1267,7 @@ class GameService {
 
     if (newAchievements.length > 0) {
       const logrosActualizados = [...currentStats.logros_desbloqueados, ...newAchievements];
-      
+
       const { error: updateError } = await supabase
         .from('perfiles_jugador')
         .update({
@@ -1305,9 +1321,22 @@ class GameService {
       console.error('Error actualizando racha diaria:', error);
     }
   }
-  
 
-  
+  // Obtener TODOS los pasos de flujo narrativo (Estilo Método de Clase)
+  async obtenerFlujosNarrativos(): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('flujo_narrativo')
+      .select('*')
+      .order('id_historia', { ascending: true })
+      .order('orden', { ascending: true });
+
+    if (error) {
+      console.error('Error al obtener todos los flujos narrativos:', error);
+      return [];
+    }
+
+    return data || [];
+  }
 
   /**
    * Obtiene estadísticas resumidas para el dashboard
@@ -1336,7 +1365,7 @@ class GameService {
         nivel: stats.nivel,
         xpTotal: stats.xp_total,
         xpParaSiguienteNivel,
-        historiasCompletadas: stats.historias_completadas,
+        historiasCompletadas: stats.historias_visitadas?.length || 0,
         personajesConocidos: stats.personajes_conocidos.length,
         ubicacionesVisitadas: stats.ubicaciones_visitadas.length,
         logrosDesbloqueados: stats.logros_desbloqueados.length,
@@ -1356,6 +1385,35 @@ class GameService {
     this.playerStats = null;
   }
 }
+
+// ==========================================
+// --- FUNCIONES PARA EL ADMIN CANVAS ---
+// ==========================================
+
+// Actualizar un paso del flujo narrativo
+export const actualizarPaso = async (id: number, updates: any) => {
+  const { data, error } = await supabase
+    .from('flujo_narrativo')
+    .update(updates)
+    .eq('id_flujo', id)
+    .select(); // select() es importante para devolver el objeto actualizado
+
+  if (error) console.error('Error actualizando paso:', error);
+  return { data, error };
+};
+
+// Crear un nuevo paso (necesario para drag & drop)
+export const crearPaso = async (nuevoPaso: any) => {
+  const { data, error } = await supabase
+    .from('flujo_narrativo')
+    .insert([nuevoPaso])
+    .select();
+
+  if (error) console.error('Error creando paso:', error);
+  return { data, error };
+};
+
+
 
 // Exportar instancia singleton
 export const gameService = GameService.getInstance();

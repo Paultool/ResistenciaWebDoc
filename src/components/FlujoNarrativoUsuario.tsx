@@ -1,12 +1,31 @@
 import 'aframe';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react'; 
 import { useAuth } from '../contexts/AuthContext';
 import { gameServiceUser, PlayerStats } from '../services/GameServiceUser';
 import MapaView from './MapaView';
 //FICHA PERSONAJES
 import { Personaje } from '../supabaseClient'; 
 import { obtenerFichaPersonajePorId } from '../supabaseClient';
+import { fail } from 'assert';
 
+// 🔑 Acepta historiaId como prop
+interface FlujoNarrativoUsuarioProps {
+    historiaId: number; // ID de la historia a mostrar
+    onBack: () => void;
+    onUpdateProfile: (recompensaPositiva: number, recompensaNegativa: number, ubicacion: string) => void; 
+}
+
+// Definición de la estructura del resultado de la aplicación (rental.html)
+interface AppResult {
+    source: 'RentalApp';
+    type: 'app-result';
+    status: 'success' | 'failure';
+    // recompensaId aquí es la recompensa **positiva** o **negativa** definida en el Hotspot, no en la app
+    recompensaId: number | undefined; 
+    // Ahora la app DEBE devolver el costo de XP si la operación fue exitosa
+    costoXP?: number; // Valor de XP a aplicar (NEGATIVO para costos, POSITIVO para premios)
+    message: string;
+}
 
 // Define las interfaces para tipar los datos
 interface RecursoMultimediaData {
@@ -44,6 +63,7 @@ interface HistoriaData {
     id_historia_dependencia?: number | null;
     estado?: 'bloqueado' | 'desbloqueado';
     id_ubicacion: { coordenadas: string } | null;
+    orden?: number;
 }
 
 interface RecompensaData {
@@ -59,6 +79,13 @@ interface PersonajeData {
     nombre: string;
 }
 
+// Nueva interfaz para la configuración de la App de Renta
+interface RentalAppConfig {
+    difficulty: "Facil" | "Medio" | "Dificil";
+    price: number;
+    requiredItem?: string; // Nombre del item requerido para éxito en STANDARD/HARD
+}
+
 // Interfaz para la Ficha Completa personaje (para el modal detallado )
 interface PersonajeFicha {
     id_personaje: number;
@@ -72,11 +99,14 @@ interface PersonajeFicha {
 // Nueva interfaz para definir un Hotspot de Interacción
 interface HotspotConfig {
     meshName: string; // El nombre de la malla dentro del GLB (ej: 'bidek')
-    contentType: 'imagen' | 'video' | 'audio' | 'interactive'; // Tipo de contenido
+    contentType: 'imagen' | 'video' | 'audio' | 'interactive'| 'backgroundMusic'  ; // Tipo de contenido
     title: string;
     url: string; // URL del contenido (imagen, video, audio)
     recompensaId?: number; // Opcional: Recompensa asociada
     personajeId?: number; // Opcional: Personaje a conocer
+    successRecompensaId?: number; //app recompensa positiva
+    failureRecompensaId?: number; //app recompensa negativa
+    rentalAppConfig?: RentalAppConfig; // Configuración específica si contentType es 'interactive'
     position?: {  // Opcional: Posición específica del hotspot
         x: number;
         y: number;
@@ -85,7 +115,16 @@ interface HotspotConfig {
     backgroundMusic?: string; // Opcional: URL del audio de fondo para el modelo 3D
 }
 
-const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+// Nueva interfaz para las props de MapaView
+interface MapaViewProps {
+    historias: HistoriaData[];
+    historiasVisitadas: number[];
+    onStartNarrativeFromMap: (historiaId: number) => void;
+    onBack: () => void;
+    initialCenter: [number, number]; // <-- ¡Añade la nueva prop!
+}
+
+const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNarrativoUsuarioProps) => {    
     const [historias, setHistorias] = useState<HistoriaData[]>([]);
     const [selectedHistoriaId, setSelectedHistoriaId] = useState<number | null>(null);
     const [flujoData, setFlujoData] = useState<FlujoNarrativoData[]>([]);
@@ -103,7 +142,7 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
     const [historiasVisitadas, setHistoriasVisitadas] = useState<number[]>([]);
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
     const [showAudioOverlay, setShowAudioOverlay] = useState(false);
-    
+    const iframeRef = useRef<HTMLIFrameElement>(null);
     const [showInventory, setShowInventory] = useState(false);
     const [showCharacters, setShowCharacters] = useState(false);
     const [showStories, setShowStories] = useState(false);
@@ -113,11 +152,266 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
     const [discoveredHotspots, setDiscoveredHotspots] = useState<number>(0);
     const totalHotspotsRef = useRef<number>(0);
     const discoveredHotspotIds = useRef<Set<string>>(new Set());
-    
+    const [appConfig, setAppConfig] = useState<any>(null); // Configuración para la App (ej. RentalApp)
+    const userId = useAuth().user?.id || null;
     const aframeContainerRef = useRef<HTMLDivElement>(null);
-
+    const iframeAppRef = useRef<HTMLIFrameElement>(null);
+    // Obtener el usuario autenticado
     const { user, loading: authLoading } = useAuth();
+    // Coordenadas por defecto (ej. Zócalo de CDMX), por si no hay historia
+    const [mapCenter, setMapCenter] = useState<[number, number]>([19.4326, -99.1332]);
 
+    const fetchPlayerStats = React.useCallback(async () => {
+        if (!user) return;
+        try {
+            const stats = await gameServiceUser.getPlayerStats(user.id);
+            setPlayerStats(stats);
+            console.log("Estadísticas del jugador cargadas:", stats);
+        } catch (error) {
+            console.error("Error al refrescar las estadísticas del jugador:", error);
+            setPlayerStats({
+                resistencia: 0,
+                inventario: [],
+                personajes_conocidos: [],
+                historias_visitadas: [],
+            } as PlayerStats);
+        }
+    }, [user]); // Añade 'user' como dependencia
+
+    // ====================================================================
+    // FUNCIÓN REEMPLAZADA: closeHotspotModal
+    // ====================================================================
+    const closeHotspotModal = React.useCallback(() => {
+        setHotspotModal(null);
+        setIsHotspotModalOpen(false);
+        if (iframeRef.current) {
+            iframeRef.current.src = '';  // Reset iframe para prevenir mensajes residuales
+        }
+        
+        // =========================================================
+        // ✅ SOLUCIÓN: Re-activar wasd-controls de A-Frame
+        // =========================================================
+        const cameraEl = document.querySelector('a-camera');
+        // Aseguramos que A-Frame esté cargado y que la cámara exista
+        if (cameraEl && (window as any).AFRAME) {
+            const wasdControls = (cameraEl as any).components['wasd-controls'];
+            
+            if (wasdControls) {
+                // wasdControls.play() fuerza al componente a reanudar su lógica de movimiento.
+                wasdControls.play(); 
+                console.log('✅ A-Frame: wasd-controls re-activado al cerrar el modal.');
+            } else {
+                // Plan de respaldo: reanudar el elemento completo
+                (cameraEl as any).play();
+                console.log('✅ A-Frame: Elemento a-camera re-activado al cerrar el modal.');
+            }
+        }
+        
+        // Reanuda audio...
+        console.log('[closeHotspotModal] Modal cerrado y iframe reseteado.');
+    }, []); // Se mantiene sin dependencias internas
+
+
+    // Función de manejo centralizado de recompensas/costos, envuelta en useCallback
+    const handleRecompensa = useCallback(async (result: AppResult) => {
+        if (!userId) return;
+
+        let costoXP = 0;
+
+        // 1. Manejo del costo/XP (si viene del iFrame, lo aplicamos)
+        // Usaremos el valor de 'costoXP' enviado por la app (debería ser negativo si fue éxito)
+        // Utilizamos 'result.costoXP != null' para cubrir 'undefined' y 'null'.
+        if (result.source === 'RentalApp' && result.costoXP != null) {
+             costoXP = result.costoXP;
+        }
+
+        console.log(`[FlujoNarrativoUsuario] Preparando para aplicar RECOMPENSA: ${result.recompensaId} y COSTO XP: ${costoXP}`);
+        if (costoXP !== 0) {
+            console.log(`[FlujoNarrativoUsuario] Aplicando costo/ganancia directo de la App: ${costoXP} XP.`);
+            const { data: updatedStats, error: costError } = await gameServiceUser.aplicarXPDirecto(
+                userId,
+                costoXP,
+                costoXP < 0 ? "Pago de Renta exitoso" : "Recompensa de App"
+            );
+
+            if (costError) {
+                console.error("🔴 Error al aplicar costo de XP:", costError);
+                // Aquí podrías mostrar un mensaje de error al usuario
+            } else {
+                setPlayerStats(updatedStats);
+            }
+        }
+        
+        // 2. Manejo de la recompensa/penalización (basado en el hotspot)
+        // La recompensaId que se usa es la que el Hotspot original definió 
+        
+        // Determinar qué recompensa aplicar
+        let recompensaIdToApply: number | null = null; // Usamos 'null' para mejor compatibilidad con DB
+
+        if (result.status === 'success' && result?.recompensaId) {
+            recompensaIdToApply = result.recompensaId;
+        } else if (result.status === 'failure' && result?.recompensaId) {
+            recompensaIdToApply = result.recompensaId;
+        }
+
+        console.log(`[FlujoNarrativoUsuario] Otorgando recompensa/penalización ID: ${recompensaIdToApply}`);
+
+        // Llamar a otorgarRecompensa solo si recompensaIdToApply es un número válido
+        if (recompensaIdToApply != null && recompensaIdToApply > 0) {
+            console.log(`[FlujoNarrativoUsuario] Otorgando recompensa/penalización ID: ${recompensaIdToApply}`);
+            const { data: finalStats, error: recompensaError } = await gameServiceUser.otorgarRecompensa(
+                userId,
+                recompensaIdToApply,
+                String(historiaId) // ID de la historia actual
+            );
+
+            if (recompensaError) {
+                console.error("🔴 Error al otorgar recompensa:", recompensaError);
+            } else {
+                // Actualizamos las estadísticas con el resultado final
+                //setPlayerStats(finalStats); 
+                await fetchPlayerStats();
+            }
+        }
+    }, [userId, appConfig, historiaId, fetchPlayerStats]); // Dependencias para useCallback
+
+     // ==================================================================
+    // --- ✅ FUNCIÓN MOVIDA Y ENVUELTA EN useCallback ---
+    // ==================================================================
+    // Función para obtener recurso multimedia por ID
+    const getRecurso = useCallback((recursoId: number | null) => {
+        if (!recursoId) return null;
+        // Usamos recursosData del estado
+        return recursosData.find(r => r.id_recurso === recursoId);
+    }, [recursosData]); // Depende de recursosData
+
+    // Función para manejar la finalización de una app integrada
+    const handleAppCompletion = React.useCallback(async (status: 'success' | 'failure', message: string) => { 
+        
+        const currentStep = flujoData[currentStepIndex];
+        if (!user || !currentStep) return;
+
+        console.log(`[handleAppCompletion] Iniciando con status: ${status}.`);
+
+        // --- INICIO DE LA MODIFICACIÓN ---
+        
+        let options: { texto: string, siguiente_paso_id: number, recompensaId?: number }[] | undefined | null = null;
+        let recompensaAppId: number | undefined | null = null;
+
+        // 1. Determinar de dónde sacar las opciones
+        if (currentStep.tipo_paso === 'app') {
+            // Para 'tipo_paso: app', las leemos del RECURSO (metadatos)
+            const recursoActual = getRecurso(currentStep.recursomultimedia_id);
+            if (recursoActual && recursoActual.metadatos) {
+                try {
+                    const parsedMetadata = JSON.parse(recursoActual.metadatos);
+                    // Leemos la navegación desde la nueva estructura unificada
+                    options = parsedMetadata?.flowConfig?.opciones_siguientes_json;
+                    console.log("[DEBUG APP] Opciones leídas desde metadatos (tipo_paso: app):", options);
+                } catch (e) {
+                    console.error("[DEBUG APP] Error al parsear metadatos para flowConfig:", e);
+                }
+            }
+        } else {
+            // Para 'contentType: interactive' (hotspot), mantenemos la lógica antigua.
+            // Las opciones vienen del flujo_narrativo Y cerramos el modal.
+            options = currentStep.opciones_decision?.opciones_siguientes_json;
+            console.log("[DEBUG APP] Opciones leídas desde flujo_narrativo (hotspot/pregunta):", options);
+            
+            // Cierra el modal SÓLO si es un hotspot
+            closeHotspotModal(); 
+            console.log('[handleAppCompletion] Cierre de Hotspot Modal llamado.');
+        }
+
+        // 2. Encontrar la opción de decisión correspondiente
+        const resultOption = options?.find(op => op.texto === status); 
+
+            // --- FIN DE LA MODIFICACIÓN ---
+
+            // LOG CRÍTICO 1:
+            console.log(`[DEBUG-APP] 1. Opciones de decisión (BD):`, options);
+
+            if (resultOption) {
+                console.log(`[DEBUG 5 - RESULT OPTION] Found option! Next Flow ID: ${resultOption.siguiente_paso_id}`);
+
+                // 3. ¡IMPORTANTE! Aplicar la recompensa definida en la navegación
+                // (Esto reemplaza la lógica de 'handleRecompensa' para 'tipo_paso: app')
+                if (resultOption.recompensaId && resultOption.recompensaId > 0 && user) {
+                    console.log(`[DEBUG APP] Otorgando recompensa desde flowConfig: ${resultOption.recompensaId}`);
+                    await gameServiceUser.otorgarRecompensa(
+                        user.id,
+                        resultOption.recompensaId,
+                        String(historiaId)
+                    );
+                    await fetchPlayerStats(); // Refrescar stats
+                }
+                
+                // 4. Avanzar al siguiente paso narrativo
+                setShowStepContent(false);
+                const nextIndex = flujoData.findIndex(p => p.id_flujo === resultOption.siguiente_paso_id); 
+
+                if (nextIndex !== -1) {
+                    console.log(`Avanzando al flujo_id: ${resultOption.siguiente_paso_id}`);
+                    setCurrentStepIndex(nextIndex);
+                } else {
+                console.log('📚 Mostrando mensaje final.');
+                    setShowEndMessage(true);
+                }
+
+            } else {
+                console.error(`[DEBUG 5 - ERROR] NO se encontró una opción de decisión para el estado: ${status}. JSON de Opciones:`, options);
+                return; 
+            }
+    }, [
+         flujoData, 
+         currentStepIndex, 
+         user, 
+         closeHotspotModal,
+         getRecurso, // <-- ¡AÑADE ESTA DEPENDENCIA!
+         fetchPlayerStats, // <-- ¡AÑADE ESTA DEPENDENCIA!
+         historiaId // <-- ¡AÑADE ESTA DEPENDENCIA!
+    ]);
+
+    // NUEVA FUNCIÓN para manejar la apertura del modal del mapa
+    const handleOpenMap = () => {
+        // 1. Definir coordenadas de fallback
+        const DEFAULT_COORDS: [number, number] = [19.4326, -99.1332]; 
+
+        // 2. Comprobar si hay una historia seleccionada
+        if (selectedHistoriaId) {
+            // 3. Encontrar la historia actual en el array de historias
+            const currentStory = historias.find(h => h.id_historia === selectedHistoriaId);
+
+            // 4. Comprobar si la historia y su ubicación existen
+            if (currentStory && currentStory.id_ubicacion && currentStory.id_ubicacion.coordenadas) {
+                
+                // 5. Parsear el string de coordenadas "lat,lng" a un array [lat, lng]
+                const coordsArray = currentStory.id_ubicacion.coordenadas
+                                        .split(',')
+                                        .map(coord => parseFloat(coord.trim()));
+                
+                // 6. Validar que las coordenadas sean correctas
+                if (coordsArray.length === 2 && !isNaN(coordsArray[0]) && !isNaN(coordsArray[1])) {
+                    // Si son válidas, establecerlas como el centro
+                    setMapCenter([coordsArray[0], coordsArray[1]]);
+                } else {
+                    // Si el string es inválido, usar el fallback
+                    console.warn(`Coordenadas inválidas para historia ${selectedHistoriaId}: ${currentStory.id_ubicacion.coordenadas}`);
+                    setMapCenter(DEFAULT_COORDS);
+                }
+            } else {
+                // Si la historia no tiene ubicación, usar el fallback
+                setMapCenter(DEFAULT_COORDS);
+            }
+        } else {
+            // Si no hay historia seleccionada (ej. menú principal), usar el fallback
+            setMapCenter(DEFAULT_COORDS);
+        }
+        
+        // 7. Finalmente, mostrar el modal del mapa
+        setShowMap(true);
+    };
+   
 
    // Función para cerrar el modal de la ficha del personaje
     const closeCharacterModal = () => {
@@ -161,11 +455,10 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
     // ESTADO para el modal del mapa
     const [showMap, setShowMap] = useState(false);
     
-    // ... (todos los useEffect y funciones existentes) ...
-
     // NUEVA FUNCIÓN para manejar el inicio desde el mapa
     // Esta función será llamada por MapaView (a través de HistoriaDetail)
     const handleStartStoryFromMap = (historiaId: number) => {
+        console.log("🎬 Padre: Iniciando historia desde mapa con ID:", historiaId);
         // 1. Ocultar el modal del mapa
         setShowMap(false);
         
@@ -194,16 +487,8 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
     const [backgroundMusicUrl, setBackgroundMusicUrl] = useState<string | null>(null);
     const [showVolumeControl, setShowVolumeControl] = useState(false);
     const [showHeightControl, setShowHeightControl] = useState(false);
-    
-    useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768);
-        };
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-        return () => window.removeEventListener('resize', checkMobile);
-    }, []);
 
+    
     // Manejador de fullscreen
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
@@ -220,6 +505,320 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             });
         }
     };
+
+
+    // Función para manejar la selección de historia desde el mapa o menú
+     const handleHistoriaSelect = (historiaId: number) => {
+
+        // 1. Resetear el estado de finalización del juego ✅ AÑADIR/ASEGURAR ESTA LÍNEA
+        setShowEndMessage(false);
+
+        // Detener música de fondo al cambiar de historia
+        // SIMPLEMENTE actualiza el estado. Los useEffect se encargarán de pausar y limpiar.
+        setBackgroundMusicUrl(null);
+        
+        setSelectedHistoriaId(historiaId);
+        setCurrentStepIndex(0);
+        setShowStepContent(false);
+        setShowEndMessage(false);
+
+        // ⬇️ --- ¡AÑADE ESTAS 3 LÍNEAS AQUÍ! --- ⬇️
+        console.log("🔄 Reseteando contadores de hotspots para la nueva historia...");
+        setDiscoveredHotspots(0); 
+        totalHotspotsRef.current = 0;
+        discoveredHotspotIds.current.clear(); // Limpia el Set de IDs
+
+
+    };
+
+    // Función que maneja la apertura del modal de hotspot
+    const handleHotspotClick = async (hotspot: HotspotConfig) => {
+        // Log para depuración
+        console.log('Hotspot clickeado:', hotspot);
+        console.log('ContentType del hotspot:', hotspot.contentType);
+
+        // Asegurar que el contentType existe antes de abrir el modal
+        if (!hotspot.contentType) {
+            console.error('Error: contentType no definido en el hotspot');
+            return;
+        }
+
+        if (!discoveredHotspotIds.current.has(hotspot.meshName)) {
+            discoveredHotspotIds.current.add(hotspot.meshName);
+            setDiscoveredHotspots(prev => prev + 1);
+
+            // Solo otorga la recompensa simple si NO es de tipo 'interactive'
+            // Las recompensas 'interactive' se manejan al recibir el mensaje de la app
+            if (hotspot.recompensaId && hotspot.contentType !== 'interactive') {
+           
+                const recompensa = recompensasData.find(r => r.id_recompensa === hotspot.recompensaId);
+                if (recompensa) {
+                    const message = `¡Has ganado ${recompensa.valor} XP por '${recompensa.nombre}'!`;
+                    setNotification(message);
+                    setTimeout(() => setNotification(null), 5000);
+                    // La función otorgarRecompensa espera historiaId como STRING
+                    await gameServiceUser.otorgarRecompensa(user?.id as string, recompensa.id_recompensa, String(selectedHistoriaId));
+                    await fetchPlayerStats();
+                }
+            }
+
+            if (hotspot.personajeId) {
+                const personaje = personajesData.find(p => p.id_personaje === hotspot.personajeId);
+                if (personaje && user) {
+                    const { error } = await gameServiceUser.knowCharacter(user.id, personaje.nombre);
+                    if (!error) {
+                        await fetchPlayerStats();
+                        const message = `Has conocido a ${personaje.nombre}. ¡Añadido a tus estadísticas!`;
+                        setNotification(message);
+                        setTimeout(() => setNotification(null), 3000);
+                    }
+                }
+            }
+        }
+
+        // Silenciar música de fondo al abrir hotspot
+        if (backgroundAudioRef.current && !backgroundAudioRef.current.paused) {
+        
+            console.log("🎵 Tipo de contenido del hotspot 0:", hotspot.contentType);
+            /*
+            if (hotspot.contentType !== 'interactive')  {
+                console.log("🎵 Pausando música de fondo (no es interactive).");
+                backgroundAudioRef.current.pause();
+             }
+                */
+        }
+
+        // Mostrar el modal
+        setHotspotModal(hotspot);
+        setIsHotspotModalOpen(true);
+        
+        // Reproducir un sonido de click simulado
+        new Audio('https://cdn.aframe.io/360-image-gallery-boilerplate/audio/click.ogg').play().catch(e => console.error("Error al reproducir audio:", e));
+    };
+
+   
+    // Función de manejo de audio para el video/audio del modal (para evitar problemas de autoplay)
+    const handleMediaAutoplay = (element: HTMLMediaElement) => {
+        element.play().catch(e => console.error("Error al intentar autoplay de media:", e));
+    };
+
+    // Manejador para reproducir audio cuando el usuario interactúa
+    const handleAudioPlay = () => {
+        if (audioRef.current) {
+            audioRef.current.play().catch(e => console.error("Error al reproducir audio:", e));
+        }
+        setShowAudioOverlay(false);
+    };
+
+    // ✅ Sincronizar la prop externa con el estado interno
+    useEffect(() => {
+        // Si recibimos un historiaId por props (desde el mapa), iniciamos esa historia
+        if (historiaId) {
+            console.log("🚀 [FlujoNarrativo] Prop recibida. Iniciando historia ID:", historiaId);
+            // Usamos la función que ya tienes para resetear contadores y pasos
+            handleHistoriaSelect(historiaId);
+        }
+    }, [historiaId]); // Se ejecuta cuando cambia historiaId
+
+
+    // ====================================================================
+    // ✅ SOLUCIÓN: useEffect para forzar el ocultamiento del modal final
+    // ====================================================================
+    useEffect(() => {
+        // Si hay una historia seleccionada, garantizamos que el mensaje final esté oculto.
+        if (selectedHistoriaId !== null) {
+            if (showEndMessage) {
+                console.log("🐛 [FIX] showEndMessage estaba en true al iniciar la historia. Forzando a false.");
+                setShowEndMessage(false);
+            }
+        }
+    }, [selectedHistoriaId, showEndMessage]); // Se dispara cada vez que se selecciona una historia.
+            
+    // Detectar si es móvil
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    
+     // ---------------------------------------------------------------------
+    // useEffect para manejar la comunicación con el iFrame de la aplicación
+    // ---------------------------------------------------------------------
+    useEffect(() => {
+        const processedMessages = new Set<string>();  // Trackear IDs de mensajes procesados
+
+        const handleIframeMessage = (event: MessageEvent) => {
+            console.log('[Flujo] Mensaje recibido del iframe:', event.data);
+           
+
+            if (event.data && event.data.source === 'Simulador') {
+                console.log('[Flujo] Source:', event.data.source);
+                console.log('[Flujo] Type:', event.data.type);
+                // CIERRA EL MODAL INMEDIATAMENTE (antes de procesar)
+                closeHotspotModal();
+                console.log('[Flujo] Modal cerrado inmediatamente tras recibir app-result.');
+                // Luego procesa
+                const result = event.data as AppResult;
+                handleRecompensa(result);
+                handleAppCompletion(result.status, result.message);
+            }
+
+            else if (event.data && event.data.source === 'RentalApp') {
+                if (event.data.type === 'app-result') {
+                    const result = event.data as AppResult;
+
+                    // Genera un ID único basado en timestamp o contenido (para detectar duplicados)
+                    const messageId = `${result.status}-${result.recompensaId}-${result.costoXP}-${Date.now()}`;
+                    if (processedMessages.has(messageId)) {
+                        console.log('[Flujo] Mensaje duplicado ignorado:', messageId);
+                        return;
+                    }
+                    processedMessages.add(messageId);
+
+                    // CIERRA EL MODAL INMEDIATAMENTE (antes de procesar)
+                    closeHotspotModal();
+                    console.log('[Flujo] Modal cerrado inmediatamente tras recibir app-result.');
+
+                    // Luego procesa
+                    handleRecompensa(result);
+                    handleAppCompletion(result.status, result.message);
+                } else if (event.data.action === 'close') {
+                    // Similar guard si es necesario
+                    closeHotspotModal();
+                    handleAppCompletion('failure', 'Cierre por usuario');
+                }
+            }
+        };
+
+        window.addEventListener('message', handleIframeMessage);
+
+        return () => {
+            window.removeEventListener('message', handleIframeMessage);
+        };
+    }, [handleRecompensa, handleAppCompletion, closeHotspotModal]);  // Quita isHotspotModalOpen si causa remociones prematuras
+
+   
+    // --- NUEVO useEffect para enviar data al iframe de la app de renta ---
+    // Se dispara cuando el modal se abre y es de tipo 'interactive'
+    useEffect(() => {
+        // Asegurarse de que tenemos todo lo necesario para actuar
+        if (!isHotspotModalOpen || hotspotModal?.contentType !== 'interactive' || !hotspotModal.rentalAppConfig || !playerStats || !iframeRef.current) {
+            return; // No hacer nada si no es el modal interactivo
+        }
+
+        // Obtener la referencia al iframe actual
+        const currentIframe = iframeRef.current;
+
+        const handleLoad = () => {
+            if (currentIframe.contentWindow) {
+                const payload = {
+                    source: 'FlujoNarrativoUsuario',
+                    appData: JSON.stringify(hotspotModal.rentalAppConfig),
+                    playerStats: {
+                        inventario: playerStats.inventario,
+                        puntuacion: playerStats.xp_total
+                    },
+                    successRecompensaId: hotspotModal.successRecompensaId,
+                    failureRecompensaId: hotspotModal.failureRecompensaId
+                };
+                console.log("[POST MESSAGE] Enviando configuración de App de Renta al Iframe (después de 'load'):", payload);
+                currentIframe.contentWindow.postMessage(payload, '*');
+            } else {
+                console.error("[POST MESSAGE] No se pudo acceder a contentWindow después de 'load'.");
+            }
+        };
+
+        // Escucha el evento 'load'
+        // Es más seguro siempre usar el listener que confiar en 'iframe.complete'
+        console.log("[POST MESSAGE] Añadiendo listener 'load' al iframe.");
+        currentIframe.addEventListener('load', handleLoad);
+        
+        // Cleanup: Esta función se ejecuta cuando el modal se cierra (o las dependencias cambian)
+        return () => {
+            console.log("[CLEANUP] Removiendo listener 'load' del iframe.");
+            // Siempre remueve el listener del iframe que referenciamos
+            currentIframe.removeEventListener('load', handleLoad);
+        };
+
+    }, [isHotspotModalOpen, hotspotModal, playerStats]); // Mantén las dependencias
+
+   // ====================================================================
+    // ✅ NUEVO: useEffect para enviar data (metadatos) al iframe de TIPO_PASO 'app'
+    // ====================================================================
+    useEffect(() => {
+        const currentStep = flujoData[currentStepIndex];
+
+        // 1. Asegurarse de que estamos en un paso 'app' y el iframe ref existe
+        if (currentStep?.tipo_paso !== 'app' || !iframeAppRef.current) {
+            return;
+        }
+
+        const currentIframe = iframeAppRef.current;
+
+        // 2. Función que envía el mensaje (se ejecutará en el 'load' del iframe)
+        const sendConfigToApp = () => {
+            const recursoActual = getRecurso(currentStep.recursomultimedia_id);
+            
+            if (!recursoActual || !recursoActual.metadatos) {
+                console.error("[POST MESSAGE App] No se encontró el recurso o metadatos para el paso 'app'.");
+                return;
+            }
+
+            let parsedMetadata: any;
+            try {
+                // 1. Parsear el JSON unificado
+                parsedMetadata = JSON.parse(recursoActual.metadatos);
+            } catch (e) {
+                console.error("[POST MESSAGE App] Error al parsear JSON de metadatos:", e, recursoActual.metadatos);
+                return;
+            }
+
+            // 2. Extraer SÓLO la configuración de la app
+            // ¡IMPORTANTE! La app (index.html) espera que appData sea un STRING JSON
+            const appData = parsedMetadata.appConfig ? JSON.stringify(parsedMetadata.appConfig) : "{}";
+                
+                // 3. Obtener stats del jugador
+                if (!playerStats) {
+                    console.error("[POST MESSAGE App] Stats del jugador no cargados. Abortando envío.");
+                    return;
+                }
+
+                if (currentIframe.contentWindow) {
+                    const payload = {
+                        source: 'FlujoNarrativoUsuario',
+                        appData: appData, // ¡AQUÍ VAN LOS PARÁMETROS DE appConfig!
+                        playerStats: {
+                            inventario: playerStats.inventario,
+                            puntuacion: playerStats.xp_total
+                        },
+                        // Estos son 'undefined' porque la recompensa y navegación
+                        // se leerán desde 'flowConfig' en handleAppCompletion
+                        successRecompensaId: undefined, 
+                        failureRecompensaId: undefined  
+                    };
+                    console.log("[POST MESSAGE App] Enviando 'appConfig' (metadatos) al Iframe:", payload);
+                    currentIframe.contentWindow.postMessage(payload, '*');
+                } else {
+                    console.error("[POST MESSAGE App] No se pudo acceder a contentWindow después de 'load'.");
+                }
+         };
+
+        console.log("[POST MESSAGE App] Añadiendo listener 'load' al iframe de tipo_paso: 'app'.");
+        currentIframe.addEventListener('load', sendConfigToApp);
+
+        // 5. Cleanup
+        return () => {
+            console.log("[CLEANUP App] Removiendo listener 'load' del iframe de tipo_paso: 'app'.");
+            if (currentIframe) {
+                currentIframe.removeEventListener('load', sendConfigToApp);
+            }
+        };
+
+    }, [currentStepIndex, flujoData, playerStats, recursosData, getRecurso]); // Depende de estos datos
 
     // Escuchar cambios de fullscreen
     useEffect(() => {
@@ -242,35 +841,73 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                             hotspotMeshes: { type: 'array', default: [] },
                             hotspotData: { type: 'string' }
                         },
-                        init: function() {
-                            const self = this;
+
+                        // --- LÓGICA DE LOS HOTSPOTS (REFACTORIZADA) ---
+                        setupHotspots: function() {
+                            const obj = this.el.getObject3D('mesh');
+                            if (!obj) {
+                                console.log('🟠 setupHotspots: Mesh no listo, reintentando en 500ms.');
+                                // Reintentar si el mesh no está cargado (puede pasar en un 'update')
+                                setTimeout(this.setupHotspots, 500); 
+                                return;
+                            }
+
+                            console.log('🔄 Ejecutando setupHotspots...');
                             const allHotspotConfigs = JSON.parse(this.data.hotspotData);
-                            // Filtrar hotspots de tipo backgroundMusic
                             const hotspotConfigs = allHotspotConfigs.filter(h => h.contentType !== 'backgroundMusic');
                             
-                            this.el.addEventListener('model-loaded', () => {
-                                const obj = self.el.getObject3D('mesh');
-                                if (!obj) return;
-                                
-                                // Recorrer todos los objetos del modelo
-                                obj.traverse((child) => {
-                                    if (child.isMesh) {
-                                        // Buscar configuración del hotspot
-                                        const config = hotspotConfigs.find(c => c.meshName === child.name);
-                                        if (config) {
-                                            child.userData.isHotspot = true;
-                                            child.userData.hotspotConfig = config;
-                                            child.userData.originalMaterial = child.material.clone();
-                                            child.userData.isClicked = false;
-                                            console.log('✅ Hotspot configurado en mesh:', child.name);
+                            // Recorrer todos los objetos del modelo
+                            obj.traverse((child) => {
+                                if (child.isMesh) {
+                                    // Buscar configuración del hotspot
+                                    const config = hotspotConfigs.find(c => c.meshName === child.name);
+                                    
+                                    if (config) {
+                                        // APLICAR/RE-APLICAR CONFIGURACIÓN
+                                        child.userData.isHotspot = true;
+                                        child.userData.hotspotConfig = config;
+                                        child.userData.originalMaterial = child.material.clone();
+                                        child.userData.isClicked = false; // <-- CRÍTICO: Resetear estado
+                                        child.userData.isHovered = false; // <-- CRÍTICO: Resetear estado
+                                        console.log('✅ Hotspot configurado en mesh:', child.name);
+                                    } else {
+                                        // LIMPIAR MESHES QUE YA NO SON HOTSPOTS
+                                        if (child.userData.isHotspot) {
+                                            child.userData.isHotspot = false;
+                                            child.userData.hotspotConfig = null;
                                         }
                                     }
-                                });
-                                
-                                console.log('✅ Interacción configurada en modelo GLB');
+                                }
                             });
+                            
+                            console.log('✅ Interacción configurada en modelo GLB');
                         },
+                        
+                        // --- INICIO: Se ejecuta 1 vez al crear ---
+                        init: function() {
+                            // Bindeamos la función para que 'this' funcione correctamente
+                            this.setupHotspots = this.setupHotspots.bind(this);
+                            this.el.addEventListener('model-loaded', this.setupHotspots);
+                        },
+                        
+                        // --- UPDATE: Se ejecuta CADA VEZ que la data (hotspotData) cambia ---
+                        update: function(oldData) {
+                            if (this.data.hotspotData !== oldData.hotspotData) {
+                                console.log('🔄 Datos del componente actualizados. Re-configurando hotspots...');
+                                // El modelo ya está cargado, solo necesitamos re-escanearlo
+                                // Usamos un timeout corto para asegurar que el modelo (obj) esté accesible
+                                setTimeout(this.setupHotspots, 100); 
+                            }
+                        },
+
+                        // --- REMOVE: Se ejecuta al destruir ---
+                        remove: function () {
+                          this.el.removeEventListener('model-loaded', this.setupHotspots);
+                        },
+
+                        // --- TICK: (Tu función 'tick' existente va aquí) ---
                         tick: function() {
+                            // ... (tu código de 'tick' de la línea 889 va aquí sin cambios) ...
                             // Obtener el cursor y su raycaster
                             const cursor = document.querySelector('a-cursor');
                             if (!cursor) return;
@@ -335,88 +972,9 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         registerComponent();
     }, []);
 
-    const handleHistoriaSelect = (historiaId: number) => {
-        // Detener música de fondo al cambiar de historia
-        if (backgroundAudioRef.current) {
-            backgroundAudioRef.current.pause();
-            backgroundAudioRef.current = null;
-        }
-        setBackgroundMusicUrl(null);
-        
-        setSelectedHistoriaId(historiaId);
-        setCurrentStepIndex(0);
-        setShowStepContent(false);
-        setShowEndMessage(false);
-    };
-
-    // Función que maneja la apertura del modal de hotspot
-    const handleHotspotClick = async (hotspot: HotspotConfig) => {
-        if (!discoveredHotspotIds.current.has(hotspot.meshName)) {
-            discoveredHotspotIds.current.add(hotspot.meshName);
-            setDiscoveredHotspots(prev => prev + 1);
-
-            if (hotspot.recompensaId) {
-                const recompensa = recompensasData.find(r => r.id_recompensa === hotspot.recompensaId);
-                if (recompensa) {
-                    const message = `¡Has ganado ${recompensa.valor} XP por '${recompensa.nombre}'!`;
-                    setNotification(message);
-                    setTimeout(() => setNotification(null), 5000);
-                    // La función otorgarRecompensa espera historiaId como STRING
-                    await gameServiceUser.otorgarRecompensa(user?.id as string, recompensa.id_recompensa, String(selectedHistoriaId));
-                    await fetchPlayerStats();
-                }
-            }
-
-            if (hotspot.personajeId) {
-                const personaje = personajesData.find(p => p.id_personaje === hotspot.personajeId);
-                if (personaje && user) {
-                    const { error } = await gameServiceUser.knowCharacter(user.id, personaje.nombre);
-                    if (!error) {
-                        await fetchPlayerStats();
-                        const message = `Has conocido a ${personaje.nombre}. ¡Añadido a tus estadísticas!`;
-                        setNotification(message);
-                        setTimeout(() => setNotification(null), 3000);
-                    }
-                }
-            }
-        }
-
-        // Silenciar música de fondo al abrir hotspot
-        if (backgroundAudioRef.current && !backgroundAudioRef.current.paused) {
-            backgroundAudioRef.current.pause();
-        }
-
-        // Mostrar el modal
-        setHotspotModal(hotspot);
-        setIsHotspotModalOpen(true);
-        
-        // Reproducir un sonido de click simulado
-        new Audio('https://cdn.aframe.io/360-image-gallery-boilerplate/audio/click.ogg').play().catch(e => console.error("Error al reproducir audio:", e));
-    };
-
-    // Función para cerrar el modal de hotspot
-    const closeHotspotModal = () => {
-        setHotspotModal(null);
-        setIsHotspotModalOpen(false);
-        
-        // Reanudar música de fondo al cerrar hotspot
-        if (backgroundAudioRef.current && backgroundAudioRef.current.paused) {
-            backgroundAudioRef.current.play().catch(e => console.error("Error al reanudar audio de fondo:", e));
-        }
-    };
-
-    // Función de manejo de audio para el video/audio del modal (para evitar problemas de autoplay)
-    const handleMediaAutoplay = (element: HTMLMediaElement) => {
-        element.play().catch(e => console.error("Error al intentar autoplay de media:", e));
-    };
-
-    const handleAudioPlay = () => {
-        if (audioRef.current) {
-            audioRef.current.play().catch(e => console.error("Error al reproducir audio:", e));
-        }
-        setShowAudioOverlay(false);
-    };
     
+
+   
     const styles = `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         html, body {
@@ -712,6 +1270,7 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         
     `;
 
+    // Efecto para cargar las historias disponibles al inicio
     useEffect(() => {
         const fetchHistorias = async () => {
             try {
@@ -720,8 +1279,17 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
 
                 // PUNTO DE DEPURACIÓN
                 console.log("Historias cargadas desde el servicio:", data);
+
+                // --- INICIO MODIFICACIÓN: ORDENAR POR CAMPO 'ORDEN' ---
+                const historiasOrdenadas = data ? [...data].sort((a, b) => {
+                    // Asumiendo que es orden ascendente (1, 2, 3...)
+                    // Usamos (a.orden || 0) para manejar casos donde sea null/undefined
+                    return (a.orden || 0) - (b.orden || 0);
+                }) : [];
+                // --- FIN MODIFICACIÓN ---
+
                 
-                setHistorias(data || []);
+                setHistorias(historiasOrdenadas);
                 
                 // Pre-cargar recursos multimedia para las imágenes de historias
                 const { data: recursos, error: recursosError } = await gameServiceUser.fetchMultimediaResources();
@@ -741,6 +1309,7 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         }
     }, [selectedHistoriaId]);
 
+    // Efecto para cargar todos los datos necesarios cuando se selecciona una historia
     useEffect(() => {
         const fetchAllData = async () => {
             if (!selectedHistoriaId || authLoading || !user) return;
@@ -790,9 +1359,19 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             });
         }
 
-    }, [selectedHistoriaId, user, authLoading]);
-    
+    }, [selectedHistoriaId, user, authLoading, fetchPlayerStats]);
+
+    // useEffect para manejar la carga y reproducción de recursos multimedia al cambiar de paso
     useEffect(() => {
+        // --- INICIO DE LA SOLUCIÓN ---
+        // Si no hay historia seleccionada (estamos en el menú), no procesar ningún paso.
+        // Esto previene que el useEffect se dispare con datos antiguos (flujoData) 
+        // mientras selectedHistoriaId ya es null, lo que causaba que la música se reiniciara.
+        if (!selectedHistoriaId) {
+            return;
+        }
+        // --- FIN DE LA SOLUCIÓN ---
+
         const currentStep = flujoData[currentStepIndex];
         if (!currentStep) return;
 
@@ -810,11 +1389,15 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
 
         // Detener música de fondo si no es un modelo 3D
         if (!is3DModel) {
+
+            // Detener música de fondo si está sonando
             if (backgroundAudioRef.current) {
+                console.log("⏸️ Deteniendo música de fondo al cambiar de paso.");
                 backgroundAudioRef.current.pause();
                 backgroundAudioRef.current = null;
             }
             setBackgroundMusicUrl(null);
+        
         }
 
         if (recursoActual && recursoActual.tipo === '3d_model') {
@@ -869,27 +1452,62 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             setShowStepContent(true);
         }
 
-    }, [currentStepIndex, flujoData, recursosData]);
+    }, [currentStepIndex, flujoData, recursosData, selectedHistoriaId]); // <-- AÑADIR selectedHistoriaId
     
-    // useEffect para manejar la música de fondo
+    // --- Efecto 1: Maneja la lógica de Play/Pause ---
     useEffect(() => {
-        if (backgroundMusicUrl && !isHotspotModalOpen) {
-            if (!backgroundAudioRef.current) {
-                backgroundAudioRef.current = new Audio(backgroundMusicUrl);
-                backgroundAudioRef.current.loop = true;
-                backgroundAudioRef.current.volume = backgroundMusicVolume;
+        // No hacer nada si no hay URL de música
+        if (!backgroundMusicUrl) {
+            if (backgroundAudioRef.current) {
+                backgroundAudioRef.current.pause();
             }
-            
-            backgroundAudioRef.current.play().catch(e => console.error("Error al reproducir música de fondo:", e));
-            
-            return () => {
-                if (backgroundAudioRef.current) {
-                    backgroundAudioRef.current.pause();
-                    backgroundAudioRef.current = null;
-                }
-            };
+            return;
         }
-    }, [backgroundMusicUrl, isHotspotModalOpen]);
+
+        // Crear el objeto de audio si no existe
+        if (!backgroundAudioRef.current) {
+            console.log("🎵 Creando nueva instancia de Audio:", backgroundMusicUrl);
+            backgroundAudioRef.current = new Audio(backgroundMusicUrl);
+            backgroundAudioRef.current.loop = true;
+        }
+
+        // Aplicar volumen actual
+        backgroundAudioRef.current.volume = backgroundMusicVolume;
+
+        // Lógica de reproducción/pausa
+        // QUEREMOS QUE SUENE SI:
+        // 1. El modal NO está abierto
+        // 2. O, el modal SÍ está abierto y es de tipo 'interactive'
+        const shouldPlay = !isHotspotModalOpen || (isHotspotModalOpen && hotspotModal?.contentType === 'interactive');
+
+        if (shouldPlay) {
+            // Esto cumple tu requisito: si no es interactivo, 'shouldPlay' será false y se pausará.
+            console.log("🎵 Reproduciendo música.", { isOpen: isHotspotModalOpen, type: hotspotModal?.contentType });
+            backgroundAudioRef.current.play().catch(e => console.error("Error al reproducir música de fondo:", e));
+        } else {
+            // Esto se activa si isHotspotModalOpen es true Y el tipo NO es 'interactive'
+            console.log("⏸️ Pausando música (Modal no interactivo abierto).", { type: hotspotModal?.contentType });
+            backgroundAudioRef.current.pause();
+        }
+        
+    // Este efecto se ejecuta cada vez que cambia el estado del modal o el volumen
+    }, [backgroundMusicUrl, isHotspotModalOpen, hotspotModal, backgroundMusicVolume]);
+
+    // --- Efecto 2: Maneja la limpieza profunda ---
+    useEffect(() => {
+        // Guarda la referencia actual del audio
+        const audio = backgroundAudioRef.current;
+
+        // Retorna una función de limpieza que se ejecutará solo si 
+        // 'backgroundMusicUrl' cambia o si el componente se desmonta.
+        return () => {
+            if (audio) {
+                console.log("🧹 Limpieza (desmontaje o cambio de URL): Deteniendo música.");
+                audio.pause();
+                backgroundAudioRef.current = null;
+            }
+        };
+    }, [backgroundMusicUrl]); // <-- ¡Solo depende de la URL!
     
     // useEffect para actualizar el volumen de la música de fondo
     useEffect(() => {
@@ -956,7 +1574,7 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             document.removeEventListener('click', handleCursorClick);
             console.log('❌ Listener de click removido');
         };
-    }, [selectedHistoriaId, handleHotspotClick]);
+    }, [selectedHistoriaId, handleHotspotClick]); // 'handleHotspotClick' es ahora una dependencia
 
     // Controles de movimiento para móvil con joystick virtual mejorado
     useEffect(() => {
@@ -1036,22 +1654,38 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
     }, [isMobile, selectedHistoriaId]);
 
  
-   
-    const getRecurso = (recursoId: number | null) => {
-        if (!recursoId) return null;
-        return recursosData.find(r => r.id_recurso === recursoId);
+    // ==================================================================
+    // --- NUEVA FUNCIÓN PARA VOLVER AL MENÚ (ACTUALIZADA) ---
+    // ==================================================================
+    const handleReturnToMenu = () => {
+        console.log("🎵 Deteniendo música de fondo y volviendo al menú.");
+        
+        // 1. Detener la música
+        setBackgroundMusicUrl(null);
+        
+        // 2. Volver al menú
+        setSelectedHistoriaId(null);
+
+        // 3. (SOLUCIÓN) Limpiar los datos de la historia anterior para evitar condiciones de carrera
+        setFlujoData([]);
+        setCurrentStepIndex(0); // Reset index
+        setShowEndMessage(false); // Ensure end message is hidden
     };
 
+    // ==================================================================
+    // --- FUNCIÓN handleNextStep (CORREGIDA) ---
+    // ==================================================================
+    // Función para manejar el avance al siguiente paso
     const handleNextStep = async (nextStepId: number | null) => {
         const currentStep = flujoData[currentStepIndex];
 
+        // 1. Otorgar recompensas/personajes del paso ACTUAL (esto está bien aquí)
         if (currentStep.id_recompensa !== null) {
             const recompensa = recompensasData.find(r => r.id_recompensa === currentStep.id_recompensa);
             if (recompensa) {
                 const message = `¡Has ganado ${recompensa.valor} XP por '${recompensa.nombre}'!`;
                 setNotification(message);
                 setTimeout(() => setNotification(null), 5000);
-                // La función otorgarRecompensa espera historiaId como STRING
                 await gameServiceUser.otorgarRecompensa(user?.id as string, recompensa.id_recompensa, String(selectedHistoriaId));
                 await fetchPlayerStats();
             }
@@ -1070,21 +1704,16 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             }
         }
 
-        if (!user || nextStepId === null) {
-            setShowEndMessage(true);
-            return;
-        }
-
-        // Para tipo_paso 'final', completar la historia actual
-        if (currentStep.tipo_paso === 'final' && selectedHistoriaId !== null) {
-            console.log('=== DEBUG: PASO FINAL ===');
+        // --- INICIO DE LA SOLUCIÓN ---
+        // 2. Comprobar PRIMERO si el paso actual es 'final'.
+        // Esta lógica debe ejecutarse ANTES del guard "nextStepId === null".
+        if (currentStep.tipo_paso === 'final' && selectedHistoriaId !== null && user) {
+            console.log('=== DEBUG: PASO FINAL (Lógica Corregida) ===');
             console.log('Tipo de paso:', currentStep.tipo_paso);
             console.log('Historia actual ID:', selectedHistoriaId);
-            console.log('Historia actual ID (tipo):', typeof selectedHistoriaId);
-            console.log('ID siguiente paso:', currentStep.id_siguiente_paso);
             console.log('Paso completo:', JSON.stringify(currentStep, null, 2));
             
-            // La función completeStory espera un STRING
+            // *** ¡AQUÍ ES DONDE SE GUARDA LA HISTORIA! ***
             const { error } = await gameServiceUser.completeStory(user.id, String(selectedHistoriaId));
             if (!error) {
                 console.log(`✅ Historia ${selectedHistoriaId} completada para el usuario ${user.id}`);
@@ -1092,10 +1721,10 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                 console.error('❌ Error completando historia:', error);
             }
 
-            // Si hay id_siguiente_paso, es el ID de la siguiente historia
-            // Para tipo 'final', interpretamos id_siguiente_paso como el ID de la siguiente historia
-            if (currentStep.id_siguiente_paso) {
-                const siguienteHistoriaId = currentStep.id_siguiente_paso;
+            // 'nextStepId' (que es 'currentStep.id_siguiente_paso')
+            // aquí se interpreta como el ID de la *siguiente historia*.
+            if (nextStepId) { 
+                const siguienteHistoriaId = nextStepId;
                 console.log(`📖 Cambiando a la siguiente historia con ID: ${siguienteHistoriaId}`);
                 
                 // Buscar el primer paso de la siguiente historia
@@ -1112,29 +1741,34 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                 setSelectedHistoriaId(siguienteHistoriaId);
                 setCurrentStepIndex(0);
                 setShowStepContent(false);
-                setShowEndMessage(false);
+                setShowEndMessage(false); // Asegurarse de que no se muestre el mensaje final
                 console.log('=========================');
-                return;
+                return; // Salir de la función
             } else {
-                console.log('📚 No hay siguiente historia. Mostrando mensaje final.');
+                // No hay siguiente historia, mostrar mensaje final
+                console.log('📚 No hay siguiente historia. Volviendo al menú.');
                 console.log('=========================');
-                setShowEndMessage(true);
-                return;
+                handleReturnToMenu(); // <--- SOLUCIÓN: Volver al menú
+                return; // Salir de la función
             }
         }
+        // --- FIN DE LA SOLUCIÓN ---
+
+
+        // 3. Comprobación de guardia (Guard check)
+        // Si no es un paso 'final', ahora sí podemos comprobar si el siguiente paso es nulo.
+        if (!user || nextStepId === null) {
+            console.log('📚 No hay siguiente paso o usuario inválido. Mostrando mensaje final.');
+            setShowEndMessage(true);
+            return;
+        }
+
         
-        // Para tipo_paso 'app', marcar como visitada al cerrar
+        // 4. Lógica para tipo_paso 'app'
         if (currentStep.tipo_paso === 'app' && selectedHistoriaId !== null && user) {
             console.log('=== DEBUG: PASO APP ===');
             console.log('Historia ID:', selectedHistoriaId, '(tipo:', typeof selectedHistoriaId, ')');
             
-            // La función completeStory espera un STRING
-            const { error } = await gameServiceUser.completeStory(user.id, String(selectedHistoriaId));
-            if (!error) {
-                console.log(`✅ Historia ${selectedHistoriaId} con app completada para el usuario ${user.id}`);
-            } else {
-                console.error('❌ Error completando historia con app:', error);
-            }
             console.log('=======================');
             
             // Volver al menú de historias
@@ -1143,15 +1777,24 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             return;
         }
         
+        // 5. Lógica de avance normal (para pasos 'narrativo' y 'pregunta')
         setShowStepContent(false);
         const nextIndex = flujoData.findIndex(p => p.id_flujo === nextStepId);
         if (nextIndex !== -1) {
             setCurrentStepIndex(nextIndex);
-        } else {
-            setShowEndMessage(true);
+        } 
+        // Si no se encuentra el siguiente paso, mostrar mensaje de fin
+        else {
+           console.log('📚 Siguiente paso no encontrado. Mostrando mensaje final.');
+            setShowEndMessage(true); 
         }
     };
-    
+    // ==================================================================
+    // --- FIN DE LA FUNCIÓN handleNextStep (CORREGIDA) ---
+    // ==================================================================
+
+
+    // Función para retroceder al paso anterior
     const goBack = () => {
       if(currentStepIndex > 0) {
         setShowStepContent(false);
@@ -1159,57 +1802,51 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
       }
     };
 
+    // Función para avanzar al siguiente paso
     const goNext = () => {
       if(currentStepIndex < flujoData.length - 1) {
         setShowStepContent(false);
         setCurrentStepIndex(currentStepIndex + 1);
       }
     };
-
-    const fetchPlayerStats = async () => {
-        if (!user) return;
-        try {
-            const stats = await gameServiceUser.getPlayerStats(user.id);
-            setPlayerStats(stats);
-            console.log("Estadísticas del jugador cargadas:", stats);
-        } catch (error) {
-            console.error("Error al refrescar las estadísticas del jugador:", error);
-            setPlayerStats({
-                resistencia: 0,
-                inventario: [],
-                personajes_conocidos: [],
-                historias_visitadas: [],
-            } as PlayerStats);
-        }
-    };
-
+    
+    // Función para renderizar el contenido del paso actual
     const renderStepContent = () => {
         const step = flujoData[currentStepIndex];
         
         // Si no hay paso, no renderizar nada
         if (!step) return null;
         
-        // --- Lógica para Tipo APP (NUEVO) ---
-        if (step.tipo_paso === 'app') {
-            const recursoActual = getRecurso(currentStep.recursomultimedia_id);
-            const appUrl = recursoActual?.archivo || '';
-            console.log("APP URL:", appUrl);r
+        // --- Lógica para Pasos de Aplicación (App) ---
+        else if (step.tipo_paso === 'app') {
+            const recursoActual = getRecurso(step.recursomultimedia_id);
+
+            // Log 7: Verifica que el paso 'app' se está renderizando y con qué recurso
+            console.log(`[DEBUG 7 - RENDER APP] Rendering App Step. Recurso ID: ${step.recursomultimedia_id}, File: ${recursoActual?.archivo}`);
+            
+            // Si no hay recurso o URL en el recurso, no podemos mostrar la app.
+            if (!recursoActual || !recursoActual.archivo) {
+                return (
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-4 text-center bg-red-800 text-white rounded-lg z-30">
+                        Error: Recurso tipo 'app' no encontrado o sin URL (archivo).
+                    </div>
+                );
+            }
+
+            // El iframe que carga la app
             return (
-                <div className="fixed inset-0 z-50 bg-black">
-                    <button
-                        className="absolute top-4 right-4 z-[100] bg-red-600 hover:bg-red-700 text-white w-12 h-12 rounded-full flex items-center justify-center text-2xl font-bold shadow-2xl transition-all duration-300"
-                        onClick={() => handleNextStep(null)}
-                        title="Cerrar App"
-                    >
-                        ×
-                    </button>
+                <div className="full-media-container z-50 bg-black">
+                    {/* IMPORTANTÍSIMO: Usar la URL de 'recursoActual.archivo'
+                    y darle el 100% de alto y ancho para que ocupe toda la pantalla.
+                    */}
                     <iframe
-                        src={appUrl}
-                        className="w-full h-full border-0"
-                        title="App Interactiva"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        ref={iframeAppRef} 
+                        src={recursoActual.archivo}
+                        title="Simulador Narrativo"
+                        style={{ width: '100%', height: '100%', border: 'none' }}
                         allowFullScreen
-                    />
+                        
+                    ></iframe>
                 </div>
             );
         }
@@ -1353,7 +1990,7 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         return null;
     };
 
-
+    // Renderizado principal
     if (!selectedHistoriaId) {
         if (loading) {
             return (
@@ -1408,9 +2045,9 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         return (
             <div className="relative min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 text-white p-4 md:p-8 overflow-y-auto">
               
-                <div className="max-w-7xl mx-auto mt-20">
-                    <h1 className="text-5xl font-bold text-center mb-4 bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">Selecciona tu Aventura</h1>
-                    <p className="text-center text-gray-400 mb-12">Explora mundos increíbles y desbloquea nuevas historias</p>
+                <div className="max-w-7xl mx-auto ">
+                    <h1 className="text-5xl font-bold text-center mb-3 bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">Selecciona tu Aventura</h1>
+                    <p className="text-center text-gray-400 mb-3">Explora mundos increíbles y desbloquea nuevas historias</p>
                     
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {historiasConEstado.map(historia => {
@@ -1498,8 +2135,20 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         );
     }
 
-    const currentStep = flujoData[currentStepIndex];
-    if (!currentStep) {
+    // --- LÓGICA DE RENDERIZADO CORREGIDA ---
+
+    // 1. Si estamos cargando datos, mostrar un loader.
+    // Esto previene la condición de carrera (race condition).
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-black text-white">
+                <p>Cargando datos de la historia...</p>
+            </div>
+        );
+    }
+
+    // 2. Si se nos dijo explícitamente que mostremos el mensaje final, hacerlo.
+    if (showEndMessage) {
         return (
             <div className="relative min-h-screen bg-black text-white p-8 flex flex-col items-center justify-center text-center">
                 <div className="bg-white bg-opacity-10 backdrop-blur-md p-10 rounded-xl max-w-lg w-[90%]">
@@ -1510,7 +2159,7 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                     <button
                         className="bg-green-600 text-white py-4 px-6 rounded-lg font-semibold text-lg cursor-pointer
                         transition-all duration-300 ease-in-out hover:bg-green-700 hover:scale-105"
-                        onClick={onBack}
+                        onClick={handleReturnToMenu} // <--- SOLUCIÓN: Volver al menú
                     >
                         Finalizar y Volver
                     </button>
@@ -1519,13 +2168,44 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         );
     }
 
+    // 3. Obtener el paso actual.
+    const currentStep = flujoData[currentStepIndex];
+
+    // 4. Si NO estamos cargando, y NO es el fin, pero AÚN ASÍ no hay un paso
+    //    (ej. flujoData vino vacío de la DB), ahora sí mostramos el fin.
+    if (!currentStep) {
+        console.error("Error: No se encontró un paso actual (currentStep), pero 'loading' es false. Mostrando fin.");
+        return (
+            <div className="relative min-h-screen bg-black text-white p-8 flex flex-col items-center justify-center text-center">
+                <div className="bg-white bg-opacity-10 backdrop-blur-md p-10 rounded-xl max-w-lg w-[90%]">
+                    <h2 className="text-3xl font-bold mb-4">Error de la Historia</h2>
+                    <p className="text-lg leading-relaxed mb-6">
+                        No se pudo cargar el flujo narrativo. (currentStep es nulo).
+                    </p>
+                    <button
+                        className="bg-red-600 text-white py-4 px-6 rounded-lg font-semibold text-lg cursor-pointer"
+                        onClick={onBack}
+                    >
+                        Volver
+                    </button>
+                </div>
+            </div>
+        );
+    }
+    
+    // --- FIN DE LA LÓGICA CORREGIDA ---
+
+    // Obtener recurso multimedia del paso actual
     const recursoActual = getRecurso(currentStep.recursomultimedia_id);
     const mediaSrc = recursoActual?.archivo || '';
+    // Determinar si el paso es de decisión
     const isDecisionStep = currentStep.tipo_paso === 'pregunta' || (currentStep.opciones_decision?.opciones_siguientes_json && currentStep.opciones_decision.opciones_siguientes_json.length > 0);
     const hasNext = currentStepIndex < flujoData.length - 1;
     const hasPrevious = currentStepIndex > 0;
     const is3DModel = recursoActual?.tipo === '3d_model';
 
+
+    // Renderizado del componente principal
     return (
         <div className="relative min-h-screen bg-black text-white">
             <style>{styles}</style>
@@ -1602,8 +2282,7 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
 
                
             </div>
-
-          
+         
             
             <div id="stepContent" className="step-content">
                 {renderStepContent()}
@@ -1635,7 +2314,7 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                     </div>
 
                     <div className="info-icons">
-                        <div className="tool-icon" onClick={() => setShowMap(true)}>
+                        <div className="tool-icon" onClick={handleOpenMap}>
                             <span style={{ fontSize: '1.2rem' }}>🗺️</span>
                             <span id="mapCount" style={{ fontSize: '0.75rem' }}></span>
                         </div>
@@ -1822,13 +2501,15 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                             </div>
                         )}
                         {hotspotModal?.contentType === 'interactive' && (
-                            <div className="p-8 bg-gray-800 rounded-xl max-w-2xl w-full">
-                                <p className="mb-6 text-xl text-white">¡Interactúa aquí para continuar la historia!</p>
-                                <button className="bg-blue-600 text-white py-3 px-8 rounded-lg font-semibold hover:bg-blue-700 text-lg"
-                                    onClick={() => alert('Lógica interactiva ejecutada!')}>
-                                    Completar Interacción
-                                </button>
-                            </div>
+                             <iframe
+                                    ref={iframeRef}
+                                    id="interactive-iframe" // ¡CRUCIAL! Añadir el ID para poder seleccionarlo en el useEffect
+                                    src={hotspotModal.url}
+                                    title={hotspotModal.title}
+                                    className="w-full h-full"
+                                    style={{ border: 'none' }}
+                                    allowFullScreen
+                             ></iframe>
                         )}
                     </div>
                 </div>
@@ -1873,6 +2554,9 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                         onStartNarrativeFromMap={handleStartStoryFromMap}
                         // Pasamos la función para cerrar (que es la misma)
                         onBack={() => setShowMap(false)}
+                        // Centro inicial del mapa
+                        initialCenter={mapCenter}
+                        recursos={recursosData} // <--- ¡AÑADE ESTA LÍNEA!
                     />
                 </div>
             </div>
@@ -1931,8 +2615,7 @@ const FlujoNarrativoUsuario: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                             className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 px-4 rounded-lg font-semibold mb-4 transition-all duration-300 flex items-center justify-center gap-2"
                             onClick={() => {
                                 setShowStories(false);
-                                setSelectedHistoriaId(null);
-                                setCurrentStepIndex(0);
+                                handleReturnToMenu(); // <--- SOLUCIÓN: Volver al menú
                             }}
                         >
                             ← Volver al Menú de Historias

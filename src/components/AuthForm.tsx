@@ -2,14 +2,14 @@ import React, { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import './AuthForm.css'
 
-// 1. Añadir la interfaz de props para Fullscreen
 interface AuthFormProps {
-  // Función para reafirmar la pantalla completa
   onRequestFullscreen?: () => void; 
+  // 1. AGREGAR ESTA LÍNEA
+  onClose?: () => void; 
 }
 
-// 2. Aceptar la prop
-const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen }) => {
+// 2. AGREGAR onClose AQUÍ
+const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen, onClose }) => {
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -28,32 +28,22 @@ const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen }) => {
 
     try {
       if (isLogin) {
-        // Iniciar sesión
         const { error } = await signIn(email, password)
         if (error) {
           setError(error.message)
         } else {
           if (onRequestFullscreen) {
-            // 🔑 FIX CLAVE DE TIEMPO:
-            // 1. Reafirma la solicitud de Fullscreen.
             onRequestFullscreen()
-            
-            // 2. Espera 50ms antes de que el estado de AuthContext cambie.
-            // Esto asegura que el navegador tenga tiempo de procesar el re-request 
-            // de fullscreen, manteniendo la interfaz en FullScreen al cargar el Dashboard.
             await new Promise(resolve => setTimeout(resolve, 50)); 
           }
-          setMessage('¡Inicio de sesión exitoso!')
-          // NOTA: El cambio de estado de AuthContext ocurre inmediatamente después de este bloque.
+          setMessage('Iniciando sistema...')
         }
       } else {
-        // Registro
         if (password !== confirmPassword) {
           setError('Las contraseñas no coinciden')
           setLoading(false)
           return
         }
-        
         if (password.length < 6) {
           setError('La contraseña debe tener al menos 6 caracteres')
           setLoading(false)
@@ -65,15 +55,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen }) => {
           setError(error.message)
         } else {
            if (onRequestFullscreen) {
-             // Aplicar la misma espera para el registro
              onRequestFullscreen()
              await new Promise(resolve => setTimeout(resolve, 50)); 
            }
-          setMessage('¡Registro exitoso! Revisa tu email para confirmar tu cuenta.')
+          setMessage('Registro exitoso. Verifica tu email.')
         }
       }
     } catch (err: any) {
-      setError('Error inesperado: ' + err.message)
+      setError('Error del sistema: ' + err.message)
     } finally {
       setLoading(false)
     }
@@ -89,33 +78,42 @@ const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen }) => {
   }
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <h2>{isLogin ? '🔑 Iniciar Sesión' : '📝 Registro'}</h2>
-          <p className="auth-subtitle">
+    <div className="af-container">
+      <div className="af-card">
+        
+        {/* 3. AGREGAR ESTE BLOQUE PARA EL BOTÓN */}
+        {onClose && (
+            <button className="af-close-btn" onClick={onClose} type="button">
+                ✕
+            </button>
+        )}
+        
+        <div className="af-header">
+          <h2 className="af-title">{isLogin ? 'ACCESO AL SISTEMA' : 'NUEVO RECLUTA'}</h2>
+          <p className="af-subtitle">
             {isLogin 
-              ? 'Accede a tu cuenta de La Resistencia' 
-              : 'Únete a la narrativa urbana'}
+              ? 'Identifícate para continuar' 
+              : 'Únete a La Resistencia'}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="email">📧 Email</label>
+        <form onSubmit={handleSubmit} className="af-form">
+          <div className="af-form-group">
+            <label className="af-label" htmlFor="email">Correo Electrónico</label>
             <input
               type="email"
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="form-control"
-              placeholder="tu@email.com"
+              className="af-input"
+              placeholder="agente@resistencia.com"
+              autoComplete="email"
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">🔒 Contraseña</label>
+          <div className="af-form-group">
+            <label className="af-label" htmlFor="password">Código de Acceso</label>
             <input
               type="password"
               id="password"
@@ -123,14 +121,15 @@ const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen }) => {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="form-control"
-              placeholder="Mínimo 6 caracteres"
+              className="af-input"
+              placeholder="••••••••"
+              autoComplete="current-password"
             />
           </div>
 
           {!isLogin && (
-            <div className="form-group">
-              <label htmlFor="confirmPassword">🔒 Confirmar Contraseña</label>
+            <div className="af-form-group">
+              <label className="af-label" htmlFor="confirmPassword">Confirmar Código</label>
               <input
                 type="password"
                 id="confirmPassword"
@@ -138,42 +137,42 @@ const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen }) => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={6}
-                className="form-control"
-                placeholder="Repite tu contraseña"
+                className="af-input"
+                placeholder="••••••••"
               />
             </div>
           )}
 
           {error && (
-            <div className="alert alert-error">
-              ❌ {error}
+            <div className="af-alert af-alert-error">
+              ⚠️ {error}
             </div>
           )}
 
           {message && (
-            <div className="alert alert-success">
-              ✅ {message}
+            <div className="af-alert af-alert-success">
+              🚀 {message}
             </div>
           )}
 
           <button 
             type="submit" 
             disabled={loading}
-            className="btn btn-primary"
+            className="af-btn-submit"
           >
-            {loading ? '⏳ Procesando...' : (isLogin ? '🚪 Entrar' : '📝 Registrarse')}
+            {loading ? 'PROCESANDO...' : (isLogin ? 'INGRESAR' : 'REGISTRARSE')}
           </button>
         </form>
 
-        <div className="auth-switch">
-          <p>
-            {isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
+        <div className="af-footer">
+          <p className="af-text">
+            {isLogin ? '¿Aún no eres miembro?' : '¿Ya tienes credenciales?'}
             <button 
               type="button" 
               onClick={toggleMode}
-              className="btn btn-link"
+              className="af-link"
             >
-              {isLogin ? 'Regístrate aquí' : 'Inicia sesión'}
+              {isLogin ? 'Solicitar Acceso' : 'Ingresar'}
             </button>
           </p>
         </div>

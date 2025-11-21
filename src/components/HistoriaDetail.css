@@ -1,468 +1,358 @@
-/* Historia Detail Modal */
-.historia-detail-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  /* CRÍTICO: Asegura la cobertura total de la pantalla */
-  width: 100vw; 
-  height: 100vh;
-  /* El fondo se hace ligeramente más transparente para que se note el ambiente */
-  background: rgba(26, 26, 26, 0.95); 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
-}
+/* ============================================================
+   AISLAMIENTO DE ESTILOS (Namespacing con prefijo .hd-)
+   Evita conflictos con el CSS global del Main
+   ============================================================ */
 
-.historia-detail-modal {
-  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
-  border-radius: 20px;
-  border: 1px solid #4a4a4a;
-  max-width: 800px;
-  width: 100%;
-  max-height: 90vh;
-  /* CRÍTICO: Usamos flex para que el scroll del contenido sea independiente */
-  display: flex; 
-  flex-direction: column;
-  overflow: hidden;
-  position: relative;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-}
-
-.historia-detail-modal::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #8B4513, #CD853F);
-  z-index: 1;
-}
-
-/* Modal Header */
-.modal-header {
-  padding: 2rem;
-  border-bottom: 1px solid #4a4a4a;
-  position: relative;
-  flex-shrink: 0; /* Asegura que no se encoja */
-}
-
-/* 🚨 CORRECCIÓN DEFINITIVA: Botón de cierre muy pequeño (24px) */
-.btn-close {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: #8B2635; /* Color guinda fuerte para contraste */
-  border: none;
-  color: white;
-  width: 24px; 
-  height: 24px; 
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 0.8rem; 
-  font-weight: bold;
-  transition: all 0.3s ease;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10; /* Asegura que esté por encima de todo */
-}
-
-.btn-close:hover {
-  background: #A03040;
-  transform: scale(1.1);
-}
-
-.modal-header h2 {
-  color: #CD853F;
-  margin: 0 0 1rem 0;
-  font-size: 1.8rem;
-  padding-right: 3rem;
-}
-
-.historia-meta {
-  display: flex;
-  flex-wrap: wrap;
-  /* CRÍTICO: Espacio mínimo entre los badges */
-  gap: 0.3rem; 
-}
-
-/* 🚨 CORRECCIÓN DEFINITIVA: Estilos SÚPER compactos para todos los badges */
-.badge, .level-badge, .date-badge {
-  /* MUY poco padding para reducir el "cuadro" */
-  padding: 0.2rem 0.5rem; 
-  border-radius: 10px; 
-  /* Fuente pequeña para que el contenido encaje */
-  font-size: 0.65rem; 
-  font-weight: bold;
-  white-space: nowrap;
-  /* Esto asegura que las reglas de color específicas no anulen el tamaño */
+/* Reset local solo para este componente */
+.hd-overlay * {
   box-sizing: border-box;
 }
 
-/* Estilos de color específicos (se mantienen) */
-.badge.principal {
-  background: linear-gradient(45deg, #5a4d2d, #8B4513);
-  color: #ffffff;
-}
-
-.badge.secundaria { /* Cuadro Morado */
-  background: linear-gradient(45deg, #4a2d5a, #6f42c1);
-  color: #ffffff;
-}
-
-.level-badge { /* Cuadro Guinda */
-  background: linear-gradient(45deg, #5a2d2d, #8B2635);
-  color: #ffffff;
-}
-
-.date-badge { /* Cuadro Azul */
-  background: linear-gradient(45deg, #2d4a5a, #4682B4);
-  color: #ffffff;
-}
-
-/* Modal Tabs */
-.modal-tabs {
+/* Overlay: Fondo oscuro que cubre todo */
+.hd-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(4px);
   display: flex;
-  border-bottom: 1px solid #4a4a4a;
-  background: #1a1a1a;
-  flex-shrink: 0;
-}
-
-.tab {
-  flex: 1;
-  padding: 1rem 1.5rem;
-  background: none;
-  border: none;
-  color: #cccccc;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 600;
-  border-bottom: 3px solid transparent;
-}
-
-.tab:hover {
-  background: #2a2a2a;
-  color: #CD853F;
-}
-
-.tab.active {
-  color: #CD853F;
-  background: #2a2a2a;
-  border-bottom-color: #8B4513;
-}
-
-/* Modal Content */
-.modal-content {
-  flex-grow: 1; 
-  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
-  overflow-y: auto;
-  padding: 2rem;
-}
-
-.tab-panel {
-  min-height: 100%;
-}
-
-.content-tab .historia-description h3 {
-  color: #CD853F;
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-}
-
-.content-tab .historia-description p {
-  color: #cccccc;
-  line-height: 1.6;
-  margin-bottom: 2rem;
-}
-
-.historia-metadata {
-  margin: 2rem 0;
-}
-
-.historia-metadata h3 {
-  color: #CD853F;
-  margin-bottom: 1rem;
-}
-
-.historia-metadata pre {
-  background: #1a1a1a;
-  border: 1px solid #4a4a4a;
-  border-radius: 8px;
-  padding: 1rem;
-  color: #cccccc;
-  font-size: 0.9rem;
-  overflow-x: auto;
-}
-
-.historia-actions {
-  display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-/* Personajes Tab */
-.personajes-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1.5rem;
-}
-
-.personaje-card {
-  background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
-  border: 1px solid #4a4a4a;
-  border-radius: 15px;
-  padding: 1.5rem;
-  display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 1rem;
-  transition: all 0.3s ease;
+  z-index: 9999; /* Muy alto para estar encima de todo */
+  padding: 0;
 }
 
-.personaje-card:hover {
-  transform: translateY(-3px);
-  border-color: #8B4513;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+/* Ajuste específico para cuando vive en el mapa */
+.historia-detail-map-wrapper .hd-overlay {
+  position: absolute !important;
 }
 
-.personaje-avatar {
-  width: 50px;
-  height: 50px;
-  background: linear-gradient(45deg, #8B4513, #CD853F);
+/* Modal Principal */
+.hd-modal {
+  background-color: #121212;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  color: #e2e8f0;
+  font-family: 'Inter', sans-serif; /* Asegura fuente propia */
+  overflow: hidden;
+}
+
+/* =========================================
+   HEADER
+   ========================================= */
+.hd-header {
+  padding: 16px 24px;
+  background-color: #1a1a1a;
+  border-bottom: 1px solid #333;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hd-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  gap: 20px;
+}
+
+.hd-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+.hd-btn-close {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: #cbd5e0;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
+  font-size: 1.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  font-weight: bold;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.hd-btn-close:hover {
+  background: #e53e3e;
   color: white;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-.personaje-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; 
-  border-radius: 50%;
+/* Badges */
+.hd-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 
-.personaje-info h4 {
-  color: #CD853F;
-  margin: 0 0 0.5rem 0;
-  font-size: 1.1rem;
-}
-
-.personaje-rol {
-  color: #8B4513;
+.hd-badge {
+  font-size: 0.7rem;
+  padding: 4px 10px;
+  border-radius: 4px;
   font-weight: 600;
-  font-size: 0.9rem;
-  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1;
 }
 
-.personaje-desc {
-  color: #cccccc;
-  font-size: 0.8rem;
-  line-height: 1.4;
+.hd-badge-main { background: #3182ce; color: white; }
+.hd-badge-sec { background: #2d3748; color: #cbd5e0; border: 1px solid #4a5568; }
+.hd-badge-lvl { background: rgba(236, 201, 75, 0.1); color: #ecc94b; border: 1px solid #744210; }
+.hd-badge-date { padding-left: 0; color: #718096; font-weight: 400; text-transform: none; }
+
+/* =========================================
+   TABS
+   ========================================= */
+.hd-tabs {
+  display: flex;
+  background-color: #161616;
+  border-bottom: 1px solid #333;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.hd-tab {
+  flex: 1;
+  padding: 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #718096;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
   margin: 0;
+  text-align: center;
 }
 
-.truncate-text { 
-  display: -webkit-box; 
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical; 
-  overflow: hidden;
+.hd-tab:hover {
+  background-color: #222;
+  color: #a0aec0;
+}
+
+.hd-tab.active {
+  color: #63b3ed;
+  border-bottom-color: #63b3ed;
+  background-color: rgba(99, 179, 237, 0.05);
+}
+
+/* =========================================
+   CONTENIDO
+   ========================================= */
+.hd-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background-color: #0f0f0f;
+  width: 100%; /* Asegura llenar el ancho para evitar hueco */
+}
+
+.hd-section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #718096;
+  margin: 0 0 12px 0;
+  letter-spacing: 1.5px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 8px;
+}
+
+.hd-description {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #e2e8f0;
+  margin-bottom: 20px;
+  /* Asegura que el texto rompa si es muy largo */
   word-wrap: break-word; 
 }
 
-
-/* Multimedia Tab */
-.multimedia-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1.5rem;
+/* =========================================
+   BOTONES ACCIÓN
+   ========================================= */
+.hd-actions {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #2d2d2d;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.multimedia-item {
-  background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
-  border: 1px solid #4a4a4a;
-  border-radius: 15px;
-  padding: 1.5rem;
+.hd-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border: none;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hd-btn-primary { background: #3182ce; color: white; }
+.hd-btn-primary:hover:not(:disabled) { background: #2b6cb0; }
+
+.hd-btn-sec { background: transparent; border: 1px solid #4a5568; color: #a0aec0; }
+.hd-btn-sec:hover { border-color: #cbd5e0; color: #fff; }
+
+.hd-btn-disabled { background: #2d3748; color: #718096; cursor: not-allowed; opacity: 0.7; }
+
+.hd-access-msg {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #e53e3e;
+  margin-top: 5px;
+}
+
+/* =========================================
+   GRIDS (PERSONAJES Y MULTIMEDIA)
+   ========================================= */
+.hd-grid {
+  display: grid;
+  /* 1fr asegura que las columnas se estiren para llenar el hueco derecho */
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+/* Personajes */
+.hd-char-card {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.hd-char-img {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 10px;
+  border: 2px solid #4a5568;
+}
+
+.hd-char-placeholder {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #2d3748;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  transition: all 0.3s ease;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 10px;
 }
 
-.multimedia-item:hover {
-  transform: translateY(-3px);
-  border-color: #8B4513;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+.hd-char-name {
+  font-size: 0.95rem;
+  color: #fff;
+  margin: 0 0 4px 0;
+  font-weight: 700;
 }
 
-.multimedia-icon {
-  font-size: 2.5rem;
-  opacity: 0.8;
+.hd-char-rol {
+  font-size: 0.75rem;
+  color: #63b3ed;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
-.multimedia-info h4 {
-  color: #CD853F;
-  margin: 0 0 0.5rem 0;
+/* RESTAURADO: Descripción del personaje visible */
+.hd-char-desc {
+  font-size: 0.8rem;
+  color: #a0aec0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 4; /* Cortar a 4 líneas */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Multimedia */
+.hd-media-card {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.hd-media-preview {
+  height: 120px;
+  background: #000;
+  width: 100%;
+  position: relative;
+}
+
+.hd-media-content {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hd-media-info {
+  padding: 10px;
+}
+
+.hd-media-title {
+  font-size: 0.85rem;
+  margin: 0 0 6px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.hd-media-tag {
+  font-size: 0.7rem;
+  color: #90cdf4;
+  background: rgba(66, 153, 225, 0.15);
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+/* Estados vacíos */
+.hd-status-msg {
+  text-align: center;
+  padding: 40px;
+  color: #718096;
   font-size: 1rem;
 }
 
-.multimedia-tipo {
-  color: #8B4513;
-  font-weight: 600;
-  font-size: 0.8rem;
-  margin: 0 0 0.5rem 0;
-}
-
-.multimedia-desc {
-  color: #cccccc;
-  font-size: 0.8rem;
-  line-height: 1.4;
-  margin: 0 0 1rem 0;
-}
-
-/* Buttons */
-.btn {
-  padding: 0.8rem 1.5rem;
-  border: none;
-  border-radius: 25px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: inline-block;
-  text-align: center;
-  font-size: 0.9rem;
-}
-
-.btn-primary {
-  background: linear-gradient(45deg, #8B4513, #CD853F);
-  color: white;
-}
-
-.btn-primary:hover {
-  background: linear-gradient(45deg, #A0522D, #DAA520);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(139, 69, 19, 0.4);
-}
-
-.btn-secondary {
-  background: linear-gradient(45deg, #4a4a4a, #5a5a5a);
-  color: white;
-}
-
-.btn-secondary:hover {
-  background: linear-gradient(45deg, #5a5a5a, #6a6a6a);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-}
-
-.btn-outline {
-  background: transparent;
-  color: #CD853F;
-  border: 2px solid #8B4513;
-}
-
-.btn-outline:hover {
-  background: #8B4513;
-  color: white;
-}
-
-.btn-sm {
-  padding: 0.5rem 1rem;
-  font-size: 0.8rem;
-}
-
-/* No Data */
-.no-data {
-  text-align: center;
-  padding: 3rem;
-  color: #888888;
-  font-size: 1.1rem;
-}
-
-.loading-detail,
-.error-detail {
-  text-align: center;
-  padding: 3rem;
-  color: #cccccc;
-  font-size: 1.1rem;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .historia-detail-modal {
-    margin: 0.5rem;
-  }
-  
-  .modal-header {
-    padding: 1.5rem;
-  }
-  
-  .modal-content {
-    padding: 1.5rem;
-  }
-  
-  .personajes-grid,
-  .multimedia-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .historia-actions {
-    flex-direction: column;
-  }
-  
-  .modal-tabs {
-    flex-direction: column;
-  }
-  
-  .tab {
-    padding: 0.8rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .historia-meta {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .modal-header h2 {
-    font-size: 1.4rem;
-  }
-}
-
-
-.historia-detail-map-wrapper .historia-detail-overlay {
-  /* ¡CRÍTICO! Cambiamos fixed por absolute y usamos !important para forzar la anulación */
-  position: absolute !important;
-  
-  /* Usamos % en lugar de vw/vh para respetar el tamaño del padre (MapaView) */
-  width: 100% !important; 
-  height: 100% !important;
-
-  /* Aseguramos que los bordes coincidan con el wrapper */
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-}
-
-/* Opcional: Para asegurar que el contenido del modal esté bien centrado dentro del overlay anidado. */
-.historia-detail-map-wrapper .historia-detail-modal {
-  /* Puedes ajustar max-width/max-height aquí si notas que el modal es demasiado grande */
-  /* max-width: 600px; */ 
-  /* max-height: 80vh; */
-}
-
-
-
-
+/* Scrollbar customizada solo para este modal */
+.hd-modal-content::-webkit-scrollbar { width: 8px; }
+.hd-modal-content::-webkit-scrollbar-track { background: #0f0f0f; }
+.hd-modal-content::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }

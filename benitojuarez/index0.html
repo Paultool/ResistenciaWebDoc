@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Interactivo de Colonias Benito Juárez</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; font-family: ui-sans-serif, system-ui; background-color: #1a202c; color: #e2e8f0; }
+        #app-container { height: 100vh; position: relative; }
+        #map { height: 100%; width: 100%; }
+        .leaflet-popup-content { background: #2d3748; color: #e2e8f0; }
+        .leaflet-popup-tip { background: #2d3748; }
+        .bar-container { height: 1rem; background: #374151; border-radius: 0.25rem; overflow: hidden; margin: 0.25rem 0; }
+        .bar-fill { height: 100%; transition: width 0.3s; }
+        /* Clases para los badges */
+        .gentrificacion-badge { padding: 0.125rem 0.25rem; border-radius: 0.125rem; font-size: 0.75rem; font-weight: 600; }
+        .alto { background: #ef4444; color: white; } 
+        .medio { background: #f59e0b; color: white; } 
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <div id="map"></div>
+        <div id="info-panel" class="absolute top-4 right-4 bg-gray-800 p-4 rounded-lg shadow-lg max-w-sm z-[1000] hidden">
+            <h2 id="info-title" class="text-xl font-bold mb-2"></h2>
+            <p id="info-message" class="text-sm mb-4"></p>
+            <button id="close-button" class="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded transition-colors">Entendido</button>
+        </div>
+    </div>
+
+    <script>
+        let map = null; 
+        let appConfig;
+        let finalStatus = 'success';
+        const layerGroup = L.layerGroup();
+        const referenceValues = {
+            salarioIngeniero: 30000,
+            salarioArtista: 8000
+        };
+
+        const getKmlDataValue = (placemark, name) => {
+            const dataElement = placemark.querySelector(`ExtendedData Data[name="${name}"]`);
+            if (dataElement) {
+                const valueElement = dataElement.querySelector('value');
+                return valueElement ? valueElement.textContent.trim() : '';
+            }
+            return '';
+        };
+
+        function parseKMLCoords(text) {
+            const parsed = text.trim().split(/\s+/)
+                .filter(c => c.includes(','))
+                .map(c => {
+                    const parts = c.split(',');
+                    const lng = parseFloat(parts[0]);
+                    const lat = parseFloat(parts[1]);
+                    return [lat, lng];
+                })
+                .filter(c => !isNaN(c[0]) && !isNaN(c[1]));
+            return parsed;
+        }
+
+        function addPolysFromDoc(doc) {
+            console.log("[Mapa] Procesando KML...");
+            const placemarks = doc.getElementsByTagNameNS('*', 'Placemark');
+            console.log(`[Mapa] Encontrados ${placemarks.length} Placemarks.`);
+
+            for (let i = 0; i < placemarks.length; i++) {
+                const placemark = placemarks[i];
+                try {
+                    const nameNode = placemark.getElementsByTagNameNS('*', 'name')[0] || placemark.getElementsByTagName('name')[0];
+                    const coordsNode = placemark.getElementsByTagNameNS('*', 'coordinates')[0] || placemark.getElementsByTagName('coordinates')[0];
+                    
+                    if (!nameNode || !coordsNode) continue; 
+
+                    const name = nameNode.textContent.trim();
+                    const description = getKmlDataValue(placemark, 'descripción');
+
+                    const coordsText = coordsNode.textContent.trim();
+                    const coords = parseKMLCoords(coordsText);
+
+                    if (coords.length > 0) {
+                        const polygon = L.polygon(coords, {
+                            color: '#C2185B',
+                            weight: 2,
+                            opacity: 0.8,
+                            fillColor: '#C2185B',
+                            fillOpacity: 0.4
+                        });
+
+                        const center = polygon.getBounds().getCenter();
+                        
+                        // Lógica de datos simulados (mock data)
+                        const salarioPromedio = 15000 + (Math.random() * 20000); 
+                        const isGentrificada = salarioPromedio > 25000;
+                        
+                        const coloniaData = {
+                            name,
+                            description,
+                            salarioPromedio,
+                            isGentrificada,
+                            plusvalia: isGentrificada ? '+15%' : '+5%',
+                            gentrificacionLevel: isGentrificada ? 'ALTO' : 'MEDIO'
+                        };
+
+                        polygon.on('click', () => showColoniaPopup(coloniaData, center));
+                        polygon.addTo(layerGroup);
+                    } 
+
+                } catch (e) {
+                    finalStatus = 'failure';
+                    console.error(`[Mapa] Error KML en Placemark ${i + 1}: ${e.message}`, placemark);
+                }
+            }
+
+            layerGroup.addTo(map);
+            console.log("[Mapa] Polígonos cargados.");
+
+            if (placemarks.length > 0) {
+                map.setView([19.389, -99.168], 13);
+            }
+        }
+
+        async function loadMap() {
+            console.log("[Mapa] Iniciando carga del mapa...");
+            
+            if (map && map.remove) {
+                map.remove();
+                map = null;
+            }
+
+            map = L.map('map', {
+                maxZoom: 18,
+                minZoom: 12
+            }).setView([19.389, -99.168], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            layerGroup.clearLayers();
+
+            try {
+                const kmlUrl = 'bj.kml';
+                const response = await fetch(kmlUrl);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const kmlText = await response.text();
+
+                const doc = new DOMParser().parseFromString(kmlText, 'text/xml');
+                
+                const errorNode = doc.querySelector('parsererror');
+                if (errorNode) throw new Error('KML malformado: ' + errorNode.textContent);
+
+                addPolysFromDoc(doc);
+
+                // OCULTAMOS EL PANEL DE INFORMACIÓN INICIAL DE INICIO
+                document.getElementById('info-panel').classList.add('hidden');
+
+            } catch (error) {
+                console.error("[Mapa] Error al cargar o procesar KML:", error);
+                finalStatus = 'failure';
+                
+                // SOLO MOSTRAMOS EL PANEL EN CASO DE ERROR
+                document.getElementById('info-title').textContent = "Error de Carga";
+                document.getElementById('info-message').textContent = `No se pudieron cargar los polígonos. Causa: ${error.message}`;
+                document.getElementById('info-panel').classList.remove('hidden');
+            }
+        }
+
+        function showColoniaPopup(data, center) {
+            const apiContext = JSON.parse(appConfig.appData).apiContext || { referenceValues: referenceValues };
+            
+            const badgeClass = data.isGentrificada ? 'alto' : 'medio';
+            const locationText = data.name + ' Benito Juárez CDMX';
+
+            const popupContent = `
+                <div class="p-2 text-sm max-w-xs">
+                    
+                    <h3 class="font-bold text-xl text-yellow-300 mb-2">${data.name}</h3>
+
+                    <h4 class="font-bold text-lg text-white mb-2 border-t border-gray-700 pt-2">Nivel de Presión Urbana</h4>
+                    
+                    <div class="flex justify-between space-x-2 text-xs mb-3">
+                        
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold text-gray-300 truncate">Nivel de Gentrificación</p>
+                            <p class="text-base font-bold mb-1">
+                                <span class="gentrificacion-badge ${badgeClass}">${data.gentrificacionLevel}</span>
+                            </p>
+                            <p class="text-xxs text-gray-400">Desplazamiento cultural y económico.</p>
+                        </div>
+
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold text-gray-300 truncate">Aumento de Plusvalía</p>
+                            <p class="text-base font-bold text-green-400 mb-1">${data.plusvalia}</p>
+                            <p class="text-xxs text-gray-400">Indica el incremento en el valor.</p>
+                        </div>
+                    </div>
+                    
+                    <h4 class="font-bold text-base text-white mt-3 mb-2 border-t border-gray-700 pt-2">Carga de la Renta (MXN)</h4>
+                    
+                    <div class="space-y-1 text-xs">
+                        <div class="flex justify-between">
+                            <span class="font-semibold">Renta Promedio (Real):</span>
+                            <span class="font-bold text-red-400">$${data.salarioPromedio.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-semibold">Ingreso (Artista) (Ref):</span>
+                            <span class="font-bold text-blue-400">$${apiContext.referenceValues.salarioArtista.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-semibold">Ingreso (Ingeniero) (Ref):</span>
+                            <span class="font-bold text-green-400">$${apiContext.referenceValues.salarioIngeniero.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
+                        </div>
+                    </div>
+                    
+                    <p class="text-xs mt-3 text-gray-400">Contraste de presión económica sobre perfiles.</p>
+                </div>
+            `;
+            L.popup({ closeButton: true, maxWidth: 350 }).setLatLng(center).setContent(popupContent).openOn(map);
+        }
+
+        // Listeners y Modo Prueba (Sin cambios)
+        window.addEventListener('message', (event) => {
+            if (event.data.source !== 'FlujoNarrativoUsuario') return;
+            appConfig = event.data;
+            document.getElementById('close-button').textContent = JSON.parse(appConfig.appData).buttonText || 'Entendido';
+            loadMap();
+        });
+
+        document.getElementById('close-button').addEventListener('click', () => {
+            document.getElementById('info-panel').classList.add('hidden');
+            sendResult(finalStatus);
+        });
+
+        if (window.parent === window) {
+            const mockConfig = {
+                source: 'FlujoNarrativoUsuario',
+                appData: '{"title":"Mapa Interactivo","message":"Click en una colonia para datos.","buttonText":"Entendido","apiContext":{"referenceValues":{"salarioIngeniero":30000,"salarioArtista":8000}}}'
+            };
+            appConfig = mockConfig;
+            document.getElementById('close-button').textContent = JSON.parse(appConfig.appData).buttonText || 'Entendido';
+            loadMap();
+        }
+
+        function sendResult(status) {
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    source: 'MapaInteractivoBenitoJuarez',
+                    status: status,
+                }, '*');
+            }
+        }
+    </script>
+</body>
+</html>

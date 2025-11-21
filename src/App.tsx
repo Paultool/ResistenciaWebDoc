@@ -146,7 +146,7 @@ const MainContent: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);  
   
   // 🔑 ACTUALIZACIÓN: Se agrega 'wip' al tipo de vista
-  type View = 'dashboard' | 'historias' | 'personajes' | 'mapa' | 'inventario' | 'admin' | 'intro' | 'story-selection' | 'narrative-flow' | 'profile' | 'cine' | 'wip';
+  type View = 'dashboard' | 'historias' | 'personajes' | 'mapa' | 'inventario' | 'admin' | 'intro' | 'story-selection' | 'narrative-flow' | 'profile' |  'wip';
   const [currentView, setCurrentView] = useState<View>('dashboard');
   
   const [historias, setHistorias] = useState<Historia[]>([]);
@@ -171,10 +171,24 @@ const MainContent: React.FC = () => {
   // Estado para controlar el menú hamburguesa en móvil
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // FUNCIÓN: Maneja el inicio del flujo narrativo desde una historia específica
   const handleStartNarrative = (historia: Historia) => {
     setFlujoNarrativoHistoriaId(historia.id); 
-    setCurrentView('cine'); 
+    setCurrentView('historias'); 
   };
+
+  // NUEVA FUNCIÓN: Maneja el inicio del flujo narrativo desde el mapa
+  const handleStartNarrativeFromMap = (historiaId: number) => {
+    console.log("🗺️ Mapa solicitó ir a historia:", historiaId);
+    
+    // Configuramos el ID de la historia para el flujo narrativo
+    setFlujoNarrativoHistoriaId(historiaId);
+    
+    // Cambiamos la vista actual a 'historias'
+    // Esto desmontará MapaViewS y montará FlujoNarrativoUsuario
+    setCurrentView('historias');
+  };
+
 
   useEffect(() => {
     const inicializar = async () => {
@@ -259,7 +273,6 @@ const MainContent: React.FC = () => {
       .from('perfiles_jugador')
       .update({ 
         xp_total: userProfile.xp_total + totalXP,
-        ubicaciones_visitadas: Array.from(updatedUbicaciones),
         fecha_ultimo_acceso: new Date().toISOString()
       })
       .eq('user_id', userProfile.user_id)
@@ -318,7 +331,7 @@ const MainContent: React.FC = () => {
 
   const renderCurrentView = () => {
     
-      if (currentView === 'cine') {
+      if (currentView === 'historias') {
         if (flujoNarrativoHistoriaId) {
           return (
             <FlujoNarrativoUsuario
@@ -345,52 +358,20 @@ const MainContent: React.FC = () => {
         case 'dashboard':
           return <UserDashboard onNavigate={handleNavigateFromDashboard} />;
         
-        case 'historias':
-          return (
-            <div className="historias-view">
-              <div className="view-header">
-                <button onClick={handleBackToDashboard} className="back-btn">← Volver al Dashboard</button>
-                <h2>📚 Historias Disponibles</h2>
-                <p>Explora las narrativas urbanas de La Resistencia</p>
-              </div>
-              
-              {loading && (<div className="loading"><p>⏳ Cargando historias...</p></div>)}
-
-              {error && (
-                <div className="error">
-                  <p>❌ {error}</p>
-                  <button onClick={cargarHistorias} className="retry-btn">🔄 Reintentar</button>
-                </div>
-              )}
-
-              {!loading && !error && (
-                <>
-                  <div className="historias-stats">
-                    <span className="stat">📊 Total: {historias.length} historias</span>
-                    <span className="stat">⭐ Principales: {historias.filter(h => h.es_historia_principal).length}</span>
-                    <span className="stat">📖 Secundarias: {historias.filter(h => !h.es_historia_principal).length}</span>
-                  </div>
-
-                  {historias.length === 0 ? (
-                    <p className="no-data">No hay historias disponibles</p>
-                  ) : (
-                    <div className="historias-grid">
-                      {historias.map((historia) => (
-                        <HistoriaCard key={historia.id} historia={historia} onViewDetail={handleViewDetail}/>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          );
-        
+                
         case 'personajes':
           return <PersonajesView onBack={handleBackToDashboard} />;
         
         case 'mapa':
-          return <MapaView onBack={handleBackToDashboard} historias={historias} onViewDetail={handleViewDetail} />;
-        
+          return (
+            <MapaView 
+                historias={historias} 
+                // Pasamos las historias visitadas (asegúrate que userProfile tenga esto, o usa un array vacío temporalmente)
+                historiasVisitadas={userProfile?.historias_visitadas || []}
+                // ¡AQUÍ ESTÁ LA CLAVE! Pasamos la función que acabamos de crear
+                onStartNarrativeFromMap={handleStartNarrativeFromMap} 
+            />
+          );
         case 'inventario':
           return <InventarioView onBack={handleBackToDashboard} />;
         
@@ -433,14 +414,14 @@ const MainContent: React.FC = () => {
                   onClick={handleToggleNavBar}
                   title="Ocultar Menú Superior"
               >
-                  <i className="fas fa-chevron-up">OCULTAR</i>
+                  <i className="fas fa-chevron-up"></i>
               </button>
               <button className={`nav-link-btn ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => handleNavClick('dashboard')}>Dashboard</button>
-              <button className={`nav-link-btn ${currentView === 'cine' ? 'active' : ''}`} onClick={() => handleNavClick('cine')}>Cine</button>
               <button className={`nav-link-btn ${currentView === 'historias' ? 'active' : ''}`} onClick={() => handleNavClick('historias')}>Historias</button>
-              <button className={`nav-link-btn ${currentView === 'personajes' ? 'active' : ''}`} onClick={() => handleNavClick('personajes')}>Personajes</button>
               <button className={`nav-link-btn ${currentView === 'mapa' ? 'active' : ''}`} onClick={() => handleNavClick('mapa')}>Mapa</button>
               <button className={`nav-link-btn ${currentView === 'inventario' ? 'active' : ''}`} onClick={() => handleNavClick('inventario')}>Inventario</button>
+              <button className={`nav-link-btn ${currentView === 'personajes' ? 'active' : ''}`} onClick={() => handleNavClick('personajes')}>Personajes</button>
+            
               
               {/* 🔑 NUEVO: Botón WIP */}
               <button className={`nav-link-btn ${currentView === 'wip' ? 'active' : ''}`} onClick={() => handleNavClick('wip')}>WIP</button>
@@ -486,24 +467,23 @@ const MainContent: React.FC = () => {
 // --- NUEVOS COMPONENTES PARA EL LANDING PAGE ---
 // ==========================================================
 
-// --- Modal de Login ---
+// ==========================================================
+// --- Modal de Login (VERSIÓN CINEMATOGRÁFICA) ---
+// ==========================================================
 interface LoginModalProps {
   onClose: () => void;
-  // Propagación de Fullscreen
   onRequestFullscreen: () => void; 
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ onClose, onRequestFullscreen }) => {
+    // 🚨 CAMBIO RADICAL: Eliminamos "info-modal-overlay", "info-modal-content", 
+    // títulos duplicados y botones externos.
+    // Ahora AuthForm toma el control total de la pantalla.
     return (
-        <div className="info-modal-overlay" onClick={onClose}>
-            <div className="info-modal-content login-modal-override" onClick={(e) => e.stopPropagation()}>
-                <button onClick={onClose} className="info-modal-close-btn">&times;</button>
-                <h2 className="info-modal-title">ACCESO</h2> 
-                <p className="login-modal-subtitle">Únete a La Resistencia</p>
-                {/* Pasar la función al AuthForm */}
-                <AuthForm onRequestFullscreen={onRequestFullscreen} />
-            </div>
-        </div>
+        <AuthForm 
+            onRequestFullscreen={onRequestFullscreen} 
+            onClose={onClose} // Pasamos el control de cierre al formulario
+        />
     );
 };
 
@@ -685,7 +665,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
   
   const videoRef = useRef<HTMLVideoElement>(null);
   
-  const videoSrc = "https://ia800103.us.archive.org/12/items/intro_resistencia/intro%20resistencia%20.mp4"; 
+  const videoSrc = "https://ia600103.us.archive.org/12/items/intro_resistencia/intro%20resistencia%20sub%20sp.mp4"; 
 
   const handleVideoEnd = () => {
     setShowContent(true);
@@ -754,23 +734,36 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
       </video>
       <div className="landing-overlay"></div>
       
-      {/* Botón de control de audio y Fullscreen */}
+     {/* Botón de inicialización */}
       {isMuted && !showContent && (
         <button className="unmute-button" onClick={handleUnmuteClick}>
-            <i className="fas fa-volume-up"></i> Activar Audio y Pantalla Completa
+           &gt; INICIALIZAR SISTEMA _
         </button>
       )}
 
       {/* El contenido final aparece con la transición al terminar el video */}
-      <main className={`landing-content ${showContent ? 'show' : 'hide'}`}> 
-        <h1 className="landing-title">LA RESISTENCIA</h1>
-        <p className="landing-subtitle">
-          Narrativa urbana interactiva sobre la resistencia social en Ciudad de México
+       <main className={`landing-content ${showContent ? 'show' : 'hide'}`}> 
+        
+        {/* TÍTULO GLITCH */}
+        <h1 
+            className="landing-glitch-title" 
+            data-text="LA RESISTENCIA"
+        >
+            LA RESISTENCIA
+        </h1>
+        
+        {/* SUBTÍTULO TÉCNICO */}
+        <p className="landing-tech-subtitle">
+          SYSTEM_READY :: PROTOCOL_CDMX_V2.4
         </p>
-        <button onClick={handleResisteClick} className="btn btn-primary landing-button">
-          RESISTE
+        
+        {/* BOTÓN HACKER */}
+        <button onClick={handleResisteClick} className="landing-glitch-btn">
+          [ INGRESAR ]
         </button>
+
       </main>
+
 
       {/* RENDERIZADO CONDICIONAL: Solo mostrar si showBottomBar es true */}
       {showBottomBar && (
@@ -789,24 +782,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
       )}
 
 
-      {/* Modales */}
+      {/* Modales (Info y Login) */}
       {infoModalContentKey && (
         <InfoModal
           contentKey={infoModalContentKey}
           onClose={() => setInfoModalContentKey(null)}
-          onOpenVideoModal={handleOpenVideoModal} // 🔑 Pasamos el handler
+          onOpenVideoModal={handleOpenVideoModal}
         />
       )}
       
       {isLoginModalOpen && (
         <LoginModal
           onClose={() => setIsLoginModalOpen(false)}
-          // Pasamos la función al LoginModal
           onRequestFullscreen={onRequestFullscreen} 
         />
       )}
       
-      {/* 🔑 NUEVO: Renderizado del modal de video en la Landing Page */}
       {videoModalData && (
           <YouTubeVideoModal 
               videoId={videoModalData.videoId} 
@@ -814,6 +805,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
               onClose={() => setVideoModalData(null)} 
           />
       )}
+
 
     </div>
   );
@@ -872,6 +864,13 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="App" ref={appRef}> {/* ASIGNAMOS LA REFERENCIA AL CONTENEDOR APP */}
+
+      {/* 👇VIDEO DE TEXTURA 👇 */}
+      <video className="glitch-overlay" autoPlay muted loop playsInline>
+          <source src="https://nz71ioy1keimlqqc.public.blob.vercel-storage.com/Fondo.webm" type="video/webm" />
+      </video>
+      {/* 👆 FIN DEL VIDEO DE TEXTURA 👆 */}
+
       {user ? (
         // --- VISTA AUTENTICADA ---\
         <MainContent />

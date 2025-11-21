@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Observatorio de la Ciudad</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body, html {
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+            background-color: #1a202c; /* Fondo oscuro */
+            color: #e2e8f0; /* Texto claro */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: auto;
+        }
+        #app-container {
+            width: 95%;
+            max-width: 700px;
+            background-color: #2d3748;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        .data-card {
+            background-color: #1f2937;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            text-align: left;
+        }
+        /* Estilo para la barra de gráfica */
+        .bar-container {
+            height: 1.5rem;
+            border-radius: 0.25rem;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container" class="space-y-6">
+        <h1 id="title" class="text-3xl font-extrabold text-purple-400">Cargando Observatorio...</h1>
+        <p id="message" class="text-gray-400">Esperando datos de gentrificación en tiempo real...</p>
+        
+        <div id="loading" class="text-center py-8">
+            <svg class="animate-spin h-8 w-8 text-purple-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="mt-2 text-purple-400">Analizando datos vía IA...</p>
+        </div>
+
+        <div id="data-display" class="space-y-4 hidden">
+            <div id="censo-card" class="data-card">
+                <h3 class="text-xl font-semibold mb-2 text-yellow-300">Nivel de Presión Urbana</h3>
+                <p id="censo-titulo" class="text-gray-300"></p>
+                <p id="censo-valor" class="text-4xl font-bold mt-2 text-yellow-500"></p>
+                <p class="text-sm mt-1 text-gray-400">Mide la intensidad del desplazamiento cultural y económico.</p>
+            </div>
+
+            <div id="mapa-card" class="data-card">
+                <h3 class="text-xl font-semibold mb-2 text-teal-300">Aumento de Plusvalía</h3>
+                <p id="mapa-titulo" class="text-gray-300"></p>
+                <p id="mapa-valor" class="text-4xl font-bold mt-2 text-teal-500"></p>
+                <p class="text-sm mt-1 text-gray-400">Indica el incremento en el valor de la propiedad, impulsando las rentas.</p>
+            </div>
+
+            <div id="grafica-card" class="data-card">
+                <h3 class="text-xl font-semibold mb-3 text-red-300">Carga de la Renta Mensual (MXN)</h3>
+                
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span id="label-renta" class="font-bold text-red-400">Renta (IA): </span>
+                        <span id="valor-renta" class="font-bold text-red-400">$0</span>
+                    </div>
+                    <div class="bar-container bg-red-800">
+                        <div id="bar-renta" class="bg-red-500 h-full" style="width: 0%;"></div>
+                    </div>
+                    
+                    <div class="flex justify-between text-sm pt-2">
+                        <span id="label-artista" class="text-gray-300">Salario Artista: </span>
+                        <span id="valor-artista" class="text-gray-300">$0</span>
+                    </div>
+                    <div class="bar-container bg-gray-700">
+                        <div id="bar-artista" class="bg-blue-500 h-full" style="width: 0%;"></div>
+                    </div>
+
+                    <div class="flex justify-between text-sm pt-2">
+                        <span id="label-ingeniero" class="text-gray-300">Salario Ingeniero: </span>
+                        <span id="valor-ingeniero" class="text-gray-300">$0</span>
+                    </div>
+                    <div class="bar-container bg-gray-700">
+                        <div id="bar-ingeniero" class="bg-green-500 h-full" style="width: 0%;"></div>
+                    </div>
+                </div>
+                <p class="text-sm mt-3 text-gray-400">El contraste ilustra la presión económica sobre distintos perfiles.</p>
+            </div>
+        </div>
+
+        <button id="close-button" class="mt-8 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 hidden">
+            Entendido
+        </button>
+    </div>
+
+    <script>
+        let appConfig = null;
+        let finalStatus = 'success';
+        
+        // 🔑 REEMPLAZA ESTO: URL de tu Edge Function de Supabase
+        const BASE_API_URL = 'https://atogaijnlssrgkvilsyp.supabase.co/functions/v1/datos-ciudad'; 
+
+        // Función de utilidad para enviar el resultado de vuelta a la aplicación principal (FlujoNarrativoUsuario.tsx)
+        function sendResult(status) {
+            if (appConfig && window.parent) {
+                const result = {
+                    source: 'ObservatorioApp',
+                    type: 'app-result',
+                    status: status,
+                    costoXP: status === 'success' ? appConfig.costoExito : 0, // En este caso, siempre costará algo asimilar los datos
+                    message: status === 'success' ? appConfig.successMessage : 'Fallo al obtener datos.',
+                    successRecompensaId: appConfig.successRecompensaId,
+                    failureRecompensaId: appConfig.failureRecompensaId,
+                };
+                window.parent.postMessage(result, '*');
+            }
+        }
+
+        // -----------------------------------------------------------
+        // 1. Lógica de Fetch de Datos desde la Edge Function de Gemini
+        // -----------------------------------------------------------
+        async function fetchData(apiContext) {
+            console.log('[Observatorio] Buscando datos con contexto:', apiContext);
+
+            const contextString = encodeURIComponent(JSON.stringify(apiContext));
+            const API_ENDPOINT = `${BASE_API_URL}?context=${contextString}`;
+
+            try {
+                const response = await fetch(API_ENDPOINT);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('[Observatorio] Error al buscar datos:', error);
+                // Si falla la API, forzamos un error de juego si es necesario, aunque en este caso queremos mostrar el fallo de datos
+                throw new Error("Fallo de conexión a la fuente de datos.");
+            }
+        }
+
+        // -----------------------------------------------------------
+        // 2. Lógica de Renderizado
+        // -----------------------------------------------------------
+        function renderData(data, referenceValues) {
+            const display = document.getElementById('data-display');
+            const loading = document.getElementById('loading');
+            const button = document.getElementById('close-button');
+            
+            // Ocultar carga, mostrar datos y botón
+            loading.classList.add('hidden');
+            display.classList.remove('hidden');
+            button.classList.remove('hidden');
+
+            // A. Render Censo (Gentrificación)
+            document.getElementById('censo-titulo').innerText = data.censoData.titulo;
+            document.getElementById('censo-valor').innerText = data.censoData.valor.toUpperCase();
+
+            // B. Render Mapa (Plusvalía)
+            document.getElementById('mapa-titulo').innerText = data.mapaData.titulo;
+            document.getElementById('mapa-valor').innerText = data.mapaData.valor;
+            
+            // C. Render Gráfica (Renta vs. Salarios)
+            const renta = data.graficaData.renta;
+            const artista = data.graficaData.artista;
+            const ingeniero = data.graficaData.ingeniero;
+            
+            // Usamos el valor más alto (ingeniero o renta) como el 100% de la barra de referencia
+            const maxRef = Math.max(renta, artista, ingeniero, 10000); // Mínimo para que las barras no sean infinitas
+            
+            document.getElementById('valor-renta').innerText = `$${renta.toLocaleString('es-MX')}`;
+            document.getElementById('label-renta').innerText = `${data.graficaData.labelRenta}:`;
+            
+            document.getElementById('valor-artista').innerText = `$${artista.toLocaleString('es-MX')}`;
+            document.getElementById('label-artista').innerText = `${data.graficaData.labelArtista} (Ref):`;
+
+            document.getElementById('valor-ingeniero').innerText = `$${ingeniero.toLocaleString('es-MX')}`;
+            document.getElementById('label-ingeniero').innerText = `${data.graficaData.labelIngeniero} (Ref):`;
+
+            // Calcular porcentajes de ancho
+            const percentRenta = (renta / maxRef) * 100;
+            const percentArtista = (artista / maxRef) * 100;
+            const percentIngeniero = (ingeniero / maxRef) * 100;
+
+            document.getElementById('bar-renta').style.width = `${Math.min(100, percentRenta)}%`;
+            document.getElementById('bar-artista').style.width = `${Math.min(100, percentArtista)}%`;
+            document.getElementById('bar-ingeniero').style.width = `${Math.min(100, percentIngeniero)}%`;
+            
+            // Lógica para determinar el éxito o el fracaso de la misión (opcional)
+            // Se asume que el simple hecho de acceder a los datos es el éxito
+            finalStatus = 'success';
+        }
+
+        // -----------------------------------------------------------
+        // 3. Listener y Eventos
+        // -----------------------------------------------------------
+
+        // Listener para recibir la configuración de la aplicación desde el padre (FlujoNarrativoUsuario.tsx)
+        window.addEventListener('message', async (event) => {
+            if (event.data.source !== 'FlujoNarrativoUsuario') return;
+            
+            appConfig = event.data;
+            const appData = JSON.parse(appConfig.appData);
+            
+            document.getElementById('title').innerText = appData.title;
+            document.getElementById('message').innerText = appData.message;
+            document.getElementById('close-button').innerText = appData.buttonText;
+            
+            try {
+                // Inicia la carga de datos
+                const data = await fetchData(appData.apiContext);
+                renderData(data, appData.apiContext.referenceValues);
+            } catch (error) {
+                // Manejo de error de API/Fetch
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('message').innerText = "ERROR DE CONEXIÓN: No se pudieron obtener los datos de la ciudad. Revisar URL de la Edge Function.";
+                document.getElementById('close-button').classList.remove('hidden');
+                document.getElementById('title').innerText = "Fallo del Observatorio";
+                finalStatus = 'failure';
+                
+                // Muestra el error para debugging
+                console.error("Error grave en la app:", error);
+            }
+        });
+        
+        // Listener para enviar el resultado del juego al hacer clic en el botón
+        document.getElementById('close-button').addEventListener('click', () => {
+            sendResult(finalStatus);
+        });
+
+        // Simulación de 'load' para entornos de prueba
+        if (window.parent === window) {
+             console.log("Corriendo en modo de prueba. Asegúrate de configurar la URL BASE_API_URL.");
+             // Simulación de la configuración que viene del padre
+             const mockConfig = {
+                source: 'FlujoNarrativoUsuario',
+                appData: '{"title":"Observatorio de la Ciudad","message":"Datos de gentrificación obtenidos en tiempo real.","buttonText":"Entendido","costoExito":50,"successTitle":"Datos Asimilados","successMessage":"Entiendes mejor la presión de la ciudad.","apiContext":{"location":"Narvarte CDMX","topics":["renta promedio","aumento plusvalia","gentrificacion"],"referenceValues":{"salarioIngeniero":30000,"salarioArtista":8000}}}',
+                playerStats: {},
+                costoExito: 50
+             };
+             window.postMessage(mockConfig, '*');
+        }
+    </script>
+</body>
+</html>

@@ -28,12 +28,6 @@ const Navbar: React.FC<NavbarProps> = ({ currentView, isAdmin, userEmail, onNavi
           <span>📚 Historias</span>
         </button>
         <button
-          className={`nav-link-btn ${currentView === 'personajes' ? 'active' : ''}`}
-          onClick={() => onNavigate('personajes')}
-        >
-          <span>🎭 Personajes</span>
-        </button>
-        <button
           className={`nav-link-btn ${currentView === 'mapa' ? 'active' : ''}`}
           onClick={() => onNavigate('mapa')}
         >
@@ -45,6 +39,14 @@ const Navbar: React.FC<NavbarProps> = ({ currentView, isAdmin, userEmail, onNavi
         >
           <span>🎒 Inventario</span>
         </button>
+        <button
+          className={`nav-link-btn ${currentView === 'personajes' ? 'active' : ''}`}
+          onClick={() => onNavigate('personajes')}
+        >
+          <span>🎭 Personajes</span>
+        </button>
+        
+        
         {isAdmin && (
           <button
             className={`nav-link-btn ${currentView === 'admin' ? 'active' : ''}`}

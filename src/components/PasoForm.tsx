@@ -113,6 +113,7 @@ const PasoForm: React.FC<PasoFormProps> = ({
             >
               <option value="narrativo">Narrativo</option>
               <option value="pregunta">Pregunta (con opciones)</option>
+              <option value="app">APP</option>
               <option value="final">Final</option>
             </select>
           </div>
@@ -225,7 +226,7 @@ const PasoForm: React.FC<PasoFormProps> = ({
             </div>
           )}
 
-          {formData.tipo_paso === 'pregunta' && (
+          {(formData.tipo_paso === 'pregunta' || formData.tipo_paso === 'app') && (
             <div className="options-section">
               <h4>Opciones Siguientes</h4>
               {(formData.metadata?.opciones_siguientes_json ?? []).map((opcion: OpcionSiguiente, index: number) => (

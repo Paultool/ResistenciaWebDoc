@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { gameService } from '../services/GameService'
+import { gameServiceUser as gameService } from '../services/GameServiceUser'
 import './GameStats.css'
 
 interface GameStatsProps {
@@ -30,16 +30,16 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
     if (user?.id) {
       cargarEstadisticas()
     }
-    
+
     // Escuchar eventos de actualización de estadísticas
     const handleStatsUpdate = () => {
       if (user?.id) {
         setTimeout(() => cargarEstadisticas(), 500) // Pequeño delay para que se actualice la BD
       }
     }
-    
+
     window.addEventListener('statsUpdated', handleStatsUpdate)
-    
+
     return () => {
       window.removeEventListener('statsUpdated', handleStatsUpdate)
     }
@@ -51,9 +51,9 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
     try {
       setLoading(true)
       setError(null)
-      
+
       const dashboardStats = await gameService.getDashboardStats(user.id)
-      
+
       if (dashboardStats) {
         setStats(dashboardStats)
       } else {
@@ -73,7 +73,7 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
     const xpNivelSiguiente = Math.pow(stats.nivel, 2) * 100
     const xpEnNivelActual = stats.xpTotal - xpNivelActual
     const xpNecesarioNivel = xpNivelSiguiente - xpNivelActual
-    
+
     return Math.min(100, Math.max(0, (xpEnNivelActual / xpNecesarioNivel) * 100))
   }
 
@@ -134,7 +134,7 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
 
         <div className="xp-progress-container">
           <div className="progress-bar">
-            <div 
+            <div
               className="progress-fill"
               style={{ width: `${progressPercentage}%` }}
             ></div>
@@ -169,7 +169,7 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
               <div className="stat-icon">📍</div>
               <div className="stat-content">
                 <div className="stat-number">{stats.ubicacionesVisitadas}</div>
-                <div className="stat-label">Lugares</div>
+                <div className="stat-label">Ubicaciones</div>
               </div>
             </div>
 

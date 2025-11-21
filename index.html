@@ -1,13 +1,46 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>La Resistencia | WebDoc Narrativo</title>
+
+  <!-- === CÓDIGO DE GOOGLE ANALYTICS (GA4) === -->
+  <!-- 🟢 ID DE MEDICIÓN CONFIRMADO: G-0WQQDFX022 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-0WQQDFX022"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    // CONFIGURA TU ID AQUÍ
+    gtag('config', 'G-0WQQDFX022'); 
+  </script>
+  <!-- ======================================= -->
 </head>
 
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <!-- Contenido de carga inicial mientras React arranca -->
+    <style>
+        .initial-loading {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #282c34;
+            color: white;
+            font-size: 1.5rem;
+        }
+    </style>
+    <div class="initial-loading">
+        <h1>Cargando La Resistencia...</h1>
+        <p>Iniciando experiencia interactiva.</p>
+    </div>
+  </div>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 

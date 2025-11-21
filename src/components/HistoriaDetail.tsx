@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+﻿import React, { useState, useEffect } from 'react'
 import {
   supabase,
   Historia,
@@ -7,7 +7,7 @@ import {
   obtenerPersonajesPorHistoriaId,
   obtenerMultimediaPorIds
 } from '../supabaseClient'
-import { gameService } from '../services/GameService'
+import { gameServiceUser as gameService } from '../services/GameServiceUser'
 import { useAuth } from '../contexts/AuthContext'
 import './HistoriaDetail.css'
 
@@ -22,8 +22,8 @@ interface Personaje {
   id_personaje: number;
   nombre: string;
   imagen: string | null;
-  rol?: string; 
-  descripcion?: string; 
+  rol?: string;
+  descripcion?: string;
 }
 
 interface RecursoMultimedia {
@@ -32,7 +32,7 @@ interface RecursoMultimedia {
   archivo: string;
   metadatos: string | null;
   descripcion: string;
-  titulo?: string; 
+  titulo?: string;
 }
 
 interface HistoriaCompleta extends Historia {
@@ -43,7 +43,6 @@ interface HistoriaCompleta extends Historia {
 
 const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, onStartNarrative }) => {
   const { user } = useAuth()
-  // Aseguramos que multimedia y personajes inicien como array para evitar el error 'length'
   const [historia, setHistoria] = useState<HistoriaCompleta | null>(null)
   const [personajes, setPersonajes] = useState<Personaje[]>([]);
   const [multimedia, setMultimedia] = useState<RecursoMultimedia[]>([]);
@@ -54,6 +53,8 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
   const [canAccess, setCanAccess] = useState(true)
   const [isCompleting, setIsCompleting] = useState(false)
   const [hasStarted, setHasStarted] = useState(false)
+  const [isFavorited, setIsFavorited] = useState(false)
+  const [isFavoritingLoading, setIsFavoritingLoading] = useState(false)
 
   useEffect(() => {
     const fetchHistoriaData = async () => {
@@ -65,7 +66,6 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
 
         const flujoData = await obtenerFlujoNarrativoDeHistoria(historiaId);
 
-        // Obtener IDs de personajes y multimedia únicos
         const personajeIds = Array.from(new Set(
           flujoData
             .map(paso => paso.id_personaje)
@@ -78,27 +78,26 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
             .filter(id => id !== null) as number[]
         ));
 
-        // Cargar datos por separado
         const [personajesData, multimediaData] = await Promise.all([
           obtenerPersonajesPorHistoriaId(historiaId),
           obtenerMultimediaPorIds(multimediaIds)
         ]);
 
-        // Nos aseguramos de que siempre sean arrays (incluso si la API devuelve null o undefined)
         setPersonajes(personajesData || []);
         setMultimedia(multimediaData || []);
-        
-        // Cargar estadísticas del jugador
+
         if (user?.id) {
           const stats = await gameService.getPlayerStats(user.id);
           setPlayerStats(stats);
           const nivelRequerido = historiaData?.nivel_acceso_requerido || 1;
           setCanAccess(stats?.nivel >= nivelRequerido);
+
+          const historiaIdStr = String(historiaId);
+          setIsFavorited(stats?.historias_favoritas?.includes(historiaIdStr) || false);
         }
 
       } catch (err: any) {
-        // En caso de error, aseguramos que multimedia sea un array vacío
-        setMultimedia([]); 
+        setMultimedia([]);
         setError('Error al cargar los detalles de la historia: ' + err.message);
       } finally {
         setLoading(false);
@@ -109,10 +108,10 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
 
   const handleComenzarHistoria = async () => {
     if (!user?.id || !historia || isCompleting) return
-    
+
     try {
       setIsCompleting(true)
-      
+
       if (!canAccess) {
         alert(`🔒 Necesitas alcanzar el nivel ${historia.nivel_acceso_requerido} para acceder a esta historia.`)
         return
@@ -120,7 +119,7 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
 
       setHasStarted(true)
       onStartNarrative(historia);
-      
+
     } catch (error: any) {
       console.error('Error comenzando historia:', error)
       alert('❌ Error al comenzar la historia. Inténtalo de nuevo.')
@@ -129,9 +128,36 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
     }
   }
 
+  const handleToggleFavorite = async () => {
+    if (!user?.id || isFavoritingLoading) return
+
+    try {
+      setIsFavoritingLoading(true)
+      const historiaIdStr = String(historiaId)
+
+      let success = false
+      if (isFavorited) {
+        success = await gameService.removeFromFavorites(user.id, historiaIdStr)
+      } else {
+        success = await gameService.addToFavorites(user.id, historiaIdStr)
+      }
+
+      if (success) {
+        setIsFavorited(!isFavorited)
+      } else {
+        alert('❌ Error al actualizar favoritos. Inténtalo de nuevo.')
+      }
+    } catch (error: any) {
+      console.error('Error toggling favorite:', error)
+      alert('❌ Error al actualizar favoritos. Inténtalo de nuevo.')
+    } finally {
+      setIsFavoritingLoading(false)
+    }
+  }
+
   const renderRecurso = (recurso: RecursoMultimedia) => {
     if (!recurso || !recurso.archivo) return null;
-    
+
     const getYouTubeId = (url: string) => {
       const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
       const match = url.match(regex);
@@ -139,7 +165,7 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
     };
 
     const youtubeId = getYouTubeId(recurso.archivo);
-    
+
     if (youtubeId) {
       const embedUrl = `https://www.youtube.com/embed/${youtubeId}`;
       return (
@@ -148,22 +174,22 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
           title={recurso.descripcion || "Video de YouTube"}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
-          className="multimedia-media" 
+          className="hd-media-content"
         ></iframe>
       );
     }
-    
+
     const url = recurso.archivo.startsWith('http')
       ? recurso.archivo
       : `${supabase.storage.from('assets-juego').getPublicUrl(recurso.archivo).data.publicUrl}`;
-    
+
     switch (recurso.tipo) {
       case 'imagen':
-        return <img src={url} alt={recurso.descripcion || "Imagen del recurso"} className="multimedia-media" />;
+        return <img src={url} alt={recurso.descripcion || "Imagen del recurso"} className="hd-media-content" />;
       case 'video':
-        return <video src={url} controls className="multimedia-media" />;
+        return <video src={url} controls className="hd-media-content" />;
       case 'audio':
-        return <audio src={url} controls className="multimedia-audio" />;
+        return <audio src={url} controls className="hd-media-content" />;
       default:
         return <span className="unsupported-media">Archivo: {recurso.archivo}</span>;
     }
@@ -171,8 +197,8 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
 
   if (loading) {
     return (
-      <div className="historia-detail-overlay loading-detail">
-        <div className="historia-detail-modal">
+      <div className="hd-overlay">
+        <div className="hd-modal">
           <p>⏳ Cargando...</p>
         </div>
       </div>
@@ -181,10 +207,10 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
 
   if (error || !historia) {
     return (
-      <div className="historia-detail-overlay error-detail">
-        <div className="historia-detail-modal">
+      <div className="hd-overlay">
+        <div className="hd-modal">
           <p className="error-message">❌ {error || 'No se encontró la historia.'}</p>
-          <button onClick={onClose} className="btn-secondary mt-3">
+          <button onClick={onClose} className="hd-btn hd-btn-sec">
             Cerrar
           </button>
         </div>
@@ -193,63 +219,56 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
   }
 
   return (
-    <div className="historia-detail-overlay"> 
-      <div className="historia-detail-modal">
-        <div className="modal-header">
-          <button onClick={onClose} className="btn-close">×</button> 
-          <h2>{historia.titulo}</h2>
-          <div className="historia-meta">
-            <span className={`badge ${historia.es_historia_principal ? 'principal' : 'secundaria'}`}>
+    <div className="hd-overlay">
+      <div className="hd-modal">
+        <div className="hd-header">
+          <div className="hd-header-top">
+            <h2 className="hd-title">{historia.titulo}</h2>
+            <button onClick={onClose} className="hd-btn-close">×</button>
+          </div>
+          <div className="hd-meta">
+            <span className={`hd-badge ${historia.es_historia_principal ? 'hd-badge-main' : 'hd-badge-sec'}`}>
               {historia.es_historia_principal ? '⭐ Principal' : '📖 Secundaria'}
             </span>
-            <span className="level-badge">
+            <span className="hd-badge hd-badge-lvl">
               🔒 Nivel {historia.nivel_acceso_requerido}
             </span>
-            <span className="date-badge">
+            <span className="hd-badge hd-badge-date">
               📅 {new Date(historia.fecha_creacion).toLocaleDateString('es-MX')}
             </span>
           </div>
         </div>
 
-        <div className="modal-tabs">
+        <div className="hd-tabs">
           <button
-            className={`tab ${activeTab === 'contenido' ? 'active' : ''}`}
+            className={`hd-tab ${activeTab === 'contenido' ? 'active' : ''}`}
             onClick={() => setActiveTab('contenido')}
           >
             📜 Contenido
           </button>
           <button
-            className={`tab ${activeTab === 'personajes' ? 'active' : ''}`}
+            className={`hd-tab ${activeTab === 'personajes' ? 'active' : ''}`}
             onClick={() => setActiveTab('personajes')}
           >
             🎭 Personajes ({personajes?.length || 0})
           </button>
           <button
-            className={`tab ${activeTab === 'multimedia' ? 'active' : ''}`}
+            className={`hd-tab ${activeTab === 'multimedia' ? 'active' : ''}`}
             onClick={() => setActiveTab('multimedia')}
           >
             🎥 Multimedia ({multimedia?.length || 0})
           </button>
         </div>
 
-        <div className="modal-content content-tab"> 
+        <div className="hd-content">
           {activeTab === 'contenido' && (
-            <div className="tab-panel">
-              <div className="historia-description">
-                <h3>📝 Descripción</h3>
-                <p>{historia.narrativa}</p>
-              </div>
+            <div>
+              <h3 className="hd-section-title">📝 Descripción</h3>
+              <p className="hd-description">{historia.narrativa}</p>
 
-              {historia.metadata && (
-                <div className="historia-metadata">
-                  <h3>🔍 Detalles Adicionales</h3>
-                  <pre>{JSON.stringify(historia.metadata, null, 2)}</pre>
-                </div>
-              )}
-              
-              <div className="historia-actions">
+              <div className="hd-actions">
                 <button
-                  className={`btn ${canAccess ? 'btn-primary' : 'btn-disabled'}`}
+                  className={`hd-btn ${canAccess ? 'hd-btn-primary' : 'hd-btn-disabled'}`}
                   onClick={handleComenzarHistoria}
                   disabled={!canAccess || isCompleting}
                 >
@@ -263,46 +282,52 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
                     `🔒 Requiere Nivel ${historia.nivel_acceso_requerido}`
                   )}
                 </button>
-                
+
                 {!canAccess && (
-                  <div className="access-info">
+                  <div className="hd-access-msg">
                     <p>📊 Tu nivel actual: {playerStats?.nivel || 1}</p>
                     <p>🔒 Nivel requerido: {historia.nivel_acceso_requerido}</p>
                   </div>
                 )}
-                
-                <button className="btn btn-secondary">
-                  🔖 Marcar como Favorita
+
+                <button
+                  className="hd-btn hd-btn-sec"
+                  onClick={handleToggleFavorite}
+                  disabled={isFavoritingLoading}
+                >
+                  {isFavoritingLoading ? (
+                    '⏳ Procesando...'
+                  ) : isFavorited ? (
+                    '❤️ Remover de Favoritas'
+                  ) : (
+                    '🤍 Marcar como Favorita'
+                  )}
                 </button>
               </div>
             </div>
           )}
 
           {activeTab === 'personajes' && (
-            <div className="tab-panel">
+            <div>
               {(personajes && personajes.length > 0) ? (
-                <div className="personajes-grid">
+                <div className="hd-grid">
                   {personajes.map(personaje => (
-                    <div key={personaje.id_personaje} className="personaje-card">
-                      <div className="personaje-avatar">
-                        {personaje.imagen ? (
-                          <img src={personaje.imagen} alt={personaje.nombre} loading="lazy" />
-                        ) : (
-                          <div className="placeholder-personaje-avatar">
-                            <span className="avatar-icon-small">👤</span> 
-                          </div>
-                        )}
-                      </div>
-                      <div className="personaje-info">
-                        <h4>{personaje.nombre}</h4>
-                        <p className="personaje-rol">{personaje.rol}</p>
-                        <p className="personaje-desc truncate-text">{personaje.descripcion}</p>
-                      </div>
+                    <div key={personaje.id_personaje} className="hd-char-card">
+                      {personaje.imagen ? (
+                        <img src={personaje.imagen} alt={personaje.nombre} loading="lazy" className="hd-char-img" />
+                      ) : (
+                        <div className="hd-char-placeholder">
+                          <span>👤</span>
+                        </div>
+                      )}
+                      <h4 className="hd-char-name">{personaje.nombre}</h4>
+                      <p className="hd-char-rol">{personaje.rol}</p>
+                      <p className="hd-char-desc">{personaje.descripcion}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="no-data">
+                <div className="hd-status-msg">
                   <p>👥 No hay personajes asociados a esta historia</p>
                 </div>
               )}
@@ -310,29 +335,25 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
           )}
 
           {activeTab === 'multimedia' && (
-            <div className="tab-panel">
-              {/* 🚨 CORRECCIÓN DEL ERROR DE LENGTH: Se verifica si existe 'multimedia' antes de leer 'length' */}
-              {(historia?.recursomultimedia?.length ?? 0) > 0 ? (
-                <div className="multimedia-grid">
+            <div>
+              {(multimedia && multimedia.length > 0) ? (
+                <div className="hd-grid">
                   {multimedia.map(recurso => (
-                    <div key={recurso.id_recurso} className="multimedia-item">
-                      <div className="multimedia-preview">
+                    <div key={recurso.id_recurso} className="hd-media-card">
+                      <div className="hd-media-preview">
                         {renderRecurso(recurso)}
                       </div>
-                      <div className="multimedia-info">
-                        {recurso.titulo ? (
-                            <h4>{recurso.titulo}</h4>
-                        ) : (
-                            <h4>{recurso.descripcion.length > 50 ? recurso.descripcion.substring(0, 50) + '...' : recurso.descripcion}</h4> 
-                        )}
-                        <p className="multimedia-tipo">{recurso.tipo.toUpperCase()}</p>
-                        <p className="multimedia-desc truncate-text">{recurso.descripcion}</p>
+                      <div className="hd-media-info">
+                        <h4 className="hd-media-title">
+                          {recurso.titulo || (recurso.descripcion?.length > 50 ? recurso.descripcion.substring(0, 50) + '...' : (recurso.descripcion || 'Sin descripción'))}
+                        </h4>
+                        <span className="hd-media-tag">{recurso.tipo.toUpperCase()}</span>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="no-data">
+                <div className="hd-status-msg">
                   <p>🎥 No hay recursos multimedia para esta historia</p>
                 </div>
               )}
