@@ -6,6 +6,7 @@ import './GameStats.css'
 interface GameStatsProps {
   className?: string
   showDetailed?: boolean
+  onNavigateToStory?: (historiaId: number) => void
 }
 
 interface DashboardStats {
@@ -20,21 +21,27 @@ interface DashboardStats {
   inventarioItems: number
 }
 
-const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = true }) => {
+const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = true, onNavigateToStory }) => {
   const { user } = useAuth()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [favoriteStories, setFavoriteStories] = useState<any[]>([])
+  const [loadingFavorites, setLoadingFavorites] = useState(false)
 
   useEffect(() => {
     if (user?.id) {
       cargarEstadisticas()
+      cargarHistoriasFavoritas()
     }
 
     // Escuchar eventos de actualización de estadísticas
     const handleStatsUpdate = () => {
       if (user?.id) {
-        setTimeout(() => cargarEstadisticas(), 500) // Pequeño delay para que se actualice la BD
+        setTimeout(() => {
+          cargarEstadisticas()
+          cargarHistoriasFavoritas()
+        }, 500) // Pequeño delay para que se actualice la BD
       }
     }
 
@@ -64,6 +71,28 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
       setError('Error al cargar las estadísticas: ' + err.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const cargarHistoriasFavoritas = async () => {
+    if (!user?.id) return
+
+    try {
+      setLoadingFavorites(true)
+      const favorites = await gameService.getFavoriteStoriesDetails(user.id)
+      setFavoriteStories(favorites || [])
+    } catch (err: any) {
+      console.error('Error cargando historias favoritas:', err)
+    } finally {
+      setLoadingFavorites(false)
+    }
+  }
+
+  const handleFavoriteClick = (historiaId: number) => {
+    if (onNavigateToStory) {
+      onNavigateToStory(historiaId)
+    } else {
+      console.warn('No navigation handler provided for favorite story:', historiaId)
     }
   }
 
@@ -197,6 +226,60 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Sección de Archivos Favoritos */}
+      {showDetailed && (
+        <div className="favorite-stories-section">
+          <h3 className="section-title">
+            <span className="title-icon">❤️</span>
+            Archivos Favoritos
+            <span className="title-count">({favoriteStories.length})</span>
+          </h3>
+
+          {loadingFavorites ? (
+            <div className="favorites-loading">
+              <div className="loading-spinner"></div>
+              <p>Cargando favoritos...</p>
+            </div>
+          ) : favoriteStories.length === 0 ? (
+            <div className="favorites-empty">
+              <div className="empty-icon">📂</div>
+              <p>No tienes historias favoritas aún</p>
+              <span className="empty-hint">Marca historias como favoritas para verlas aquí</span>
+            </div>
+          ) : (
+            <div className="favorites-grid">
+              {favoriteStories.map((historia) => (
+                <div
+                  key={historia.id_historia}
+                  className="favorite-card"
+                  onClick={() => handleFavoriteClick(historia.id_historia)}
+                >
+                  <div className="favorite-card-header">
+                    <div className="favorite-icon">📖</div>
+                    <div className="favorite-badge">FAVORITO</div>
+                  </div>
+                  <div className="favorite-card-content">
+                    <h4 className="favorite-title">{historia.titulo}</h4>
+                    <p className="favorite-description">
+                      {historia.descripcion?.substring(0, 100)}
+                      {historia.descripcion?.length > 100 ? '...' : ''}
+                    </p>
+                  </div>
+                  <div className="favorite-card-footer">
+                    <span className="favorite-location">
+                      {historia.id_ubicacion?.nombre || 'Ubicación desconocida'}
+                    </span>
+                    <button className="favorite-play-btn">
+                      ▶️ Jugar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -135,18 +135,10 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
       setIsFavoritingLoading(true)
       const historiaIdStr = String(historiaId)
 
-      let success = false
-      if (isFavorited) {
-        success = await gameService.removeFromFavorites(user.id, historiaIdStr)
-      } else {
-        success = await gameService.addToFavorites(user.id, historiaIdStr)
-      }
+      // Use toggleFavoriteStory which returns true if now favorited, false if removed
+      const isNowFavorited = await gameService.toggleFavoriteStory(user.id, historiaIdStr)
+      setIsFavorited(isNowFavorited)
 
-      if (success) {
-        setIsFavorited(!isFavorited)
-      } else {
-        alert('❌ Error al actualizar favoritos. Inténtalo de nuevo.')
-      }
     } catch (error: any) {
       console.error('Error toggling favorite:', error)
       alert('❌ Error al actualizar favoritos. Inténtalo de nuevo.')

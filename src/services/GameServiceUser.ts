@@ -702,6 +702,85 @@ class GameServiceUser {
             console.error('❌ [Streak] Error en checkAndUpdateStreak:', error);
         }
     }
+    /**
+ * Alterna el estado de favorito de una historia para un usuario.
+ * @param userId El ID del usuario.
+ * @param storyId El ID de la historia.
+ * @returns true si la historia es ahora favorita, false si se eliminó de favoritos.
+ */
+    async toggleFavoriteStory(userId: string, storyId: string): Promise<boolean> {
+        try {
+            const stats = await this.getPlayerStats(userId);
+            if (!stats) throw new Error("Usuario no encontrado");
+
+            const favorites = stats.historias_favoritas || [];
+            const index = favorites.indexOf(storyId);
+            let newFavorites: string[];
+            let isFavorite: boolean;
+
+            if (index > -1) {
+                // Eliminar de favoritos
+                newFavorites = favorites.filter(id => id !== storyId);
+                isFavorite = false;
+                console.log(`💔 [Favorites] Eliminando historia ${storyId} de favoritos.`);
+            } else {
+                // Agregar a favoritos
+                newFavorites = [...favorites, storyId];
+                isFavorite = true;
+                console.log(`❤️ [Favorites] Agregando historia ${storyId} a favoritos.`);
+            }
+
+            const { error } = await supabase
+                .from('perfiles_jugador')
+                .update({ historias_favoritas: newFavorites })
+                .eq('user_id', userId);
+
+            if (error) throw error;
+
+            // Actualizar cache local
+            if (this.playerStats) {
+                this.playerStats.historias_favoritas = newFavorites;
+            }
+
+            return isFavorite;
+        } catch (error: any) {
+            console.error("❌ [Favorites] Error toggling favorite:", error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Obtiene los detalles completos de las historias favoritas del usuario.
+     */
+    async getFavoriteStoriesDetails(userId: string): Promise<any[]> {
+        try {
+            const stats = await this.getPlayerStats(userId);
+            if (!stats || !stats.historias_favoritas || stats.historias_favoritas.length === 0) {
+                return [];
+            }
+
+            // Convertir IDs a números si es necesario (asumiendo que en DB son numéricos o strings consistentes)
+            // El fix anterior mostró que 'id_historia' es la columna correcta y espera números si los IDs son numéricos.
+            // Sin embargo, 'historias_favoritas' es string[]. Vamos a intentar convertir.
+            const favoriteIds = stats.historias_favoritas
+                .map(id => Number(id))
+                .filter(id => !isNaN(id));
+
+            if (favoriteIds.length === 0) return [];
+
+            const { data, error } = await supabase
+                .from('historia')
+                .select('*, id_ubicacion ( nombre, coordenadas )') // Traemos detalles de ubicación también
+                .in('id_historia', favoriteIds);
+
+            if (error) throw error;
+
+            return data || [];
+        } catch (error: any) {
+            console.error("❌ [Favorites] Error fetching favorite stories details:", error.message);
+            return [];
+        }
+    }
 
     /**
      * Obtiene estadísticas resumidas para el dashboard
