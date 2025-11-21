@@ -129,6 +129,95 @@ class GameServiceUser {
         }
     }
 
+    // Esta función verifica si el usuario existe, y si no, lo crea.
+    async initializePlayerProfile(userId: string) {
+        try {
+            // 1. Verificar si ya existe
+            const { data: existing } = await supabase
+                .from('perfiles_jugador')
+                .select('*')
+                .eq('user_id', userId)
+                .single();
+
+            if (existing) {
+                return { ...existing, puntuacion: existing.xp_total };
+            }
+
+            // 2. Insertar SIN el campo email
+            const { data, error } = await supabase
+                .from('perfiles_jugador')
+                .insert([
+                    {
+                        user_id: userId,
+                        historias_completadas: 0, // Obligatorio según tu esquema
+                        xp_total: 0,
+                        nivel: 1,
+                        inventario: [],
+                        historias_visitadas: [],
+                        personajes_conocidos: []
+                    }
+                ])
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            return {
+                ...data,
+                puntuacion: data.xp_total
+            };
+
+        } catch (error: any) {
+            console.error("Error creando perfil:", error.message);
+            return null;
+        }
+    }
+
+    async aplicarXPDirecto(userId: string, xpAmount: number, razon: string) {
+        console.log(`[SERVICE] Modificando XP: ${xpAmount} para usuario: ${userId}. Razón: ${razon}`);
+
+        try {
+            // 1. LEER EL XP ACTUAL
+            // IMPORTANTE: Cambia 'perfiles' por el nombre real de tu tabla si es 'users' o 'profiles'
+            const { data: currentData, error: readError } = await supabase
+                .from('perfiles_jugador')
+                .select('xp_total') // Asegúrate que la columna se llama 'puntuacion' o 'xp_total'
+                .eq('user_id', userId)
+                .single();
+
+            if (readError) {
+                console.error("Error leyendo XP actual:", readError);
+                throw readError;
+            }
+
+            const currentXP = currentData?.xp_total || 0;
+            const newXP = currentXP + xpAmount; // Suma algebraica (si xpAmount es -150, restará)
+
+            // 2. ACTUALIZAR EL XP EN LA BASE DE DATOS
+            const { error: updateError } = await supabase
+                .from('perfiles_jugador')
+                .update({ xp_total: newXP }) // Asegúrate que la columna se llama 'puntuacion'
+                .eq('user_id', userId);
+
+            if (updateError) {
+                console.error("Error actualizando XP:", updateError);
+                throw updateError;
+            }
+
+            console.log(`[SERVICE] XP actualizado en BD de ${currentXP} a ${newXP}`);
+
+            // 3. MAGIA: LLAMAR A getPlayerStats PARA DEVOLVER EL FORMATO CORRECTO
+            // Esto elimina los errores de tipo porque usa tu función que ya funciona.
+            const updatedStats = await this.getPlayerStats(userId);
+            return { data: updatedStats, error: null };
+
+        } catch (error: any) {
+            console.error("[SERVICE] Error crítico en aplicarXPDirecto:", error.message);
+            // Devolvemos la estructura de error estándar
+            return { data: null, error };
+        }
+    }
+
     /**
      * Agrega un objeto al inventario del jugador y le otorga puntos de experiencia.
      * @param userId El ID del usuario.
@@ -549,6 +638,72 @@ class GameServiceUser {
     }
 
     /**
+     * Verifica y actualiza la racha de días consecutivos
+     */
+    private async checkAndUpdateStreak(userId: string, currentStats: PlayerStats): Promise<void> {
+        try {
+            const now = new Date();
+            const lastAccess = new Date(currentStats.fecha_ultimo_acceso);
+
+            // Normalizar fechas a medianoche para comparar días
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const lastDate = new Date(lastAccess.getFullYear(), lastAccess.getMonth(), lastAccess.getDate());
+
+            const diffTime = Math.abs(today.getTime() - lastDate.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            console.log(`📅 [Streak] Hoy: ${today.toISOString()}, Último: ${lastDate.toISOString()}, Diff: ${diffDays} días`);
+
+            let newStreak = currentStats.racha_dias_consecutivos;
+            let shouldUpdate = false;
+
+            if (diffDays === 0) {
+                // Mismo día, no hacer nada (excepto actualizar fecha_ultimo_acceso si queremos precisión de hora)
+                console.log('📅 [Streak] Mismo día, racha se mantiene.');
+            } else if (diffDays === 1) {
+                // Día consecutivo, aumentar racha
+                newStreak += 1;
+                shouldUpdate = true;
+                console.log(`📅 [Streak] Día consecutivo! Racha aumenta a ${newStreak}`);
+            } else {
+                // Se rompió la racha (más de 1 día de diferencia)
+                newStreak = 1;
+                shouldUpdate = true;
+                console.log(`📅 [Streak] Racha rota. Reiniciando a 1.`);
+            }
+
+            // Siempre actualizamos fecha_ultimo_acceso al entrar
+            const updateData: any = {
+                fecha_ultimo_acceso: now.toISOString()
+            };
+
+            if (shouldUpdate) {
+                updateData.racha_dias_consecutivos = newStreak;
+            }
+
+            // Actualizar en DB
+            const { error } = await supabase
+                .from('perfiles_jugador')
+                .update(updateData)
+                .eq('user_id', userId);
+
+            if (error) {
+                console.error('❌ [Streak] Error actualizando racha:', error);
+            } else {
+                // Actualizar objeto local
+                currentStats.fecha_ultimo_acceso = updateData.fecha_ultimo_acceso;
+                if (shouldUpdate) {
+                    currentStats.racha_dias_consecutivos = newStreak;
+                }
+                console.log('✅ [Streak] Racha y/o fecha actualizadas correctamente.');
+            }
+
+        } catch (error) {
+            console.error('❌ [Streak] Error en checkAndUpdateStreak:', error);
+        }
+    }
+
+    /**
      * Obtiene estadísticas resumidas para el dashboard
      */
     async getDashboardStats(userId: string): Promise<{
@@ -571,11 +726,50 @@ class GameServiceUser {
                 return null
             }
 
+            // Verificar y actualizar racha antes de devolver datos
+            await this.checkAndUpdateStreak(userId, stats);
             console.log('📊 [getDashboardStats] Stats obtenidos:', stats);
             console.log('📊 [getDashboardStats] historias_visitadas:', stats.historias_visitadas);
 
             const xpSiguienteNivel = this.getXPForNextLevel(stats.nivel)
             const xpParaSiguienteNivel = Math.max(0, xpSiguienteNivel - stats.xp_total)
+
+            // Calcular ubicaciones únicas visitadas
+            let uniqueLocationsCount = 0;
+            console.log('🔍 [getDashboardStats] Historias visitadas (raw):', stats.historias_visitadas);
+
+            if (stats.historias_visitadas && stats.historias_visitadas.length > 0) {
+                // Convertimos a números para evitar error 400 si la columna id es numérica
+                const historiasIds = stats.historias_visitadas
+                    .map(id => Number(id))
+                    .filter(id => !isNaN(id));
+
+                console.log('🔍 [getDashboardStats] Ejecutando query con IDs numéricos:', historiasIds);
+
+                if (historiasIds.length > 0) {
+                    const { data: storiesData, error: storiesError } = await supabase
+                        .from('historia')
+                        .select('id_ubicacion')
+                        .in('id_historia', historiasIds);
+
+                    console.log('🔍 [getDashboardStats] Resultado query - Error:', storiesError);
+                    console.log('🔍 [getDashboardStats] Resultado query - Data:', storiesData);
+
+                    if (!storiesError && storiesData) {
+                        // Filtramos nulos por si acaso
+                        const validLocations = storiesData.filter(s => s.id_ubicacion !== null && s.id_ubicacion !== undefined);
+                        const uniqueLocations = new Set(validLocations.map(s => s.id_ubicacion));
+                        uniqueLocationsCount = uniqueLocations.size;
+                        console.log('🔍 [getDashboardStats] Ubicaciones únicas calculadas:', uniqueLocationsCount);
+                    } else {
+                        console.log('❌ [getDashboardStats] Falló la query de historias.');
+                    }
+                } else {
+                    console.log('⚠️ [getDashboardStats] No hay IDs válidos tras conversión.');
+                }
+            } else {
+                console.log('⚠️ [getDashboardStats] No hay historias visitadas en el perfil.');
+            }
 
             const result = {
                 nivel: stats.nivel,
@@ -583,7 +777,7 @@ class GameServiceUser {
                 xpParaSiguienteNivel,
                 historiasCompletadas: stats.historias_visitadas?.length || 0,
                 personajesConocidos: stats.personajes_conocidos?.length || 0,
-                ubicacionesVisitadas: stats.ubicaciones_visitadas?.length || 0,
+                ubicacionesVisitadas: uniqueLocationsCount,
                 logrosDesbloqueados: stats.logros_desbloqueados?.length || 0,
                 rachaDias: stats.racha_dias_consecutivos,
                 inventarioItems: stats.inventario?.length || 0

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal de Acceso</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        body {
+            background-color: #050505;
+            color: #00ff41;
+            font-family: 'Share Tech Mono', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 400px;
+            border: 2px solid #00ff41;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+            background: rgba(0, 20, 0, 0.9);
+            position: relative;
+        }
+
+        .container::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #004400;
+            padding-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .screen {
+            background-color: #001100;
+            border: 1px solid #005500;
+            height: 60px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            letter-spacing: 8px;
+            text-shadow: 0 0 5px #00ff41;
+        }
+
+        .status-msg {
+            text-align: center;
+            min-height: 50px;
+            margin-bottom: 15px;
+            font-size: 1rem;
+            color: #ffff00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.2;
+            white-space: pre-line;
+            /* Permite saltos de línea */
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            font-family: inherit;
+            font-size: 1.2rem;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.95);
+            background: #003300;
+        }
+
+        button:hover:not(:disabled) {
+            box-shadow: 0 0 10px #00ff41;
+            background: rgba(0, 255, 65, 0.1);
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-color: #555;
+            color: #555;
+        }
+
+        .action-area {
+            margin-top: 20px;
+            display: flex;
+        }
+
+        .btn-hint {
+            width: 100%;
+            font-size: 0.9rem;
+            border-color: #ffff00;
+            color: #ffff00;
+            font-weight: bold;
+        }
+
+        .btn-hint:hover:not(:disabled) {
+            box-shadow: 0 0 10px #ffff00;
+            background: rgba(255, 255, 0, 0.1);
+        }
+
+        .blink {
+            animation: blinker 1s linear infinite;
+        }
+
+        @keyframes blinker {
+            50% {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <span id="timer" class="blink">--:--</span>
+            <span>INTENTOS: <span id="attempts">0</span></span>
+            <span>XP: <span id="xp-display">0</span></span>
+        </div>
+
+        <div class="screen" id="display">_ _ _ _</div>
+        <div class="status-msg" id="status-msg">INICIANDO SISTEMA...</div>
+
+        <div class="keypad">
+            <button onclick="pressKey(1)">1</button>
+            <button onclick="pressKey(2)">2</button>
+            <button onclick="pressKey(3)">3</button>
+            <button onclick="pressKey(4)">4</button>
+            <button onclick="pressKey(5)">5</button>
+            <button onclick="pressKey(6)">6</button>
+            <button onclick="pressKey(7)">7</button>
+            <button onclick="pressKey(8)">8</button>
+            <button onclick="pressKey(9)">9</button>
+            <button onclick="clearDisplay()" style="color:#ff4141; border-color:#ff4141;">BORRAR</button>
+            <button onclick="pressKey(0)">0</button>
+            <button onclick="submitCode()">ENTRAR</button>
+        </div>
+
+        <div class="action-area">
+            <button class="btn-hint" id="btn-hint" onclick="buyHint()">
+                COMPRAR PISTA (<span id="hint-cost">0</span> XP)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Configuración Inicial ---
+        let appConfig = {
+            code: "RANDOM",
+            attempts: 3,
+            timeLimit: 30,
+            hintCost: 50
+        };
+
+        let currentInput = "";
+        let attemptsLeft = 3;
+        let timeLeft = 30;
+        let timerInterval = null;
+
+        // Variables críticas de XP
+        let playerXP = 0;
+        let totalSpentXP = 0;     // Esta variable es la clave. Debe ser negativa al final.
+        let hintPrice = 50;
+
+        let successId = null;
+        let failureId = null;
+        let isConfigLoaded = false;
+        let revealedIndices = [];
+        let targetCode = "";
+
+        // DOM Elements
+        const displayEl = document.getElementById('display');
+        const timerEl = document.getElementById('timer');
+        const attemptsEl = document.getElementById('attempts');
+        const xpEl = document.getElementById('xp-display');
+        const hintCostEl = document.getElementById('hint-cost');
+        const msgEl = document.getElementById('status-msg');
+        const hintBtn = document.getElementById('btn-hint');
+
+        // --- 2. Recepción de Datos (Input) ---
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.source === 'FlujoNarrativoUsuario' && !isConfigLoaded) {
+                isConfigLoaded = true;
+                console.log("[TERMINAL DEBUG] Datos recibidos del Padre:", event.data);
+
+                const data = JSON.parse(event.data.appData);
+
+                // Configuración
+                appConfig = { ...appConfig, ...data };
+                successId = event.data.successRecompensaId;
+                failureId = event.data.failureRecompensaId;
+
+                // Carga de XP: Convertimos a Number para evitar errores de texto
+                playerXP = Number(event.data.playerStats.puntuacion || 0);
+                hintPrice = Number(appConfig.hintCost || 50);
+
+                console.log(`[TERMINAL DEBUG] XP Inicial: ${playerXP}, Precio Pista: ${hintPrice}`);
+
+                // Generar Código
+                if (!appConfig.code || appConfig.code === "RANDOM") {
+                    targetCode = Math.floor(1000 + Math.random() * 9000).toString();
+                } else {
+                    targetCode = appConfig.code.toString();
+                }
+                console.log("[TERMINAL DEBUG] Código Objetivo:", targetCode);
+
+                // UI setup
+                attemptsLeft = Number(appConfig.attempts);
+                timeLeft = Number(appConfig.timeLimit);
+
+                updateUI();
+                startTimer();
+
+                msgEl.innerText = "INGRESE CÓDIGO DE 4 DÍGITOS";
+                msgEl.style.color = "#00ff41";
+            }
+        });
+
+        // --- 3. Funciones UI y Lógica ---
+        function updateUI() {
+            let displayText = currentInput.padEnd(4, '_').split('').join(' ');
+            displayEl.innerText = displayText;
+            attemptsEl.innerText = attemptsLeft;
+
+            // XP Display
+            xpEl.innerText = playerXP;
+            hintCostEl.innerText = hintPrice;
+
+            // Estado del botón
+            const canBuy = (playerXP >= hintPrice) && (revealedIndices.length < 3);
+            hintBtn.disabled = !canBuy;
+
+            if (!canBuy && playerXP < hintPrice) {
+                hintBtn.style.opacity = "0.5";
+            } else {
+                hintBtn.style.opacity = "1";
+            }
+        }
+
+        function pressKey(num) {
+            if (currentInput.length < 4) {
+                currentInput += num.toString();
+                updateUI();
+            }
+        }
+
+        function clearDisplay() {
+            currentInput = "";
+            msgEl.innerText = "ENTRADA BORRADA";
+            msgEl.style.color = "#fff";
+            updateUI();
+        }
+
+        function startTimer() {
+            timerEl.innerText = `00:${timeLeft}`;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                let secs = timeLeft < 10 ? `0${timeLeft}` : timeLeft;
+                timerEl.innerText = `00:${secs}`;
+
+                if (timeLeft <= 0) {
+                    endGame('failure', "Tiempo agotado.");
+                }
+            }, 1000);
+        }
+
+        // --- 4. Lógica de Compra de Pistas (CRÍTICO) ---
+        function buyHint() {
+            console.log("[TERMINAL DEBUG] Intentando comprar pista...");
+
+            if (playerXP >= hintPrice && revealedIndices.length < 3) {
+
+                // 1. Reducir XP visualmente
+                playerXP = playerXP - hintPrice;
+
+                // 2. Acumular el Gasto (Negativo)
+                totalSpentXP = totalSpentXP - hintPrice;
+
+                console.log(`[TERMINAL DEBUG] Pista comprada. Nuevo XP Visual: ${playerXP}, Total Gasto Acumulado: ${totalSpentXP}`);
+
+                // 3. Lógica del juego
+                let idx;
+                do {
+                    idx = Math.floor(Math.random() * 4);
+                } while (revealedIndices.includes(idx));
+
+                revealedIndices.push(idx);
+
+                // Mensaje claro
+                let realNumber = targetCode[idx];
+                msgEl.innerText = `PISTA COMPRADA:\nEn la POSICIÓN ${idx + 1} va el NÚMERO ${realNumber}`;
+                msgEl.style.color = "#ffff00";
+
+                updateUI();
+            } else {
+                console.log("[TERMINAL DEBUG] Compra fallida. Fondos insuficientes o límite alcanzado.");
+                msgEl.innerText = "FONDOS INSUFICIENTES";
+                msgEl.style.color = "#ff4141";
+            }
+        }
+
+        function submitCode() {
+            if (currentInput.length !== 4) return;
+
+            console.log(`[TERMINAL DEBUG] Código enviado: ${currentInput} vs Objetivo: ${targetCode}`);
+
+            if (currentInput === targetCode) {
+                endGame('success', "Acceso concedido.");
+            } else {
+                attemptsLeft--;
+                currentInput = "";
+                msgEl.innerText = "CÓDIGO INCORRECTO";
+                msgEl.style.color = "#ff4141";
+
+                // Efecto visual
+                displayEl.style.borderColor = "red";
+                setTimeout(() => displayEl.style.borderColor = "#00ff41", 300);
+
+                if (attemptsLeft <= 0) {
+                    endGame('failure', "Sistema bloqueado.");
+                }
+                updateUI();
+            }
+        }
+
+        // --- 5. Finalización y Envío (CRÍTICO) ---
+        function endGame(status, message) {
+            clearInterval(timerInterval);
+            document.querySelectorAll('button').forEach(b => b.disabled = true);
+
+            if (status === 'success') {
+                displayEl.style.color = '#00ff41';
+                displayEl.innerText = targetCode.split('').join(' ');
+                msgEl.innerText = "ACCESO AUTORIZADO";
+                msgEl.style.color = "#00ff41";
+            } else {
+                displayEl.style.color = '#ff4141';
+                msgEl.innerText = "ACCESO DENEGADO";
+                msgEl.style.color = "#ff4141";
+            }
+
+            // Construcción del Payload
+            // Aseguramos que costoXP sea un número negativo si hubo gasto
+            const finalCost = Number(totalSpentXP);
+
+            const result = {
+                source: 'RentalApp', // Debe coincidir con lo que React espera
+                type: 'app-result',
+                status: status,
+                recompensaId: status === 'success' ? successId : failureId,
+                costoXP: finalCost, // EJ: -50, -100, ó 0
+                message: message
+            };
+
+            console.log("===========================================");
+            console.log("[TERMINAL DEBUG] FINALIZANDO JUEGO");
+            console.log("[TERMINAL DEBUG] Status:", status);
+            console.log("[TERMINAL DEBUG] Gasto Total a enviar (costoXP):", finalCost);
+            console.log("[TERMINAL DEBUG] Payload Completo:", result);
+            console.log("===========================================");
+
+            // Enviar al padre tras breve pausa
+            setTimeout(() => {
+                window.parent.postMessage(result, '*');
+                console.log("[TERMINAL DEBUG] Mensaje enviado a window.parent");
+            }, 2000);
+        }
+    </script>
+</body>
+
+</html>

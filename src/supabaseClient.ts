@@ -1322,6 +1322,8 @@ class GameService {
     }
   }
 
+ 
+
   // Obtener TODOS los pasos de flujo narrativo (Estilo Método de Clase)
   async obtenerFlujosNarrativos(): Promise<any[]> {
     const { data, error } = await supabase
@@ -1386,6 +1388,8 @@ class GameService {
   }
 }
 
+
+
 // ==========================================
 // --- FUNCIONES PARA EL ADMIN CANVAS ---
 // ==========================================
@@ -1412,6 +1416,8 @@ export const crearPaso = async (nuevoPaso: any) => {
   if (error) console.error('Error creando paso:', error);
   return { data, error };
 };
+
+
 
 
 
