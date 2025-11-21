@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { gameServiceUser as gameService } from '../services/GameServiceUser'
+import '../styles/resistance-theme.css'
 import './GameStats.css'
 
 interface GameStatsProps {
@@ -41,7 +42,7 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
         setTimeout(() => {
           cargarEstadisticas()
           cargarHistoriasFavoritas()
-        }, 500) // Pequeño delay para que se actualice la BD
+        }, 500)
       }
     }
 
@@ -107,22 +108,22 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
   }
 
   const getRankTitle = (nivel: number): string => {
-    if (nivel >= 20) return '🏛️ Líder Legendario'
-    if (nivel >= 15) return '⚡ Resistente Épico'
-    if (nivel >= 10) return '🔥 Guerrero Urbano'
-    if (nivel >= 7) return '💪 Luchador Veterano'
-    if (nivel >= 5) return '🌟 Activista Experimentado'
-    if (nivel >= 3) return '📚 Aprendiz Comprometido'
-    return '🌱 Resistente Novato'
+    if (nivel >= 20) return 'LÍDER LEGENDARIO'
+    if (nivel >= 15) return 'RESISTENTE ÉPICO'
+    if (nivel >= 10) return 'GUERRERO URBANO'
+    if (nivel >= 7) return 'LUCHADOR VETERANO'
+    if (nivel >= 5) return 'ACTIVISTA EXPERIMENTADO'
+    if (nivel >= 3) return 'APRENDIZ COMPROMETIDO'
+    return 'RESISTENTE NOVATO'
   }
 
   if (loading) {
     return (
-      <div className={`game-stats loading ${className}`}>
-        <div className="stats-skeleton">
-          <div className="skeleton-line level"></div>
-          <div className="skeleton-line xp"></div>
-          <div className="skeleton-line progress"></div>
+      <div className={`resistance-dashboard loading ${className}`}>
+        <div className="terminal-loading">
+          <div className="loading-text mono-text-green">
+            <span className="cursor-blink">CARGANDO DATOS</span>
+          </div>
         </div>
       </div>
     )
@@ -130,11 +131,11 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
 
   if (error || !stats) {
     return (
-      <div className={`game-stats error ${className}`}>
-        <div className="error-content">
-          <p className="error-message">❌ {error || 'No se pudieron cargar las estadísticas'}</p>
-          <button onClick={cargarEstadisticas} className="retry-btn">
-            🔄 Reintentar
+      <div className={`resistance-dashboard error ${className}`}>
+        <div className="terminal-error">
+          <p className="error-text mono-text-amber">❌ {error || 'ERROR: NO SE PUDIERON CARGAR LAS ESTADÍSTICAS'}</p>
+          <button onClick={cargarEstadisticas} className="terminal-btn">
+            🔄 REINTENTAR
           </button>
         </div>
       </div>
@@ -145,142 +146,109 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
   const rankTitle = getRankTitle(stats.nivel)
 
   return (
-    <div className={`game-stats ${className}`}>
-      <div className="player-level-section">
-        <div className="level-badge-container">
-          <div className="level-badge">
-            <span className="level-number">{stats.nivel}</span>
-            <span className="level-label">NIVEL</span>
+    <div className={`resistance-dashboard ${className} scanlines`}>
+      {/* SECCIÓN 1: NIVEL Y XP */}
+      <div className="agent-status">
+        <div className="status-row">
+          <div className="level-badge mono-text-amber">
+            [LVL {stats.nivel}]
           </div>
-          <div className="level-info">
-            <h3 className="rank-title">{rankTitle}</h3>
-            <div className="xp-display">
-              <span className="current-xp">{stats.xpTotal.toLocaleString()}</span>
-              <span className="xp-label">XP</span>
+          <div className="xp-container">
+            <div className="xp-bar">
+              <div className="xp-fill" style={{ width: `${progressPercentage}%` }} />
+            </div>
+            <div className="xp-text mono-text-amber">
+              {stats.xpTotal.toLocaleString()}/{(stats.xpTotal + stats.xpParaSiguienteNivel).toLocaleString()} XP
             </div>
           </div>
         </div>
-
-        <div className="xp-progress-container">
-          <div className="progress-bar">
-            <div
-              className="progress-fill"
-              style={{ width: `${progressPercentage}%` }}
-            ></div>
-            <div className="progress-spark"></div>
-          </div>
-          <div className="progress-text">
-            <span>Siguiente nivel: {stats.xpParaSiguienteNivel.toLocaleString()} XP</span>
-          </div>
+        <div className="rank-title mono-text-green">
+          {rankTitle}
         </div>
       </div>
 
+      {/* SEPARADOR */}
+      <div className="terminal-separator" />
+
       {showDetailed && (
-        <div className="detailed-stats">
+        <>
+          {/* SECCIÓN 2: ESTADÍSTICAS */}
           <div className="stats-grid">
-            <div className="stat-item stories">
+            <div className="stat-item fade-in">
               <div className="stat-icon">📚</div>
-              <div className="stat-content">
-                <div className="stat-number">{stats.historiasCompletadas}</div>
-                <div className="stat-label">Historias</div>
-              </div>
+              <div className="stat-number mono-text-white">{stats.historiasCompletadas}</div>
+              <div className="stat-label mono-text-muted">HISTORIAS</div>
             </div>
 
-            <div className="stat-item characters">
+            <div className="stat-item fade-in" style={{ animationDelay: '0.1s' }}>
               <div className="stat-icon">👥</div>
-              <div className="stat-content">
-                <div className="stat-number">{stats.personajesConocidos}</div>
-                <div className="stat-label">Personajes</div>
-              </div>
+              <div className="stat-number mono-text-white">{stats.personajesConocidos}</div>
+              <div className="stat-label mono-text-muted">PERSONAJES</div>
             </div>
 
-            <div className="stat-item locations">
+            <div className="stat-item fade-in" style={{ animationDelay: '0.2s' }}>
               <div className="stat-icon">📍</div>
-              <div className="stat-content">
-                <div className="stat-number">{stats.ubicacionesVisitadas}</div>
-                <div className="stat-label">Ubicaciones</div>
-              </div>
+              <div className="stat-number mono-text-white">{stats.ubicacionesVisitadas}</div>
+              <div className="stat-label mono-text-muted">UBICACIONES</div>
             </div>
 
-            <div className="stat-item achievements">
+            <div className="stat-item fade-in" style={{ animationDelay: '0.3s' }}>
               <div className="stat-icon">🏆</div>
-              <div className="stat-content">
-                <div className="stat-number">{stats.logrosDesbloqueados}</div>
-                <div className="stat-label">Logros</div>
-              </div>
+              <div className="stat-number mono-text-white">{stats.logrosDesbloqueados}</div>
+              <div className="stat-label mono-text-muted">LOGROS</div>
             </div>
 
-            <div className="stat-item inventory">
+            <div className="stat-item fade-in" style={{ animationDelay: '0.4s' }}>
               <div className="stat-icon">🎒</div>
-              <div className="stat-content">
-                <div className="stat-number">{stats.inventarioItems}</div>
-                <div className="stat-label">Objetos</div>
-              </div>
+              <div className="stat-number mono-text-white">{stats.inventarioItems}</div>
+              <div className="stat-label mono-text-muted">OBJETOS</div>
             </div>
 
-            <div className="stat-item streak">
+            <div className="stat-item fade-in" style={{ animationDelay: '0.5s' }}>
               <div className="stat-icon">🔥</div>
-              <div className="stat-content">
-                <div className="stat-number">{stats.rachaDias}</div>
-                <div className="stat-label">Días</div>
-              </div>
+              <div className="stat-number mono-text-white">{stats.rachaDias}</div>
+              <div className="stat-label mono-text-muted">RACHA</div>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Sección de Archivos Favoritos */}
-      {showDetailed && (
-        <div className="favorite-stories-section">
-          <h3 className="section-title">
-            <span className="title-icon">❤️</span>
-            Archivos Favoritos
-            <span className="title-count">({favoriteStories.length})</span>
-          </h3>
+          {/* SEPARADOR */}
+          <div className="terminal-separator" />
 
-          {loadingFavorites ? (
-            <div className="favorites-loading">
-              <div className="loading-spinner"></div>
-              <p>Cargando favoritos...</p>
+          {/* SECCIÓN 3: ARCHIVOS FAVORITOS */}
+          <div className="favorites-section">
+            <div className="favorites-header mono-text-green">
+              &gt;&gt;&gt; ARCHIVOS_FAVORITOS [{favoriteStories.length}]
             </div>
-          ) : favoriteStories.length === 0 ? (
-            <div className="favorites-empty">
-              <div className="empty-icon">📂</div>
-              <p>No tienes historias favoritas aún</p>
-              <span className="empty-hint">Marca historias como favoritas para verlas aquí</span>
-            </div>
-          ) : (
-            <div className="favorites-grid">
-              {favoriteStories.map((historia) => (
-                <div
-                  key={historia.id_historia}
-                  className="favorite-card"
-                  onClick={() => handleFavoriteClick(historia.id_historia)}
-                >
-                  <div className="favorite-card-header">
-                    <div className="favorite-icon">📖</div>
-                    <div className="favorite-badge">FAVORITO</div>
+
+            {loadingFavorites ? (
+              <div className="favorites-loading">
+                <span className="mono-text-muted cursor-blink">CARGANDO</span>
+              </div>
+            ) : favoriteStories.length === 0 ? (
+              <div className="favorites-empty">
+                <span className="mono-text-muted">[!] NO HAY ARCHIVOS CLASIFICADOS</span>
+              </div>
+            ) : (
+              <div className="favorites-row">
+                {favoriteStories.map((historia, index) => (
+                  <div
+                    key={historia.id_historia}
+                    className="folder-item hover-glow-amber"
+                    onClick={() => handleFavoriteClick(historia.id_historia)}
+                    title={historia.titulo}
+                  >
+                    <div className="folder-icon">📁</div>
+                    <div className="folder-name mono-text-amber">
+                      {historia.titulo && historia.titulo.length > 15
+                        ? historia.titulo.substring(0, 15) + '...'
+                        : historia.titulo || 'Sin título'}
+                    </div>
                   </div>
-                  <div className="favorite-card-content">
-                    <h4 className="favorite-title">{historia.titulo}</h4>
-                    <p className="favorite-description">
-                      {historia.descripcion?.substring(0, 100)}
-                      {historia.descripcion?.length > 100 ? '...' : ''}
-                    </p>
-                  </div>
-                  <div className="favorite-card-footer">
-                    <span className="favorite-location">
-                      {historia.id_ubicacion?.nombre || 'Ubicación desconocida'}
-                    </span>
-                    <button className="favorite-play-btn">
-                      ▶️ Jugar
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   )

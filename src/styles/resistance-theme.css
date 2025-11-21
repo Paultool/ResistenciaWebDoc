@@ -1,0 +1,413 @@
+/**
+ * RESISTANCE THEME - Sistema de Diseño Global
+ * Estética: Hacker/Terminal para Sistema Secreto de Resistencia
+ * Versión: 1.0
+ */
+
+/* ============================================
+   VARIABLES GLOBALES
+   ============================================ */
+
+:root {
+    /* Backgrounds */
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #151515;
+    --bg-tertiary: #1a1a1a;
+    --bg-overlay: rgba(0, 0, 0, 0.9);
+
+    /* Text Colors */
+    --text-primary: #00ff00;
+    /* Verde Matrix */
+    --text-secondary: #CD853F;
+    /* Amber/Gold */
+    --text-muted: #666666;
+    --text-white: #f0f0f0;
+    --text-dark: #333333;
+
+    /* Borders */
+    --border-primary: #CD853F;
+    --border-secondary: #222222;
+    --border-green: #00ff00;
+
+    /* Effects */
+    --glow-amber: rgba(205, 133, 63, 0.5);
+    --glow-green: rgba(0, 255, 0, 0.3);
+    --shadow-amber: 0 0 10px rgba(205, 133, 63, 0.5);
+    --shadow-green: 0 0 10px rgba(0, 255, 0, 0.3);
+
+    /* Typography */
+    --font-mono: 'Courier New', 'Consolas', monospace;
+    --font-size-xs: 0.65rem;
+    --font-size-sm: 0.75rem;
+    --font-size-md: 0.85rem;
+    --font-size-lg: 1rem;
+    --font-size-xl: 1.2rem;
+    --font-size-xxl: 1.5rem;
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
+    --spacing-xl: 24px;
+
+    /* Transitions */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+}
+
+/* ============================================
+   COMPONENTES REUTILIZABLES
+   ============================================ */
+
+/* Separador Terminal */
+.terminal-separator {
+    border: none;
+    border-top: 1px solid var(--border-primary);
+    margin: var(--spacing-md) 0;
+    opacity: 0.6;
+}
+
+.terminal-separator-thick {
+    border-top: 2px solid var(--border-primary);
+}
+
+/* Header de Sección */
+.section-header {
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+    font-size: var(--font-size-md);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+}
+
+.section-header-amber {
+    color: var(--text-secondary);
+}
+
+/* Botón Terminal */
+.terminal-btn {
+    background: transparent;
+    border: 1px solid var(--border-primary);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.terminal-btn:hover {
+    background: var(--text-secondary);
+    color: #000;
+    box-shadow: var(--shadow-amber);
+    transform: translateY(-2px);
+}
+
+.terminal-btn:active {
+    transform: translateY(0);
+}
+
+.terminal-btn-green {
+    border-color: var(--border-green);
+    color: var(--text-primary);
+}
+
+.terminal-btn-green:hover {
+    background: var(--text-primary);
+    box-shadow: var(--shadow-green);
+}
+
+/* Badge Terminal */
+.terminal-badge {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid var(--border-primary);
+    background: rgba(205, 133, 63, 0.1);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+}
+
+/* Texto Monospace */
+.mono-text {
+    font-family: var(--font-mono);
+}
+
+.mono-text-green {
+    color: var(--text-primary);
+}
+
+.mono-text-amber {
+    color: var(--text-secondary);
+}
+
+/* Contenedor con Borde */
+.terminal-box {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-secondary);
+    padding: var(--spacing-md);
+    border-radius: 4px;
+}
+
+.terminal-box-highlight {
+    border-color: var(--border-primary);
+    box-shadow: 0 0 20px rgba(205, 133, 63, 0.1);
+}
+
+/* ============================================
+   ANIMACIONES
+   ============================================ */
+
+/* Cursor Parpadeante */
+@keyframes blink {
+
+    0%,
+    50% {
+        opacity: 1;
+    }
+
+    51%,
+    100% {
+        opacity: 0;
+    }
+}
+
+.cursor-blink {
+    animation: blink 1s infinite;
+}
+
+.cursor-blink::after {
+    content: '█';
+    animation: blink 1s infinite;
+    color: var(--text-secondary);
+    margin-left: 2px;
+}
+
+/* Pulse (para iconos) */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.pulse {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Glow */
+@keyframes glow-amber {
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px rgba(205, 133, 63, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(205, 133, 63, 0.6);
+    }
+}
+
+.glow-amber {
+    animation: glow-amber 2s ease-in-out infinite;
+}
+
+/* Scanlines Overlay */
+@keyframes scanlines {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(10px);
+    }
+}
+
+.scanlines::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(0deg,
+            rgba(0, 0, 0, 0.15),
+            rgba(0, 0, 0, 0.15) 1px,
+            transparent 1px,
+            transparent 2px);
+    pointer-events: none;
+    z-index: 1;
+    animation: scanlines 10s linear infinite;
+}
+
+/* Glitch Effect */
+@keyframes glitch {
+    0% {
+        transform: translate(0);
+    }
+
+    20% {
+        transform: translate(-2px, 2px);
+    }
+
+    40% {
+        transform: translate(-2px, -2px);
+    }
+
+    60% {
+        transform: translate(2px, 2px);
+    }
+
+    80% {
+        transform: translate(2px, -2px);
+    }
+
+    100% {
+        transform: translate(0);
+    }
+}
+
+.glitch:hover {
+    animation: glitch 0.3s ease-in-out;
+}
+
+/* Typing Effect */
+@keyframes typing {
+    from {
+        width: 0;
+    }
+
+    to {
+        width: 100%;
+    }
+}
+
+.typing {
+    overflow: hidden;
+    white-space: nowrap;
+    animation: typing 1s steps(40, end);
+}
+
+/* Fade In */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Slide In from Left */
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.slide-in-left {
+    animation: slideInLeft 0.4s ease-out;
+}
+
+/* ============================================
+   UTILIDADES
+   ============================================ */
+
+/* Text Shadows */
+.text-glow-amber {
+    text-shadow: 0 0 5px var(--glow-amber);
+}
+
+.text-glow-green {
+    text-shadow: 0 0 5px var(--glow-green);
+}
+
+/* Hover Effects */
+.hover-glow-amber:hover {
+    box-shadow: var(--shadow-amber);
+    border-color: var(--border-primary);
+}
+
+.hover-glow-green:hover {
+    box-shadow: var(--shadow-green);
+    border-color: var(--border-green);
+}
+
+.hover-lift:hover {
+    transform: translateY(-3px);
+    transition: transform var(--transition-fast);
+}
+
+/* Responsive Utilities */
+@media (max-width: 768px) {
+    :root {
+        --font-size-xs: 0.6rem;
+        --font-size-sm: 0.7rem;
+        --font-size-md: 0.8rem;
+        --font-size-lg: 0.9rem;
+        --font-size-xl: 1.1rem;
+    }
+}
+
+/* ============================================
+   SCROLLBAR PERSONALIZADO
+   ============================================ */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-primary);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+/* ============================================
+   SELECTION
+   ============================================ */
+
+::selection {
+    background: var(--text-secondary);
+    color: #000;
+}
+
+::-moz-selection {
+    background: var(--text-secondary);
+    color: #000;
+}

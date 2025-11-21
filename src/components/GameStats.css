@@ -1,373 +1,297 @@
-/*
- * GAMESTATS CSS - VERSIÓN MONOCROMÁTICA ULTRA-PROFESIONAL Y DENSE
- * Objetivo: **FINAL FIX** para asegurar la visibilidad de la barra de progreso (XP).
+/**
+ * GAME STATS - RESISTANCE DASHBOARD
+ * Estilo: Terminal Hacker/Resistance Station
  */
 
-.game-stats {
-  background: transparent; 
-  color: #c0c0c0;
-  padding: 0; 
-  font-family: 'Consolas', 'Courier New', monospace;
-  line-height: 1.2;
+/* ============================================
+   CONTENEDOR PRINCIPAL
+   ============================================ */
+
+.resistance-dashboard {
+  background: var(--bg-primary);
+  color: var(--text-white);
+  font-family: var(--font-mono);
+  padding: var(--spacing-lg);
+  border: 1px solid var(--border-secondary);
+  border-radius: 4px;
+  position: relative;
+  min-height: 200px;
 }
 
-/* 1. SECCIÓN DE NIVEL Y XP */
-.level-xp-container {
+/* ============================================
+   ESTADOS: LOADING Y ERROR
+   ============================================ */
+
+.resistance-dashboard.loading,
+.resistance-dashboard.error {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 10px; 
-  padding-bottom: 5px;
-  border-bottom: 1px solid #222; 
+  align-items: center;
+  justify-content: center;
+  min-height: 250px;
+}
+
+.terminal-loading,
+.terminal-error {
+  text-align: center;
+}
+
+.loading-text {
+  font-size: var(--font-size-md);
+  letter-spacing: 2px;
+}
+
+.error-text {
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-lg);
+  letter-spacing: 1px;
+}
+
+/* ============================================
+   SECCIÓN 1: NIVEL Y XP
+   ============================================ */
+
+.agent-status {
+  margin-bottom: var(--spacing-md);
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-sm);
 }
 
 .level-badge {
-  width: 35px;
-  height: 35px;
-  border: 1px solid #CD853F;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--border-primary);
+  background: rgba(205, 133, 63, 0.1);
+  flex-shrink: 0;
 }
 
-.level-number {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #CD853F;
+.xp-container {
+  flex: 1;
+  min-width: 0;
+}
+
+.xp-bar {
+  height: 6px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: var(--spacing-xs);
+  position: relative;
+}
+
+.xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--text-secondary) 0%, #DAA520 100%);
+  transition: width var(--transition-slow);
+  box-shadow: 0 0 10px var(--glow-amber);
+}
+
+.xp-text {
+  font-size: var(--font-size-xs);
+  letter-spacing: 1px;
+  display: block;
+  text-align: right;
 }
 
 .rank-title {
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: #f0f0f0;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  letter-spacing: 3px;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  margin-top: var(--spacing-xs);
 }
 
-.current-xp {
-  font-size: 0.65rem;
-  font-weight: 500;
-  color: #CD853F;
-}
+/* ============================================
+   SECCIÓN 2: GRID DE ESTADÍSTICAS
+   ============================================ */
 
-.xp-label {
-  font-size: 0.55rem;
-  color: #555;
-  text-transform: uppercase;
-}
-
-/* 2. BARRA DE PROGRESO DE XP */
-.xp-bar-container {
-  /* ¡CLAVE CORREGIDA! Aseguramos un margen inferior suficiente */
-  margin-bottom: 20px; 
-}
-
-.progress-bar-label {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.6rem;
-  color: #999;
-  margin-bottom: 3px;
-}
-
-.progress-bar {
-  height: 4px; /* ¡CLAVE CORREGIDA! Incrementamos la altura para visibilidad */
-  background-color: #333;
-  border-radius: 1px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: #CD853F;
-  transition: width 0.5s ease;
-}
-
-/* 3. GRID DE ESTADÍSTICAS DETALLADAS (Historias, Logros, Días, Objetos, etc.) */
 .stats-grid {
   display: grid;
-  /* MÁXIMA DENSIDAD */
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); 
-  gap: 4px; 
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+  margin: var(--spacing-md) 0;
 }
 
 .stat-item {
-  background: #151515;
-  border: 1px solid #222;
-  padding: 4px 5px;
-  border-radius: 2px;
-  line-height: 1.1;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-secondary);
+  padding: var(--spacing-sm);
+  text-align: center;
+  transition: all var(--transition-normal);
+  cursor: default;
+}
+
+.stat-item:hover {
+  border-color: var(--border-primary);
+  box-shadow: 0 0 15px rgba(205, 133, 63, 0.2);
+  transform: translateY(-2px);
 }
 
 .stat-icon {
-  font-size: 0.7rem;
-  color: #CD853F;
-  margin-bottom: 1px;
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--spacing-xs);
+  filter: drop-shadow(0 0 5px rgba(205, 133, 63, 0.3));
 }
 
 .stat-number {
-  font-size: 0.6rem; 
+  font-size: var(--font-size-lg);
   font-weight: 700;
-  color: #f0f0f0;
-  display: block;
+  margin-bottom: 2px;
 }
 
 .stat-label {
-  font-size: 0.5rem; 
-  font-weight: 400;
-  color: #555;
-  text-transform: uppercase;
+  font-size: var(--font-size-xs);
   letter-spacing: 1.5px;
-  margin-top: 1px;
-}
-
-/* Responsive Design */
-@media (max-width: 900px) {
-  .stats-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 5px;
-  }
-}
-
-@media (max-width: 500px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* 4. SECCIÓN DE ARCHIVOS FAVORITOS - TEMA HACKER/CINEMATIC */
-.favorite-stories-section {
-  margin-top: 30px;
-  padding: 20px;
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-  border: 1px solid #CD853F;
-  border-radius: 8px;
-  box-shadow: 0 0 20px rgba(205, 133, 63, 0.1);
-}
-
-.section-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #CD853F;
   text-transform: uppercase;
+}
+
+/* ============================================
+   SECCIÓN 3: ARCHIVOS FAVORITOS
+   ============================================ */
+
+.favorites-section {
+  margin-top: var(--spacing-md);
+}
+
+.favorites-header {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
   letter-spacing: 2px;
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-md);
+  text-transform: uppercase;
+}
+
+.favorites-loading,
+.favorites-empty {
+  text-align: center;
+  padding: var(--spacing-xl) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  letter-spacing: 1px;
+}
+
+.favorites-row {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  border-bottom: 2px solid #CD853F;
-  padding-bottom: 10px;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  align-items: flex-start;
 }
 
-.title-icon {
-  font-size: 1.5rem;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
-.title-count {
-  font-size: 0.9rem;
-  color: #888;
-  font-weight: 400;
-}
-
-/* Loading State */
-.favorites-loading {
+.folder-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 40px;
-  color: #888;
-}
-
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #333;
-  border-top: 3px solid #CD853F;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 15px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Empty State */
-.favorites-empty {
-  text-align: center;
-  padding: 60px 20px;
-  color: #666;
-}
-
-.empty-icon {
-  font-size: 4rem;
-  margin-bottom: 15px;
-  opacity: 0.3;
-}
-
-.favorites-empty p {
-  font-size: 1.1rem;
-  color: #888;
-  margin-bottom: 8px;
-}
-
-.empty-hint {
-  font-size: 0.85rem;
-  color: #555;
-  font-style: italic;
-}
-
-/* Favorites Grid */
-.favorites-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-/* Favorite Card - Hacker/Cinematic Style */
-.favorite-card {
-  background: linear-gradient(145deg, #0d0d0d 0%, #1a1a1a 100%);
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 0;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+  transition: all var(--transition-normal);
+  min-width: 90px;
+  max-width: 120px;
 }
 
-.favorite-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #CD853F, transparent);
-  transition: left 0.5s ease;
+.folder-item:hover {
+  border-color: var(--border-primary);
+  box-shadow: var(--shadow-amber);
+  transform: translateY(-3px);
 }
 
-.favorite-card:hover::before {
-  left: 100%;
-}
-
-.favorite-card:hover {
-  border-color: #CD853F;
-  box-shadow: 0 0 30px rgba(205, 133, 63, 0.3);
-  transform: translateY(-5px);
-}
-
-.favorite-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px;
-  background: rgba(205, 133, 63, 0.05);
-  border-bottom: 1px solid #222;
-}
-
-.favorite-icon {
+.folder-icon {
   font-size: 1.5rem;
-  filter: drop-shadow(0 0 8px rgba(205, 133, 63, 0.5));
+  filter: drop-shadow(0 0 8px rgba(205, 133, 63, 0.4));
 }
 
-.favorite-badge {
-  font-size: 0.65rem;
+.folder-name {
+  font-size: var(--font-size-xs);
   font-weight: 700;
-  color: #CD853F;
-  background: rgba(205, 133, 63, 0.1);
-  padding: 4px 10px;
-  border-radius: 12px;
-  border: 1px solid #CD853F;
-  letter-spacing: 1.5px;
-}
-
-.favorite-card-content {
-  padding: 20px 15px;
-}
-
-.favorite-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #f0f0f0;
-  margin-bottom: 10px;
-  text-transform: uppercase;
   letter-spacing: 1px;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   line-height: 1.3;
 }
 
-.favorite-description {
-  font-size: 0.85rem;
-  color: #999;
-  line-height: 1.5;
-  margin: 0;
-}
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
 
-.favorite-card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 15px;
-  background: rgba(0, 0, 0, 0.3);
-  border-top: 1px solid #222;
-}
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 
-.favorite-location {
-  font-size: 0.75rem;
-  color: #666;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
+  .status-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
 
-.favorite-location::before {
-  content: '📍';
-  font-size: 0.9rem;
-}
+  .level-badge {
+    font-size: var(--font-size-md);
+  }
 
-.favorite-play-btn {
-  background: linear-gradient(135deg, #CD853F 0%, #B8860B 100%);
-  color: #000;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
+  .xp-container {
+    width: 100%;
+  }
 
-.favorite-play-btn:hover {
-  background: linear-gradient(135deg, #DAA520 0%, #CD853F 100%);
-  box-shadow: 0 0 15px rgba(205, 133, 63, 0.5);
-  transform: scale(1.05);
-}
-
-/* Responsive Design for Favorites */
-@media (max-width: 900px) {
-  .favorites-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 15px;
+  .favorites-row {
+    justify-content: center;
   }
 }
 
-@media (max-width: 500px) {
-  .favorites-grid {
+@media (max-width: 480px) {
+  .resistance-dashboard {
+    padding: var(--spacing-md);
+  }
+
+  .stats-grid {
     grid-template-columns: 1fr;
+    gap: var(--spacing-xs);
   }
-  
-  .favorite-stories-section {
-    padding: 15px;
+
+  .stat-item {
+    padding: var(--spacing-xs);
   }
-  
-  .section-title {
-    font-size: 1rem;
+
+  .stat-icon {
+    font-size: var(--font-size-lg);
   }
+
+  .stat-number {
+    font-size: var(--font-size-md);
+  }
+
+  .folder-item {
+    min-width: 60px;
+  }
+}
+
+/* ============================================
+   UTILIDADES ESPECÍFICAS
+   ============================================ */
+
+.mono-text-white {
+  color: var(--text-white);
+}
+
+.mono-text-muted {
+  color: var(--text-muted);
+}
+
+.mono-text-green {
+  color: var(--text-primary);
+}
+
+.mono-text-amber {
+  color: var(--text-secondary);
 }
