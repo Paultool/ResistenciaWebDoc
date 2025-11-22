@@ -189,20 +189,20 @@
 }
 
 .stat-icon {
-  font-size: 1.5rem;
+  font-size: 0.9rem;
   margin-bottom: var(--spacing-xs);
-  filter: drop-shadow(0 0 6px rgba(205, 133, 63, 0.4));
+  filter: drop-shadow(0 0 4px rgba(205, 133, 63, 0.4));
   transition: filter var(--transition-fast);
 }
 
 .stat-item:hover .stat-icon {
-  filter: drop-shadow(0 0 12px rgba(205, 133, 63, 0.7));
+  filter: drop-shadow(0 0 8px rgba(205, 133, 63, 0.7));
 }
 
 .stat-value {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-md);
   font-weight: 700;
-  letter-spacing: 1.5px;
+  letter-spacing: 1px;
   margin-bottom: var(--spacing-xs);
 }
 
@@ -289,13 +289,13 @@
 }
 
 .folder-icon {
-  font-size: 1.5rem;
-  filter: drop-shadow(0 0 8px rgba(205, 133, 63, 0.5));
+  font-size: 0.9rem;
+  filter: drop-shadow(0 0 5px rgba(205, 133, 63, 0.5));
   transition: filter var(--transition-fast);
 }
 
 .folder-item:hover .folder-icon {
-  filter: drop-shadow(0 0 14px rgba(205, 133, 63, 0.8));
+  filter: drop-shadow(0 0 10px rgba(205, 133, 63, 0.8));
 }
 
 .folder-name {
@@ -325,19 +325,19 @@
   }
 
   .stat-icon {
-    font-size: 1.3rem;
+    font-size: 0.8rem;
   }
 
   .stat-value {
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-sm);
   }
 
   .stat-label {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
   }
 
   .folder-icon {
-    font-size: 1.3rem;
+    font-size: 0.8rem;
   }
 
   .folder-item {
@@ -375,34 +375,34 @@
   }
 
   .stat-icon {
-    font-size: 1.2rem;
+    font-size: 0.7rem;
   }
 
   .stat-value {
-    font-size: var(--font-size-sm);
-    letter-spacing: 1px;
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
   }
 
   .stat-label {
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     letter-spacing: 0.5px;
   }
 
   .favorites-header {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
   }
 
   .folder-item {
-    min-width: 60px;
-    max-width: 80px;
-    padding: 6px;
+    min-width: 55px;
+    max-width: 75px;
+    padding: 5px;
   }
 
   .folder-icon {
-    font-size: 1.2rem;
+    font-size: 0.7rem;
   }
 
   .folder-name {
-    font-size: 0.6rem;
+    font-size: 0.55rem;
   }
 }
