@@ -68,8 +68,17 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void }> = ({ onNa
   }
 
   const handleSignOut = async () => {
-    gameService.clearCache()
-    await signOut()
+    try {
+      // Intentar limpiar caché si el método existe
+      if (gameService.clearCache) {
+        gameService.clearCache()
+      }
+    } catch (e) {
+      console.warn('Error clearing cache:', e)
+    } finally {
+      // Siempre cerrar sesión
+      await signOut()
+    }
   }
 
   return (

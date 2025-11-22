@@ -868,9 +868,12 @@ class GameServiceUser {
             console.error('❌ [getDashboardStats] Error obteniendo estadísticas del dashboard:', error)
             return null
         }
+    // Método para limpiar caché al cerrar sesión
+    public clearCache(): void {
+        console.log('Limpiando caché de servicio de juego...');
+        // Si implementamos caché en memoria en el futuro, limpiarlo aquí
+        this.playerStats = null;
     }
 }
-
-
 
 export const gameServiceUser = GameServiceUser.getInstance();
