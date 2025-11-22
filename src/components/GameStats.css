@@ -189,20 +189,20 @@
 }
 
 .stat-icon {
-  font-size: 2rem;
+  font-size: 1.5rem;
   margin-bottom: var(--spacing-xs);
-  filter: drop-shadow(0 0 8px rgba(205, 133, 63, 0.4));
+  filter: drop-shadow(0 0 6px rgba(205, 133, 63, 0.4));
   transition: filter var(--transition-fast);
 }
 
 .stat-item:hover .stat-icon {
-  filter: drop-shadow(0 0 15px rgba(205, 133, 63, 0.7));
+  filter: drop-shadow(0 0 12px rgba(205, 133, 63, 0.7));
 }
 
 .stat-value {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-lg);
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   margin-bottom: var(--spacing-xs);
 }
 
@@ -289,13 +289,13 @@
 }
 
 .folder-icon {
-  font-size: 2rem;
-  filter: drop-shadow(0 0 10px rgba(205, 133, 63, 0.5));
+  font-size: 1.5rem;
+  filter: drop-shadow(0 0 8px rgba(205, 133, 63, 0.5));
   transition: filter var(--transition-fast);
 }
 
 .folder-item:hover .folder-icon {
-  filter: drop-shadow(0 0 18px rgba(205, 133, 63, 0.8));
+  filter: drop-shadow(0 0 14px rgba(205, 133, 63, 0.8));
 }
 
 .folder-name {
@@ -311,26 +311,39 @@
 }
 
 /* ============================================
-   RESPONSIVE DESIGN
+   RESPONSIVE
    ============================================ */
 
 @media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .resistance-dashboard {
+    padding: var(--spacing-md);
   }
 
-  .status-row {
-    flex-direction: column;
-    align-items: flex-start;
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-sm);
   }
 
-  .level-badge {
+  .stat-icon {
+    font-size: 1.3rem;
+  }
+
+  .stat-value {
     font-size: var(--font-size-md);
   }
 
-  .xp-container {
-    width: 100%;
+  .stat-label {
+    font-size: 0.65rem;
+  }
+
+  .folder-icon {
+    font-size: 1.3rem;
+  }
+
+  .folder-item {
+    min-width: 70px;
+    max-width: 90px;
+    padding: var(--spacing-sm);
   }
 
   .favorites-row {
@@ -340,47 +353,56 @@
 
 @media (max-width: 480px) {
   .resistance-dashboard {
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
+  }
+
+  .level-badge {
+    font-size: var(--font-size-md);
+    padding: 4px 8px;
+  }
+
+  .rank-title {
+    font-size: var(--font-size-sm);
   }
 
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-xs);
   }
 
   .stat-item {
-    padding: var(--spacing-xs);
+    padding: var(--spacing-sm);
   }
 
   .stat-icon {
-    font-size: var(--font-size-lg);
+    font-size: 1.2rem;
   }
 
-  .stat-number {
-    font-size: var(--font-size-md);
+  .stat-value {
+    font-size: var(--font-size-sm);
+    letter-spacing: 1px;
+  }
+
+  .stat-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.5px;
+  }
+
+  .favorites-header {
+    font-size: var(--font-size-sm);
   }
 
   .folder-item {
     min-width: 60px;
+    max-width: 80px;
+    padding: 6px;
   }
-}
 
-/* ============================================
-   UTILIDADES ESPECÍFICAS
-   ============================================ */
+  .folder-icon {
+    font-size: 1.2rem;
+  }
 
-.mono-text-white {
-  color: var(--text-white);
-}
-
-.mono-text-muted {
-  color: var(--text-muted);
-}
-
-.mono-text-green {
-  color: var(--text-primary);
-}
-
-.mono-text-amber {
-  color: var(--text-secondary);
+  .folder-name {
+    font-size: 0.6rem;
+  }
 }
