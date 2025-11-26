@@ -26,8 +26,8 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
       const personajesData = await obtenerPersonajes()
       setPersonajes(personajesData)
     } catch (err: any) {
-      console.error('Error cargando personajes:', err)
-      setError('Error al cargar los personajes: ' + err.message)
+      console.error('Error:', err)
+      setError('ERROR DE SISTEMA: ' + err.message)
     } finally {
       setLoading(false)
     }
@@ -36,24 +36,24 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
   const handleMeetCharacter = async (personaje: Personaje) => {
     if (!user?.id) return
     try {
-      const gameEvent = await gameService.meetCharacter(user.id, personaje.id.toString())
+      const gameEvent = await gameService.meetCharacter(user.id, personaje.nombre.toString())
       if (gameEvent) {
-        alert(`🎉 ¡Has conocido a ${personaje.nombre}! +${gameEvent.xp_ganado} XP`)
+        alert(`[ REGISTRO ACTUALIZADO ]\nSujeto: ${personaje.nombre}\nXP Ganada: +${gameEvent.xp_ganado}`)
+        window.dispatchEvent(new Event('statsUpdated'))
+      } else {
+        alert(`[ INFORMACIÓN ]\nEl sujeto ${personaje.nombre} ya está registrado en la base de datos.`)
       }
     } catch (error: any) {
-      console.error('Error conociendo personaje:', error)
-      alert('Error al intentar conocer al personaje. Intenta de nuevo.')
+      console.error('Error:', error)
+      alert('ERROR AL PROCESAR SOLICITUD.')
     }
   }
 
   if (loading) {
     return (
-      <div className="pv-container">
-        <div className="pv-header">
-          <h2>🎭 Galería de Personajes</h2>
-        </div>
-        <div className="pv-status">
-          <p>⏳ Cargando datos...</p>
+      <div className="pv-container flex items-center justify-center">
+        <div className="text-[#33ff00] text-xl animate-pulse font-mono">
+          {'>'} CARGANDO BASE DE DATOS DE SUJETOS...
         </div>
       </div>
     )
@@ -63,11 +63,11 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
     return (
       <div className="pv-container">
         <div className="pv-header">
-          <h2>🎭 Galería de Personajes</h2>
+          <h2>BASE DE DATOS</h2>
         </div>
         <div className="pv-status">
-          <p>❌ {error}</p>
-          <button onClick={cargarPersonajes} className="pv-btn-retry">🔄 Reintentar</button>
+          <p>[ ! ] {error}</p>
+          <button onClick={cargarPersonajes} className="pv-btn-retry">REINTENTAR CONEXIÓN</button>
         </div>
       </div>
     )
@@ -75,61 +75,69 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
 
   return (
     <div className="pv-container">
+      
+      {/* HEADER */}
       <div className="pv-header">
-        <h2>Galería de Personajes</h2>
-        <p>Protagonistas de La Resistencia</p>
+        <div>
+          <h2>BASE DE DATOS</h2>
+          <p>REGISTRO DE SUJETOS CLAVE</p>
+        </div>
+        {onBack && (
+          <button 
+            onClick={onBack} 
+            className="border border-[#33ff00] text-[#33ff00] bg-transparent px-4 py-2 font-bold uppercase hover:bg-[#33ff00] hover:text-black transition-all"
+          >
+            [ X ] CERRAR
+          </button>
+        )}
       </div>
 
       <div className="pv-stats">
-        <span className="pv-stat-item">👥 Total: <span className="pv-stat-highlight">{personajes.length}</span></span>
-        <span className="pv-stat-item">🏛️ Fichas disponibles</span>
+        <span className="pv-stat-item">SUJETOS IDENTIFICADOS: <span className="pv-stat-highlight">{personajes.length}</span></span>
+        <span className="pv-stat-item">ESTADO: <span style={{color:'#33ff00'}}>EN LÍNEA</span></span>
       </div>
 
+      {/* GRID */}
       <div className="pv-grid">
         {personajes.map((personaje) => {
           const atributos = personaje.metadata || {}
 
           return (
             <div key={personaje.id} className="pv-card">
+              
+              {/* Imagen Mugshot */}
               <div className="pv-image-container">
                 {personaje.imagen ? (
-                  <img
-                    src={personaje.imagen}
-                    alt={personaje.nombre}
-                    loading="lazy"
-                  />
+                  <img src={personaje.imagen} alt={personaje.nombre} loading="lazy" />
                 ) : (
-                  <div className="pv-placeholder">👤</div>
+                  <div className="pv-placeholder">?</div>
                 )}
               </div>
 
               <div className="pv-info">
                 <h3 className="pv-name">{personaje.nombre}</h3>
-                <p className="pv-rol">{personaje.rol || 'Sin rol definido'}</p>
+                <p className="pv-rol">{personaje.rol || 'ROL DESCONOCIDO'}</p>
+                
                 <p className="pv-desc">
-                  {personaje.descripcion || 'Sin descripción disponible.'}
+                  {personaje.descripcion || 'DATOS NO DISPONIBLES.'}
                 </p>
 
                 {atributos.edad && (
                   <div className="pv-meta-row">
-                    <span className="pv-meta-label">Edad:</span> {atributos.edad}
+                    <span className="pv-meta-label">EDAD:</span> {atributos.edad}
                   </div>
                 )}
 
                 {atributos.profesion && (
                   <div className="pv-meta-row">
-                    <span className="pv-meta-label">Profesión:</span> {atributos.profesion}
+                    <span className="pv-meta-label">OCUPACIÓN:</span> {atributos.profesion}
                   </div>
                 )}
               </div>
 
               <div className="pv-actions">
-                {/* Botón único que ahora ocupará todo el ancho */}
-                <button
-                  onClick={() => setSelectedPersonaje(personaje)}
-                  className="pv-btn pv-btn-sec"
-                >
-                  👁️ Ver Ficha
+                <button onClick={() => setSelectedPersonaje(personaje)} className="pv-btn">
+                  [ VER EXPEDIENTE ]
                 </button>
               </div>
             </div>
@@ -137,14 +145,14 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
         })}
       </div>
 
-      {/* Modal de Detalle de Personaje */}
+      {/* MODAL EXPEDIENTE */}
       {selectedPersonaje && (
         <div className="pv-modal-overlay" onClick={() => setSelectedPersonaje(null)}>
           <div className="pv-modal" onClick={(e) => e.stopPropagation()}>
 
             <div className="pv-modal-header">
               <h2 className="pv-modal-title">{selectedPersonaje.nombre}</h2>
-              <button onClick={() => setSelectedPersonaje(null)} className="pv-modal-close">×</button>
+              <button onClick={() => setSelectedPersonaje(null)} className="pv-modal-close">X</button>
             </div>
 
             <div className="pv-modal-content">
@@ -153,29 +161,31 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
                 {selectedPersonaje.imagen ? (
                   <img src={selectedPersonaje.imagen} alt={selectedPersonaje.nombre} />
                 ) : (
-                  <div className="pv-placeholder">👤</div>
+                  <div className="pv-placeholder" style={{color:'#33ff00', fontSize:'5rem'}}>?</div>
                 )}
               </div>
 
               {/* Columna Derecha: Info */}
               <div className="pv-modal-info">
                 <div>
-                  <h4 className="pv-section-title">Rol / Ocupación</h4>
-                  <p className="pv-modal-desc" style={{ color: '#63b3ed', fontWeight: 'bold' }}>{selectedPersonaje.rol}</p>
+                  <h4 className="pv-section-title">CLASIFICACIÓN / ROL</h4>
+                  <p className="pv-modal-desc" style={{ color: '#33ff00', fontWeight: 'bold', textTransform:'uppercase' }}>
+                    {selectedPersonaje.rol || 'NO CLASIFICADO'}
+                  </p>
                 </div>
 
                 <div>
-                  <h4 className="pv-section-title">Descripción</h4>
+                  <h4 className="pv-section-title">PERFIL PSICOLÓGICO / BIO</h4>
                   <p className="pv-modal-desc">{selectedPersonaje.descripcion}</p>
                 </div>
 
                 {selectedPersonaje.metadata && (
                   <div>
-                    <h4 className="pv-section-title">Atributos</h4>
+                    <h4 className="pv-section-title">ATRIBUTOS TÉCNICOS</h4>
                     <div className="pv-attr-grid">
                       {Object.entries(selectedPersonaje.metadata).map(([key, value]) => (
                         <div key={key} className="pv-attr-row">
-                          <span className="pv-attr-key">{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                          <span className="pv-attr-key">{key}</span>
                           <span className="pv-attr-val">{String(value)}</span>
                         </div>
                       ))}
@@ -186,13 +196,12 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
             </div>
 
             <div className="pv-modal-actions">
-              {/* Aquí se mantiene el botón para ganar XP */}
               <button
                 onClick={() => handleMeetCharacter(selectedPersonaje)}
-                className="pv-btn pv-btn-pri"
-                style={{ width: 'auto', display: 'inline-flex' }}
+                className="pv-btn"
+                style={{ width: 'auto', display: 'inline-block', border:'1px solid #fff', color:'#fff' }}
               >
-                🤝 Registrar Encuentro (+25 XP)
+                [+] REGISTRAR ENCUENTRO (+25 XP)
               </button>
             </div>
           </div>

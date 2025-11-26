@@ -1,355 +1,285 @@
 /* ============================================================
-   INVENTARIO VIEW - ESTILO DARK MINIMALIST (Namespaced: iv-)
+   INVENTARIO VIEW - ESTILO RESISTENCIA OS (Namespaced: iv-)
    ============================================================ */
-
-/* Reset local */
-.iv-container * {
-  box-sizing: border-box;
-}
 
 .iv-container {
   padding: 2rem;
-  background-color: #0f0f0f; /* Fondo oscuro plano */
+  background-color: #050505;
   min-height: 100vh;
-  color: #e2e8f0;
-  font-family: 'Inter', sans-serif;
+  color: #a8a8a8;
+  font-family: 'Courier Prime', monospace; /* Fuente Hacker */
+  position: relative;
 }
 
-/* --- HEADER --- */
+/* Scanlines de Fondo */
+.iv-container::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+              linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 0;
+  background-size: 100% 2px, 3px 100%;
+  pointer-events: none;
+}
+
+/* --- HEADER TÁCTICO --- */
 .iv-header {
-  margin-bottom: 2rem;
-  text-align: center;
-  border-bottom: 1px solid #333;
-  padding-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 3rem;
+  border-bottom: 1px solid #33ff00;
+  padding-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
 }
 
 .iv-header h2 {
   color: #fff;
-  margin: 0 0 0.5rem 0;
-  font-size: 2rem;
-  font-weight: 800;
-  letter-spacing: -1px;
+  margin: 0;
+  font-size: 3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  line-height: 0.9;
+  text-shadow: 2px 2px 0px rgba(51, 255, 0, 0.3);
 }
 
 .iv-header p {
-  color: #718096;
-  font-size: 1rem;
+  color: #33ff00;
+  font-size: 0.9rem;
   margin: 0;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 /* --- CONTROLES Y FILTROS --- */
 .iv-controls {
-  margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 3rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  align-items: center;
+  gap: 1rem;
 }
 
 .iv-filter-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-  background-color: #161616;
-  padding: 8px;
-  border-radius: 8px;
+  gap: 15px;
+  padding: 15px;
   border: 1px solid #333;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .iv-filter-btn {
   background: transparent;
-  color: #718096;
-  border: 1px solid transparent;
-  padding: 8px 16px;
-  border-radius: 6px;
+  color: #666;
+  border: 1px solid #333;
+  padding: 10px 20px;
   cursor: pointer;
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
   transition: all 0.2s;
-  text-transform: capitalize;
+  font-family: 'Courier Prime', monospace;
 }
 
 .iv-filter-btn:hover {
-  color: #cbd5e0;
-  background-color: rgba(255, 255, 255, 0.05);
+  border-color: #fff;
+  color: #fff;
 }
 
 .iv-filter-btn.active {
-  background-color: #3182ce; /* Azul acento */
-  color: white;
-  box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
+  background-color: rgba(51, 255, 0, 0.1);
+  border-color: #33ff00;
+  color: #33ff00;
+  box-shadow: 0 0 10px rgba(51, 255, 0, 0.2);
 }
 
 /* --- STATS BAR --- */
 .iv-stats {
   display: flex;
-  justify-content: center;
   gap: 2rem;
-  padding: 12px 24px;
-  background-color: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 6px;
-}
-
-.iv-stat-item {
-  color: #a0aec0;
-  font-size: 0.9rem;
-  font-weight: 500;
+  padding: 10px;
+  border-left: 3px solid #33ff00;
+  background: rgba(0, 0, 0, 0.5);
+  font-size: 0.8rem;
+  text-transform: uppercase;
 }
 
 .iv-stat-val {
-  color: #63b3ed;
+  color: #fff;
   font-weight: 700;
   margin-left: 5px;
 }
 
-/* --- GRID DE INVENTARIO --- */
+/* --- GRID --- */
 .iv-grid {
+  position: relative;
+  z-index: 1;
   display: grid;
-  /* Tarjetas adaptables */
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 25px;
 }
 
-/* --- TARJETA (CARD) --- */
+/* --- CARD (FICHA DE OBJETO) --- */
 .iv-card {
-  background-color: #161616;
-  border: 1px solid #333; /* Borde base */
-  border-radius: 8px;
-  padding: 16px;
-  transition: transform 0.2s, box-shadow 0.2s;
+  background-color: #080808;
+  border: 1px solid #333;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden;
+  transition: all 0.3s;
+  cursor: default;
 }
 
 .iv-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.5);
-  /* El color del borde cambiará dinámicamente según rareza en el inline-style */
+  border-color: #33ff00;
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(51, 255, 0, 0.15);
 }
 
-/* Header de la tarjeta */
+/* Esquinas Decorativas */
+.iv-card::before {
+  content: ''; position: absolute; top: -1px; left: -1px; width: 10px; height: 10px;
+  border-top: 2px solid transparent; border-left: 2px solid transparent; transition: all 0.3s;
+}
+.iv-card:hover::before { border-color: #33ff00; }
+
 .iv-card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 12px;
+  margin-bottom: 15px;
+  border-bottom: 1px dashed #333;
+  padding-bottom: 10px;
 }
 
 .iv-icon-box {
-  width: 48px;
-  height: 48px;
-  background-color: #2d3748;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  color: #e2e8f0;
+  width: 50px; height: 50px;
+  background: #000;
+  border: 1px solid #444;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem;
 }
 
 .iv-rarity-badge {
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid currentColor; /* Toma el color del texto */
-}
-
-/* Info de la tarjeta */
-.iv-card-body {
-  flex-grow: 1;
-  margin-bottom: 16px;
+  padding: 2px 6px;
+  background: #000;
+  border: 1px solid currentColor;
 }
 
 .iv-card-title {
   color: #fff;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  margin: 0 0 4px 0;
-  line-height: 1.3;
+  text-transform: uppercase;
+  margin: 0 0 5px 0;
 }
 
 .iv-card-type {
-  color: #718096;
-  font-size: 0.75rem;
+  color: #33ff00;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  font-weight: 600;
-  margin-bottom: 8px;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
   display: block;
 }
 
 .iv-card-desc {
-  color: #a0aec0;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 3; /* Limita a 3 líneas */
-  -webkit-box-orient: vertical;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #888;
+  height: 3em; /* Altura fija */
   overflow: hidden;
 }
 
-/* Footer de la tarjeta */
+/* Footer Botón */
 .iv-card-footer {
+  margin-top: 20px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-top: 1px solid #333;
-  padding-top: 12px;
-  margin-top: auto;
-}
-
-.iv-card-date {
-  font-size: 0.75rem;
-  color: #718096;
+  justify-content: flex-end;
 }
 
 .iv-btn-view {
-  background-color: #2d3748;
-  color: #e2e8f0;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
+  background: transparent;
+  color: #33ff00;
+  border: 1px solid #33ff00;
+  padding: 8px 16px;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 700;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .iv-btn-view:hover {
-  background-color: #4a5568;
-  color: #fff;
+  background: #33ff00;
+  color: #000;
+  box-shadow: 0 0 10px #33ff00;
 }
 
 /* --- EMPTY STATE --- */
 .iv-empty {
-  text-align: center;
-  padding: 4rem;
-  background-color: #161616;
-  border-radius: 8px;
-  border: 1px dashed #4a5568;
-  color: #718096;
+  text-align: center; padding: 4rem;
+  border: 1px dashed #333; color: #555;
+  text-transform: uppercase; letter-spacing: 2px;
 }
-.iv-empty-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
 
-/* --- MODAL (Estilo consistente con Personajes) --- */
+/* --- MODAL DE DETALLE --- */
 .iv-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.9);
-  backdrop-filter: blur(4px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 3000;
-  padding: 20px;
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.9); backdrop-filter: blur(5px);
+  display: flex; justify-content: center; align-items: center; z-index: 3000;
 }
 
 .iv-modal {
-  background-color: #121212;
-  border: 1px solid #333;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 600px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+  background-color: #050505;
+  border: 1px solid #33ff00;
+  width: 100%; max-width: 600px;
+  display: flex; flex-direction: column;
+  box-shadow: 0 0 50px rgba(51, 255, 0, 0.2);
+  position: relative;
 }
 
 .iv-modal-header {
-  padding: 16px 24px;
-  background-color: #1a1a1a;
-  border-bottom: 1px solid #333;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  padding: 20px; border-bottom: 1px solid #33ff00;
+  display: flex; justify-content: space-between; align-items: center;
+  background: rgba(51, 255, 0, 0.05);
 }
 
-.iv-modal-title-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.iv-modal-icon { font-size: 1.5rem; }
-.iv-modal-h2 { margin: 0; font-size: 1.3rem; color: #fff; font-weight: 700; }
+.iv-modal-h2 { margin: 0; font-size: 1.5rem; color: #fff; text-transform: uppercase; }
 
 .iv-modal-close {
-  background: transparent;
-  border: none;
-  color: #718096;
-  font-size: 1.5rem;
-  cursor: pointer;
-  line-height: 1;
+  background: transparent; border: 1px solid #33ff00;
+  color: #33ff00; width: 30px; height: 30px;
+  cursor: pointer; transition: all 0.2s;
 }
-.iv-modal-close:hover { color: #e53e3e; }
+.iv-modal-close:hover { background: #33ff00; color: #000; }
 
-.iv-modal-content {
-  padding: 24px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
+.iv-modal-content { padding: 30px; display: flex; flex-direction: column; gap: 20px; }
 
-.iv-detail-row {
-  border-bottom: 1px solid #2d2d2d;
-  padding-bottom: 12px;
-}
-.iv-detail-row:last-child { border-bottom: none; }
+.iv-detail-row { border-bottom: 1px dashed #333; padding-bottom: 15px; }
 
 .iv-detail-label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  color: #718096;
-  margin-bottom: 4px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  font-size: 0.7rem; text-transform: uppercase;
+  color: #33ff00; margin-bottom: 5px; letter-spacing: 1px;
 }
 
-.iv-detail-value {
-  font-size: 0.95rem;
-  color: #e2e8f0;
-  line-height: 1.5;
-}
+.iv-detail-value { font-size: 1rem; color: #ccc; }
 
-.iv-modal-footer {
-  padding: 16px 24px;
-  background-color: #161616;
-  border-top: 1px solid #333;
-  text-align: right;
-}
+.iv-modal-footer { padding: 20px; border-top: 1px solid #333; text-align: right; }
 
 .iv-btn-close-modal {
-  background-color: #2d3748;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
+  background: transparent; border: 1px solid #555; color: #888;
+  padding: 10px 20px; font-weight: 700; text-transform: uppercase; cursor: pointer;
 }
-.iv-btn-close-modal:hover { background-color: #4a5568; }
-
-/* Loading / Error */
-.iv-status { text-align: center; padding: 4rem; color: #718096; }
-.iv-btn-retry { margin-top: 1rem; padding: 8px 16px; background: #3182ce; color: white; border: none; border-radius: 4px; cursor: pointer; }
-
-/* Responsive */
-@media (max-width: 600px) {
-  .iv-container { padding: 1rem; }
-  .iv-filter-bar { width: 100%; }
-  .iv-filter-btn { flex: 1; text-align: center; }
-}
+.iv-btn-close-modal:hover { border-color: #fff; color: #fff; }

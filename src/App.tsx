@@ -21,26 +21,26 @@ import './components/HistoriaDetail.css';
 // --- Componente Modal de Video YouTube (NUEVO) ---
 // ==========================================================
 const YouTubeVideoModal: React.FC<{ videoId: string; title: string; onClose: () => void }> = ({ videoId, title, onClose }) => {
-    // URL de embebido de YouTube. El parámetro 'autoplay=1' inicia la reproducción.
-    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+  // URL de embebido de YouTube. El parámetro 'autoplay=1' inicia la reproducción.
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
 
-    return (
-        <div className="video-modal-overlay" onClick={onClose}>
-            <div className="video-modal-content" onClick={(e) => e.stopPropagation()}>
-                <button onClick={onClose} className="video-modal-close-btn">&times;</button>
-                <h3 className="video-modal-title">{title}</h3>
-                <div className="video-responsive">
-                    <iframe
-                        src={embedUrl}
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        title={title}
-                    ></iframe>
-                </div>
-            </div>
+  return (
+    <div className="video-modal-overlay" onClick={onClose}>
+      <div className="video-modal-content" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="video-modal-close-btn">&times;</button>
+        <h3 className="video-modal-title">{title}</h3>
+        <div className="video-responsive">
+          <iframe
+            src={embedUrl}
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            title={title}
+          ></iframe>
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 
@@ -48,12 +48,12 @@ const YouTubeVideoModal: React.FC<{ videoId: string; title: string; onClose: () 
 // --- Componente de Proceso (WIP) (ACTUALIZADO 2x2) ---
 // ==========================================================
 interface WorkInProgressViewProps {
-    onOpenVideoModal: (videoId: string, title: string) => void;
+  onOpenVideoModal: (videoId: string, title: string) => void;
 }
 
 const WorkInProgressView: React.FC<WorkInProgressViewProps> = ({ onOpenVideoModal }) => {
   const links = [
-    { name: 'PRIMER CORTE (Video)', type: 'video', videoId: '1MpN0MbBFlA', icon: 'fab fa-youtube' }, 
+    { name: 'PRIMER CORTE (Video)', type: 'video', videoId: '1MpN0MbBFlA', icon: 'fab fa-youtube' },
     { name: 'GALERIA', type: 'link', url: 'https://pablonieto.jimdofree.com/2025/10/28/la-resistencia-wip/', icon: 'fas fa-camera-retro' },
     { name: 'CARPETA DE PRODUCCION', type: 'link', url: 'https://drive.google.com/file/d/1MbjrWQTWGnUcngcSb2afQpiZjqqNFtqG/view?usp=sharing', icon: 'fas fa-folder-open' },
     { name: 'GITHUB', type: 'link', url: 'https://github.com/Paultool/ResistenciaWebDoc', icon: 'fab fa-github' },
@@ -65,7 +65,7 @@ const WorkInProgressView: React.FC<WorkInProgressViewProps> = ({ onOpenVideoModa
       <p className="wip-description">
         Esta es la documentación y recursos externos del proyecto "WebDoc La Resistencia".
       </p>
-      
+
       {/* 🔑 CLAVE: La clase wip-links-grid define el layout 2x2 en App.css */}
       <div className="wip-links-grid">
         {links.map((link) => {
@@ -74,7 +74,7 @@ const WorkInProgressView: React.FC<WorkInProgressViewProps> = ({ onOpenVideoModa
               <button
                 key={link.name}
                 onClick={() => onOpenVideoModal(link.videoId, link.name)}
-                className="wip-link-card" 
+                className="wip-link-card"
               >
                 <i className={`${link.icon} wip-icon`}></i>
                 <span className="wip-link-name">{link.name}</span>
@@ -142,48 +142,48 @@ const HistoriaCard: React.FC<HistoriaCardProps> = ({ historia, onViewDetail }) =
 // ==========================================================
 const MainContent: React.FC = () => {
 
-  const { user } = useAuth();  
-  const [isAdmin, setIsAdmin] = useState(false);  
-  
+  const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+
   // 🔑 ACTUALIZACIÓN: Se agrega 'wip' al tipo de vista
-  type View = 'dashboard' | 'historias' | 'personajes' | 'mapa' | 'inventario' | 'admin' | 'intro' | 'story-selection' | 'narrative-flow' | 'profile' |  'wip';
+  type View = 'dashboard' | 'historias' | 'personajes' | 'mapa' | 'inventario' | 'admin' | 'intro' | 'story-selection' | 'narrative-flow' | 'profile' | 'wip';
   const [currentView, setCurrentView] = useState<View>('dashboard');
-  
+
   const [historias, setHistorias] = useState<Historia[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [conexionOk, setConexionOk] = useState(false);
   const [selectedHistoriaId, setSelectedHistoriaId] = useState<number | null>(null);
-  const [selectedStory, setSelectedStory] = useState<any>(null); 
+  const [selectedStory, setSelectedStory] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>({ user_id: null, xp_total: 0, ubicaciones_visitadas: [] });
   const [flujoNarrativoHistoriaId, setFlujoNarrativoHistoriaId] = useState<number | null>(null);
   const [view, setView] = useState('dashboard');
   const [historiaId, setHistoriaId] = useState<number | null>(null);
-  
+
   // 🔑 NUEVO ESTADO: Para el modal de video
-  const [videoModalData, setVideoModalData] = useState<{ videoId: string; title: string } | null>(null); 
-  
+  const [videoModalData, setVideoModalData] = useState<{ videoId: string; title: string } | null>(null);
+
   const supabaseClient = supabase;
-  
+
   // ESTADO: Controla la visibilidad de la barra de navegación superior
-  const [showNavBar, setShowNavBar] = useState(true); 
+  const [showNavBar, setShowNavBar] = useState(true);
 
   // Estado para controlar el menú hamburguesa en móvil
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // FUNCIÓN: Maneja el inicio del flujo narrativo desde una historia específica
   const handleStartNarrative = (historia: Historia) => {
-    setFlujoNarrativoHistoriaId(historia.id); 
-    setCurrentView('historias'); 
+    setFlujoNarrativoHistoriaId(historia.id);
+    setCurrentView('historias');
   };
 
   // NUEVA FUNCIÓN: Maneja el inicio del flujo narrativo desde el mapa
   const handleStartNarrativeFromMap = (historiaId: number) => {
     console.log("🗺️ Mapa solicitó ir a historia:", historiaId);
-    
+
     // Configuramos el ID de la historia para el flujo narrativo
     setFlujoNarrativoHistoriaId(historiaId);
-    
+
     // Cambiamos la vista actual a 'historias'
     // Esto desmontará MapaViewS y montará FlujoNarrativoUsuario
     setCurrentView('historias');
@@ -193,10 +193,10 @@ const MainContent: React.FC = () => {
   useEffect(() => {
     const inicializar = async () => {
       console.log('🔄 Inicializando aplicación La Resistencia...');
-      
+
       const conexionExitosa = await testConnection();
       setConexionOk(conexionExitosa);
-      
+
       if (conexionExitosa && user) {
         if (user.email === 'paultool@gmail.com') {
           setIsAdmin(true);
@@ -211,14 +211,14 @@ const MainContent: React.FC = () => {
         setLoading(false);
       }
     };
-    
+
     inicializar();
-  }, [user]); 
+  }, [user]);
 
   const cargarHistorias = async () => {
     try {
       setLoading(true);
-      setError(null); 
+      setError(null);
       const historiasData = await obtenerHistorias();
       setHistorias(historiasData);
     } catch (err: any) {
@@ -228,12 +228,12 @@ const MainContent: React.FC = () => {
       setLoading(false);
     }
   };
-  
-  const setupProfile = async () => {
-    if (!user) return; 
 
-    const fixedUserId = user.id; 
-    
+  const setupProfile = async () => {
+    if (!user) return;
+
+    const fixedUserId = user.id;
+
     const { data: profile, error } = await supabaseClient
       .from('perfiles_jugador')
       .select('*')
@@ -252,7 +252,7 @@ const MainContent: React.FC = () => {
         .insert({ user_id: fixedUserId })
         .select()
         .single();
-        
+
       if (createError) {
         console.error("Error al crear un nuevo perfil:", createError);
       } else {
@@ -263,15 +263,15 @@ const MainContent: React.FC = () => {
 
   const handleUpdateProfile = async (recompensaPositiva: number, recompensaNegativa: number, ubicacion: string) => {
     const totalXP = recompensaPositiva + recompensaNegativa;
-    
+
     const updatedUbicaciones = new Set(userProfile.ubicaciones_visitadas || []);
     if (ubicacion) {
-        updatedUbicaciones.add(ubicacion);
+      updatedUbicaciones.add(ubicacion);
     }
 
     const { data: updatedProfile, error } = await supabaseClient
       .from('perfiles_jugador')
-      .update({ 
+      .update({
         xp_total: userProfile.xp_total + totalXP,
         fecha_ultimo_acceso: new Date().toISOString()
       })
@@ -292,8 +292,8 @@ const MainContent: React.FC = () => {
 
   const handleBackToDashboard = () => {
     setCurrentView('dashboard');
-    setSelectedHistoriaId(null); 
-    setFlujoNarrativoHistoriaId(null); 
+    setSelectedHistoriaId(null);
+    setFlujoNarrativoHistoriaId(null);
   };
 
   const handleViewDetail = (historiaId: number) => {
@@ -305,99 +305,99 @@ const MainContent: React.FC = () => {
   };
 
   const handleStartNarrativeFromDetail = (historiaId: number) => {
-     const historiaSeleccionada = historias.find(h => h.id === historiaId);
-     if (historiaSeleccionada) {
-        handleStartNarrative(historiaSeleccionada);
-     }
+    const historiaSeleccionada = historias.find(h => h.id === historiaId);
+    if (historiaSeleccionada) {
+      handleStartNarrative(historiaSeleccionada);
+    }
   };
 
   const handleNavClick = (view: View) => {
     setCurrentView(view);
     setIsMobileMenuOpen(false);
   };
-  
+
   const handleToggleNavBar = () => {
     setShowNavBar(prev => !prev);
     if (showNavBar) {
-        setIsMobileMenuOpen(false); 
+      setIsMobileMenuOpen(false);
     }
   };
-  
+
   // 🔑 NUEVA FUNCIÓN: Abre el modal de video (usado en WIP)
   const handleOpenVideoModal = (videoId: string, title: string) => {
-        setVideoModalData({ videoId, title });
+    setVideoModalData({ videoId, title });
   };
 
 
   const renderCurrentView = () => {
-    
-      if (currentView === 'historias') {
-        if (flujoNarrativoHistoriaId) {
-          return (
-            <FlujoNarrativoUsuario
-              historiaId={flujoNarrativoHistoriaId}
-              onBack={handleBackToDashboard}
-              onUpdateProfile={handleUpdateProfile} 
-            />
-          );
-        }
-        return <FlujoNarrativoUsuario onBack={handleBackToDashboard} onUpdateProfile={handleUpdateProfile} />;
-      }
-        
-      if (selectedHistoriaId) {
+
+    if (currentView === 'historias') {
+      if (flujoNarrativoHistoriaId) {
         return (
-          <HistoriaDetail
-            historiaId={selectedHistoriaId}
-            onClose={closeDetail}
-            onStartNarrative={() => handleStartNarrativeFromDetail(selectedHistoriaId)} 
+          <FlujoNarrativoUsuario
+            historiaId={flujoNarrativoHistoriaId}
+            onBack={handleBackToDashboard}
+            onUpdateProfile={handleUpdateProfile}
           />
         );
       }
-        
-      switch (currentView) {
-        case 'dashboard':
-          return <UserDashboard onNavigate={handleNavigateFromDashboard} />;
-        
-                
-        case 'personajes':
-          return <PersonajesView onBack={handleBackToDashboard} />;
-        
-        case 'mapa':
-          return (
-            <MapaView 
-                historias={historias} 
-                // Pasamos las historias visitadas (asegúrate que userProfile tenga esto, o usa un array vacío temporalmente)
-                historiasVisitadas={userProfile?.historias_visitadas || []}
-                // ¡AQUÍ ESTÁ LA CLAVE! Pasamos la función que acabamos de crear
-                onStartNarrativeFromMap={handleStartNarrativeFromMap} 
-            />
-          );
-        case 'inventario':
-          return <InventarioView onBack={handleBackToDashboard} />;
-        
-        // 🔑 NUEVO: Caso para la vista WIP
-        case 'wip':
-            return <WorkInProgressView onOpenVideoModal={handleOpenVideoModal} />;
+      return <FlujoNarrativoUsuario onBack={handleBackToDashboard} onUpdateProfile={handleUpdateProfile} />;
+    }
 
-        case 'admin':
-          return isAdmin ? <AdminPanel /> : <p>Acceso denegado.</p>;
-        
-        default:
-          return <UserDashboard onNavigate={handleNavigateFromDashboard} />;
-      }
+    if (selectedHistoriaId) {
+      return (
+        <HistoriaDetail
+          historiaId={selectedHistoriaId}
+          onClose={closeDetail}
+          onStartNarrative={() => handleStartNarrativeFromDetail(selectedHistoriaId)}
+        />
+      );
+    }
+
+    switch (currentView) {
+      case 'dashboard':
+        return <UserDashboard onNavigate={handleNavigateFromDashboard} />;
+
+
+      case 'personajes':
+        return <PersonajesView onBack={handleBackToDashboard} />;
+
+      case 'mapa':
+        return (
+          <MapaView
+            historias={historias}
+            // Pasamos las historias visitadas (asegúrate que userProfile tenga esto, o usa un array vacío temporalmente)
+            historiasVisitadas={userProfile?.historias_visitadas || []}
+            // ¡AQUÍ ESTÁ LA CLAVE! Pasamos la función que acabamos de crear
+            onStartNarrativeFromMap={handleStartNarrativeFromMap}
+          />
+        );
+      case 'inventario':
+        return <InventarioView onBack={handleBackToDashboard} />;
+
+      // 🔑 NUEVO: Caso para la vista WIP
+      case 'wip':
+        return <WorkInProgressView onOpenVideoModal={handleOpenVideoModal} />;
+
+      case 'admin':
+        return isAdmin ? <AdminPanel /> : <p>Acceso denegado.</p>;
+
+      default:
+        return <UserDashboard onNavigate={handleNavigateFromDashboard} />;
+    }
   };
 
   return (
     <div className="app-authenticated">
-      
+
       {showNavBar && (
         <nav className="elegant-navbar">
           <div className="navbar-logo">
             <h1>LA RESISTENCIA</h1>
           </div>
 
-          <button 
-            className="navbar-hamburger-btn" 
+          <button
+            className="navbar-hamburger-btn"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle navigation"
             aria-expanded={isMobileMenuOpen}
@@ -409,20 +409,20 @@ const MainContent: React.FC = () => {
 
           <div className={`navbar-menu-container ${isMobileMenuOpen ? 'is-open' : ''}`}>
             <div className="navbar-links">
-              <button 
-                  className="navbar-hide-btn" 
-                  onClick={handleToggleNavBar}
-                  title="Ocultar Menú Superior"
+              <button
+                className="navbar-hide-btn"
+                onClick={handleToggleNavBar}
+                title="Ocultar Menú Superior"
               >
-                  <i className="fas fa-chevron-up"></i>
+                <i className="fas fa-chevron-up"></i>
               </button>
               <button className={`nav-link-btn ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => handleNavClick('dashboard')}>Dashboard</button>
               <button className={`nav-link-btn ${currentView === 'historias' ? 'active' : ''}`} onClick={() => handleNavClick('historias')}>Historias</button>
               <button className={`nav-link-btn ${currentView === 'mapa' ? 'active' : ''}`} onClick={() => handleNavClick('mapa')}>Mapa</button>
               <button className={`nav-link-btn ${currentView === 'inventario' ? 'active' : ''}`} onClick={() => handleNavClick('inventario')}>Inventario</button>
               <button className={`nav-link-btn ${currentView === 'personajes' ? 'active' : ''}`} onClick={() => handleNavClick('personajes')}>Personajes</button>
-            
-              
+
+
               {/* 🔑 NUEVO: Botón WIP */}
               <button className={`nav-link-btn ${currentView === 'wip' ? 'active' : ''}`} onClick={() => handleNavClick('wip')}>WIP</button>
 
@@ -430,34 +430,34 @@ const MainContent: React.FC = () => {
                 <button className={`nav-link-btn ${currentView === 'admin' ? 'active' : ''}`} onClick={() => handleNavClick('admin')}>Admin</button>
               )}
             </div>
-            
+
             <div className="navbar-user-info">
               {user?.email}
             </div>
-            
+
           </div>
         </nav>
       )}
-      
+
       {!showNavBar && (
         <button className="navbar-show-btn" onClick={handleToggleNavBar} title="Mostrar Menú Superior">
-            <i className="fas fa-chevron-down"></i>
+          <i className="fas fa-chevron-down"></i>
         </button>
       )}
-   
+
       <main className={`app-main ${!showNavBar ? 'navbar-hidden' : ''}`}>
         {renderCurrentView()}
       </main>
-      
+
       {/* 🔑 NUEVO: Renderizado del modal de video para la sección autenticada */}
       {videoModalData && (
-          <YouTubeVideoModal 
-              videoId={videoModalData.videoId} 
-              title={videoModalData.title}
-              onClose={() => setVideoModalData(null)} 
-          />
+        <YouTubeVideoModal
+          videoId={videoModalData.videoId}
+          title={videoModalData.title}
+          onClose={() => setVideoModalData(null)}
+        />
       )}
-      
+
     </div>
   );
 };
@@ -472,19 +472,19 @@ const MainContent: React.FC = () => {
 // ==========================================================
 interface LoginModalProps {
   onClose: () => void;
-  onRequestFullscreen: () => void; 
+  onRequestFullscreen: () => void;
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ onClose, onRequestFullscreen }) => {
-    // 🚨 CAMBIO RADICAL: Eliminamos "info-modal-overlay", "info-modal-content", 
-    // títulos duplicados y botones externos.
-    // Ahora AuthForm toma el control total de la pantalla.
-    return (
-        <AuthForm 
-            onRequestFullscreen={onRequestFullscreen} 
-            onClose={onClose} // Pasamos el control de cierre al formulario
-        />
-    );
+  // 🚨 CAMBIO RADICAL: Eliminamos "info-modal-overlay", "info-modal-content", 
+  // títulos duplicados y botones externos.
+  // Ahora AuthForm toma el control total de la pantalla.
+  return (
+    <AuthForm
+      onRequestFullscreen={onRequestFullscreen}
+      onClose={onClose} // Pasamos el control de cierre al formulario
+    />
+  );
 };
 
 
@@ -531,26 +531,26 @@ interface InfoModalProps {
   contentKey: 'acerca' | 'making-off' | 'equipo';
   onClose: () => void;
   // 🔑 NUEVA PROP: Handler opcional para abrir el video modal
-  onOpenVideoModal?: (videoId: string, title: string) => void; 
+  onOpenVideoModal?: (videoId: string, title: string) => void;
 }
 
 const InfoModal: React.FC<InfoModalProps> = ({ contentKey, onClose, onOpenVideoModal }) => {
   const { title, body } = modalInfoContent[contentKey];
-  const modalContentRef = useRef<HTMLDivElement>(null); 
+  const modalContentRef = useRef<HTMLDivElement>(null);
 
   // Función para convertir texto simple con saltos de línea (\n) a HTML
   const formatBody = (text: string) => {
     // Reemplazamos \n por <br/> y aseguramos que no haya espacio en blanco al inicio/fin
     return text.trim().replace(/\n/g, '<br/>');
   };
-  
+
   // Condicional: si es 'making-off' usamos el body con HTML. Si no, lo formateamos.
-  const renderedBody = contentKey === 'making-off' 
-    ? body 
-    : formatBody(body); 
-    
+  const renderedBody = contentKey === 'making-off'
+    ? body
+    : formatBody(body);
+
   // 🔑 CLAVE: Determina el estilo whiteSpace para evitar saltos de línea no deseados
-  const textStyle = contentKey !== 'making-off' 
+  const textStyle = contentKey !== 'making-off'
     ? { whiteSpace: 'pre-wrap' as const } // Aplica pre-wrap solo a acerca y equipo
     : {}; // No aplica white-space a making-off (usa el default: normal)
 
@@ -560,19 +560,19 @@ const InfoModal: React.FC<InfoModalProps> = ({ contentKey, onClose, onOpenVideoM
     if (contentKey === 'making-off' && modalContentRef.current && onOpenVideoModal) {
       const modal = modalContentRef.current;
       // Seleccionamos todos los botones con la clase de video
-      const videoButtons = modal.querySelectorAll('.js-open-video'); 
+      const videoButtons = modal.querySelectorAll('.js-open-video');
 
       const handleVideoClick = (e: Event) => {
         const button = e.currentTarget as HTMLButtonElement;
         const videoId = button.getAttribute('data-video-id');
         const title = button.getAttribute('data-video-title') || 'Video';
-        
+
         if (videoId) {
-            e.preventDefault();
-            // 1. Cerrar el modal actual
-            onClose(); 
-            // 2. Abrir el modal de video a través del handler
-            onOpenVideoModal(videoId, title);
+          e.preventDefault();
+          // 1. Cerrar el modal actual
+          onClose();
+          // 2. Abrir el modal de video a través del handler
+          onOpenVideoModal(videoId, title);
         }
       };
 
@@ -583,27 +583,27 @@ const InfoModal: React.FC<InfoModalProps> = ({ contentKey, onClose, onOpenVideoM
       return () => {
         // Limpiamos los event listeners
         videoButtons.forEach(button => {
-            button.removeEventListener('click', handleVideoClick);
+          button.removeEventListener('click', handleVideoClick);
         });
       };
     }
   }, [contentKey, onClose, onOpenVideoModal]);
-  
+
   return (
     <div className="info-modal-overlay" onClick={onClose}>
-      <div 
-        className="info-modal-content" 
+      <div
+        className="info-modal-content"
         onClick={(e) => e.stopPropagation()}
         ref={modalContentRef} // Asignamos la referencia
       >
         <button onClick={onClose} className="info-modal-close-btn">&times;</button>
         <h2 className="info-modal-title">{title}</h2>
-        
-        <p 
-            className="info-modal-body" 
-            style={textStyle} // 🔑 APLICA EL ESTILO CONDICIONAL
-            // 🔑 USAMOS dangerouslySetInnerHTML AQUÍ
-            dangerouslySetInnerHTML={{ __html: renderedBody }}
+
+        <p
+          className="info-modal-body"
+          style={textStyle} // 🔑 APLICA EL ESTILO CONDICIONAL
+          // 🔑 USAMOS dangerouslySetInnerHTML AQUÍ
+          dangerouslySetInnerHTML={{ __html: renderedBody }}
         />
       </div>
     </div>
@@ -616,7 +616,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ contentKey, onClose, onOpenVideoM
 interface BottomBarProps {
   onOpenModal: (contentKey: 'acerca' | 'making-off' | 'equipo') => void;
   onOpenLogin: () => void;
-  onToggleVisibility: () => void; 
+  onToggleVisibility: () => void;
 }
 
 const BottomBar: React.FC<BottomBarProps> = ({ onOpenModal, onOpenLogin, onToggleVisibility }) => {
@@ -624,7 +624,7 @@ const BottomBar: React.FC<BottomBarProps> = ({ onOpenModal, onOpenLogin, onToggl
     <footer className="bottom-bar">
       {/* Botón de Tache (Ocultar) */}
       <button onClick={onToggleVisibility} className="bottom-bar-close-btn" title="Ocultar Información">
-        <i className="fas fa-times"></i> 
+        <i className="fas fa-times"></i>
       </button>
 
       <button onClick={() => onOpenModal('acerca')} className="bottom-bar-btn">
@@ -655,22 +655,22 @@ interface LandingPageProps {
 const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFullscreen }) => {
   const [showContent, setShowContent] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
-  const [showBottomBar, setShowBottomBar] = useState(true); 
-  
+  const [showBottomBar, setShowBottomBar] = useState(true);
+
   const [infoModalContentKey, setInfoModalContentKey] = useState<'acerca' | 'making-off' | 'equipo' | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  
+
   // 🔑 NUEVO ESTADO: Para el modal de video
-  const [videoModalData, setVideoModalData] = useState<{ videoId: string; title: string } | null>(null); 
-  
+  const [videoModalData, setVideoModalData] = useState<{ videoId: string; title: string } | null>(null);
+
   const videoRef = useRef<HTMLVideoElement>(null);
-  
-  const videoSrc = "https://ia600103.us.archive.org/12/items/intro_resistencia/intro%20resistencia%20sub%20sp.mp4"; 
+
+  const videoSrc = "https://ia600103.us.archive.org/12/items/intro_resistencia/intro%20resistencia%20sub%20sp.mp4";
 
   const handleVideoEnd = () => {
     setShowContent(true);
     if (videoRef.current) {
-        setIsMuted(videoRef.current.muted);
+      setIsMuted(videoRef.current.muted);
     }
   };
 
@@ -678,53 +678,53 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
     const video = videoRef.current;
 
     if (video) {
-        video.muted = false;
-        video.volume = 0.7; 
-        
-        // 1. LLAMAMOS A LA FUNCIÓN DEL PADRE para Fullscreen
-        onRequestFullscreen();
-        
-        setIsMuted(false);
-        video.play().catch(error => console.error("Error al intentar reproducir sin mute:", error));
+      video.muted = false;
+      video.volume = 0.7;
+
+      // 1. LLAMAMOS A LA FUNCIÓN DEL PADRE para Fullscreen
+      onRequestFullscreen();
+
+      setIsMuted(false);
+      video.play().catch(error => console.error("Error al intentar reproducir sin mute:", error));
     }
   };
-  
+
   const handleResisteClick = () => {
     // Reafirma la pantalla completa
-    onRequestFullscreen(); 
+    onRequestFullscreen();
     setIsLoginModalOpen(true);
   };
-  
-   useEffect(() => {
+
+  useEffect(() => {
     const video = videoRef.current;
     if (video) {
-        video.volume = 0.7;
+      video.volume = 0.7;
     }
-   }, []);
+  }, []);
 
   const handleOpenLoginModal = () => {
-    onRequestFullscreen(); 
+    onRequestFullscreen();
     setIsLoginModalOpen(true);
   };
-  
+
   const handleToggleBottomBar = () => {
     setShowBottomBar(prev => !prev);
   };
 
   // 🔑 NUEVA FUNCIÓN: Manejador para abrir el modal de video
   const handleOpenVideoModal = (videoId: string, title: string) => {
-      setVideoModalData({ videoId, title });
+    setVideoModalData({ videoId, title });
   };
 
 
   return (
-    <div className="landing-page"> 
+    <div className="landing-page">
       <video
         ref={videoRef}
         className="landing-video-bg"
         autoPlay
-        loop={false} 
-        muted={isMuted} 
+        loop={false}
+        muted={isMuted}
         playsInline
         src={videoSrc}
         key={videoSrc}
@@ -733,30 +733,30 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
         Tu navegador no soporta el tag de video.
       </video>
       <div className="landing-overlay"></div>
-      
-     {/* Botón de inicialización */}
+
+      {/* Botón de inicialización */}
       {isMuted && !showContent && (
         <button className="unmute-button" onClick={handleUnmuteClick}>
-           &gt; INICIALIZAR SISTEMA _
+          &gt; INICIALIZAR SISTEMA _
         </button>
       )}
 
       {/* El contenido final aparece con la transición al terminar el video */}
-       <main className={`landing-content ${showContent ? 'show' : 'hide'}`}> 
-        
+      <main className={`landing-content ${showContent ? 'show' : 'hide'}`}>
+
         {/* TÍTULO GLITCH */}
-        <h1 
-            className="landing-glitch-title" 
-            data-text="LA RESISTENCIA"
+        <h1
+          className="landing-glitch-title"
+          data-text="LA RESISTENCIA"
         >
-            LA RESISTENCIA
+          LA RESISTENCIA
         </h1>
-        
+
         {/* SUBTÍTULO TÉCNICO */}
         <p className="landing-tech-subtitle">
           SYSTEM_READY :: PROTOCOL_CDMX_V2.4
         </p>
-        
+
         {/* BOTÓN HACKER */}
         <button onClick={handleResisteClick} className="landing-glitch-btn">
           [ INGRESAR ]
@@ -767,18 +767,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
 
       {/* RENDERIZADO CONDICIONAL: Solo mostrar si showBottomBar es true */}
       {showBottomBar && (
-        <BottomBar 
-          onOpenModal={setInfoModalContentKey} 
+        <BottomBar
+          onOpenModal={setInfoModalContentKey}
           onOpenLogin={handleOpenLoginModal}
           onToggleVisibility={handleToggleBottomBar}
         />
       )}
-      
+
       {/* Botón flotante para MOSTRAR (las rayitas) */}
       {!showBottomBar && (
-          <button className="bottom-bar-show-btn" onClick={handleToggleBottomBar} title="Mostrar Información">
-              <i className="fas fa-bars"></i> 
-          </button>
+        <button className="bottom-bar-show-btn" onClick={handleToggleBottomBar} title="Mostrar Información">
+          <i className="fas fa-bars"></i>
+        </button>
       )}
 
 
@@ -790,20 +790,20 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
           onOpenVideoModal={handleOpenVideoModal}
         />
       )}
-      
+
       {isLoginModalOpen && (
         <LoginModal
           onClose={() => setIsLoginModalOpen(false)}
-          onRequestFullscreen={onRequestFullscreen} 
+          onRequestFullscreen={onRequestFullscreen}
         />
       )}
-      
+
       {videoModalData && (
-          <YouTubeVideoModal 
-              videoId={videoModalData.videoId} 
-              title={videoModalData.title}
-              onClose={() => setVideoModalData(null)} 
-          />
+        <YouTubeVideoModal
+          videoId={videoModalData.videoId}
+          title={videoModalData.title}
+          onClose={() => setVideoModalData(null)}
+        />
       )}
 
 
@@ -829,24 +829,24 @@ function App(): JSX.Element {
  */
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth();
-  
+
   // REFERENCIA: Al contenedor principal que no se desmonta (div.App)
-  const appRef = useRef<HTMLDivElement>(null); 
-  
+  const appRef = useRef<HTMLDivElement>(null);
+
   // FUNCIÓN: Se encarga de solicitar Fullscreen en el elemento principal
   const requestAppFullscreen = () => {
     const appContainer = appRef.current;
     if (appContainer) {
-        // Aseguramos la compatibilidad con diferentes navegadores
-        if (appContainer.requestFullscreen) {
-            appContainer.requestFullscreen();
-        } else if ((appContainer as any).mozRequestFullScreen) { /* Firefox */
-            (appContainer as any).mozRequestFullScreen();
-        } else if ((appContainer as any).webkitRequestFullscreen) { /* Chrome, Safari and Opera */
-            (appContainer as any).webkitRequestFullscreen();
-        } else if ((appContainer as any).msRequestFullscreen) { /* IE/Edge */
-            (appContainer as any).msRequestFullscreen();
-        }
+      // Aseguramos la compatibilidad con diferentes navegadores
+      if (appContainer.requestFullscreen) {
+        appContainer.requestFullscreen();
+      } else if ((appContainer as any).mozRequestFullScreen) { /* Firefox */
+        (appContainer as any).mozRequestFullScreen();
+      } else if ((appContainer as any).webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+        (appContainer as any).webkitRequestFullscreen();
+      } else if ((appContainer as any).msRequestFullscreen) { /* IE/Edge */
+        (appContainer as any).msRequestFullscreen();
+      }
     }
   };
 
@@ -867,7 +867,7 @@ const AppContent: React.FC = () => {
 
       {/* 👇VIDEO DE TEXTURA 👇 */}
       <video className="glitch-overlay" autoPlay muted loop playsInline>
-          <source src="https://nz71ioy1keimlqqc.public.blob.vercel-storage.com/Fondo.webm" type="video/webm" />
+        <source src="https://nz71ioy1keimlqqc.public.blob.vercel-storage.com/Fondo.webm" type="video/webm" />
       </video>
       {/* 👆 FIN DEL VIDEO DE TEXTURA 👆 */}
 
@@ -876,10 +876,10 @@ const AppContent: React.FC = () => {
         <MainContent />
       ) : (
         // --- VISTA PÚBLICA (LANDING CON MODAL) ---\
-        <LandingPage 
-            onLoginSuccess={() => { /* No es necesario aquí ya que AuthContext se encarga */ }}
-            // PASAMOS LA FUNCIÓN DE FULLSCREEN A LANDINGPAGE
-            onRequestFullscreen={requestAppFullscreen}
+        <LandingPage
+          onLoginSuccess={() => { /* No es necesario aquí ya que AuthContext se encarga */ }}
+          // PASAMOS LA FUNCIÓN DE FULLSCREEN A LANDINGPAGE
+          onRequestFullscreen={requestAppFullscreen}
         />
       )}
     </div>

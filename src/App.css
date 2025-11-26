@@ -4,34 +4,39 @@
 
 .glitch-overlay {
   position: fixed;
-  top: 0; 
+  top: 0;
   left: 0;
-  width: 100vw; 
+  width: 100vw;
   height: 100vh;
   object-fit: cover;
-  z-index: 9999;     
-  pointer-events: none; /* IMPORTANTE: Deja pasar los clics */
-  
+  z-index: 9999;
+  pointer-events: none;
+  /* IMPORTANTE: Deja pasar los clics */
+
   /* 👇 ESTO ES LA CLAVE PARA VER EL INTRO DEBAJO 👇 */
-  mix-blend-mode: screen; /* O prueba 'overlay' si screen es muy blanco */
-  opacity: 0.1;           /* Ajusta esto: 0.2 es sutil, 0.6 es fuerte */
+  mix-blend-mode: screen;
+  /* O prueba 'overlay' si screen es muy blanco */
+  opacity: 0.1;
+  /* Ajusta esto: 0.2 es sutil, 0.6 es fuerte */
 }
 
 /* El contenedor principal de la aplicación, ahora flexible */
 .App {
-  background: #111; 
+  background: #111;
   color: #ffffff;
   font-family: 'Arial', sans-serif;
   /* 🔑 CAMBIO CLAVE: Usamos height: 100% para basarnos en el body/root */
-  height: 100%; 
-  min-height: 100vh; /* Se mantiene min-height para asegurar altura mínima */
+  height: 100%;
+  min-height: 100vh;
+  /* Se mantiene min-height para asegurar altura mínima */
 }
+
 .app-authenticated {
-    display: flex; 
-    flex-direction: column;
-    /* 🔑 CLAVE: Usamos height: 100% para ocupar toda la altura del .App */
-    height: 100%; 
-    width: 100%; 
+  display: flex;
+  flex-direction: column;
+  /* 🔑 CLAVE: Usamos height: 100% para ocupar toda la altura del .App */
+  height: 100%;
+  width: 100%;
 }
 
 /* Estilos para el estado de carga */
@@ -49,7 +54,8 @@
 }
 
 .loading-container h1 {
-  color: #CD853F; /* Color principal de "Resistencia" */
+  color: #CD853F;
+  /* Color principal de "Resistencia" */
   font-size: 1.5rem;
   margin-bottom: 1rem;
 }
@@ -72,14 +78,15 @@
   top: 0;
   z-index: 1000;
   transition: all 0.3s ease-in-out;
- 
+
 }
 
 
 .navbar-logo h1 {
   font-size: 1rem;
   font-weight: bold;
-  color: #CD853F; /* Color principal de "Resistencia" */
+  color: #CD853F;
+  /* Color principal de "Resistencia" */
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
@@ -141,19 +148,20 @@
 /* --- 2.1. Estilos de Hamburguesa (Responsividad) --- */
 
 .navbar-hamburger-btn {
-  display: none; /* Oculto por defecto en escritorio */
+  display: none;
+  /* Oculto por defecto en escritorio */
   background: none;
   border: none;
   cursor: pointer;
   padding: 0.5rem;
-  z-index: 1001; 
+  z-index: 1001;
 }
 
 .navbar-hamburger-btn span {
   display: block;
   width: 25px;
   height: 3px;
-  background-color: #d1d5db; 
+  background-color: #d1d5db;
   margin: 5px 0;
   border-radius: 3px;
   transition: all 0.3s ease-in-out;
@@ -162,9 +170,11 @@
 .navbar-hamburger-btn[aria-expanded="true"] span:nth-child(1) {
   transform: translateY(8px) rotate(45deg);
 }
+
 .navbar-hamburger-btn[aria-expanded="true"] span:nth-child(2) {
   opacity: 0;
 }
+
 .navbar-hamburger-btn[aria-expanded="true"] span:nth-child(3) {
   transform: translateY(-8px) rotate(-45deg);
 }
@@ -178,7 +188,7 @@
   position: relative;
   height: 100vh;
   width: 100%;
-  overflow: hidden; 
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   color: #ffffff;
@@ -190,7 +200,7 @@
   left: 50%;
   width: 100%;
   height: 100%;
-  object-fit: cover; 
+  object-fit: cover;
   transform: translate(-50%, -50%);
   z-index: 1;
 }
@@ -201,7 +211,8 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.75); /* Oscurece más para que el texto resalte */
+  background: rgba(0, 0, 0, 0.75);
+  /* Oscurece más para que el texto resalte */
   z-index: 2;
 }
 
@@ -211,78 +222,93 @@
   /* El contenedor está centrado con flex */
   display: flex;
   flex-direction: column;
-  align-items: center; /* CLAVE: Alinea los elementos (incluyendo el botón) al centro */
+  align-items: center;
+  /* CLAVE: Alinea los elementos (incluyendo el botón) al centro */
   justify-content: center;
   text-align: center;
   padding: 2rem;
-  flex-grow: 1; 
+  flex-grow: 1;
 }
 
 /* --- ANIMACIÓN DE TÍTULO (LA RESISTENCIA) --- */
 .landing-title {
   font-family: 'Georgia', serif;
-  font-size: 5rem; 
+  font-size: 5rem;
   font-weight: 700;
   text-transform: uppercase;
-  color: #CD853F; 
+  color: #CD853F;
   letter-spacing: 0.2em;
-  text-shadow: 0 0 10px #CD853F80, 0 0 20px #CD853F50; /* Efecto neón/glow */
+  text-shadow: 0 0 10px #CD853F80, 0 0 20px #CD853F50;
+  /* Efecto neón/glow */
   margin: 0;
   /* Aplicar animación */
   animation: flicker 4s infinite alternate;
 }
 
 @keyframes flicker {
-  0%, 18%, 22%, 25%, 53%, 57%, 100% {
+
+  0%,
+  18%,
+  22%,
+  25%,
+  53%,
+  57%,
+  100% {
     text-shadow: 0 0 4px #CD853F, 0 0 11px #CD853F, 0 0 19px #CD853F, 0 0 40px #FFD700;
     opacity: 1;
   }
-  20%, 24%, 55% {        
+
+  20%,
+  24%,
+  55% {
     text-shadow: none;
     opacity: 0.8;
   }
 }
+
 /* ------------------------------------------- */
 .landing-subtitle {
-    /* Mantiene el tamaño y el color */
-    font-size: 1.2rem;
-    color: #131212da;
-    text-shadow: 1px 1px 2px rgba(61, 5, 5, 0.7);
-    
-    /* 💥 CAMBIOS CLAVE PARA ALINEACIÓN */
-    
-    /* 1. Limita el ancho máximo para evitar que sea una línea muy larga */
-    max-width: 650px; 
-    
-    /* 2. Centra el BLOQUE del subtítulo (establece márgenes iguales izquierda/derecha) */
-    margin-left: auto;
-    margin-right: auto;
-    
-    /* 3. Asegura que el texto dentro del bloque limitado esté centrado */
-    text-align: center;
-    
-    /* Opcional: añade espacio debajo si quieres separarlo del botón */
-    margin-bottom: 2rem; 
+  /* Mantiene el tamaño y el color */
+  font-size: 1.2rem;
+  color: #131212da;
+  text-shadow: 1px 1px 2px rgba(61, 5, 5, 0.7);
+
+  /* 💥 CAMBIOS CLAVE PARA ALINEACIÓN */
+
+  /* 1. Limita el ancho máximo para evitar que sea una línea muy larga */
+  max-width: 650px;
+
+  /* 2. Centra el BLOQUE del subtítulo (establece márgenes iguales izquierda/derecha) */
+  margin-left: auto;
+  margin-right: auto;
+
+  /* 3. Asegura que el texto dentro del bloque limitado esté centrado */
+  text-align: center;
+
+  /* Opcional: añade espacio debajo si quieres separarlo del botón */
+  margin-bottom: 2rem;
 }
 
 /* --- CORRECCIÓN FINAL: BOTÓN RESISTE MÁS PEQUEÑO --- */
 .landing-button {
   /* CLAVE: Asegura que solo ocupe el ancho del contenido */
-  display: inline-block !important; 
+  display: inline-block !important;
   width: auto !important;
   /* 💥 CAMBIO CLAVE: Usa !important para anular Bootstrap (el morado) */
-    background-color: #CD853F !important; /* Color personalizado: Ocre/Marrón */
-    border-color: #CD853F !important;     /* Borde del mismo color */
-  
-  font-size: 1.1rem; 
-  padding: 0.8rem 2.5rem; 
+  background-color: #CD853F !important;
+  /* Color personalizado: Ocre/Marrón */
+  border-color: #CD853F !important;
+  /* Borde del mismo color */
+
+  font-size: 1.1rem;
+  padding: 0.8rem 2.5rem;
   text-transform: uppercase;
-  letter-spacing: 0.15em; 
+  letter-spacing: 0.15em;
   font-weight: bold;
   color: #111;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(205, 133, 63, 0.5);
-  cursor: pointer; 
+  cursor: pointer;
 }
 
 .landing-button:hover {
@@ -298,82 +324,89 @@
 /* ========================================================== */
 
 .bottom-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    
-    /* Estilo Barra de Estado */
-    background: rgba(10, 10, 10, 0.95);
-    border-top: 1px solid #333;
-    padding: 10px 20px;
-    
-    display: flex;
-    justify-content: center; /* Centrado */
-    align-items: center;
-    gap: 30px; /* Separación amplia */
-    z-index: 100;
-    
-    box-shadow: 0 -10px 20px rgba(0,0,0,0.8);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+
+  /* Estilo Barra de Estado */
+  background: rgba(10, 10, 10, 0.95);
+  border-top: 1px solid #333;
+  padding: 10px 20px;
+
+  display: flex;
+  justify-content: center;
+  /* Centrado */
+  align-items: center;
+  gap: 30px;
+  /* Separación amplia */
+  z-index: 100;
+
+  box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.8);
 }
 
 /* Botones de la barra inferior */
 .bottom-bar-btn {
-    background: transparent;
-    border: none;
-    color: #555; /* Apagado por defecto */
-    font-family: 'Courier New', monospace;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    cursor: pointer;
-    position: relative;
-    transition: all 0.3s;
-    padding: 5px 10px;
+  background: transparent;
+  border: none;
+  color: #555;
+  /* Apagado por defecto */
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s;
+  padding: 5px 10px;
 }
 
 .bottom-bar-btn::before {
-    content: '[';
-    margin-right: 5px;
-    color: #333;
-    transition: color 0.3s;
+  content: '[';
+  margin-right: 5px;
+  color: #333;
+  transition: color 0.3s;
 }
+
 .bottom-bar-btn::after {
-    content: ']';
-    margin-left: 5px;
-    color: #333;
-    transition: color 0.3s;
+  content: ']';
+  margin-left: 5px;
+  color: #333;
+  transition: color 0.3s;
 }
 
 .bottom-bar-btn:hover {
-    color: #CD853F;
-    text-shadow: 0 0 8px #CD853F;
+  color: #CD853F;
+  text-shadow: 0 0 8px #CD853F;
 }
-.bottom-bar-btn:hover::before, 
+
+.bottom-bar-btn:hover::before,
 .bottom-bar-btn:hover::after {
-    color: #CD853F;
+  color: #CD853F;
 }
 
 /* Botón de Ocultar (La X pequeña) */
 .bottom-bar-close-btn {
-    background: transparent;
-    border: 1px solid #333;
-    color: #444;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    border-radius: 50%;
-    transition: all 0.3s;
-    margin-right: auto; /* Lo empuja a la izquierda absoluta si usas flex */
-    position: absolute;
-    left: 20px;
+  background: transparent;
+  border: 1px solid #333;
+  color: #444;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.3s;
+  margin-right: auto;
+  /* Lo empuja a la izquierda absoluta si usas flex */
+  position: absolute;
+  left: 20px;
 }
+
 .bottom-bar-close-btn:hover {
-    border-color: #e53e3e;
-    color: #e53e3e;
+  border-color: #e53e3e;
+  color: #e53e3e;
 }
 
 
@@ -390,9 +423,11 @@
   background: rgba(0, 0, 0, 0.9);
   backdrop-filter: blur(10px);
   display: flex;
-  align-items: center; /* Centrado vertical */
-  justify-content: center; /* Centrado horizontal */
-  z-index: 1010; 
+  align-items: center;
+  /* Centrado vertical */
+  justify-content: center;
+  /* Centrado horizontal */
+  z-index: 1010;
   padding: 1rem;
 }
 
@@ -403,7 +438,8 @@
   border-radius: 12px;
   max-width: 600px;
   width: 100%;
-  position: relative; /* CLAVE para posicionar el botón 'x' */
+  position: relative;
+  /* CLAVE para posicionar el botón 'x' */
   border: 1px solid #4a4a4a;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
   animation: modalFadeIn 0.3s ease-out;
@@ -411,29 +447,36 @@
 
 /* ESTILO ESPECÍFICO PARA EL MODAL DE LOGIN (MÁS COMPACTO) */
 .login-modal-override {
-    max-width: 400px; 
-    padding: 2.5rem 2rem;
+  max-width: 400px;
+  padding: 2.5rem 2rem;
 }
 
 /* --- BOTÓN CERRAR --- */
 .info-modal-close-btn {
-    color: #555;
-    font-family: Arial, sans-serif;
-    top: 15px;
-    right: 20px;
+  color: #555;
+  font-family: Arial, sans-serif;
+  top: 15px;
+  right: 20px;
 }
-.info-modal-close-btn:hover { color: #fff; }
+
+.info-modal-close-btn:hover {
+  color: #fff;
+}
 
 
 .info-modal-title {
-    color: #fff;
-    border-bottom: 1px solid #333;
-    padding-bottom: 15px;
-    margin-bottom: 20px;
-    font-size: 1.5rem;
-    text-transform: uppercase;
+  color: #fff;
+  border-bottom: 1px solid #333;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  text-transform: uppercase;
 }
-.info-modal-title::before { content: 'FILE: '; color: #555; }
+
+.info-modal-title::before {
+  content: 'FILE: ';
+  color: #555;
+}
 
 .info-modal-body {
   font-size: 1rem;
@@ -444,10 +487,10 @@
 }
 
 .login-modal-subtitle {
-    color: #e0e0e0;
-    text-align: center;
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
+  color: #e0e0e0;
+  text-align: center;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 @keyframes modalFadeIn {
@@ -455,6 +498,7 @@
     opacity: 0;
     transform: translateY(-20px) scale(0.98);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -466,167 +510,170 @@
 /* ========================================================== */
 
 .historias-view {
-    padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .view-header {
-    text-align: center;
-    margin-bottom: 2.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #333;
+  text-align: center;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #333;
 }
 
 .view-header h2 {
-    color: #CD853F; /* Tono dorado/cobre para resaltar */
-    font-size: 2.5rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 0.5rem;
+  color: #CD853F;
+  /* Tono dorado/cobre para resaltar */
+  font-size: 2.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
 }
 
 .view-header p {
-    color: #a0a0a0;
+  color: #a0a0a0;
 }
 
 .historias-stats {
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    margin-bottom: 2rem;
-    color: #ffffff;
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  color: #ffffff;
 }
 
 .stat {
-    font-size: 0.9rem;
-    padding: 0.5rem 1rem;
-    background: #1e1e1e;
-    border-radius: 5px;
-    border: 1px solid #333;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  background: #1e1e1e;
+  border-radius: 5px;
+  border: 1px solid #333;
 }
 
 .historias-grid {
-    display: grid;
-    /* Ajuste para que se vea bien en diferentes tamaños de pantalla */
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 2rem;
+  display: grid;
+  /* Ajuste para que se vea bien en diferentes tamaños de pantalla */
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
 }
 
 /* --- Estilos para HistoriaCard (Ficha) --- */
 .historia-card {
-    background: #1e1e1e;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-    /* Animación de hover sutil */
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  /* Animación de hover sutil */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .historia-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(205, 133, 63, 0.2);
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(205, 133, 63, 0.2);
 }
 
 .historia-card h3 {
-    color: #CD853F;
-    font-size: 1.5rem;
-    margin-top: 0;
-    margin-bottom: 0.8rem;
+  color: #CD853F;
+  font-size: 1.5rem;
+  margin-top: 0;
+  margin-bottom: 0.8rem;
 }
 
 .historia-card .descripcion {
-    font-size: 0.95rem;
-    color: #cccccc;
-    line-height: 1.4;
-    margin-bottom: 1.5rem;
-    /* Limitar a unas pocas líneas para el preview */
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-height: 60px; 
+  font-size: 0.95rem;
+  color: #cccccc;
+  line-height: 1.4;
+  margin-bottom: 1.5rem;
+  /* Limitar a unas pocas líneas para el preview */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 60px;
 }
 
 .historia-card .metadata {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.8rem;
-    margin-bottom: 1.5rem;
-    font-size: 0.85rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
 }
 
 .historia-card .metadata span {
-    padding: 0.3rem 0.6rem;
-    border-radius: 4px;
-    background: #2a2a2a;
-    color: #999;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  background: #2a2a2a;
+  color: #999;
 }
 
 /* Etiquetas de tipo de historia */
 .historia-card .tipo.principal {
-    background: #503100;
-    color: #FFD700; /* Oro */
-    border: 1px solid #FFD70055;
+  background: #503100;
+  color: #FFD700;
+  /* Oro */
+  border: 1px solid #FFD70055;
 }
 
 .historia-card .tipo.secundaria {
-    background: #181c22;
-    color: #7b8593;
+  background: #181c22;
+  color: #7b8593;
 }
 
 .historia-card .nivel {
-    background: #132a13;
-    color: #5cb85c;
+  background: #132a13;
+  color: #5cb85c;
 }
 
 .historia-card .card-actions {
-    text-align: right;
-    margin-top: auto; /* Empuja las acciones al fondo */
+  text-align: right;
+  margin-top: auto;
+  /* Empuja las acciones al fondo */
 }
 
 /* Reutilizar estilos de botón para la acción "Ver Detalle" */
 .historia-card .btn-primary {
-    background-color: #CD853F;
-    border-color: #CD853F;
-    color: #111;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
+  background-color: #CD853F;
+  border-color: #CD853F;
+  color: #111;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
 }
 
 .historia-card .btn-primary:hover {
-    background-color: #e69d4d;
-    border-color: #e69d4d;
-    color: #111;
+  background-color: #e69d4d;
+  border-color: #e69d4d;
+  color: #111;
 }
 
 .historia-card .btn-sm {
-    padding: 0.4rem 1rem;
-    font-size: 0.9rem;
+  padding: 0.4rem 1rem;
+  font-size: 0.9rem;
 }
 
 /* Estilo para el botón de volver al dashboard en la vista de historias */
 .historias-view .back-btn {
-    background: none;
-    border: 1px solid #555;
-    color: #cccccc;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    float: left;
-    margin-top: 0.5rem;
+  background: none;
+  border: 1px solid #555;
+  color: #cccccc;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  float: left;
+  margin-top: 0.5rem;
 }
 
 .historias-view .back-btn:hover {
-    background: #CD853F;
-    color: #111;
-    border-color: #CD853F;
+  background: #CD853F;
+  color: #111;
+  border-color: #CD853F;
 }
 
 /* ========================================================== */
@@ -634,85 +681,88 @@
 /* ========================================================== */
 
 @media (max-width: 768px) {
+
   /* --- LANDING PAGE --- */
   /* 3. TÍTULO PRINCIPAL (LA RESISTENCIA) - ESTILO GLITCH */
   .landing-title {
-      font-family: 'Arial Black', sans-serif; /* Fuente muy pesada */
-      font-size: 4rem; 
-      font-weight: 900;
-      color: #fff;
-      text-transform: uppercase;
-      letter-spacing: -2px;
-      margin: 0;
-      position: relative;
-      /* Efecto de distorsión */
-      text-shadow: 
-          2px 0 #CD853F, 
-          -2px 0 #0ff;
+    font-family: 'Arial Black', sans-serif;
+    /* Fuente muy pesada */
+    font-size: 4rem;
+    font-weight: 900;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: -2px;
+    margin: 0;
+    position: relative;
+    /* Efecto de distorsión */
+    text-shadow:
+      2px 0 #CD853F,
+      -2px 0 #0ff;
   }
 
   .landing-subtitle {
-      font-family: 'Courier New', monospace;
-      background-color: #CD853F;
-      color: #000;
-      padding: 2px 10px;
-      font-weight: 700;
-      font-size: 0.9rem;
-      letter-spacing: 1px;
-      margin-top: 10px;
-      margin-bottom: 30px;
-      display: inline-block;
+    font-family: 'Courier New', monospace;
+    background-color: #CD853F;
+    color: #000;
+    padding: 2px 10px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    margin-top: 10px;
+    margin-bottom: 30px;
+    display: inline-block;
   }
 
-  
-    
+
+
   /* 4. BOTÓN "RESISTE" (Entrada Principal) */
   .landing-button {
-      background: transparent !important;
-      border: 2px solid #CD853F !important;
-      color: #CD853F !important;
-      font-family: 'Courier New', monospace;
-      font-size: 1.2rem;
-      padding: 1rem 3rem;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      position: relative;
-      overflow: hidden;
-      transition: all 0.3s;
-      box-shadow: 0 0 15px rgba(205, 133, 63, 0.3);
+    background: transparent !important;
+    border: 2px solid #CD853F !important;
+    color: #CD853F !important;
+    font-family: 'Courier New', monospace;
+    font-size: 1.2rem;
+    padding: 1rem 3rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+    box-shadow: 0 0 15px rgba(205, 133, 63, 0.3);
   }
 
   .landing-button:hover {
-      background: #CD853F !important;
-      color: #000 !important;
-      box-shadow: 0 0 40px rgba(205, 133, 63, 0.8);
-      transform: scale(1.05);
+    background: #CD853F !important;
+    color: #000 !important;
+    box-shadow: 0 0 40px rgba(205, 133, 63, 0.8);
+    transform: scale(1.05);
   }
 
 
 
   /* --- NAVBAR AUTENTICADA (Hamburguesa) --- */
   .elegant-navbar {
-    flex-direction: row; 
-    justify-content: space-between; 
+    flex-direction: row;
+    justify-content: space-between;
     align-items: center;
     padding: .3rem;
-     font-size: 0.35rem; /* Reducido de 1rem a 0.85rem */
+    font-size: 0.35rem;
+    /* Reducido de 1rem a 0.85rem */
     font-weight: 500;
     padding: 0.5rem 0.8rem;
   }
 
   .navbar-hamburger-btn {
-    display: block; 
+    display: block;
   }
 
   .navbar-menu-container {
-    display: none; 
+    display: none;
     position: absolute;
-    top: 100%; 
+    top: 100%;
     left: 0;
     width: 100%;
-    background: #111827; 
+    background: #111827;
     box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
     padding: 1.5rem;
     z-index: 1000;
@@ -720,51 +770,53 @@
 
   /* El contenedor que se despliega en móvil */
   .navbar-menu-container.is-open {
-      /* Mantenemos el display flex/block para desplegarlo */
-      display: flex;
-      flex-direction: column;
-      
+    /* Mantenemos el display flex/block para desplegarlo */
+    display: flex;
+    flex-direction: column;
 
-      /* 🔑 CLAVE 1: Limitar la altura al 100% del viewport */
-      height: 100vh; /* Ocupar toda la altura de la ventana */
-      
-      /* 🔑 CLAVE 2: Forzar el scroll interno si el contenido se desborda */
-      overflow-y: auto; /* ¡Esto permite que el menú móvil tenga scroll! */
-      
-      /* 🔑 CLAVE 3: Añadir padding inferior para que el botón de ocultar no se pegue al fondo */
-      padding-bottom: 2rem; 
-      
-      /* ... (mantener estilos de posición fixed o absolute para el menú abierto) ... */
+
+    /* 🔑 CLAVE 1: Limitar la altura al 100% del viewport */
+    height: 100vh;
+    /* Ocupar toda la altura de la ventana */
+
+    /* 🔑 CLAVE 2: Forzar el scroll interno si el contenido se desborda */
+    overflow-y: auto;
+    /* ¡Esto permite que el menú móvil tenga scroll! */
+
+    /* 🔑 CLAVE 3: Añadir padding inferior para que el botón de ocultar no se pegue al fondo */
+    padding-bottom: 2rem;
+
+    /* ... (mantener estilos de posición fixed o absolute para el menú abierto) ... */
   }
 
   /* 💥 Ajuste opcional para el contenedor interno de enlaces (navbar-links) */
   .navbar-menu-container.is-open .navbar-links {
-      /* Esto permite que los enlaces ocupen el espacio necesario */
-      flex-grow: 1; 
+    /* Esto permite que los enlaces ocupen el espacio necesario */
+    flex-grow: 1;
   }
 
 
   .navbar-links {
-    flex-direction: column; 
+    flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
     width: 100%;
   }
 
   .nav-link-btn {
-    padding: 0.5rem 0; 
-    font-size: 1.1rem; 
+    padding: 0.5rem 0;
+    font-size: 1.1rem;
     width: 100%;
     text-align: left;
   }
-  
+
   .nav-link-btn::after {
-     transform: scaleX(0) !important; 
+    transform: scaleX(0) !important;
   }
 
   .nav-link-btn.active::after {
-     transform: scaleX(1) !important;
-     width: 40px; 
+    transform: scaleX(1) !important;
+    width: 40px;
   }
 
   .navbar-user-info {
@@ -773,17 +825,17 @@
     width: 100%;
     text-align: left;
     padding: 0.8rem;
-    border-top: 1px solid #4a4a4a; 
+    border-top: 1px solid #4a4a4a;
   }
-  
+
   /* --- BOTTOM BAR --- */
   .bottom-bar {
-    gap: 1rem;
-    padding: 1rem 0.5rem;
+    gap: .5rem;
+    padding: .5rem 0.5rem;
   }
 
   .bottom-bar-btn {
-    font-size: 0.8rem;
+    font-size: 0.6rem;
   }
 }
 
@@ -797,24 +849,27 @@
   }
 
   .bottom-bar {
-    flex-direction: column;
+    overflow-x: auto;
+    justify-content: flex-start;
     gap: 0.5rem;
   }
-  
+
   /* Modales más pequeños en móviles */
   .info-modal-content {
     background-color: #0a0a0a;
     border: 1px solid #333;
-    border-top: 4px solid #CD853F; /* Tope naranja */
-    border-radius: 0; /* Cuadrado */
+    border-top: 4px solid #CD853F;
+    /* Tope naranja */
+    border-radius: 0;
+    /* Cuadrado */
     font-family: 'Courier New', monospace;
     color: #ccc;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
     max-width: 700px;
   }
-  
+
   .login-modal-override {
-      max-width: 90%;
+    max-width: 90%;
   }
 }
 
@@ -823,22 +878,25 @@
 /* ========================================================== */
 
 .landing-content {
-    /* ... (Estilos existentes, no los borres) ... */
-    
-    /* Reglas de transición para el nuevo efecto */
-    opacity: 0;
-    transition: opacity 1.5s ease-in-out; /* Transición suave de 1.5 segundos */
-    pointer-events: none; /* Asegura que no se pueda hacer clic antes de aparecer */
+  /* ... (Estilos existentes, no los borres) ... */
+
+  /* Reglas de transición para el nuevo efecto */
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+  /* Transición suave de 1.5 segundos */
+  pointer-events: none;
+  /* Asegura que no se pueda hacer clic antes de aparecer */
 }
 
 /* CLASE para ocultar/mostrar */
 .landing-content.show {
-    opacity: 1;
-    pointer-events: auto; /* Permite interacciones cuando es visible */
+  opacity: 1;
+  pointer-events: auto;
+  /* Permite interacciones cuando es visible */
 }
 
 .landing-content.hide {
-    opacity: 0;
+  opacity: 0;
 }
 
 /* ========================================================== */
@@ -846,45 +904,49 @@
 /* ========================================================== */
 
 .unmute-button {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 5; /* Por encima del overlay pero debajo del contenido final */
-    
-    background: rgba(205, 133, 63, 0.9); /* Color Resistencia semi-transparente */
-    color: #111;
-    border: 2px solid #fff;
-    padding: 1rem 2rem;
-    font-size: 1.2rem;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    
-    /* Animación de pulsación sutil para llamar la atención */
-    animation: pulse 2s infinite; 
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  /* Por encima del overlay pero debajo del contenido final */
+
+  background: rgba(205, 133, 63, 0.9);
+  /* Color Resistencia semi-transparente */
+  color: #111;
+  border: 2px solid #fff;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  /* Animación de pulsación sutil para llamar la atención */
+  animation: pulse 2s infinite;
 }
 
 .unmute-button:hover {
-    background: #e69d4d;
-    transform: translate(-50%, -50%) scale(1.05);
-    animation: none;
+  background: #e69d4d;
+  transform: translate(-50%, -50%) scale(1.05);
+  animation: none;
 }
 
 .unmute-button i {
-    margin-right: 0.5rem;
+  margin-right: 0.5rem;
 }
 
 @keyframes pulse {
   0% {
     box-shadow: 0 0 0 0 rgba(205, 133, 63, 0.4);
   }
+
   70% {
     box-shadow: 0 0 0 15px rgba(205, 133, 63, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(205, 133, 63, 0);
   }
@@ -892,7 +954,7 @@
 
 /* Ajuste de la opacidad del overlay para que el botón resalte más */
 .landing-overlay {
-    background: rgba(21, 1, 43, 0.15); 
+  background: rgba(21, 1, 43, 0.15);
 }
 
 /* ========================================================== */
@@ -900,78 +962,89 @@
 /* ========================================================== */
 
 .fullscreen-toggle-button {
-    /* Posicionamiento fijo en la ventana del navegador */
-    position: fixed; 
-    top: 20px; /* Separación de la parte superior */
-    left: 20px; /* Separación de la izquierda */
-    z-index: 10000; /* Asegura que esté por encima de todo */
-    
-    /* Estilos visuales */
-    background: rgba(0, 0, 0, 0.6);
-    color: #fff;
-    border: 1px solid #777;
-    border-radius: 5px;
-    padding: 0.7rem 1rem;
-    font-size: 1.2rem;
-    cursor: pointer;
-    transition: background 0.3s, color 0.3s;
+  /* Posicionamiento fijo en la ventana del navegador */
+  position: fixed;
+  top: 20px;
+  /* Separación de la parte superior */
+  left: 20px;
+  /* Separación de la izquierda */
+  z-index: 10000;
+  /* Asegura que esté por encima de todo */
+
+  /* Estilos visuales */
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: 1px solid #777;
+  border-radius: 5px;
+  padding: 0.7rem 1rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s;
 }
 
 .fullscreen-toggle-button:hover {
-    background: rgba(205, 133, 63, 0.8); /* Color Resistencia al pasar el ratón */
-    color: #111;
+  background: rgba(205, 133, 63, 0.8);
+  /* Color Resistencia al pasar el ratón */
+  color: #111;
 }
 
 /* Opcional: Asegúrate de que el contenedor de la LandingPage esté correcto */
 .landing-page {
-    position: relative; /* Es necesario para contener otros elementos si no usas fixed */
-    width: 100%;
-    height: 100vh;
-    overflow: hidden;
+  position: relative;
+  /* Es necesario para contener otros elementos si no usas fixed */
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* 💥 NUEVO ESTILO: Botón de Ocultar/Cerrar la NavBar (dentro de la barra) */
 /* El botón de ocultar la barra superior */
 .navbar-hide-btn {
-    /* 🔑 CLAVE: Forzar visibilidad en móvil */
-    display: block !important; 
-    
-    /* Estilos para que se vea como un botón de menú */
-        font-size: .3rem;
+  /* 🔑 CLAVE: Forzar visibilidad en móvil */
+  display: block !important;
 
-    text-align: center;
-    background: #d70e0e; /* Fondo para destacarlo */
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    order: -1; /* Lo fuerza a ser el primer elemento si usas Flexbox en el padre */
+  /* Estilos para que se vea como un botón de menú */
+  font-size: .3rem;
+
+  text-align: center;
+  background: #d70e0e;
+  /* Fondo para destacarlo */
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  order: -1;
+  /* Lo fuerza a ser el primer elemento si usas Flexbox en el padre */
 }
 
 .navbar-hide-btn:hover {
-    color: #a78bfa; /* Color de acento de tu navbar */
-    transform: translateY(-2px);
+  color: #a78bfa;
+  /* Color de acento de tu navbar */
+  transform: translateY(-2px);
 }
 
 /* 💥 NUEVO ESTILO: Botón Flotante para RE-MOSTRAR la NavBar (cuando está oculta) */
 .navbar-show-btn {
-    position: fixed;
-    top: 1rem; /* Posición en la parte superior izquierda */
-    right: 1rem;
-    /* Estilos estéticos */
-    background: rgba(0, 0, 0, 0.7);
-    color: #f1f1f1;
-    border: 1px solid #a78bfa; /* Borde con el color de acento del nav */
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.3rem;
-    z-index: 1001; /* Debe estar por encima de todo */
-    transition: all 0.3s ease;
+  position: fixed;
+  top: 1rem;
+  /* Posición en la parte superior izquierda */
+  right: 1rem;
+  /* Estilos estéticos */
+  background: rgba(0, 0, 0, 0.7);
+  color: #f1f1f1;
+  border: 1px solid #a78bfa;
+  /* Borde con el color de acento del nav */
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.3rem;
+  z-index: 1001;
+  /* Debe estar por encima de todo */
+  transition: all 0.3s ease;
 }
 
 .navbar-show-btn:hover {
-    background: #a78bfa;
-    color: black;
+  background: #a78bfa;
+  color: black;
 }
 
 /* 🔑 CAMBIO CLAVE: Contenido principal (donde debe ocurrir el scroll) */
@@ -986,28 +1059,29 @@
   /* 🔑 CLAVE 3: FORZAR EL SCROLL INTERNO */
   /* Ahora el contenido se deslizará DENTRO de este contenedor */
   overflow-y: auto;
-  
+
   /* Este padding es para asegurar que el contenido se vea bajo la barra sticky */
-  padding-top: .5rem; 
-  padding-bottom: 2rem; 
+  padding-top: .5rem;
+  padding-bottom: 2rem;
   padding-left: 1rem;
   padding-right: 1rem;
-  
+
 }
 
 /* 💥 Ajuste para el contenido principal cuando la barra está OCULTA */
 .app-main.navbar-hidden {
-    /* Ajusta el padding para que el contenido suba cuando la barra no está */
-    padding-top: 1rem; 
+  /* Ajusta el padding para que el contenido suba cuando la barra no está */
+  padding-top: 1rem;
 }
 
 /* Puedes añadir media queries si la barra de navegación en móvil necesita más ajustes
    o si el botón navbar-hide-btn no debe verse en móvil. */
 @media (max-width: 768px) {
-    /* Ocultar el botón de ocultar en móviles, ya que se usa la hamburguesa */
-    .navbar-hide-btn {
-        display: none;
-    }
+
+  /* Ocultar el botón de ocultar en móviles, ya que se usa la hamburguesa */
+  .navbar-hide-btn {
+    display: none;
+  }
 }
 
 /* ========================================================== */
@@ -1015,89 +1089,94 @@
 /* ========================================================== */
 
 .wip-container {
-    max-width: 1000px;
-    margin: .3rem auto; /* Añade margen superior e inferior para separarlo del navbar/footer */
-    padding: 2rem;
-    color: #f3f4f6;
-    background-color: #1f2937; /* Fondo oscuro sutil */
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
-    border: 1px solid #374151;
+  max-width: 1000px;
+  margin: .3rem auto;
+  /* Añade margen superior e inferior para separarlo del navbar/footer */
+  padding: 2rem;
+  color: #f3f4f6;
+  background-color: #1f2937;
+  /* Fondo oscuro sutil */
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+  border: 1px solid #374151;
 }
 
 .wip-header {
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: #a78bfa; /* Color de acento (Púrpura) */
-    margin-bottom: 0.5rem;
-    text-align: center;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #a78bfa;
+  /* Color de acento (Púrpura) */
+  margin-bottom: 0.5rem;
+  text-align: center;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
 }
 
 .wip-description {
-    font-size: 1.1rem;
-    color: #d1d5db;
-    margin-bottom: 2.5rem;
-    text-align: center;
+  font-size: 1.1rem;
+  color: #d1d5db;
+  margin-bottom: 2.5rem;
+  text-align: center;
 }
 
 .wip-links-grid {
-    display: grid;
-    /* Adapta la cuadrícula: 3 columnas en escritorio, 1 en móvil */
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
+  display: grid;
+  /* Adapta la cuadrícula: 3 columnas en escritorio, 1 en móvil */
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
 }
 
 .wip-link-card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: #2d3748;
-    padding: 1.5rem;
-    border-radius: 10px;
-    text-decoration: none;
-    color: #e5e7eb;
-    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
-    border-left: 5px solid #a78bfa; /* Borde de acento */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #2d3748;
+  padding: 1.5rem;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #e5e7eb;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+  border-left: 5px solid #a78bfa;
+  /* Borde de acento */
 }
 
 .wip-link-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
-    background-color: #374151;
-    color: #a78bfa;
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+  background-color: #374151;
+  color: #a78bfa;
 }
 
 .wip-icon {
-    font-size: 1.8rem;
-    color: #a78bfa;
-    margin-right: 1rem;
+  font-size: 1.8rem;
+  color: #a78bfa;
+  margin-right: 1rem;
 }
 
 .wip-link-card:hover .wip-icon {
-    color: #ffffff;
+  color: #ffffff;
 }
 
 .wip-link-name {
-    font-size: 1rem;
-    font-weight: 600;
-    flex-grow: 1;
+  font-size: 1rem;
+  font-weight: 600;
+  flex-grow: 1;
 }
 
 .wip-external-icon {
-    font-size: 0.9rem;
-    color: #9ca3af;
+  font-size: 0.9rem;
+  color: #9ca3af;
 }
 
 /* 💻 Estilos para móvil */
 @media (max-width: 600px) {
-    .wip-container {
-        padding: 1rem;
-        margin: 1rem auto;
-    }
-    .wip-header {
-        font-size: 1.8rem;
-    }
+  .wip-container {
+    padding: 1rem;
+    margin: 1rem auto;
+  }
+
+  .wip-header {
+    font-size: 1.8rem;
+  }
 }
 
 /* ========================================================== */
@@ -1106,196 +1185,247 @@
 
 /* Overlay general para el modal */
 .video-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.95);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000; /* Alto z-index para estar sobre todo */
-    backdrop-filter: blur(5px);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  /* Alto z-index para estar sobre todo */
+  backdrop-filter: blur(5px);
 }
 
 /* Contenido del modal (el contenedor del video) */
 .video-modal-content {
-    background: #1e1e1e;
-    padding: 20px;
-    border-radius: 10px;
-    max-width: 90%;
-    width: 800px; /* Ancho máximo ideal para un video 16:9 */
-    box-shadow: 0 0 30px rgba(167, 139, 250, 0.5); 
-    position: relative;
+  background: #1e1e1e;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 90%;
+  width: 800px;
+  /* Ancho máximo ideal para un video 16:9 */
+  box-shadow: 0 0 30px rgba(167, 139, 250, 0.5);
+  position: relative;
 }
 
 .video-modal-close-btn {
-    position: absolute;
-    top: -15px;
-    right: -15px;
-    background: #a78bfa;
-    color: #111;
-    border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    font-size: 1.5rem;
-    line-height: 1;
-    cursor: pointer;
-    z-index: 2001;
-    transition: background-color 0.3s;
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  background: #a78bfa;
+  color: #111;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2001;
+  transition: background-color 0.3s;
 }
 
 .video-modal-title {
-    color: #a78bfa;
-    text-align: center;
-    margin-bottom: 15px;
-    font-size: 1.2rem;
+  color: #a78bfa;
+  text-align: center;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
 }
 
 /* 🔑 CLAVE: Estilos para el contenedor responsive del iframe */
 .video-responsive {
-    position: relative;
-    padding-bottom: 56.25%; /* Relación de aspecto 16:9 */
-    height: 0;
-    overflow: hidden;
+  position: relative;
+  padding-bottom: 56.25%;
+  /* Relación de aspecto 16:9 */
+  height: 0;
+  overflow: hidden;
 }
 
 .video-responsive iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 5px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 5px;
 }
 
 /* ========================================================== */
 /* --- ESTILOS PARA BOTONES DENTRO DE InfoModal (LANDING) --- */
 /* ========================================================== */
 .modal-link-btn {
-    border: 1px solid #222;
-    background: #111;
-    margin-bottom: 8px;
-    padding: 10px;
-    color: #888;
-    font-size: 0.9rem;
+  border: 1px solid #222;
+  background: #111;
+  margin-bottom: 8px;
+  padding: 10px;
+  color: #888;
+  font-size: 0.9rem;
 }
+
 .modal-link-btn:hover {
-    border-color: #CD853F;
-    color: #CD853F;
-    background: rgba(205, 133, 63, 0.05);
+  border-color: #CD853F;
+  color: #CD853F;
+  background: rgba(205, 133, 63, 0.05);
 }
 
 .modal-link-btn i {
-    margin-right: 8px;
-    width: 20px;
-    text-align: center;
+  margin-right: 8px;
+  width: 20px;
+  text-align: center;
 }
 
 /* Añadir o modificar estas reglas en tu App.css */
 
 .wip-links-grid {
-    display: grid;
-    /* 🔑 CLAVE para el 2x2: define dos columnas de igual tamaño */
-    grid-template-columns: repeat(2, 1fr); 
-    gap: 20px; /* Espacio entre los elementos */
-    margin-top: 20px;
-    padding: 0 20px; /* Opcional: para darle aire en los lados */
+  display: grid;
+  /* 🔑 CLAVE para el 2x2: define dos columnas de igual tamaño */
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  /* Espacio entre los elementos */
+  margin-top: 20px;
+  padding: 0 20px;
+  /* Opcional: para darle aire en los lados */
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .landing-title { font-size: 2.5rem; }
-    .unmute-button { width: 80%; padding: 1rem; font-size: 0.9rem; }
-    .bottom-bar { overflow-x: auto; justify-content: flex-start; } /* Scroll en móvil */
+  .landing-title {
+    font-size: 2.5rem;
+  }
+
+  .unmute-button {
+    width: 80%;
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .bottom-bar {
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+
+  /* Scroll en móvil */
 }
 
 /* 1. BOTÓN DE INICIO (UNMUTE) - ESTILO "SYSTEM BOOT" */
 .unmute-button {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 10;
-    
-    /* Estilo Técnico */
-    background: rgba(0, 0, 0, 0.8);
-    border: 1px solid #CD853F;
-    color: #CD853F;
-    padding: 1.5rem 3rem;
-    
-    font-family: 'Courier New', monospace;
-    font-size: 1rem;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    
-    cursor: pointer;
-    backdrop-filter: blur(5px);
-    box-shadow: 0 0 20px rgba(205, 133, 63, 0.2);
-    transition: all 0.3s ease;
-    
-    /* Efecto parpadeo de cursor */
-    animation: terminalPulse 2s infinite;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+
+  /* Estilo Técnico */
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid #CD853F;
+  color: #CD853F;
+  padding: 1.5rem 3rem;
+
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+
+  cursor: pointer;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 0 20px rgba(205, 133, 63, 0.2);
+  transition: all 0.3s ease;
+
+  /* Efecto parpadeo de cursor */
+  animation: terminalPulse 2s infinite;
 }
 
 .unmute-button::before {
-    content: '> ';
+  content: '> ';
 }
+
 .unmute-button::after {
-    content: '_';
-    animation: blink 1s infinite;
+  content: '_';
+  animation: blink 1s infinite;
 }
 
 .unmute-button:hover {
-    background: #CD853F;
-    color: #000;
-    box-shadow: 0 0 50px rgba(205, 133, 63, 0.6);
-    letter-spacing: 5px; /* Efecto de expansión */
+  background: #CD853F;
+  color: #000;
+  box-shadow: 0 0 50px rgba(205, 133, 63, 0.6);
+  letter-spacing: 5px;
+  /* Efecto de expansión */
 }
 
 @keyframes terminalPulse {
-    0% { box-shadow: 0 0 10px rgba(205, 133, 63, 0.1); }
-    50% { box-shadow: 0 0 25px rgba(205, 133, 63, 0.4); border-color: #fff; }
-    100% { box-shadow: 0 0 10px rgba(205, 133, 63, 0.1); }
+  0% {
+    box-shadow: 0 0 10px rgba(205, 133, 63, 0.1);
+  }
+
+  50% {
+    box-shadow: 0 0 25px rgba(205, 133, 63, 0.4);
+    border-color: #fff;
+  }
+
+  100% {
+    box-shadow: 0 0 10px rgba(205, 133, 63, 0.1);
+  }
 }
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
 
 /* BOTÓN FLOTANTE (HAMBURGUESA) - ESTILO TERMINAL */
 .bottom-bar-show-btn {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    z-index: 100; /* Por encima del video */
-    
-    background: rgba(10, 10, 10, 0.9);
-    color: #CD853F; /* Color Cobre */
-    border: 1px solid #CD853F;
-    border-radius: 0; /* Cuadrado para look técnico */
-    
-    padding: 12px 16px;
-    font-size: 1.2rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 100;
+  /* Por encima del video */
+
+  background: rgba(10, 10, 10, 0.9);
+  color: #CD853F;
+  /* Color Cobre */
+  border: 1px solid #CD853F;
+  border-radius: 0;
+  /* Cuadrado para look técnico */
+
+  padding: 12px 16px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
 }
 
 .bottom-bar-show-btn:hover {
-    background: #CD853F;
-    color: #000;
-    box-shadow: 0 0 20px rgba(205, 133, 63, 0.6);
-    transform: scale(1.1);
+  background: #CD853F;
+  color: #000;
+  box-shadow: 0 0 20px rgba(205, 133, 63, 0.6);
+  transform: scale(1.1);
 }
 
 /* Opcional: Animación de entrada */
 .bottom-bar-show-btn {
-    animation: fadeInBtn 0.5s ease-out;
+  animation: fadeInBtn 0.5s ease-out;
 }
 
 @keyframes fadeInBtn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 
@@ -1305,7 +1435,8 @@
 
 /* 1. TÍTULO GLITCH PRINCIPAL */
 .landing-glitch-title {
-  font-family: 'Arial Black', sans-serif; /* Fuente gruesa necesaria */
+  font-family: 'Arial Black', sans-serif;
+  /* Fuente gruesa necesaria */
   font-weight: 900;
   font-size: 6rem;
   color: #e29c05d3;
@@ -1321,13 +1452,15 @@
 /* Capas fantasma para el efecto RGB Split */
 .landing-glitch-title::before,
 .landing-glitch-title::after {
-  content: attr(data-text); /* Copia el texto dinámicamente */
+  content: attr(data-text);
+  /* Copia el texto dinámicamente */
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: #000; /* Fondo negro para ocultar el original tras los cortes */
+  background: #000;
+  /* Fondo negro para ocultar el original tras los cortes */
 }
 
 /* Capa Roja (Izquierda) */
@@ -1397,17 +1530,18 @@
   width: 100%;
   height: 100%;
   background: #0fb406;
-  
+
   transition: left 0.3s ease-in-out;
   z-index: -1;
 }
 
 .landing-glitch-btn:hover {
-  color: #000; /* Texto negro sobre fondo naranja */
-  box-shadow: 
+  color: #000;
+  /* Texto negro sobre fondo naranja */
+  box-shadow:
     0 0 20px rgba(205, 133, 63, 0.6),
-    inset 0 0 10px rgba(0,0,0,0.5);
-  text-shadow: 0 0 5px rgba(255,255,255,0.5);
+    inset 0 0 10px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
 }
 
 .landing-glitch-btn:hover::before {
@@ -1429,36 +1563,101 @@
 
 /* 3. ANIMACIONES GLITCH (KEYFRAMES) */
 @keyframes glitch-anim-1 {
-  0% { clip: rect(30px, 9999px, 10px, 0); }
-  5% { clip: rect(70px, 9999px, 90px, 0); }
-  10% { clip: rect(5px, 9999px, 40px, 0); }
-  15% { clip: rect(0px, 9999px, 0px, 0); } /* Pausa */
-  45% { clip: rect(0px, 9999px, 0px, 0); }
-  50% { clip: rect(20px, 9999px, 60px, 0); }
-  55% { clip: rect(80px, 9999px, 100px, 0); }
-  60% { clip: rect(0px, 9999px, 0px, 0); }
-  100% { clip: rect(0px, 9999px, 0px, 0); }
+  0% {
+    clip: rect(30px, 9999px, 10px, 0);
+  }
+
+  5% {
+    clip: rect(70px, 9999px, 90px, 0);
+  }
+
+  10% {
+    clip: rect(5px, 9999px, 40px, 0);
+  }
+
+  15% {
+    clip: rect(0px, 9999px, 0px, 0);
+  }
+
+  /* Pausa */
+  45% {
+    clip: rect(0px, 9999px, 0px, 0);
+  }
+
+  50% {
+    clip: rect(20px, 9999px, 60px, 0);
+  }
+
+  55% {
+    clip: rect(80px, 9999px, 100px, 0);
+  }
+
+  60% {
+    clip: rect(0px, 9999px, 0px, 0);
+  }
+
+  100% {
+    clip: rect(0px, 9999px, 0px, 0);
+  }
 }
 
 @keyframes glitch-anim-2 {
-  0% { clip: rect(10px, 9999px, 80px, 0); }
-  5% { clip: rect(90px, 9999px, 100px, 0); }
-  10% { clip: rect(15px, 9999px, 30px, 0); }
-  15% { clip: rect(0px, 9999px, 0px, 0); } /* Pausa */
-  45% { clip: rect(0px, 9999px, 0px, 0); }
-  50% { clip: rect(50px, 9999px, 90px, 0); }
-  55% { clip: rect(10px, 9999px, 20px, 0); }
-  60% { clip: rect(0px, 9999px, 0px, 0); }
-  100% { clip: rect(0px, 9999px, 0px, 0); }
+  0% {
+    clip: rect(10px, 9999px, 80px, 0);
+  }
+
+  5% {
+    clip: rect(90px, 9999px, 100px, 0);
+  }
+
+  10% {
+    clip: rect(15px, 9999px, 30px, 0);
+  }
+
+  15% {
+    clip: rect(0px, 9999px, 0px, 0);
+  }
+
+  /* Pausa */
+  45% {
+    clip: rect(0px, 9999px, 0px, 0);
+  }
+
+  50% {
+    clip: rect(50px, 9999px, 90px, 0);
+  }
+
+  55% {
+    clip: rect(10px, 9999px, 20px, 0);
+  }
+
+  60% {
+    clip: rect(0px, 9999px, 0px, 0);
+  }
+
+  100% {
+    clip: rect(0px, 9999px, 0px, 0);
+  }
 }
 
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
 
 /* Responsive para el título grande */
 @media (max-width: 768px) {
   .landing-glitch-title {
     font-size: 2.5rem;
   }
+
   .landing-tech-subtitle {
     font-size: 0.8rem;
     letter-spacing: 2px;

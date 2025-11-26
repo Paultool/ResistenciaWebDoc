@@ -11,7 +11,7 @@ import './AdminPanel.css';
 import Editor from '@monaco-editor/react';
 import { getSchemaForResource, FormField } from '../schemas/appSchemas'; // Ajusta la ruta
 
-interface AdminRecursosMultimediaProps {}
+interface AdminRecursosMultimediaProps { }
 
 const AdminRecursosMultimedia: React.FC<AdminRecursosMultimediaProps> = () => {
   const [recursos, setRecursos] = useState<RecursoMultimedia[]>([]);
@@ -19,7 +19,7 @@ const AdminRecursosMultimedia: React.FC<AdminRecursosMultimediaProps> = () => {
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingRecurso, setEditingRecurso] = useState<RecursoMultimedia | null>(null);
-  
+
   // ACTUALIZADO: El estado base
   const [formData, setFormData] = useState({
     tipo: 'imagen',
@@ -31,7 +31,7 @@ const AdminRecursosMultimedia: React.FC<AdminRecursosMultimediaProps> = () => {
   const [dynamicData, setDynamicData] = useState<any>({});
   // 'metadatosString' es el JSON que se muestra en el editor fallback
   const [metadatosString, setMetadatosString] = useState<string>('');
-  
+
   // NUEVO: Estado para el esquema actual
   const [currentSchema, setCurrentSchema] = useState<FormField[] | null>(null);
 
@@ -89,7 +89,7 @@ const AdminRecursosMultimedia: React.FC<AdminRecursosMultimediaProps> = () => {
   const handleJsonEditorChange = (value: string | undefined) => {
     setMetadatosString(value || '');
   };
-  
+
   // NUEVO: Manejador para los campos 'json' dentro del formulario dinámico
   const handleDynamicJsonChange = (fieldName: string, value: string | undefined) => {
     let parsedValue: any = null;
@@ -127,7 +127,7 @@ const AdminRecursosMultimedia: React.FC<AdminRecursosMultimediaProps> = () => {
     const prettyJson = JSON.stringify(recurso.metadatos, null, 2);
     setMetadatosString(prettyJson); // Para el editor fallback
     setDynamicData(recurso.metadatos || {}); // Para el formulario dinámico
-    
+
     // El useEffect se encargará de setear 'currentSchema'
     setShowForm(true);
   };
@@ -146,7 +146,7 @@ const AdminRecursosMultimedia: React.FC<AdminRecursosMultimediaProps> = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    
+
     let metadatosParaGuardar: any = {};
 
     try {
@@ -271,7 +271,7 @@ const AdminRecursosMultimedia: React.FC<AdminRecursosMultimediaProps> = () => {
           ➕ Añadir Nuevo Recurso
         </button>
       </div>
-      
+
       {showForm && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -309,10 +309,10 @@ const AdminRecursosMultimedia: React.FC<AdminRecursosMultimediaProps> = () => {
                   placeholder="https://.../reparacion/"
                 />
               </div>
-              
+
               {/* === RENDERIZADO DINÁMICO DE METADATOS === */}
               {renderMetadataForm()}
-              
+
               <div className="form-actions">
                 <button type="submit" className="btn btn-primary">
                   {editingRecurso ? 'Guardar Cambios' : 'Crear Recurso'}
@@ -327,7 +327,7 @@ const AdminRecursosMultimedia: React.FC<AdminRecursosMultimediaProps> = () => {
       )}
 
       {error && (
-        <div className="alert alert-danger" onClick={() => setError(null)} style={{cursor: 'pointer'}}>
+        <div className="alert alert-danger" onClick={() => setError(null)} style={{ cursor: 'pointer' }}>
           <strong>Error:</strong> {error} (clic para cerrar)
         </div>
       )}

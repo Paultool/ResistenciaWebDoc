@@ -7,13 +7,13 @@ interface InventarioViewProps {
   onBack?: () => void
 }
 
-// Definimos categorías visuales que agrupan posibles valores de la DB
+// Categorías Tácticas
 const CATEGORIAS = [
-  { id: 'todos', label: '📦 Todos' },
-  { id: 'documento', label: '📄 Documentos', types: ['documento', 'nota', 'carta', 'informe', 'papel'] },
-  { id: 'evidencia', label: '🔍 Evidencia', types: ['evidencia', 'pista', 'objeto', 'clave'] },
-  { id: 'foto', label: '📸 Fotos', types: ['foto', 'imagen', 'fotografia', 'polaroid'] },
-  { id: 'otro', label: '🔹 Otros', types: [] } // Fallback
+  { id: 'todos', label: 'ALL_ITEMS' },
+  { id: 'documento', label: 'ARCHIVOS', types: ['documento', 'nota', 'carta', 'informe', 'papel'] },
+  { id: 'evidencia', label: 'EVIDENCIA', types: ['evidencia', 'pista', 'objeto', 'clave'] },
+  { id: 'foto', label: 'IMÁGENES', types: ['foto', 'imagen', 'fotografia', 'polaroid'] },
+  { id: 'otro', label: 'OTROS', types: [] }
 ];
 
 const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
@@ -22,8 +22,6 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
-
-  // Estado para el filtro activo
   const [activeCategory, setActiveCategory] = useState<string>('todos')
 
   useEffect(() => {
@@ -38,7 +36,6 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
       setError(null)
       const stats = await gameService.getPlayerStats(user?.id!)
       if (stats && stats.inventario) {
-        // Normalizamos los tipos a minúsculas para evitar errores de 'FOTO' vs 'foto'
         const itemsNormalizados = stats.inventario.map(item => ({
           ...item,
           tipo: item.tipo ? item.tipo.toLowerCase() : 'otro'
@@ -46,19 +43,16 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
         setInventario(itemsNormalizados)
       }
     } catch (err: any) {
-      console.error('Error cargando inventario:', err)
-      setError('Error al cargar el inventario: ' + err.message)
+      console.error('Error:', err)
+      setError('ERROR DE SISTEMA: ' + err.message)
     } finally {
       setLoading(false)
     }
   }
 
-  // --- LÓGICA DE FILTRADO ROBUSTA ---
   const getCategoryForItem = (tipo: string): string => {
     for (const cat of CATEGORIAS) {
-      if (cat.types && cat.types.includes(tipo)) {
-        return cat.id;
-      }
+      if (cat.types && cat.types.includes(tipo)) return cat.id;
     }
     return 'otro';
   };
@@ -66,17 +60,13 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
   const filteredItems = inventario.filter(item => {
     if (activeCategory === 'todos') return true;
     const itemCat = getCategoryForItem(item.tipo);
-
-    // Si la categoría es 'otro', incluimos todo lo que no coincida con las otras cats
     if (activeCategory === 'otro') {
       const knownTypes = CATEGORIAS.flatMap(c => c.types || []);
       return !knownTypes.includes(item.tipo);
     }
-
     return itemCat === activeCategory;
   });
 
-  // Helper para contar items por categoría visual
   const countByCategory = (catId: string) => {
     if (catId === 'todos') return inventario.length;
     if (catId === 'otro') {
@@ -87,41 +77,36 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
     return inventario.filter(i => targetTypes.includes(i.tipo)).length;
   };
 
-  // --- HELPERS VISUALES ---
   const getItemIcon = (tipo: string): string => {
     const map: Record<string, string> = {
       'documento': '📄', 'nota': '📝', 'carta': '✉️',
       'foto': '📸', 'imagen': '🖼️',
-      'evidencia': '🔍', 'pista': '🧩',
-      'llave': '🔑', 'usb': '💾'
+      'evidencia': '🔍', 'pista': '🧩', 'llave': '🔑', 'usb': '💾'
     };
-    // Búsqueda parcial (ej: si tipo es 'documento_secreto', devuelve documento)
     for (const key in map) {
       if (tipo.includes(key)) return map[key];
     }
     return '📦';
   }
 
+  // Colores Neón para Rarezas
   const getRarityColor = (rareza: string): string => {
     const r = rareza ? rareza.toLowerCase() : 'comun';
     const colors: Record<string, string> = {
-      'común': '#718096', 'comun': '#718096',
-      'rara': '#63b3ed', 'raro': '#63b3ed',
-      'épica': '#9f7aea', 'epico': '#9f7aea',
-      'legendaria': '#f6ad55', 'legendario': '#f6ad55',
-      'clave': '#f56565' // Objetos clave en rojo
+      'común': '#888', 'comun': '#888',
+      'rara': '#00ffff', 'raro': '#00ffff', // Cian
+      'épica': '#ff00ff', 'epico': '#ff00ff', // Magenta
+      'legendaria': '#ffff00', 'legendario': '#ffff00', // Amarillo
+      'clave': '#ff0000' // Rojo Alerta
     }
-    return colors[r] || '#718096';
+    return colors[r] || '#888';
   }
 
   if (loading) {
     return (
-      <div className="iv-container">
-        <div className="iv-header">
-          <h2>🎒 Mi Inventario</h2>
-        </div>
-        <div className="iv-status">
-          <p>⏳ Cargando objetos...</p>
+      <div className="iv-container flex items-center justify-center">
+        <div className="text-[#33ff00] text-xl animate-pulse font-mono">
+          {'>'} ACCEDIENDO ALMACÉN...
         </div>
       </div>
     )
@@ -129,13 +114,12 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
 
   if (error) {
     return (
-      <div className="iv-container">
-        <div className="iv-header">
-          <h2>🎒 Mi Inventario</h2>
-        </div>
-        <div className="iv-status">
-          <p>❌ {error}</p>
-          <button onClick={cargarInventario} className="iv-btn-retry">🔄 Reintentar</button>
+      <div className="iv-container flex items-center justify-center">
+        <div className="text-red-500 font-mono border border-red-500 p-4">
+          [ ! ] {error}
+          <button onClick={cargarInventario} className="block mt-4 text-white border border-white px-4 py-2 hover:bg-white hover:text-black w-full">
+            REINTENTAR
+          </button>
         </div>
       </div>
     )
@@ -143,41 +127,49 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
 
   return (
     <div className="iv-container">
+      
+      {/* HEADER */}
       <div className="iv-header">
-        <h2>Mi Inventario</h2>
-        <p>Objetos y evidencias recolectadas</p>
+        <div>
+          <h2>INVENTARIO</h2>
+          <p>RECURSOS Y EVIDENCIAS ALMACENADAS</p>
+        </div>
+        {onBack && (
+          <button onClick={onBack} className="iv-btn-view border-[#33ff00] text-[#33ff00]">
+            [ X ] SALIR
+          </button>
+        )}
       </div>
 
       <div className="iv-controls">
-        {/* Filtros Generados Dinámicamente */}
+        {/* Stats Bar */}
+        <div className="iv-stats">
+          <span>CAPACIDAD: <span className="iv-stat-val">ILIMITADA</span></span>
+          <span>ITEMS EN BODEGA: <span className="iv-stat-val" style={{color:'#33ff00'}}>{inventario.length}</span></span>
+        </div>
+
+        {/* Filtros */}
         <div className="iv-filter-bar">
           {CATEGORIAS.map(cat => {
             const count = countByCategory(cat.id);
-            // Solo mostrar categorías que tengan items (o Todos)
             if (cat.id !== 'todos' && count === 0) return null;
-
             return (
               <button
                 key={cat.id}
                 className={`iv-filter-btn ${activeCategory === cat.id ? 'active' : ''}`}
                 onClick={() => setActiveCategory(cat.id)}
               >
-                {cat.label} ({count})
+                {cat.label} [{count}]
               </button>
             );
           })}
         </div>
-
-        <div className="iv-stats">
-          <span className="iv-stat-item">Total: <span className="iv-stat-val">{inventario.length}</span></span>
-          <span className="iv-stat-item">Mostrando: <span className="iv-stat-val">{filteredItems.length}</span></span>
-        </div>
       </div>
 
+      {/* GRID CONTENT */}
       {filteredItems.length === 0 ? (
         <div className="iv-empty">
-          <span className="iv-empty-icon">📭</span>
-          <p>No hay objetos en esta categoría.</p>
+          <p>[ ! ] SECCIÓN VACÍA</p>
         </div>
       ) : (
         <div className="iv-grid">
@@ -187,32 +179,26 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
               <div
                 key={index}
                 className="iv-card"
-                style={{ borderColor: activeCategory === 'todos' ? '#333' : color }} // Sutil detalle de color
+                style={{ borderColor: selectedItem === item ? '#33ff00' : '#333' }}
               >
                 <div className="iv-card-header">
                   <div className="iv-icon-box">{getItemIcon(item.tipo)}</div>
-                  <span className="iv-rarity-badge" style={{ color: color }}>
-                    {item.rareza || 'COMÚN'}
+                  <span className="iv-rarity-badge" style={{ color: color, borderColor: color }}>
+                    {item.rareza || 'N/A'}
                   </span>
                 </div>
 
                 <div className="iv-card-body">
-                  <h3 className="iv-card-title">{item.nombre}</h3>
                   <span className="iv-card-type">{item.tipo}</span>
-                  <p className="iv-card-desc">
-                    {item.descripcion || 'Sin descripción disponible.'}
-                  </p>
+                  <h3 className="iv-card-title">{item.nombre}</h3>
+                  <div className="iv-card-desc">
+                    {item.descripcion || 'DATOS NO DISPONIBLES.'}
+                  </div>
                 </div>
 
                 <div className="iv-card-footer">
-                  <span className="iv-card-date">
-                    {new Date(item.fecha_obtencion).toLocaleDateString('es-MX')}
-                  </span>
-                  <button
-                    onClick={() => setSelectedItem(item)}
-                    className="iv-btn-view"
-                  >
-                    Ver Detalles
+                  <button onClick={() => setSelectedItem(item)} className="iv-btn-view">
+                    [ INSPECCIONAR ]
                   </button>
                 </div>
               </div>
@@ -221,61 +207,48 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
         </div>
       )}
 
-      {/* Modal de Detalle (Namespaced iv-) */}
+      {/* MODAL DETALLE */}
       {selectedItem && (
         <div className="iv-modal-overlay" onClick={() => setSelectedItem(null)}>
           <div className="iv-modal" onClick={(e) => e.stopPropagation()}>
 
             <div className="iv-modal-header">
-              <div className="iv-modal-title-group">
-                <span className="iv-modal-icon">{getItemIcon(selectedItem.tipo)}</span>
-                <h2 className="iv-modal-h2">{selectedItem.nombre}</h2>
-              </div>
-              <button onClick={() => setSelectedItem(null)} className="iv-modal-close">×</button>
+              <h2 className="iv-modal-h2">{selectedItem.nombre}</h2>
+              <button onClick={() => setSelectedItem(null)} className="iv-modal-close">X</button>
             </div>
 
             <div className="iv-modal-content">
               <div className="iv-detail-row">
-                <div className="iv-detail-label">Tipo & Rareza</div>
-                <div className="iv-detail-value" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <span style={{ textTransform: 'capitalize' }}>{selectedItem.tipo}</span>
+                <div className="iv-detail-label">CLASIFICACIÓN</div>
+                <div className="iv-detail-value flex gap-2 items-center">
                   <span className="iv-rarity-badge" style={{ color: getRarityColor(selectedItem.rareza) }}>
                     {selectedItem.rareza}
                   </span>
+                  <span className="text-sm text-[#666] uppercase">| {selectedItem.tipo}</span>
                 </div>
               </div>
 
               <div className="iv-detail-row">
-                <div className="iv-detail-label">Descripción</div>
-                <div className="iv-detail-value">{selectedItem.descripcion}</div>
+                <div className="iv-detail-label">DESCRIPCIÓN TÉCNICA</div>
+                <div className="iv-detail-value" style={{lineHeight: '1.6'}}>
+                  {selectedItem.descripcion}
+                </div>
               </div>
 
               <div className="iv-detail-row">
-                <div className="iv-detail-label">Origen</div>
-                <div className="iv-detail-value">
-                  {selectedItem.historia_origen || 'Desconocido'}
-                  <span style={{ color: '#718096', fontSize: '0.8rem', marginLeft: '8px' }}>
-                    ({new Date(selectedItem.fecha_obtencion).toLocaleDateString()})
+                <div className="iv-detail-label">ORIGEN / FECHA</div>
+                <div className="iv-detail-value text-sm">
+                  {selectedItem.historia_origen || 'DESCONOCIDO'} 
+                  <span className="text-[#666] ml-2">
+                    [{new Date(selectedItem.fecha_obtencion).toLocaleDateString()}]
                   </span>
                 </div>
-              </div>
-
-              {/* Sección explicativa de rareza */}
-              <div className="iv-detail-row" style={{ background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '6px', border: 'none' }}>
-                <div className="iv-detail-label" style={{ marginBottom: '0' }}>Información</div>
-                <p style={{ fontSize: '0.85rem', color: '#a0aec0', fontStyle: 'italic', margin: '4px 0 0 0' }}>
-                  {selectedItem.rareza === 'común' && 'Objeto estándar encontrado frecuentemente.'}
-                  {selectedItem.rareza === 'rara' && 'Objeto poco común, útil para ciertas interacciones.'}
-                  {selectedItem.rareza === 'épica' && 'Objeto valioso con gran importancia narrativa.'}
-                  {selectedItem.rareza === 'legendaria' && 'Reliquia única. Define el curso de la historia.'}
-                  {selectedItem.rareza === 'clave' && 'Necesario para desbloquear nuevas áreas.'}
-                </p>
               </div>
             </div>
 
             <div className="iv-modal-footer">
               <button onClick={() => setSelectedItem(null)} className="iv-btn-close-modal">
-                Cerrar
+                CERRAR VISUALIZACIÓN
               </button>
             </div>
           </div>

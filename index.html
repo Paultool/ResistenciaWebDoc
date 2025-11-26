@@ -4,14 +4,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>La Resistencia | WebDoc Narrativo</title>
+  <title>La Resistencia | Terminal</title>
 
   <!-- === CÓDIGO DE GOOGLE ANALYTICS (GA4) === -->
   <!-- 🟢 ID DE MEDICIÓN CONFIRMADO: G-0WQQDFX022 -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-0WQQDFX022"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
+    function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
 
     // CONFIGURA TU ID AQUÍ
@@ -24,21 +24,121 @@
   <div id="root">
     <!-- Contenido de carga inicial mientras React arranca -->
     <style>
-        .initial-loading {
-            font-family: sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #282c34;
-            color: white;
-            font-size: 1.5rem;
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background-color: #000;
+        overflow: hidden;
+      }
+
+      .initial-loading {
+        font-family: 'Courier New', Courier, monospace;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        color: #33ff00;
+        text-shadow: 0 0 5px #33ff00;
+        z-index: 9999;
+        position: relative;
+        background: radial-gradient(circle, rgba(16, 30, 16, 1) 0%, rgba(0, 0, 0, 1) 100%);
+      }
+
+      .initial-loading::before {
+        content: " ";
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+        z-index: 2;
+        background-size: 100% 2px, 3px 100%;
+        pointer-events: none;
+      }
+
+      .terminal-text {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+        border-right: 10px solid #33ff00;
+        white-space: nowrap;
+        overflow: hidden;
+        width: 0;
+        animation: typing 2s steps(30, end) forwards, blink-caret 0.75s step-end infinite;
+      }
+
+      .loading-bar {
+        width: 300px;
+        height: 20px;
+        border: 2px solid #33ff00;
+        position: relative;
+        padding: 2px;
+      }
+
+      .loading-bar::after {
+        content: '';
+        display: block;
+        height: 100%;
+        width: 0;
+        background-color: #33ff00;
+        animation: loading 3s ease-in-out forwards;
+        box-shadow: 0 0 10px #33ff00;
+      }
+
+      .status-text {
+        margin-top: 10px;
+        font-size: 0.9rem;
+        opacity: 0;
+        animation: fadeIn 0.5s forwards;
+        animation-delay: 0.5s;
+      }
+
+      @keyframes typing {
+        from {
+          width: 0
         }
+
+        to {
+          width: 100%
+        }
+      }
+
+      @keyframes blink-caret {
+
+        from,
+        to {
+          border-color: transparent
+        }
+
+        50% {
+          border-color: #33ff00;
+        }
+      }
+
+      @keyframes loading {
+        0% {
+          width: 0;
+        }
+
+        100% {
+          width: 100%;
+        }
+      }
+
+      @keyframes fadeIn {
+        to {
+          opacity: 1;
+        }
+      }
     </style>
     <div class="initial-loading">
-        <h1>Cargando La Resistencia...</h1>
-        <p>Iniciando experiencia interactiva.</p>
+      <div class="terminal-text">INITIALIZING LA RESISTENCIA...</div>
+      <div class="loading-bar"></div>
+      <div class="status-text">ESTABLISHING SECURE CONNECTION...</div>
     </div>
   </div>
   <script type="module" src="/src/main.tsx"></script>

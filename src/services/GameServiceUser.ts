@@ -385,6 +385,77 @@ class GameServiceUser {
     }
 
     /**
+     * Registra el encuentro de un usuario con un personaje y otorga XP.
+     * @param userId El ID del usuario.
+     * @param characterId El ID del personaje conocido.
+     * @returns GameEvent con información del XP ganado, o null si ya se conocía.
+     */
+    async meetCharacter(userId: string, characterId: string): Promise<GameEvent | null> {
+        try {
+            console.log(`🤝 [meetCharacter] Usuario ${userId} conociendo personaje ${characterId}`);
+
+            const stats = await this.getPlayerStats(userId);
+            if (!stats) {
+                throw new Error('No se pudo obtener el perfil del jugador');
+            }
+
+            // Verificar si ya conoce al personaje
+            if (stats.personajes_conocidos.includes(characterId)) {
+                console.log(`⚠️ [meetCharacter] El usuario ya conoce al personaje ${characterId}`);
+                return null;
+            }
+
+            // XP por conocer un personaje
+            const xpGanado = 25;
+            const nuevoXP = stats.xp_total + xpGanado;
+            const nuevoNivel = this.calculateLevel(nuevoXP);
+            const nuevosPersonajes = [...stats.personajes_conocidos, characterId];
+
+            // Actualizar estadísticas
+            const { error: updateError } = await supabase
+                .from('perfiles_jugador')
+                .update({
+                    xp_total: nuevoXP,
+                    nivel: nuevoNivel,
+                    personajes_conocidos: nuevosPersonajes,
+                    fecha_ultimo_acceso: new Date().toISOString()
+                })
+                .eq('user_id', userId);
+
+            if (updateError) {
+                console.error('❌ [meetCharacter] Error actualizando perfil:', updateError);
+                throw updateError;
+            }
+
+            // Actualizar cache local
+            if (this.playerStats) {
+                this.playerStats.xp_total = nuevoXP;
+                this.playerStats.nivel = nuevoNivel;
+                this.playerStats.personajes_conocidos = nuevosPersonajes;
+            }
+
+            console.log(`✅ [meetCharacter] Personaje conocido. XP: ${stats.xp_total} → ${nuevoXP}`);
+
+            // Crear evento de juego
+            const gameEvent: GameEvent = {
+                id: `${Date.now()}-${Math.random()}`,
+                tipo: 'otro',
+                descripcion: `¡Has conocido a un nuevo personaje!`,
+                xp_ganado: xpGanado,
+                fecha: new Date().toISOString()
+            };
+
+            // Verificar logros
+            await this.checkAndUnlockAchievements(userId, stats);
+
+            return gameEvent;
+        } catch (error: any) {
+            console.error('❌ [meetCharacter] Error en meetCharacter:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Otorga XP al jugador por completar una historia
      */
     async completeStory(userId: string, historiaId: string, esHistoriaPrincipal: boolean = false): Promise<GameEvent> {

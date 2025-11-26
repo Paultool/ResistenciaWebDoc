@@ -4,7 +4,6 @@ import 'leaflet/dist/leaflet.css';
 import './MapaView.css';
 import HistoriaDetail from './HistoriaDetail';
 
-// Interfaz de Historia (sin cambios)
 interface Historia {
   id_historia: number;
   titulo: string;
@@ -14,17 +13,18 @@ interface Historia {
   id_historia_dependencia?: number | null;
 }
 
-// --- MODIFICACIÓN 1: Actualizar la Interfaz de Props ---
-// Añadimos la nueva prop 'initialCenter' que viene de FlujoNarrativoUsuario
 interface MapaViewProps {
   historias: Historia[];
   onBack: () => void;
   historiasVisitadas: number[];
   onStartNarrativeFromMap: (historiaId: number) => void;
-  initialCenter: [number, number]; // <-- ¡AQUÍ ESTÁ LA NUEVA PROP!
+  initialCenter: [number, number]; 
 }
 
-// Iconos (sin cambios)
+// --- CAMBIO EN ICONOS: Usar filtros CSS si es posible, o mantener estos ---
+// Nota: Al invertir el mapa con CSS, los iconos también se invierten. 
+// Si se ven raros, puedes aplicar style={{ filter: 'invert(100%)' }} al div del icono, 
+// pero Leaflet lo hace difícil. Por ahora, estos funcionarán y se verán "distintos" por el filtro global.
 const greenIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -43,21 +43,17 @@ const yellowIcon = new L.Icon({
     shadowSize: [41, 41]
 });
 
-
-// --- MODIFICACIÓN 2: Actualizar la Firma del Componente ---
-// Recibimos 'initialCenter' desde las props
 const MapaView: React.FC<MapaViewProps> = ({ 
   historias, 
   onBack, 
   historiasVisitadas, 
   onStartNarrativeFromMap, 
-  initialCenter // <-- ¡AQUÍ LA RECIBIMOS!
+  initialCenter 
 }) => {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const [selectedHistoriaId, setSelectedHistoriaId] = useState<number | null>(null);
 
-  // Lógica de bloqueo (sin cambios)
   const isLocked = (historia: Historia): boolean => {
       if (historia.id_historia_dependencia) {
           return !historiasVisitadas.includes(historia.id_historia_dependencia);
@@ -65,63 +61,48 @@ const MapaView: React.FC<MapaViewProps> = ({
       return false;
   };
 
-  // --- MODIFICACIÓN 3: Lógica de 'useEffect' REFACTORIZADA ---
-  
-  // EFECTO 1: Para INICIALIZAR y CENTRAR el mapa
-  // Se ejecuta solo si 'initialCenter' cambia (la primera vez o si el usuario cambia de historia y reabre el mapa)
+  // --- EFECTO 1: Inicializar (Tu lógica corregida) ---
   useEffect(() => {
-    
-    // Si el mapa NO está inicializado Y el ref del DOM está listo
     if (!mapInstanceRef.current && mapRef.current) {
       console.log(`[MapaView] Inicializando mapa en: ${initialCenter}`);
       
-      // Usamos la prop 'initialCenter' y un zoom más razonable
       const initialCoords: L.LatLngTuple = initialCenter;
-      const initialZoom = 16; // 21 es demasiado zoom, 16 es mejor
+      const initialZoom = 16; 
 
-      const map = L.map(mapRef.current).setView(initialCoords, initialZoom);
+      const map = L.map(mapRef.current, {
+          zoomControl: false // Desactivamos el zoom por defecto para moverlo o estilizarlo si queremos
+      }).setView(initialCoords, initialZoom);
+      
+      // Re-agregamos control de zoom en la posición deseada
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+
       mapInstanceRef.current = map;
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution: '&copy; RESISTENCIA_OS | OpenStreetMap'
       }).addTo(map);
 
-      // Forzar recalculo de tamaño para el modal
-      setTimeout(() => {
-        map.invalidateSize();
-      }, 100);
+      setTimeout(() => { map.invalidateSize(); }, 100);
     
-    // Si el mapa YA está inicializado, solo re-centramos
     } else if (mapInstanceRef.current) {
       console.log(`[MapaView] Re-centrando mapa en: ${initialCenter}`);
-      mapInstanceRef.current.setView(initialCenter, 16); // Usar el mismo zoom
-      
-      // Forzar recalculo de tamaño
-      setTimeout(() => {
-        mapInstanceRef.current?.invalidateSize();
-      }, 100);
+      mapInstanceRef.current.setView(initialCenter, 16); 
+      setTimeout(() => { mapInstanceRef.current?.invalidateSize(); }, 100);
     }
-  
-  // Este efecto DEBE depender de 'initialCenter'
   }, [initialCenter]);
 
 
-  // EFECTO 2: Para ACTUALIZAR los marcadores
-  // Se ejecuta solo si las historias o las visitadas cambian
+  // --- EFECTO 2: Marcadores ---
   useEffect(() => {
-    // Si el mapa no está listo, no hacer nada
     if (!mapInstanceRef.current) return;
-
     const map = mapInstanceRef.current;
     
-    // Limpiar marcadores viejos
     map.eachLayer((layer) => {
       if (layer instanceof L.Marker) {
         map.removeLayer(layer);
       }
     });
 
-    // Lógica de marcadores (sin cambios)
     historias.forEach(historia => {
       const coordenadas = historia.id_ubicacion?.coordenadas;
       if (coordenadas) {
@@ -133,7 +114,17 @@ const MapaView: React.FC<MapaViewProps> = ({
           
           const marker = L.marker([lat, lng], { icon: icon }).addTo(map);
           
-          marker.bindPopup(`<b>${historia.titulo}</b><br>${locked ? 'Bloqueada' : 'Disponible'}`);
+          // Popup estilo técnico
+          const statusText = locked ? '[ BLOQUEADO ]' : '[ DISPONIBLE ]';
+          const popupContent = `
+            <div style="text-align: center;">
+                <strong style="font-size:14px;">${historia.titulo}</strong>
+                <hr style="border: 0; border-top: 1px solid #33ff00; margin: 5px 0;">
+                <span style="font-size:10px;">${statusText}</span>
+            </div>
+          `;
+
+          marker.bindPopup(popupContent);
 
           marker.on('click', () => {
             setSelectedHistoriaId(historia.id_historia); 
@@ -141,48 +132,81 @@ const MapaView: React.FC<MapaViewProps> = ({
         }
       }
     });
-  
-  // Este efecto DEBE depender de las historias y su estado
   }, [historias, historiasVisitadas]);
 
   
-  // JSX (sin cambios)
+  // --- NUEVO JSX (ESTILO TERMINAL) ---
   return (
-    <div className="mapa-view-container" style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+    <div className="mapa-view-container select-none">
       
-      <div className="view-header" style={{ flexShrink: 0, position: 'relative', zIndex: 10 }}>
-        <h2>🗺️ Mapa de La Resistencia</h2>
-        <p>Explora las historias. (Verde: Desbloqueada, Amarillo: Bloqueada)</p>
+      {/* ENCABEZADO DE TERMINAL */}
+      <div className="w-full flex justify-between items-center border-b border-[#33ff00]/30 bg-black/90 p-4 z-20">
+        <div>
+            <h2 className="text-[#33ff00] text-xl font-bold tracking-widest uppercase flex items-center gap-2">
+                <span className="animate-pulse">⌖</span> GEOLOCALIZACIÓN
+            </h2>
+            <p className="text-[10px] text-[#33ff00]/60 font-mono mt-1">
+                RASTREO DE NODOS ACTIVO.
+            </p>
+        </div>
+
+        {/* Botón de Cerrar Táctico */}
+        <button 
+            onClick={onBack}
+            className="border border-[#33ff00] text-[#33ff00] hover:bg-[#33ff00] hover:text-black px-4 py-2 text-sm font-bold uppercase tracking-widest transition-all shadow-[0_0_10px_rgba(51,255,0,0.2)]"
+        >
+            [ X ] CERRAR MAPA
+        </button>
       </div>
       
-      <div 
-        id="map" 
-        ref={mapRef} 
-        className="map-container" 
-        style={{ flexGrow: 1, height: '100%', width: '100%', zIndex: 5 }}
-      >
+      {/* CONTENEDOR DEL MAPA */}
+      <div className="relative flex-grow w-full h-full z-10">
+        
+        {/* El mapa Leaflet */}
+        <div 
+            id="map" 
+            ref={mapRef} 
+            className="h-full w-full"
+            style={{ background: '#000' }} // Fallback background
+        >
+        </div>
+
+        {/* Overlay Decorativo (Miras en las esquinas del mapa) */}
+        <div className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-[#33ff00]/50 pointer-events-none z-[400]"></div>
+        <div className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-[#33ff00]/50 pointer-events-none z-[400]"></div>
+        <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-[#33ff00]/50 pointer-events-none z-[400]"></div>
+        <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-[#33ff00]/50 pointer-events-none z-[400]"></div>
+
+        {/* Leyenda Flotante */}
+        <div className="absolute bottom-8 left-8 bg-black/80 border border-[#33ff00]/30 p-3 z-[500] backdrop-blur-sm">
+            <div className="flex items-center gap-2 mb-1">
+                <div className="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_5px_green]"></div>
+                <span className="text-[#33ff00] text-[10px]">NODO SEGURO</span>
+            </div>
+            <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-yellow-500 shadow-[0_0_5px_yellow]"></div>
+                <span className="text-yellow-500 text-[10px]">ENCRIPTADO</span>
+            </div>
+        </div>
+
       </div>
 
+      {/* MODAL DE DETALLE (Si se selecciona una historia) */}
       {selectedHistoriaId && (
         <div 
-          className="historia-detail-map-wrapper"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            zIndex: 1000
-          }}
+          className="absolute top-0 left-0 w-full h-full z-[1000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
         >
-          <HistoriaDetail
-              historiaId={selectedHistoriaId}
-              onClose={() => setSelectedHistoriaId(null)}
-              onStartNarrative={(historia) => {
-                  onStartNarrativeFromMap(historia.id_historia); 
-                  setSelectedHistoriaId(null);
-              }}
-          />
+          {/* Wrapper para HistoriaDetail con estilo */}
+          <div className="w-full max-w-md border border-[#33ff00] shadow-[0_0_30px_rgba(51,255,0,0.3)]">
+             <HistoriaDetail
+                historiaId={selectedHistoriaId}
+                onClose={() => setSelectedHistoriaId(null)}
+                onStartNarrative={(historia) => {
+                    onStartNarrativeFromMap(historia.id_historia); 
+                    setSelectedHistoriaId(null);
+                }}
+            />
+          </div>
         </div>
       )}
     </div>

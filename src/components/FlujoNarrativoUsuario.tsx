@@ -1056,7 +1056,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             cursor: pointer;
             transition: color 0.2s, opacity 0.3s;
             z-index: 50;
-            padding: 1rem;
+            padding: 10px 20px;
             line-height: 0;
             opacity: 0;
             pointer-events: none;
@@ -1075,19 +1075,25 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             color: rgba(255, 255, 255, 0.8);
             transform: translateY(-50%) scale(1.1);
         }
-        .bottom-bar {
+      .bottom-bar {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
+            
+            /* Estilo Terminal Hacker */
+            background: rgba(10, 10, 10, 0.95);
+            border-top: 1px solid #333;
+            padding: 10px 20px;
+            
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem;
-            background-color: rgba(26, 32, 44, 0.8);
-            backdrop-filter: blur(5px);
-            box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.3);
+            gap: 1.5rem;
             z-index: 60;
+            
+            box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.8);
+            font-family: 'Courier New', monospace;
             transition: transform 0.3s ease-in-out;
         }
         .bottom-bar.hidden {
@@ -1156,8 +1162,8 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             position: absolute;
             top: 1rem;
             left: 1rem;
-            background-color: rgba(26, 32, 44, 0.8);
-            backdrop-filter: blur(5px);
+        background: rgba(10, 10, 10, 0.95);
+        border-top: 1px solid #333;
             padding: 0.5rem 1rem;
             border-radius: 0.5rem;
             color: #e2e8f0;
@@ -1681,9 +1687,12 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     // Función para manejar el avance al siguiente paso
     const handleNextStep = async (nextStepId: number | null) => {
         const currentStep = flujoData[currentStepIndex];
-
+        
         // 1. Otorgar recompensas/personajes del paso ACTUAL (esto está bien aquí)
         if (currentStep.id_recompensa !== null) {
+              // buscamos el personaje en el arreglo de personajes cargados
+            const personaje = personajesData.find(p => p.id_personaje === currentStep.id_personaje);
+         
             if (personaje && user) {
                 const { error } = await gameServiceUser.knowCharacter(user.id, personaje.nombre);
                 if (!error) {
@@ -1851,23 +1860,72 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         const is3DModel = recursoActual?.tipo === '3d_model';
 
         // --- Lógica para Pasos de Decisión ---
-        if (isDecisionStep) {
+       if (isDecisionStep) {
             return (
-                <div className="decision-container">
-                    <div className="text-center">
-                        <h2 className="text-3xl md:text-5xl font-bold mb-4">¡Toma una decisión!</h2>
-                        <p className="text-lg mb-8">{contentText}</p>
+                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black p-6 font-mono selection:bg-[#33ff00] selection:text-black">
+                    
+                    {/* 1. Fondo Scanlines (Para continuidad atmosférica) */}
+                    <div className="absolute inset-0 pointer-events-none opacity-20" 
+                        style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
                     </div>
-                    <div className="decision-options">
-                        {step.opciones_decision?.opciones_siguientes_json?.map((opcion, index) => (
-                            <button
-                                key={index}
-                                className="decision-button"
-                                onClick={() => handleNextStep(opcion.siguiente_paso_id)}
-                            >
-                                {opcion.texto}
-                            </button>
-                        ))}
+
+                    {/* 2. Contenedor Principal (La Terminal de Decisión) */}
+                    <div className="relative w-full max-w-5xl bg-black/90 border-2 border-[#33ff00] p-8 md:p-12 shadow-[0_0_100px_rgba(51,255,0,0.15)]">
+                        
+                        {/* Decoración de Esquinas (Brackets) */}
+                        <div className="absolute -top-2 -left-2 w-8 h-8 border-t-4 border-l-4 border-[#33ff00]"></div>
+                        <div className="absolute -top-2 -right-2 w-8 h-8 border-t-4 border-r-4 border-[#33ff00]"></div>
+                        <div className="absolute -bottom-2 -left-2 w-8 h-8 border-b-4 border-l-4 border-[#33ff00]"></div>
+                        <div className="absolute -bottom-2 -right-2 w-8 h-8 border-b-4 border-r-4 border-[#33ff00]"></div>
+
+                        {/* Encabezado de Alerta */}
+                        <div className="text-center mb-10">
+                            <div className="inline-block border-b border-[#33ff00] pb-2 mb-6">
+                                <h2 className="text-3xl md:text-5xl font-bold text-[#33ff00] tracking-tighter uppercase animate-pulse">
+                                    {'>'} INTERVENCIÓN REQUERIDA
+                                </h2>
+                            </div>
+                            
+                            {/* Texto de la Pregunta / Contexto */}
+                            <p className="text-lg md:text-2xl text-white leading-relaxed max-w-3xl mx-auto border-l-4 border-[#33ff00]/50 pl-6 text-left">
+                                {contentText}
+                            </p>
+                        </div>
+
+                        {/* 3. Opciones de Decisión (Grid de Comandos) */}
+                        <div className="grid gap-6 md:grid-cols-1 max-w-3xl mx-auto">
+                            {step.opciones_decision?.opciones_siguientes_json?.map((opcion, index) => (
+                                <button
+                                    key={index}
+                                    className="group relative w-full py-6 px-8 border border-[#33ff00] bg-black text-left transition-all duration-200 
+                                    hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_30px_rgba(51,255,0,0.6)] hover:-translate-y-1"
+                                    onClick={() => handleNextStep(opcion.siguiente_paso_id)}
+                                >
+                                    {/* Efecto de 'Llenado' al hover (opcional, o usar bg directo) */}
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xl md:text-2xl font-bold tracking-wide uppercase">
+                                            <span className="mr-4 opacity-50 group-hover:opacity-100 font-mono">
+                                                0{index + 1}.
+                                            </span>
+                                            {opcion.texto}
+                                        </span>
+                                        
+                                        {/* Flecha reactiva */}
+                                        <span className="text-2xl font-bold opacity-0 group-hover:opacity-100 transform -translate-x-4 group-hover:translate-x-0 transition-all duration-300">
+                                            {'<<'} EJECUTAR
+                                        </span>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Footer Técnico */}
+                        <div className="mt-12 text-center">
+                            <p className="text-[#33ff00]/40 text-xs uppercase tracking-[0.3em] animate-pulse">
+                                ESPERANDO INPUT DEL USUARIO...
+                            </p>
+                        </div>
+
                     </div>
                 </div>
             );
@@ -1896,21 +1954,58 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             if (is3DModel && showInitial3DPopup) {
                 return (
                     <div className={`
-                        absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30
-                        w-[90%] max-w-[650px] bg-white bg-opacity-95 backdrop-blur-sm text-gray-800 shadow-2xl
-                        visible opacity-100 p-10 rounded-xl
+                        absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50
+                        w-[90%] max-w-[600px] 
+                        bg-black/95 backdrop-blur-md 
+                        border border-[#33ff00] shadow-[0_0_30px_rgba(51,255,0,0.15)]
+                        text-[#a8a8a8] p-8 font-mono
                     `}>
-                        <p className="text-lg font-semibold mb-4">¡Explora el entorno!</p>
-                        <p className="text-base leading-relaxed mb-6">
-                            Para continuar tu aventura, debes descubrir todos los **puntos de interés** marcados en el modelo 3D.
+                        {/* Encabezado estilo Terminal */}
+                        <div className="border-b border-[#33ff00]/30 pb-4 mb-6 flex justify-between items-center">
+                            <h2 className="text-[#33ff00] text-xl tracking-widest uppercase font-bold">
+                                {'>'} PROTOCOLO DE NAVEGACIÓN
+                            </h2>
+                            <span className="text-xs animate-pulse text-[#33ff00]">[ ONLINE ]</span>
+                        </div>
+
+                        {/* Cuerpo de Texto */}
+                        <p className="text-base leading-relaxed mb-8">
+                            Para avanzar en la simulación, debes localizar y descifrar todos los <strong className="text-white bg-[#33ff00]/20 px-1">NODOS DE INTERÉS</strong> ocultos en la estructura.
                         </p>
 
+                        {/* Diagrama de Controles (Visualización de Teclas) */}
+                        <div className="flex flex-col sm:flex-row justify-center items-center gap-8 mb-8 bg-white/5 p-4 rounded border border-white/10">
+
+                            {/* Teclas WASD */}
+                            <div className="flex flex-col items-center">
+                                <div className="w-10 h-10 border border-[#33ff00] flex items-center justify-center text-[#33ff00] font-bold mb-1 rounded-sm">W</div>
+                                <div className="flex gap-1">
+                                    <div className="w-10 h-10 border border-[#33ff00] flex items-center justify-center text-[#33ff00] font-bold rounded-sm">A</div>
+                                    <div className="w-10 h-10 border border-[#33ff00] flex items-center justify-center text-[#33ff00] font-bold rounded-sm">S</div>
+                                    <div className="w-10 h-10 border border-[#33ff00] flex items-center justify-center text-[#33ff00] font-bold rounded-sm">D</div>
+                                </div>
+                                <span className="text-xs mt-2 uppercase tracking-wider">Movimiento</span>
+                            </div>
+
+                            <div className="h-10 w-[1px] bg-[#33ff00]/30 hidden sm:block"></div>
+
+                            {/* Mouse */}
+                            <div className="flex flex-col items-center">
+                                <div className="relative w-12 h-16 border border-[#33ff00] rounded-full flex justify-center pt-3">
+                                    <div className="w-1 h-3 bg-[#33ff00] rounded-full animate-bounce"></div>
+                                </div>
+                                <span className="text-xs mt-3 uppercase tracking-wider">Mirar / Clic</span>
+                            </div>
+                        </div>
+
+                        {/* Botón de Acción */}
                         <button
-                            className="bg-blue-600 text-white py-3 px-5 rounded-lg font-semibold text-md cursor-pointer
-                            transition-all duration-300 hover:bg-blue-700"
-                            onClick={() => setShowInitial3DPopup(false)} // <--- CIERRA EL POP-UP INICIAL
+                            className="w-full group relative py-3 px-5 border border-[#33ff00] text-[#33ff00] font-bold tracking-widest uppercase
+                            transition-all duration-300 hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_20px_rgba(51,255,0,0.4)]"
+                            onClick={() => setShowInitial3DPopup(false)}
                         >
-                            Entendido, ¡a explorar!
+                            <span className="absolute inset-0 w-full h-full bg-[#33ff00]/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></span>
+                            <span className="relative">[ INICIAR RECONOCIMIENTO ]</span>
                         </button>
                     </div>
                 );
@@ -1928,25 +2023,49 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             if (is3DModel) {
                 buttonText = "Continuar Aventura →";
             }
-
+            // Render del pop-up
             return (
                 <div className={`
                     absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30
-                    w-[90%] max-w-[650px] bg-white bg-opacity-85 backdrop-blur-md text-gray-800 shadow-2xl
-                    visible opacity-100 p-10 rounded-xl
+                    w-[90%] max-w-[650px] 
+                    bg-black/95 backdrop-blur-md 
+                    border border-[#33ff00] shadow-[0_0_40px_rgba(51,255,0,0.15)]
+                    p-8 md:p-12 font-mono
                 `}>
-                    <p className="text-base leading-relaxed mb-6">{contentText}</p>
+                    {/* Decoración de Encabezado (Header Táctico) */}
+                    <div className="flex justify-between items-center mb-8 border-b border-[#33ff00]/30 pb-2">
+                        <span className="text-[#33ff00] text-xs tracking-[0.2em] uppercase animate-pulse">
+                            {'>'} NARRATIVA_ENTRANTE
+                        </span>
+                        <div className="flex gap-1">
+                            <div className="w-2 h-2 bg-[#33ff00]"></div>
+                            <div className="w-2 h-2 bg-[#33ff00]/50"></div>
+                            <div className="w-2 h-2 bg-[#33ff00]/20"></div>
+                        </div>
+                    </div>
 
-                    {/* El botón de siguiente solo se muestra si el paso tiene un ID de siguiente paso (siempre debería ser el caso aquí) */}
+                    {/* Cuerpo del Texto */}
+                    <p className="text-lg md:text-xl leading-relaxed mb-10 text-gray-200 border-l-2 border-[#33ff00] pl-6">
+                        {contentText}
+                    </p>
+
+                    {/* Botón Siguiente */}
                     {step.id_siguiente_paso && (
                         <button
-                            className="bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold text-lg cursor-pointer
-                            transition-all duration-300 ease-in-out hover:bg-blue-700 hover:scale-105"
+                            className="w-full group relative py-4 px-6 border border-[#33ff00] text-[#33ff00] font-bold text-lg tracking-widest uppercase
+                            transition-all duration-300 hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_20px_rgba(51,255,0,0.4)]"
                             onClick={() => handleNextStep(step.id_siguiente_paso as number)}
                         >
-                            {buttonText}
+                            <span className="relative z-10 flex items-center justify-center gap-3">
+                                {buttonText} <span className="group-hover:translate-x-2 transition-transform">{'>>'}</span>
+                            </span>
                         </button>
                     )}
+                    
+                    {/* Decoración de esquina inferior */}
+                    <div className="absolute bottom-2 right-2 text-[9px] text-[#33ff00]/30">
+                        END_OF_PACKET
+                    </div>
                 </div>
             );
         }
@@ -1957,23 +2076,52 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             return (
                 <div className={`
                     absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30
-                    p-10 rounded-xl max-w-lg w-[90%]
-                    bg-white bg-opacity-85 backdrop-blur-md text-gray-800 shadow-2xl
-                    ${showStepContent ? 'visible opacity-100' : 'opacity-0 pointer-events-none'}
+                    w-[90%] max-w-lg 
+                    bg-black/95 backdrop-blur-md border border-[#33ff00] shadow-[0_0_50px_rgba(51,255,0,0.2)]
+                    p-10 font-mono text-center
+                    transition-all duration-500 ease-in-out
+                    ${showStepContent ? 'visible opacity-100 scale-100' : 'opacity-0 pointer-events-none scale-95'}
                 `}>
-                    <h2 className="text-2xl font-bold mb-4 text-center">
-                        {isChapterEnd ? "Fin del Capítulo" : "Fin de la aventura"}
-                    </h2>
-                    <p className="text-base leading-relaxed mb-6 text-center">{contentText}</p>
+                    {/* Decoración Superior */}
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#33ff00] to-transparent opacity-50"></div>
+
+                    {/* Encabezado de Estado */}
+                    <div className="mb-8 border-b border-[#33ff00]/30 pb-4">
+                        <div className="text-4xl mb-2">
+                            {isChapterEnd ? '💾' : '🏁'}
+                        </div>
+                        <h2 className="text-[#33ff00] text-2xl font-bold tracking-widest uppercase animate-pulse">
+                            {isChapterEnd ? "> SECUENCIA_COMPLETADA" : "> CONEXIÓN_FINALIZADA"}
+                        </h2>
+                        <p className="text-[10px] text-[#33ff00]/50 mt-1 tracking-[0.2em]">
+                            DATOS GUARDADOS CORRECTAMENTE
+                        </p>
+                    </div>
+
+                    {/* Cuerpo del Texto */}
+                    <p className="text-lg text-gray-300 leading-relaxed mb-10">
+                        {contentText}
+                    </p>
+
+                    {/* Botón de Acción Táctico */}
                     <div className="flex justify-center">
                         <button
-                            className="bg-green-600 text-white py-4 px-6 rounded-lg font-semibold text-lg cursor-pointer
-                            transition-all duration-300 ease-in-out hover:bg-green-700 hover:scale-105"
+                            className="group relative w-full py-4 px-6 border border-[#33ff00] text-[#33ff00] font-bold text-lg tracking-widest uppercase
+                            transition-all duration-300 hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_20px_rgba(51,255,0,0.5)]"
                             onClick={() => handleNextStep(step.id_siguiente_paso as number)}
                         >
-                            {isChapterEnd ? "Siguiente Capítulo →" : "Finalizar y Volver"}
+                            <span className="flex items-center justify-center gap-3 relative z-10">
+                                {isChapterEnd ? "[ INICIAR SIGUIENTE FASE ]" : "[ TERMINAR SIMULACIÓN ]"}
+                                <span className="group-hover:translate-x-2 transition-transform">{'>>'}</span>
+                            </span>
                         </button>
                     </div>
+
+                    {/* Decoración de Esquinas */}
+                    <div className="absolute top-2 left-2 w-2 h-2 border-t border-l border-[#33ff00]"></div>
+                    <div className="absolute top-2 right-2 w-2 h-2 border-t border-r border-[#33ff00]"></div>
+                    <div className="absolute bottom-2 left-2 w-2 h-2 border-b border-l border-[#33ff00]"></div>
+                    <div className="absolute bottom-2 right-2 w-2 h-2 border-b border-r border-[#33ff00]"></div>
                 </div>
             );
         }
@@ -1985,8 +2133,46 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     if (!selectedHistoriaId) {
         if (loading) {
             return (
-                <div className="flex items-center justify-center min-h-screen bg-black text-white">
-                    <p>Cargando historias disponibles...</p>
+                <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center font-mono text-[#33ff00]">
+
+                    {/* Fondo Scanlines */}
+                    <div className="absolute inset-0 pointer-events-none opacity-20"
+                        style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
+                    </div>
+
+                    {/* Loader Visual (Anillos Giratorios) */}
+                    <div className="relative w-24 h-24 mb-8">
+                        {/* Anillo Exterior */}
+                        <div className="absolute inset-0 border-t-2 border-[#33ff00] rounded-full animate-spin shadow-[0_0_15px_#33ff00]"></div>
+
+                        {/* Anillo Interior (Gira al revés y más lento - simulación visual) */}
+                        <div className="absolute inset-4 border-b-2 border-[#33ff00]/50 rounded-full animate-pulse"></div>
+
+                        {/* Icono Central */}
+                        <div className="absolute inset-0 flex items-center justify-center text-3xl animate-bounce">
+                            📂
+                        </div>
+                    </div>
+
+                    {/* Texto de Estado */}
+                    <div className="text-center space-y-2 relative z-10">
+                        <h2 className="text-xl font-bold tracking-[0.3em] uppercase">
+                            RECUPERANDO_HISTORIAS
+                        </h2>
+
+                        <div className="flex justify-center gap-1 text-xs opacity-70">
+                            <span>CONECTANDO BASE DE DATOS</span>
+                            <span className="animate-[ping_1.5s_infinite]">.</span>
+                            <span className="animate-[ping_1.5s_infinite_0.2s]">.</span>
+                            <span className="animate-[ping_1.5s_infinite_0.4s]">.</span>
+                        </div>
+                    </div>
+
+                    {/* Footer Decorativo */}
+                    <div className="absolute bottom-10 text-[10px] text-[#33ff00]/30 tracking-widest">
+                        SYSTEM_ID: RESISTENCIA_CORE_v2.5
+                    </div>
+
                 </div>
             );
         }
@@ -2001,8 +2187,48 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
         if (historias.length === 0) {
             return (
-                <div className="flex items-center justify-center min-h-screen bg-black text-white">
-                    <p>No hay historias disponibles en este momento.</p>
+                <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center font-mono select-none">
+    
+                    {/* Fondo Scanlines */}
+                    <div className="absolute inset-0 pointer-events-none opacity-20" 
+                        style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
+                    </div>
+
+                    {/* Contenedor Central */}
+                    <div className="relative p-12 border border-dashed border-[#33ff00]/30 bg-black/50 backdrop-blur-sm text-center max-w-md">
+                        
+                        {/* Icono de Señal Perdida */}
+                        <div className="text-6xl mb-6 opacity-50 animate-pulse filter grayscale hover:grayscale-0 transition-all duration-500">
+                            📡
+                        </div>
+
+                        {/* Título Técnico */}
+                        <h2 className="text-[#33ff00] text-2xl font-bold tracking-[0.2em] uppercase mb-4">
+                            NO_SIGNAL_DETECTED
+                        </h2>
+
+                        {/* Mensaje Humano (Estilizado) */}
+                        <p className="text-[#a8a8a8] text-sm leading-relaxed mb-8">
+                            No se han encontrado historias disponibles en este sector de la memoria.
+                        </p>
+
+                        {/* Decoración de Estado */}
+                        <div className="flex flex-col items-center gap-2">
+                            <div className="w-24 h-1 bg-[#33ff00]/20 overflow-hidden">
+                                <div className="h-full w-1/2 bg-[#33ff00] animate-[ping_2s_linear_infinite]"></div>
+                            </div>
+                            <span className="text-[10px] text-[#33ff00]/40 uppercase tracking-widest">
+                                ESPERANDO TRANSMISIÓN...
+                            </span>
+                        </div>
+
+                        {/* Esquinas Decorativas */}
+                        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#33ff00]"></div>
+                        <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#33ff00]"></div>
+                        <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[#33ff00]"></div>
+                        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#33ff00]"></div>
+
+                    </div>
                 </div>
             );
         }
@@ -2033,96 +2259,153 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         });
         console.log("===================================");
 
+        //MENU PRINCIPAL DE HISTORIAS
         return (
-            <div className="relative min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 text-white p-4 md:p-8 overflow-y-auto">
+    <div className="relative min-h-screen bg-black text-[#a8a8a8] p-4 md:p-8 overflow-y-auto font-mono selection:bg-[#33ff00] selection:text-black">
 
-                <div className="max-w-7xl mx-auto ">
-                    <h1 className="text-5xl font-bold text-center mb-3 bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">Selecciona tu Aventura</h1>
-                    <p className="text-center text-gray-400 mb-3">Explora mundos increíbles y desbloquea nuevas historias</p>
+        {/* Fondo Scanlines */}
+        <div className="absolute inset-0 pointer-events-none z-0 opacity-20 fixed"
+            style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
+        </div>
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {historiasConEstado.map(historia => {
-                            const imagenFondo = historia.id_imagen_historia
-                                ? recursosData.find(r => r.id_recurso === historia.id_imagen_historia)?.archivo
-                                : null;
+        <div className="relative z-10 max-w-7xl mx-auto">
 
-                            const handleHistoriaClick = () => {
-                                if (historia.isLocked) {
-                                    // Mostrar modal con opción de ir a historia madre
-                                    const historiaMadre = historias.find(h => h.id_historia === historia.id_historia_dependencia);
-                                    if (historiaMadre) {
-                                        setLockedHistoryModal({ historia, historiaMadre });
-                                    }
-                                } else {
-                                    handleHistoriaSelect(historia.id_historia);
-                                }
-                            };
-
-                            return (
-                                <div
-                                    key={historia.id_historia}
-                                    className={`relative rounded-xl overflow-hidden transition-all duration-500 transform ${historia.isLocked
-                                        ? 'opacity-70 cursor-pointer grayscale hover:opacity-90'
-                                        : 'cursor-pointer hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50'
-                                        }`}
-                                    onClick={handleHistoriaClick}
-                                    style={{ minHeight: '400px' }}
-                                >
-                                    {/* Imagen de fondo */}
-                                    {imagenFondo ? (
-                                        <img
-                                            src={imagenFondo}
-                                            alt={historia.titulo}
-                                            className="absolute inset-0 w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="absolute inset-0 bg-gradient-to-br from-purple-900 to-blue-900"></div>
-                                    )}
-
-                                    {/* Overlay oscuro */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent"></div>
-
-                                    {/* Indicador de visitada */}
-                                    {historiasVisitadas.includes(historia.id_historia) && (
-                                        <div className="absolute top-4 right-4 bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-bold z-10">
-                                            ✓ Completada
-                                        </div>
-                                    )}
-
-                                    {/* Indicador de bloqueada */}
-                                    {historia.isLocked && (
-                                        <div className="absolute top-4 left-4 bg-red-600 text-white p-3 rounded-full z-10">
-                                            🔒
-                                        </div>
-                                    )}
-
-                                    {/* Contenido */}
-                                    <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
-                                        <h2 className="text-3xl font-bold mb-2 text-white drop-shadow-lg">{historia.titulo}</h2>
-                                        <p className="text-sm text-gray-300 mb-2 line-clamp-2">{historia.descripcion}</p>
-                                        {historia.narrativa && (
-                                            <p className="text-xs text-gray-400 italic line-clamp-3 mt-2">{historia.narrativa}</p>
-                                        )}
-
-                                        {historia.isLocked && historia.id_historia_dependencia && (
-                                            <div className="mt-3 bg-red-900/50 backdrop-blur-sm px-3 py-2 rounded-lg text-xs">
-                                                🔒 Desbloquea completando: {historias.find(h => h.id_historia === historia.id_historia_dependencia)?.titulo}
-                                            </div>
-                                        )}
-
-                                        {!historia.isLocked && (
-                                            <button className="mt-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-2 px-6 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
-                                                Jugar Ahora →
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+            {/* --- ENCABEZADO --- */}
+            <div className="border-b border-[#33ff00]/30 pb-6 mb-10 flex flex-col md:flex-row justify-between items-end gap-4">
+                <div>
+                    <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tighter mb-2 uppercase glitch-text">
+                        SELECTOR_DE_MISIONES
+                    </h1>
+                    <p className="text-[#33ff00] text-xs md:text-sm tracking-widest uppercase">
+                        {'>'} ACCESO A MEMORIA COLECTIVA. SELECCIONE NODO.
+                    </p>
+                </div>
+                <div className="text-right text-[10px] text-[#33ff00]/50 font-mono border-l border-[#33ff00]/30 pl-4">
+                    STATUS: ONLINE<br />
+                    SECURE_CONN: TRUE
                 </div>
             </div>
-        );
+
+            {/* --- GRID DE TARJETAS --- */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
+                {historiasConEstado.map((historia, index) => {
+                    const imagenFondo = historia.id_imagen_historia
+                        ? recursosData.find(r => r.id_recurso === historia.id_imagen_historia)?.archivo
+                        : null;
+
+                    const isCompleted = historiasVisitadas.includes(historia.id_historia);
+
+                    const handleHistoriaClick = () => {
+                        if (historia.isLocked) {
+                            const historiaMadre = historias.find(h => h.id_historia === historia.id_historia_dependencia);
+                            if (historiaMadre) {
+                                setLockedHistoryModal({ historia, historiaMadre });
+                            }
+                        } else {
+                            handleHistoriaSelect(historia.id_historia);
+                        }
+                    };
+
+                    return (
+                        <div
+                            key={historia.id_historia}
+                            className={`
+                                group relative border-2 bg-black overflow-hidden flex flex-col
+                                transition-all duration-300
+                                ${historia.isLocked
+                                    ? 'border-red-900/50 opacity-70 cursor-not-allowed grayscale'
+                                    : 'border-[#33ff00]/30 hover:border-[#33ff00] cursor-pointer hover:shadow-[0_0_25px_rgba(51,255,0,0.15)] hover:-translate-y-1'
+                                }
+                            `}
+                            onClick={handleHistoriaClick}
+                            style={{ height: '520px' }} // Altura fija alta
+                        >
+                            {/* 1. IMAGEN (Ocupa la mitad superior) */}
+                            <div className="h-[55%] relative overflow-hidden">
+                                {imagenFondo ? (
+                                    <img
+                                        src={imagenFondo}
+                                        alt={historia.titulo}
+                                        className={`w-full h-full object-cover transition-transform duration-700 
+                                            ${historia.isLocked ? 'blur-sm' : 'group-hover:scale-110 group-hover:contrast-110'}
+                                        `}
+                                    />
+                                ) : (
+                                    <div className="w-full h-full bg-[#111] flex items-center justify-center">
+                                        <span className="text-[#33ff00]/20 font-bold">NO_IMG</span>
+                                    </div>
+                                )}
+                                {/* Overlay scanlines sobre imagen */}
+                                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+                                
+                                {/* Badges Flotantes sobre la imagen */}
+                                <div className="absolute top-3 left-3 right-3 flex justify-between z-10">
+                                    <span className="bg-black/80 border border-[#33ff00]/50 text-[#33ff00] text-[9px] px-1.5 py-0.5 font-bold backdrop-blur-sm">
+                                        0{index + 1}
+                                    </span>
+                                    {isCompleted && (
+                                        <span className="bg-[#33ff00] text-black text-[9px] px-1.5 py-0.5 font-bold animate-pulse">
+                                            COMPLETADO
+                                        </span>
+                                    )}
+                                    {historia.isLocked && (
+                                        <span className="bg-red-600 text-white text-[9px] px-1.5 py-0.5 font-bold flex items-center gap-1">
+                                            🔒 BLOQUEADO
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* 2. PANEL DE DATOS (Siempre visible abajo) */}
+                            <div className="h-[45%] bg-black border-t border-[#33ff00]/30 p-5 flex flex-col relative z-20">
+                                
+                                {/* Título */}
+                                <h2 className={`text-2xl font-bold mb-2 uppercase tracking-tighter leading-none ${historia.isLocked ? 'text-red-500' : 'text-white group-hover:text-[#33ff00]'}`}>
+                                    {historia.titulo}
+                                </h2>
+
+                                {/* Línea separadora */}
+                                <div className="w-full h-[1px] bg-[#33ff00]/20 mb-3"></div>
+
+                                {/* Descripción (Siempre visible) */}
+                                <p className="text-xs text-gray-300 font-sans leading-relaxed line-clamp-3 mb-4 flex-grow">
+                                    {historia.descripcion}
+                                </p>
+
+                                {/* Mensaje de Error si está bloqueado */}
+                                {historia.isLocked && historia.id_historia_dependencia && (
+                                    <div className="mb-3 text-[9px] text-red-400 font-mono border border-red-900/50 p-1 bg-red-900/10">
+                                        REQ: {historias.find(h => h.id_historia === historia.id_historia_dependencia)?.titulo}
+                                    </div>
+                                )}
+
+                                {/* BOTONERA (Siempre visible si no está bloqueado) */}
+                                {!historia.isLocked && (
+                                    <div className="mt-auto flex gap-2">
+                                        <button className="flex-1 bg-[#33ff00]/10 border border-[#33ff00] text-[#33ff00] py-2 px-3 text-[10px] font-bold uppercase tracking-widest hover:bg-[#33ff00] hover:text-black transition-all flex justify-between items-center group/btn">
+                                            <span>EJECUTAR</span>
+                                            <span className="group-hover/btn:translate-x-1 transition-transform">{'>>'}</span>
+                                        </button>
+                                        
+                                        <button 
+                                            className="w-10 border border-[#33ff00]/50 text-[#33ff00] hover:bg-[#33ff00] hover:text-black flex items-center justify-center transition-colors"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                console.log("Like");
+                                            }}
+                                        >
+                                            ♥
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    </div>
+);
     }
 
     // --- LÓGICA DE RENDERIZADO CORREGIDA ---
@@ -2131,8 +2414,53 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     // Esto previene la condición de carrera (race condition).
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-black text-white">
-                <p>Cargando datos de la historia...</p>
+            <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center font-mono">
+
+                {/* Estilos de animación inline para no depender de config externa */}
+                <style>{`
+                    @keyframes scan-bar {
+                        0% { transform: translateX(-100%); }
+                        50% { transform: translateX(100%); }
+                        100% { transform: translateX(-100%); }
+                    }
+                    .animate-scan {
+                        animation: scan-bar 2s ease-in-out infinite;
+                    }
+                `}</style>
+
+                {/* Fondo Scanlines */}
+                <div className="absolute inset-0 pointer-events-none opacity-20"
+                    style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
+                </div>
+
+                {/* Contenedor Central */}
+                <div className="relative w-[90%] max-w-md p-8 border-x border-[#33ff00]/30 bg-black/50 backdrop-blur-sm text-center">
+
+                    {/* Decoración Superior e Inferior */}
+                    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#33ff00] to-transparent"></div>
+                    <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#33ff00] to-transparent"></div>
+
+                    {/* Texto Principal */}
+                    <h2 className="text-[#33ff00] text-xl font-bold tracking-[0.2em] mb-2 animate-pulse">
+                        {'>'} ACCEDIENDO_MEMORIA
+                    </h2>
+
+                    <p className="text-[#33ff00]/60 text-xs uppercase tracking-widest mb-8">
+                        Desencriptando fragmentos narrativos...
+                    </p>
+
+                    {/* Barra de Carga Hacker */}
+                    <div className="relative w-full h-1 bg-[#33ff00]/20 overflow-hidden mb-2">
+                        <div className="absolute top-0 left-0 w-full h-full bg-[#33ff00] animate-scan shadow-[0_0_10px_#33ff00]"></div>
+                    </div>
+
+                    {/* Datos ficticios de carga */}
+                    <div className="flex justify-between text-[10px] text-[#33ff00]/40 font-mono mt-2">
+                        <span>BUFFER: 64KB</span>
+                        <span>ESTADO: SYNC</span>
+                    </div>
+
+                </div>
             </div>
         );
     }
@@ -2140,19 +2468,53 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     // 2. Si se nos dijo explícitamente que mostremos el mensaje final, hacerlo.
     if (showEndMessage) {
         return (
-            <div className="relative min-h-screen bg-black text-white p-8 flex flex-col items-center justify-center text-center">
-                <div className="bg-white bg-opacity-10 backdrop-blur-md p-10 rounded-xl max-w-lg w-[90%]">
-                    <h2 className="text-3xl font-bold mb-4">Fin de la aventura</h2>
-                    <p className="text-lg leading-relaxed mb-6">
-                        ¡Has completado esta historia! Gracias por jugar.
+            <div className="relative min-h-screen bg-black flex flex-col items-center justify-center p-4 font-mono z-[100]">
+
+                {/* Fondo de Scanlines (Opcional, para consistencia) */}
+                <div className="absolute inset-0 pointer-events-none opacity-20"
+                    style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
+                </div>
+
+                {/* Contenedor Principal */}
+                <div className="relative w-full max-w-lg bg-black/90 border border-[#33ff00] p-10 shadow-[0_0_50px_rgba(51,255,0,0.2)] text-center">
+
+                    {/* Decoración de esquinas */}
+                    <div className="absolute top-0 left-0 w-3 h-3 bg-[#33ff00]"></div>
+                    <div className="absolute top-0 right-0 w-3 h-3 bg-[#33ff00]"></div>
+                    <div className="absolute bottom-0 left-0 w-3 h-3 bg-[#33ff00]"></div>
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#33ff00]"></div>
+
+                    {/* Icono de Éxito */}
+                    <div className="text-6xl mb-6 animate-bounce">
+                        🏁
+                    </div>
+
+                    {/* Título */}
+                    <h2 className="text-[#33ff00] text-4xl font-bold mb-2 tracking-widest uppercase">
+                        MISIÓN COMPLETADA
+                    </h2>
+                    <div className="h-[1px] w-20 bg-[#33ff00] mx-auto mb-6"></div>
+
+                    {/* Texto de Cuerpo */}
+                    <p className="text-[#a8a8a8] text-lg leading-relaxed mb-8">
+                        Los datos han sido recuperados exitosamente.<br />
+                        Tu contribución a la memoria colectiva ha sido registrada.
                     </p>
+
+                    {/* Botón de Acción */}
                     <button
-                        className="bg-green-600 text-white py-4 px-6 rounded-lg font-semibold text-lg cursor-pointer
-                        transition-all duration-300 ease-in-out hover:bg-green-700 hover:scale-105"
-                        onClick={handleReturnToMenu} // <--- SOLUCIÓN: Volver al menú
+                        className="w-full group relative py-4 px-6 border border-[#33ff00] text-[#33ff00] font-bold text-lg tracking-widest uppercase
+                        transition-all duration-300 hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_30px_rgba(51,255,0,0.4)]"
+                        onClick={handleReturnToMenu}
                     >
-                        Finalizar y Volver
+                        <span className="absolute inset-0 w-full h-full bg-[#33ff00]/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></span>
+                        <span className="relative">[ FINALIZAR Y VOLVER AL HUB ]</span>
                     </button>
+
+                    {/* Footer Técnico */}
+                    <div className="mt-6 text-[10px] text-[#33ff00]/40 uppercase tracking-widest">
+                        SESSION_ID: END_OF_LINE
+                    </div>
                 </div>
             </div>
         );
@@ -2166,17 +2528,51 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     if (!currentStep) {
         console.error("Error: No se encontró un paso actual (currentStep), pero 'loading' es false. Mostrando fin.");
         return (
-            <div className="relative min-h-screen bg-black text-white p-8 flex flex-col items-center justify-center text-center">
-                <div className="bg-white bg-opacity-10 backdrop-blur-md p-10 rounded-xl max-w-lg w-[90%]">
-                    <h2 className="text-3xl font-bold mb-4">Error de la Historia</h2>
-                    <p className="text-lg leading-relaxed mb-6">
-                        No se pudo cargar el flujo narrativo. (currentStep es nulo).
-                    </p>
+            <div className="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center p-4 font-mono text-red-500 select-none">
+
+                {/* Fondo de Scanlines Rojo (Efecto de Alerta) */}
+                <div className="absolute inset-0 pointer-events-none opacity-10"
+                    style={{ backgroundImage: 'linear-gradient(rgba(50, 0, 0, 0) 50%, rgba(50, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(255, 0, 0, 0.02), rgba(255, 0, 0, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
+                </div>
+
+                {/* Contenedor de Error */}
+                <div className="relative w-full max-w-lg bg-black border-2 border-red-600 p-8 shadow-[0_0_50px_rgba(255,0,0,0.15)]">
+
+                    {/* Decoración de esquinas (Brackets de error) */}
+                    <div className="absolute -top-1 -left-1 w-4 h-4 border-t-4 border-l-4 border-red-600"></div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 border-t-4 border-r-4 border-red-600"></div>
+                    <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-4 border-l-4 border-red-600"></div>
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-4 border-r-4 border-red-600"></div>
+
+                    {/* Encabezado */}
+                    <div className="flex items-center gap-4 mb-6 border-b border-red-900/50 pb-4">
+                        <div className="text-4xl animate-pulse">⚠️</div>
+                        <div>
+                            <h2 className="text-2xl font-bold tracking-widest uppercase text-white">
+                                SYSTEM FAILURE
+                            </h2>
+                            <p className="text-xs text-red-500 opacity-70">ERR_CODE: NARRATIVE_VOID</p>
+                        </div>
+                    </div>
+
+                    {/* Cuerpo del mensaje (Estilo Consola) */}
+                    <div className="bg-red-900/10 p-4 mb-8 border-l-2 border-red-600 font-mono text-sm leading-relaxed">
+                        <p className="mb-2">{'>'} INITIATING DIAGNOSTIC...</p>
+                        <p className="mb-2 text-white">ERROR: No se pudo cargar el flujo narrativo.</p>
+                        <p className="opacity-70">{'>'} DETALLE: currentStep is null.</p>
+                        <span className="inline-block w-2 h-4 bg-red-600 animate-pulse mt-2"></span>
+                    </div>
+
+                    {/* Botón de Acción */}
                     <button
-                        className="bg-red-600 text-white py-4 px-6 rounded-lg font-semibold text-lg cursor-pointer"
+                        className="w-full group relative py-3 px-6 border border-red-600 text-red-600 font-bold uppercase tracking-widest
+                        transition-all duration-300 hover:bg-red-600 hover:text-white hover:shadow-[0_0_20px_rgba(255,0,0,0.6)]"
                         onClick={onBack}
                     >
-                        Volver
+                        <span className="absolute inset-0 w-full h-full bg-red-600/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></span>
+                        <span className="relative flex items-center justify-center gap-2">
+                            <span>{'<<'}</span> ABORTAR Y REINICIAR
+                        </span>
                     </button>
                 </div>
             </div>
@@ -2277,83 +2673,172 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             <div id="stepContent" className="step-content">
                 {renderStepContent()}
             </div>
+            {/* Fin del div principal */}
 
-            {playerStats && (
-                <div id="bottomBar" className={`bottom-bar ${!showBottomBar ? 'hidden' : ''}`} style={{ fontSize: '0.8rem' }}>
-                    {/* Botón para ocultar barra en esquina inferior izquierda */}
-                    <button
-                        className="bg-gray-800 bg-opacity-80 text-white px-2 py-1 rounded-lg shadow-lg hover:bg-gray-700 transition text-sm"
-                        onClick={() => setShowBottomBar(false)}
-                        title="Ocultar barra"
-                    >
-                        ✕
-                    </button>
+           {playerStats && (
+                <div
+                    id="bottomBar"
+                    className={`
+                        fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40
+                        transition-all duration-500 ease-in-out
+                        ${!showBottomBar ? 'translate-y-[200%] opacity-0' : 'translate-y-0 opacity-100'}
+                    `}
+                >
+                    {/* Contenedor Principal del HUD */}
+                    <div className="bg-black/90 backdrop-blur-md border border-[#33ff00] shadow-[0_0_20px_rgba(51,255,0,0.2)] flex items-stretch rounded-sm overflow-hidden">
 
-                    <div className="info-display">
-                        <span className="text-xl">💪</span>
-                        <span id="resistanceValue" style={{ fontSize: '0.8rem' }}>{playerStats.xp_total || 0}</span>
-                    </div>
+                        {/* Botón Cerrar (Estilo Terminal) */}
+                        <button
+                            className="bg-[#33ff00]/10 hover:bg-[#33ff00] text-[#33ff00] hover:text-black px-3 py-2 transition-colors border-r border-[#33ff00]/30 flex items-center justify-center font-mono font-bold"
+                            onClick={() => setShowBottomBar(false)}
+                            title="Minimizar HUD"
+                        >
+                            ✕
+                        </button>
 
-                    <div id="storyTimeline" className="story-timeline">
-                        {flujoData.map((step, index) => (
+                        {/* Módulo XP (Estadística Principal) */}
+                        <div className="flex items-center gap-3 px-5 py-2 border-r border-[#33ff00]/30 min-w-[100px] justify-center">
+                            <span className="text-xl filter grayscale contrast-125">⚡</span>
+                            <div className="flex flex-col leading-none">
+                                <span className="text-[10px] text-[#33ff00] font-mono tracking-widest uppercase opacity-70">XP_TOTAL</span>
+                                <span className="text-white font-mono text-lg font-bold tabular-nums">
+                                    {playerStats.xp_total || 0}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Iconos de Herramientas (Grid Interactiva) */}
+                        <div className="flex">
+
+                            {/* Mapa */}
                             <div
-                                key={step.id_flujo}
-                                className={`story-step ${index === currentStepIndex ? 'active' : ''}`}
-                            ></div>
-                        ))}
-                    </div>
+                                className="group flex flex-col items-center justify-center px-5 py-2 cursor-pointer hover:bg-[#33ff00]/10 transition-all border-r border-[#33ff00]/20 min-w-[70px]"
+                                onClick={handleOpenMap}
+                                title="Acceder a Geolocalización"
+                            >
+                                <span className="text-lg mb-1 group-hover:scale-110 transition-transform filter grayscale group-hover:grayscale-0">🗺️</span>
+                                <span className="text-[9px] text-[#33ff00] font-mono tracking-wider group-hover:text-white">MAPA</span>
+                            </div>
 
-                    <div className="info-icons">
-                        <div className="tool-icon" onClick={handleOpenMap}>
-                            <span style={{ fontSize: '1.2rem' }}>🗺️</span>
-                            <span id="mapCount" style={{ fontSize: '0.75rem' }}></span>
+                            {/* Inventario */}
+                            <div
+                                className="group flex flex-col items-center justify-center px-5 py-2 cursor-pointer hover:bg-[#33ff00]/10 transition-all border-r border-[#33ff00]/20 min-w-[70px]"
+                                onClick={() => setShowInventory(true)}
+                                title="Ver Inventario"
+                            >
+                                <div className="relative">
+                                    <span className="text-lg mb-1 block group-hover:scale-110 transition-transform filter grayscale group-hover:grayscale-0">📦</span>
+                                    {(playerStats.inventario?.length || 0) > 0 && (
+                                        <span className="absolute -top-1 -right-2 bg-[#33ff00] text-black text-[9px] font-bold px-1 rounded-sm">
+                                            {playerStats.inventario?.length}
+                                        </span>
+                                    )}
+                                </div>
+                                <span className="text-[9px] text-[#33ff00] font-mono tracking-wider group-hover:text-white">INV</span>
+                            </div>
+
+                            {/* Personajes */}
+                            <div
+                                className="group flex flex-col items-center justify-center px-5 py-2 cursor-pointer hover:bg-[#33ff00]/10 transition-all border-r border-[#33ff00]/20 min-w-[70px]"
+                                onClick={() => setShowCharacters(true)}
+                                title="Personajes Conocidos"
+                            >
+                                <div className="relative">
+                                    <span className="text-lg mb-1 block group-hover:scale-110 transition-transform filter grayscale group-hover:grayscale-0">👥</span>
+                                    <span className="absolute -top-1 -right-2 bg-[#33ff00] text-black text-[9px] font-bold px-1 rounded-sm">
+                                        {playerStats.personajes_conocidos?.length || 0}
+                                    </span>
+                                </div>
+                                <span className="text-[9px] text-[#33ff00] font-mono tracking-wider group-hover:text-white">CREW</span>
+                            </div>
+
+                            {/* Historias (Nota: Agregué border-r aquí para separar del Fullscreen) */}
+                            <div
+                                className="group flex flex-col items-center justify-center px-5 py-2 cursor-pointer hover:bg-[#33ff00]/10 transition-all border-r border-[#33ff00]/20 min-w-[70px]"
+                                onClick={() => setShowStories(true)}
+                                title="Historias Desbloqueadas"
+                            >
+                                <div className="relative">
+                                    <span className="text-lg mb-1 block group-hover:scale-110 transition-transform filter grayscale group-hover:grayscale-0">📚</span>
+                                    <span className="absolute -top-1 -right-2 bg-[#33ff00] text-black text-[9px] font-bold px-1 rounded-sm">
+                                        {playerStats.historias_visitadas?.length || 0}
+                                    </span>
+                                </div>
+                                <span className="text-[9px] text-[#33ff00] font-mono tracking-wider group-hover:text-white">LOGS</span>
+                            </div>
+
+                            {/* NUEVO: Botón Fullscreen Integrado */}
+                            <div
+                                className="group flex flex-col items-center justify-center px-5 py-2 cursor-pointer hover:bg-[#33ff00]/10 transition-all min-w-[70px]"
+                                onClick={toggleFullscreen}
+                                title={isFullscreen ? 'Salir de Pantalla Completa' : 'Pantalla Completa'}
+                            >
+                                <span className="text-lg mb-1 group-hover:scale-110 transition-transform filter grayscale group-hover:grayscale-0 text-white">
+                                    {isFullscreen ? '⇲' : '⛶'}
+                                </span>
+                                <span className="text-[9px] text-[#33ff00] font-mono tracking-wider group-hover:text-white">
+                                    {isFullscreen ? 'EXIT' : 'VIEW'}
+                                </span>
+                            </div>
+
                         </div>
-                        <div className="tool-icon" onClick={() => setShowInventory(true)}>
-                            <span style={{ fontSize: '1.2rem' }}>📦</span>
-                            <span id="inventoryCount" style={{ fontSize: '0.75rem' }}>{playerStats.inventario?.length || 0}</span>
-                        </div>
-                        <div className="tool-icon" onClick={() => setShowCharacters(true)}>
-                            <span style={{ fontSize: '1.2rem' }}>👥</span>
-                            <span id="characterCount" style={{ fontSize: '0.75rem' }}>{playerStats.personajes_conocidos?.length || 0}</span>
-                        </div>
-                        <div className="tool-icon" onClick={() => setShowStories(true)}>
-                            <span style={{ fontSize: '1.2rem' }}>📚</span>
-                            <span id="storyCount" style={{ fontSize: '0.75rem' }}>{playerStats.historias_visitadas?.length || 0}</span>
-                        </div>
+
+                        {/* Decoración Final (Línea de estado) */}
+                        <div className="w-1 bg-[#33ff00] animate-pulse"></div>
                     </div>
                 </div>
             )}
 
-            {/* Botón flotante para mostrar barra cuando está oculta */}
+            {/* Botón flotante para mostrar barra (Estilo Icono de Sistema) */}
             {!showBottomBar && (
                 <button
-                    className="absolute bottom-4 left-4 z-50 bg-gray-800 bg-opacity-80 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 transition"
+                    className="fixed bottom-6 left-6 z-50 
+                    bg-black/90 text-[#33ff00] border border-[#33ff00] 
+                    w-12 h-12 flex items-center justify-center
+                    shadow-[0_0_15px_rgba(51,255,0,0.3)]
+                    hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_25px_rgba(51,255,0,0.6)]
+                    transition-all duration-300 group"
                     onClick={() => setShowBottomBar(true)}
-                    title="Mostrar barra"
+                    title="Restaurar HUD"
                 >
-                    📊
+                    <span className="text-xl group-hover:rotate-90 transition-transform duration-300">⚙️</span>
                 </button>
             )}
 
             {is3DModel && (
-                <div className="absolute top-4 right-4 z-50 flex flex-col gap-2">
-                    {/* Contador de hotspots */}
-                    <div className="bg-gray-800 bg-opacity-80 text-white py-1 px-3 rounded-lg text-sm">
-                        Descubiertos: {discoveredHotspots} / {totalHotspotsRef.current}
+                <div className="absolute top-4 right-4 z-50 flex flex-col gap-3 font-mono select-none">
+
+                    {/* 1. Contador de Hotspots (Estilo Display LCD) */}
+                    <div className="bg-black/90 border border-[#33ff00]/50 backdrop-blur-sm py-2 px-4 rounded-sm shadow-[0_0_15px_rgba(51,255,0,0.1)] flex flex-col items-end">
+                        <span className="text-[9px] text-[#33ff00] tracking-widest uppercase mb-1 opacity-70">NODOS ACTIVOS</span>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-white text-lg font-bold leading-none">{discoveredHotspots}</span>
+                            <span className="text-[#33ff00] text-sm">/</span>
+                            <span className="text-[#33ff00] text-sm leading-none">{totalHotspotsRef.current}</span>
+                        </div>
                     </div>
 
-                    {/* Control de volumen de música de fondo - MÁS COMPACTO */}
+                    {/* 2. Control de Volumen (Botón cuadrado + Menú lateral) */}
                     {backgroundMusicUrl && (
-                        <div className="bg-gray-800 bg-opacity-90 text-white rounded-lg">
+                        <div className="relative group">
                             <button
                                 onClick={() => setShowVolumeControl(!showVolumeControl)}
-                                className="text-lg hover:text-yellow-400 transition px-2 py-1 w-full"
-                                title="Control de volumen"
+                                className={`
+                                    w-10 h-10 flex items-center justify-center rounded-sm border transition-all duration-300
+                                    ${showVolumeControl
+                                        ? 'bg-[#33ff00] text-black border-[#33ff00] shadow-[0_0_10px_rgba(51,255,0,0.5)]'
+                                        : 'bg-black/80 text-[#33ff00] border-[#33ff00]/30 hover:border-[#33ff00] hover:bg-[#33ff00]/10'
+                                    }
+                                `}
+                                title="Sistema de Audio"
                             >
                                 🔊
                             </button>
+
+                            {/* Panel Flotante a la Izquierda */}
                             {showVolumeControl && (
-                                <div className="flex flex-col items-center gap-1 p-2 pt-0">
+                                <div className="absolute top-0 right-12 bg-black/95 border border-[#33ff00] p-3 rounded-sm shadow-2xl flex items-center gap-3 min-w-[150px] animate-in fade-in slide-in-from-right-2 duration-200">
+                                    <span className="text-[10px] text-[#33ff00] font-bold w-6">VOL</span>
                                     <input
                                         type="range"
                                         min="0"
@@ -2361,25 +2846,34 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                         step="0.1"
                                         value={backgroundMusicVolume}
                                         onChange={(e) => setBackgroundMusicVolume(parseFloat(e.target.value))}
-                                        className="w-20"
+                                        className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-[#33ff00]"
                                     />
-                                    <span className="text-xs">{Math.round(backgroundMusicVolume * 100)}%</span>
+                                    <span className="text-[10px] text-white w-8 text-right">{Math.round(backgroundMusicVolume * 100)}%</span>
                                 </div>
                             )}
                         </div>
                     )}
 
-                    {/* Control de altura de cámara - MÁS COMPACTO */}
-                    <div className="bg-gray-800 bg-opacity-90 text-white rounded-lg">
+                    {/* 3. Control de Cámara (Botón cuadrado + Menú lateral) */}
+                    <div className="relative group">
                         <button
                             onClick={() => setShowHeightControl(!showHeightControl)}
-                            className="text-lg hover:text-blue-400 transition px-2 py-1 w-full"
-                            title="Altura de cámara"
+                            className={`
+                                w-10 h-10 flex items-center justify-center rounded-sm border transition-all duration-300
+                                ${showHeightControl
+                                    ? 'bg-[#33ff00] text-black border-[#33ff00] shadow-[0_0_10px_rgba(51,255,0,0.5)]'
+                                    : 'bg-black/80 text-[#33ff00] border-[#33ff00]/30 hover:border-[#33ff00] hover:bg-[#33ff00]/10'
+                                }
+                            `}
+                            title="Calibración de Cámara"
                         >
                             📷
                         </button>
+
+                        {/* Panel Flotante a la Izquierda */}
                         {showHeightControl && (
-                            <div className="flex flex-col items-center gap-1 p-2 pt-0">
+                            <div className="absolute top-0 right-12 bg-black/95 border border-[#33ff00] p-3 rounded-sm shadow-2xl flex items-center gap-3 min-w-[150px] animate-in fade-in slide-in-from-right-2 duration-200">
+                                <span className="text-[10px] text-[#33ff00] font-bold w-6">ALT</span>
                                 <input
                                     type="range"
                                     min="-3"
@@ -2387,64 +2881,141 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                     step="0.1"
                                     value={cameraHeight}
                                     onChange={(e) => setCameraHeight(parseFloat(e.target.value))}
-                                    className="w-20"
+                                    className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-[#33ff00]"
                                 />
-                                <span className="text-xs">{cameraHeight.toFixed(1)}m</span>
+                                <span className="text-[10px] text-white w-8 text-right">{cameraHeight.toFixed(1)}m</span>
                             </div>
                         )}
                     </div>
+
                 </div>
             )}
 
 
 
             {is3DModel && !showStepContent && (
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 text-white text-2xl">
-                    Cargando modelo 3D...
+                <div className="absolute top-0 left-0 w-full h-full z-50 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center font-mono">
+
+                    {/* Definimos la animación CSS aquí mismo para que funcione al copiar/pegar */}
+                    <style>{`
+                        @keyframes slide-stripes {
+                            0% { background-position: 0 0; }
+                            100% { background-position: 30px 0; }
+                        }
+                        .loading-stripes {
+                            background-image: linear-gradient(
+                                45deg, 
+                                rgba(51, 255, 0, 0.15) 25%, 
+                                transparent 25%, 
+                                transparent 50%, 
+                                rgba(51, 255, 0, 0.15) 50%, 
+                                rgba(51, 255, 0, 0.15) 75%, 
+                                transparent 75%, 
+                                transparent
+                            );
+                            background-size: 30px 30px;
+                            animation: slide-stripes 1s linear infinite;
+                        }
+                    `}</style>
+
+                    {/* Contenedor de la Tarjeta de Carga */}
+                    <div className="w-[90%] max-w-[400px] border border-[#33ff00] p-6 bg-black shadow-[0_0_40px_rgba(51,255,0,0.15)] relative overflow-hidden">
+
+                        {/* Decoración de esquina (Corner brackets) */}
+                        <div className="absolute top-0 left-0 w-2 h-2 bg-[#33ff00]"></div>
+                        <div className="absolute top-0 right-0 w-2 h-2 bg-[#33ff00]"></div>
+                        <div className="absolute bottom-0 left-0 w-2 h-2 bg-[#33ff00]"></div>
+                        <div className="absolute bottom-0 right-0 w-2 h-2 bg-[#33ff00]"></div>
+
+                        {/* Encabezado */}
+                        <div className="flex justify-between items-end mb-2 text-[#33ff00]">
+                            <span className="text-lg font-bold tracking-widest animate-pulse">{'>'} CARGANDO_ENTORNO</span>
+                            <span className="text-xs opacity-70">v.2.5</span>
+                        </div>
+
+                        {/* Barra de Progreso */}
+                        <div className="h-6 w-full border border-[#33ff00]/50 p-1 relative">
+                            {/* Fondo animado (Stripes) */}
+                            <div className="h-full w-full bg-[#33ff00]/10 loading-stripes absolute top-0 left-0 z-0"></div>
+
+                            {/* Barra sólida que se mueve (Indeterminada) */}
+                            <div className="h-full bg-[#33ff00] relative z-10 w-full opacity-80 animate-pulse"></div>
+                        </div>
+
+                        {/* Texto de estado inferior */}
+                        <div className="mt-3 flex justify-between text-xs font-mono text-[#33ff00]/70">
+                            <span>PROCESANDO GEOMETRÍA...</span>
+                            <span className="animate-bounce">...</span>
+                        </div>
+
+                    </div>
                 </div>
             )}
 
-            {/* Botón de Fullscreen en esquina superior izquierda */}
-            <button
-                className="absolute top-4 left-4 z-50 bg-gray-800 bg-opacity-80 text-white p-3 rounded-lg shadow-lg hover:bg-gray-700 transition flex items-center gap-2"
-                onClick={toggleFullscreen}
-                title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
-            >
-                {isFullscreen ? '⊡' : '⛶'}
-            </button>
+           
 
             {/* Joystick Virtual para Móvil */}
             {isMobile && is3DModel && (
-                <div className="absolute bottom-20 left-4 z-50" style={{ width: '120px', height: '120px' }}>
+                <div className="absolute bottom-20 left-6 z-50 select-none touch-none" style={{ width: '150px', height: '150px' }}>
+
+                    {/* Decoración de fondo (Mira Táctica) */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
+                        <div className="w-[80%] h-[1px] bg-[#33ff00]"></div>
+                        <div className="h-[80%] w-[1px] bg-[#33ff00] absolute"></div>
+                        <div className="w-2 h-2 border border-[#33ff00] rounded-full bg-black relative z-0"></div>
+                    </div>
+
                     <div className="relative w-full h-full">
+                        {/* Estilo común para los botones */}
+                        {/* Nota: Usamos 'active:bg-[#33ff00]' para que se ilumine al tocar */}
+
                         {/* Botón Arriba (W) */}
                         <button
                             id="mobile-btn-up"
-                            className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-gray-800 bg-opacity-80 text-white w-10 h-10 rounded-lg shadow-lg active:bg-gray-600 flex items-center justify-center font-bold"
+                            className="absolute top-0 left-1/2 transform -translate-x-1/2 
+                            w-12 h-12 bg-black/80 border border-[#33ff00] text-[#33ff00] rounded-sm
+                            shadow-[0_0_10px_rgba(51,255,0,0.2)] backdrop-blur-sm
+                            active:bg-[#33ff00] active:text-black active:scale-95 active:shadow-[0_0_20px_rgba(51,255,0,0.6)]
+                            transition-all duration-75 flex items-center justify-center font-bold text-xl"
                             style={{ touchAction: 'none' }}
                         >
                             ▲
                         </button>
+
                         {/* Botón Izquierda (A) */}
                         <button
                             id="mobile-btn-left"
-                            className="absolute top-1/2 left-0 transform -translate-y-1/2 bg-gray-800 bg-opacity-80 text-white w-10 h-10 rounded-lg shadow-lg active:bg-gray-600 flex items-center justify-center font-bold"
+                            className="absolute top-1/2 left-0 transform -translate-y-1/2 
+                            w-12 h-12 bg-black/80 border border-[#33ff00] text-[#33ff00] rounded-sm
+                            shadow-[0_0_10px_rgba(51,255,0,0.2)] backdrop-blur-sm
+                            active:bg-[#33ff00] active:text-black active:scale-95 active:shadow-[0_0_20px_rgba(51,255,0,0.6)]
+                            transition-all duration-75 flex items-center justify-center font-bold text-xl"
                             style={{ touchAction: 'none' }}
                         >
                             ◀
                         </button>
+
                         {/* Botón Derecha (D) */}
                         <button
                             id="mobile-btn-right"
-                            className="absolute top-1/2 right-0 transform -translate-y-1/2 bg-gray-800 bg-opacity-80 text-white w-10 h-10 rounded-lg shadow-lg active:bg-gray-600 flex items-center justify-center font-bold"
+                            className="absolute top-1/2 right-0 transform -translate-y-1/2 
+                            w-12 h-12 bg-black/80 border border-[#33ff00] text-[#33ff00] rounded-sm
+                            shadow-[0_0_10px_rgba(51,255,0,0.2)] backdrop-blur-sm
+                            active:bg-[#33ff00] active:text-black active:scale-95 active:shadow-[0_0_20px_rgba(51,255,0,0.6)]
+                            transition-all duration-75 flex items-center justify-center font-bold text-xl"
                             style={{ touchAction: 'none' }}
                         >
                             ▶
                         </button>
+
                         {/* Botón Abajo (S) */}
                         <button
                             id="mobile-btn-down"
-                            className="absolute bottom-0 left-1/2 transform -translate-x-1/2 bg-gray-800 bg-opacity-80 text-white w-10 h-10 rounded-lg shadow-lg active:bg-gray-600 flex items-center justify-center font-bold"
+                            className="absolute bottom-0 left-1/2 transform -translate-x-1/2 
+                            w-12 h-12 bg-black/80 border border-[#33ff00] text-[#33ff00] rounded-sm
+                            shadow-[0_0_10px_rgba(51,255,0,0.2)] backdrop-blur-sm
+                            active:bg-[#33ff00] active:text-black active:scale-95 active:shadow-[0_0_20px_rgba(51,255,0,0.6)]
+                            transition-all duration-75 flex items-center justify-center font-bold text-xl"
                             style={{ touchAction: 'none' }}
                         >
                             ▼
@@ -2454,52 +3025,115 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             )}
 
             {/* Modal de Hotspot - Fullscreen con botón X */}
-            <div id="hotspotModal" className="fixed inset-0 bg-black" style={{ display: hotspotModal ? 'flex' : 'none', zIndex: 999999 }}>
-                <button
-                    className="absolute top-6 right-6 z-[1000000] bg-red-600 hover:bg-red-700 text-white w-12 h-12 rounded-full flex items-center justify-center text-2xl font-bold shadow-2xl transition-all duration-300"
-                    onClick={closeHotspotModal}
-                    title="Cerrar"
-                >
-                    ×
-                </button>
+            <div
+                id="hotspotModal"
+                className="fixed inset-0 bg-black/95 backdrop-blur-xl flex flex-col z-[999999] font-mono"
+                style={{ display: hotspotModal ? 'flex' : 'none' }}
+            >
+                {/* Fondo de Scanlines (Decorativo) */}
+                <div className="absolute inset-0 pointer-events-none z-0 opacity-20"
+                    style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
+                </div>
 
-                <div className="w-full h-full flex flex-col items-center justify-center p-4">
-                    <h3 className="text-3xl font-bold mb-6 text-white text-center">{hotspotModal?.title}</h3>
-                    <div className="w-full h-full max-h-[85vh] flex justify-center items-center">
+                {/* --- ENCABEZADO DEL VISOR --- */}
+                <div className="relative z-50 flex justify-between items-start p-6 border-b border-[#33ff00]/30 bg-[#33ff00]/5">
+                    <div>
+                        <h3 className="text-[#33ff00] text-2xl font-bold tracking-widest uppercase flex items-center gap-3">
+                            <span className="w-3 h-3 bg-[#33ff00] animate-pulse"></span>
+                            {hotspotModal?.title || 'ARCHIVO SIN TÍTULO'}
+                        </h3>
+                        <p className="text-xs text-[#33ff00]/60 mt-1 pl-6 uppercase">
+                            TIPO: {hotspotModal?.contentType} | ACCESO: AUTORIZADO
+                        </p>
+                    </div>
+
+                    <button
+                        className="group flex items-center gap-2 bg-black border border-[#33ff00]/50 hover:border-[#33ff00] hover:bg-[#33ff00] px-4 py-2 transition-all duration-300"
+                        onClick={closeHotspotModal}
+                        title="Cerrar Visualización"
+                    >
+                        <span className="text-[#33ff00] text-sm font-bold group-hover:text-black">[ ESC ] CERRAR CONEXIÓN</span>
+                    </button>
+                </div>
+
+                {/* --- ÁREA DE CONTENIDO --- */}
+                <div className="relative flex-1 w-full h-full p-8 flex items-center justify-center overflow-hidden">
+
+                    {/* Decoración de esquinas del marco */}
+                    <div className="absolute top-8 left-8 w-4 h-4 border-t-2 border-l-2 border-[#33ff00]"></div>
+                    <div className="absolute top-8 right-8 w-4 h-4 border-t-2 border-r-2 border-[#33ff00]"></div>
+                    <div className="absolute bottom-8 left-8 w-4 h-4 border-b-2 border-l-2 border-[#33ff00]"></div>
+                    <div className="absolute bottom-8 right-8 w-4 h-4 border-b-2 border-r-2 border-[#33ff00]"></div>
+
+                    <div className="relative z-10 w-full h-full flex justify-center items-center max-h-[80vh]">
+
+                        {/* IMAGEN */}
                         {hotspotModal?.contentType === 'imagen' && (
-                            <img src={hotspotModal.url} alt={hotspotModal.title} className="max-h-full max-w-full object-contain" />
+                            <div className="relative border border-[#33ff00]/20 p-1 bg-black shadow-[0_0_30px_rgba(51,255,0,0.1)]">
+                                <img
+                                    src={hotspotModal.url}
+                                    alt={hotspotModal.title}
+                                    className="max-h-[75vh] max-w-full object-contain"
+                                />
+                                <div className="absolute bottom-2 right-2 text-[10px] bg-black/80 text-[#33ff00] px-2 border border-[#33ff00]/30">IMG_RENDER</div>
+                            </div>
                         )}
+
+                        {/* VIDEO */}
                         {hotspotModal?.contentType === 'video' && (
-                            <video
-                                src={hotspotModal.url}
-                                controls
-                                autoPlay
-                                loop
-                                className="max-h-full max-w-full"
-                                onCanPlay={(e) => handleMediaAutoplay(e.currentTarget)}
-                            />
-                        )}
-                        {hotspotModal?.contentType === 'audio' && (
-                            <div className="bg-gray-800 p-8 rounded-xl">
-                                <audio
+                            <div className="border border-[#33ff00]/30 bg-black p-1 shadow-2xl">
+                                <video
                                     src={hotspotModal.url}
                                     controls
                                     autoPlay
-                                    className="w-full min-w-[400px]"
+                                    loop
+                                    className="max-h-[75vh] max-w-full"
                                     onCanPlay={(e) => handleMediaAutoplay(e.currentTarget)}
                                 />
                             </div>
                         )}
+
+                        {/* AUDIO */}
+                        {hotspotModal?.contentType === 'audio' && (
+                            <div className="bg-black border border-[#33ff00] p-10 rounded-sm flex flex-col items-center shadow-[0_0_50px_rgba(51,255,0,0.2)] max-w-md w-full">
+                                <div className="text-[#33ff00] text-6xl mb-6 animate-pulse">
+                                    🔊
+                                </div>
+                                <div className="w-full mb-4 h-8 flex items-center justify-center gap-1">
+                                    {/* Visualizador falso animado */}
+                                    {[...Array(10)].map((_, i) => (
+                                        <div key={i} className="w-1 bg-[#33ff00]" style={{
+                                            height: `${Math.random() * 100}%`,
+                                            animation: `pulse 0.5s infinite ${Math.random()}s`
+                                        }}></div>
+                                    ))}
+                                </div>
+                                <p className="text-[#33ff00] text-sm mb-4 tracking-widest">REPRODUCIENDO AUDIO...</p>
+
+                                {/* Truco: Invertimos los colores del player nativo para que se vea oscuro/verde */}
+                                <audio
+                                    src={hotspotModal.url}
+                                    controls
+                                    autoPlay
+                                    className="w-full min-w-[300px] filter invert hue-rotate-180 contrast-150 opacity-80"
+                                    onCanPlay={(e) => handleMediaAutoplay(e.currentTarget)}
+                                />
+                            </div>
+                        )}
+
+                        {/* INTERACTIVE / IFRAME */}
                         {hotspotModal?.contentType === 'interactive' && (
-                            <iframe
-                                ref={iframeRef}
-                                id="interactive-iframe" // ¡CRUCIAL! Añadir el ID para poder seleccionarlo en el useEffect
-                                src={hotspotModal.url}
-                                title={hotspotModal.title}
-                                className="w-full h-full"
-                                style={{ border: 'none' }}
-                                allowFullScreen
-                            ></iframe>
+                            <div className="w-full h-full border border-[#33ff00]/50 bg-black">
+                                <iframe
+                                    ref={iframeRef}
+                                    id="interactive-iframe"
+                                    src={hotspotModal.url}
+                                    title={hotspotModal.title}
+                                    className="w-full h-full"
+                                    style={{ border: 'none' }}
+                                    allowFullScreen
+                                ></iframe>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -2551,83 +3185,242 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     </div>
                 </div>
             )}
+            {/* Modal de Inventario */}
+            <div
+                id="inventoryModal"
+                className={`
+                    fixed inset-0 z-[60] flex items-center justify-center 
+                    bg-black/85 backdrop-blur-sm font-mono
+                    ${showInventory ? 'flex' : 'hidden'}
+                `}
+            >
+                {/* Contenedor del Modal */}
+                <div className="w-[90%] max-w-[600px] bg-black/95 border border-[#33ff00] shadow-[0_0_30px_rgba(51,255,0,0.15)] flex flex-col">
 
-            <div id="inventoryModal" className="modal" style={{ display: showInventory ? 'flex' : 'none' }}>
-                <div className="modal-content">
-                    <span className="close-button" onClick={() => setShowInventory(false)}>&times;</span>
-                    <h3 className="text-2xl font-bold mb-4">Inventario</h3>
-                    <div id="inventoryItems" className="max-h-80 overflow-y-auto">
-                        {playerStats?.inventario && playerStats.inventario.length > 0 ? (
-                            playerStats.inventario.map((item, index) => (
-                                <div key={index} className="list-item">
-                                    <p className="font-bold">{item.nombre}</p>
-                                    <p className="text-sm text-gray-400">{item.descripcion}</p>
+                    {/* Encabezado */}
+                    <div className="flex justify-between items-center p-4 border-b border-[#33ff00]/30 bg-[#33ff00]/5">
+                        <h3 className="text-[#33ff00] text-lg font-bold tracking-widest uppercase flex items-center gap-2">
+                            <span className="animate-pulse">_</span> ALMACÉN DE RECURSOS
+                        </h3>
+                        <button
+                            className="text-[#33ff00] hover:text-white hover:bg-[#33ff00]/20 px-2 py-1 transition-colors text-xl leading-none"
+                            onClick={() => setShowInventory(false)}
+                        >
+                            [X]
+                        </button>
+                    </div>
+
+                    <div className="p-6">
+
+                        {/* Estadísticas rápidas (Header interno) */}
+                        <div className="flex justify-between text-xs text-[#33ff00]/60 mb-4 border-b border-[#33ff00]/20 pb-2">
+                            <span>CAPACIDAD: ILIMITADA</span>
+                            <span>ITEMS: {playerStats?.inventario?.length || 0}</span>
+                        </div>
+
+                        {/* Lista de Items */}
+                        <div id="inventoryItems" className="max-h-80 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+
+                            {/* Estilos para scrollbar personalizado */}
+                            <style>{`
+                                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+                                .custom-scrollbar::-webkit-scrollbar-track { background: #111; }
+                                .custom-scrollbar::-webkit-scrollbar-thumb { background: #33ff00; border-radius: 2px; }
+                            `}</style>
+
+                            {playerStats?.inventario && playerStats.inventario.length > 0 ? (
+                                playerStats.inventario.map((item, index) => (
+                                    <div key={index} className="flex gap-3 border border-[#33ff00]/20 p-3 bg-white/5 hover:bg-[#33ff00]/10 transition-colors cursor-default group">
+
+                                        {/* Icono / Placeholder Gráfico */}
+                                        <div className="w-12 h-12 border border-[#33ff00]/30 flex items-center justify-center bg-black text-2xl group-hover:border-[#33ff00] transition-colors">
+                                            📦
+                                        </div>
+
+                                        {/* Datos del Item */}
+                                        <div className="flex-1">
+                                            <div className="flex justify-between items-start mb-1">
+                                                <p className="text-[#33ff00] font-bold text-sm uppercase group-hover:text-white transition-colors">
+                                                    {item.nombre}
+                                                </p>
+                                                <span className="text-[9px] text-[#33ff00]/50 font-mono">
+                                                    ID_{index + 100}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-gray-400 leading-tight group-hover:text-gray-300">
+                                                {item.descripcion}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-10 border border-dashed border-[#33ff00]/30 text-gray-500 text-sm">
+                                    <p className="mb-2 text-2xl opacity-50">🚫</p>
+                                    [ ! ] ALMACÉN VACÍO. RECOLECTA OBJETOS.
                                 </div>
-                            ))
-                        ) : (
-                            <p className="text-center text-gray-400">Tu inventario está vacío.</p>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
-
+            {/* Modal de Personajes */}
             {showCharacters && (
-                <div className="modal" style={{ display: 'flex' }}>
-                    <div className="modal-content">
-                        <span className="close-button" onClick={() => setShowCharacters(false)}>&times;</span>
-                        <h2>👤 Personajes Conocidos</h2>
-                        <p className="mb-4 text-sm text-gray-400">
-                            Haz clic en el nombre para ver la ficha completa.
-                        </p>
-                        <div className="list-container max-h-96 overflow-y-auto pr-2">
-                            {(playerStats?.personajes_conocidos || []).map((name: string, index: number) => (
-                                // ¡AQUÍ ESTÁ EL CAMBIO CLAVE!
-                                <div
-                                    key={index}
-                                    className="list-item hover:bg-gray-700 cursor-pointer transition-all"
-                                    onClick={() => handleCharacterClickInBar(name)} // <--- Llama a la nueva función
-                                >
-                                    <p className="font-semibold">{name}</p>
-                                </div>
-                            ))}
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 backdrop-blur-sm font-mono">
+
+                    {/* Contenedor del Modal */}
+                    <div className="w-[90%] max-w-[500px] bg-black/95 border border-[#33ff00] shadow-[0_0_30px_rgba(51,255,0,0.15)] flex flex-col">
+
+                        {/* Encabezado */}
+                        <div className="flex justify-between items-center p-4 border-b border-[#33ff00]/30 bg-[#33ff00]/5">
+                            <h3 className="text-[#33ff00] text-lg font-bold tracking-widest uppercase flex items-center gap-2">
+                                <span className="animate-pulse">_</span> BASE DE DATOS: CREW
+                            </h3>
+                            <button
+                                className="text-[#33ff00] hover:text-white hover:bg-[#33ff00]/20 px-2 py-1 transition-colors text-xl leading-none"
+                                onClick={() => setShowCharacters(false)}
+                            >
+                                [X]
+                            </button>
                         </div>
-                        {/* ... otros elementos del modal ... */}
+
+                        <div className="p-6">
+
+                            {/* Instrucciones / Subtítulo técnico */}
+                            <div className="flex justify-between items-end mb-4 border-b border-[#33ff00]/20 pb-2">
+                                <p className="text-xs text-[#33ff00]/70">
+                                    {'>'} SELECCIONE SUJETO PARA ANÁLISIS DETALLADO
+                                </p>
+                                <span className="text-[9px] bg-[#33ff00]/10 text-[#33ff00] px-1 rounded">
+                                    TOTAL: {playerStats?.personajes_conocidos?.length || 0}
+                                </span>
+                            </div>
+
+                            {/* Lista de Personajes */}
+                            <div className="max-h-96 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+
+                                {/* Estilos scrollbar */}
+                                <style>{`
+                                    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+                                    .custom-scrollbar::-webkit-scrollbar-track { background: #111; }
+                                    .custom-scrollbar::-webkit-scrollbar-thumb { background: #33ff00; border-radius: 2px; }
+                                `}</style>
+
+                                {(playerStats?.personajes_conocidos || []).length > 0 ? (
+                                    (playerStats?.personajes_conocidos || []).map((name, index) => (
+                                        <div
+                                            key={index}
+                                            className="group flex items-center gap-4 border border-[#33ff00]/20 p-3 bg-white/5 hover:bg-[#33ff00]/10 hover:border-[#33ff00]/50 transition-all cursor-pointer"
+                                            onClick={() => handleCharacterClickInBar(name)}
+                                        >
+                                            {/* Icono de Avatar Genérico */}
+                                            <div className="w-10 h-10 bg-black border border-[#33ff00]/30 flex items-center justify-center text-xl group-hover:border-[#33ff00] transition-colors">
+                                                👤
+                                            </div>
+
+                                            {/* Datos del Personaje */}
+                                            <div className="flex-1">
+                                                <div className="flex justify-between items-center">
+                                                    <p className="text-[#33ff00] font-bold text-sm uppercase group-hover:text-white transition-colors">
+                                                        {name}
+                                                    </p>
+                                                    <span className="text-[8px] border border-[#33ff00]/30 text-[#33ff00]/70 px-1 group-hover:bg-[#33ff00] group-hover:text-black transition-colors">
+                                                        VER EXPEDIENTE ↗
+                                                    </span>
+                                                </div>
+                                                <p className="text-[10px] text-gray-500 font-mono mt-1">
+                                                    ID_REF: {name.substring(0, 3).toUpperCase()}_{index + 1024}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    // Estado Vacío
+                                    <div className="text-center py-8 border border-dashed border-[#33ff00]/30 text-gray-500 text-sm">
+                                        <p className="mb-2 text-2xl opacity-50">🚫</p>
+                                        [ ! ] SIN REGISTROS. INTERACTÚA CON EL ENTORNO.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
-            <div id="storiesModal" className="modal" style={{ display: showStories ? 'flex' : 'none' }}>
-                <div className="modal-content">
-                    <span className="close-button" onClick={() => setShowStories(false)}>&times;</span>
-                    <h3 className="text-2xl font-bold mb-4">Historias Visitadas</h3>
-                    <div id="storyItems" className="max-h-80 overflow-y-auto">
-                        {/* Botón para volver al menú de historias */}
+            {/* Modal de Historias */}
+            <div
+                id="storiesModal"
+                className={`
+                    fixed inset-0 z-[60] flex items-center justify-center 
+                    bg-black/85 backdrop-blur-sm font-mono
+                    ${showStories ? 'flex' : 'hidden'}
+                `}
+            >
+                {/* Contenedor del Modal */}
+                <div className="w-[90%] max-w-[600px] bg-black/95 border border-[#33ff00] shadow-[0_0_30px_rgba(51,255,0,0.15)] flex flex-col">
+
+                    {/* Encabezado */}
+                    <div className="flex justify-between items-center p-4 border-b border-[#33ff00]/30 bg-[#33ff00]/5">
+                        <h3 className="text-[#33ff00] text-lg font-bold tracking-widest uppercase flex items-center gap-2">
+                            <span className="animate-pulse">_</span> LOGS DE MISIÓN
+                        </h3>
                         <button
-                            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 px-4 rounded-lg font-semibold mb-4 transition-all duration-300 flex items-center justify-center gap-2"
+                            className="text-[#33ff00] hover:text-white hover:bg-[#33ff00]/20 px-2 py-1 transition-colors text-xl leading-none"
+                            onClick={() => setShowStories(false)}
+                        >
+                            [X]
+                        </button>
+                    </div>
+
+                    <div className="p-6">
+
+                        {/* Botón Volver (Estilo Táctico) */}
+                        <button
+                            className="w-full mb-6 group relative py-3 px-4 border border-[#33ff00]/50 text-[#33ff00] text-sm tracking-wider uppercase
+                            transition-all duration-300 hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_15px_rgba(51,255,0,0.4)] flex items-center justify-center gap-3"
                             onClick={() => {
                                 setShowStories(false);
-                                handleReturnToMenu(); // <--- SOLUCIÓN: Volver al menú
+                                handleReturnToMenu();
                             }}
                         >
-                            ← Volver al Menú de Historias
+                            <span>{'<<'} RETORNAR AL HUB</span>
                         </button>
 
-                        {playerStats?.historias_visitadas && historias.length > 0 ? (
-                            playerStats.historias_visitadas.map((storyId, index) => {
-                                const story = historias.find(h => h.id_historia === parseInt(storyId));
-                                return story ? (
-                                    <div key={index} className="list-item">
-                                        <p className="font-bold">{story.titulo}</p>
-                                        <p className="text-sm text-gray-400">{story.descripcion}</p>
-                                    </div>
-                                ) : null;
-                            })
-                        ) : (
-                            <p className="text-center text-gray-400">Aún no has visitado historias.</p>
-                        )}
+                        {/* Lista de Items */}
+                        <div id="storyItems" className="max-h-80 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+
+                            {/* Estilos para scrollbar personalizado inline */}
+                            <style>{`
+                                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+                                .custom-scrollbar::-webkit-scrollbar-track { background: #111; }
+                                .custom-scrollbar::-webkit-scrollbar-thumb { background: #33ff00; border-radius: 2px; }
+                            `}</style>
+
+                            {playerStats?.historias_visitadas && historias.length > 0 ? (
+                                playerStats.historias_visitadas.map((storyId, index) => {
+                                    const story = historias.find(h => h.id_historia === parseInt(storyId));
+                                    return story ? (
+                                        <div key={index} className="border border-[#33ff00]/20 p-3 bg-white/5 hover:bg-[#33ff00]/10 transition-colors cursor-default group">
+                                            <div className="flex justify-between items-start mb-1">
+                                                <p className="text-[#33ff00] font-bold text-sm uppercase group-hover:text-white transition-colors">
+                                                    {story.titulo}
+                                                </p>
+                                                <span className="text-[9px] bg-[#33ff00]/20 text-[#33ff00] px-1.5 py-0.5 rounded-sm">
+                                                    FILE_{storyId}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-gray-400 group-hover:text-gray-300">{story.descripcion}</p>
+                                        </div>
+                                    ) : null;
+                                })
+                            ) : (
+                                <div className="text-center py-10 border border-dashed border-[#33ff00]/30 text-gray-500 text-sm">
+                                    <p className="mb-2 text-2xl opacity-50">📂</p>
+                                    [ ! ] SIN DATOS. EXPLORACIÓN REQUERIDA.
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
-
             {notification && (
                 <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 text-white py-3 px-6 rounded-full shadow-lg transition-all duration-500 ease-in-out animate-fade-in-down">
                     {notification}
@@ -2636,40 +3429,90 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
             {/* Modal de la FICHA del Personaje (Ficha del PersonajeView) */}
             {selectedCharacterForModal && (
-                <div className="modal" style={{ display: 'flex' }}>
-                    <div className="modal-content max-w-lg">
-                        <span className="close-button" onClick={closeCharacterModal}>&times;</span>
-                        <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-blue-400">
-                            Ficha de {selectedCharacterForModal.nombre}
-                        </h2>
+                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/85 backdrop-blur-sm font-mono" style={{ display: 'flex' }}>
+    
+                    {/* Contenedor Principal del Expediente */}
+                    <div className="relative w-[90%] max-w-lg bg-black/95 border border-[#33ff00] shadow-[0_0_40px_rgba(51,255,0,0.15)] flex flex-col max-h-[90vh] overflow-hidden">
+                        
+                        {/* Decoración de Esquinas */}
+                        <div className="absolute top-0 left-0 w-3 h-3 bg-[#33ff00] z-10"></div>
+                        <div className="absolute top-0 right-0 w-3 h-3 bg-[#33ff00] z-10"></div>
+                        <div className="absolute bottom-0 left-0 w-3 h-3 bg-[#33ff00] z-10"></div>
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#33ff00] z-10"></div>
 
-                        <div className="flex flex-col gap-4">
-                            {/* Imagen del personaje (si está disponible) */}
-                            {selectedCharacterForModal.imagen && (
-                                <div className="text-center">
-                                    <img
-                                        src={selectedCharacterForModal.imagen}
-                                        alt={`Imagen de ${selectedCharacterForModal.nombre}`}
-                                        className="w-32 h-32 object-cover rounded-full mx-auto border-4 border-blue-400"
-                                    />
-                                </div>
-                            )}
+                        {/* ENCABEZADO */}
+                        <div className="flex justify-between items-center p-5 border-b border-[#33ff00]/30 bg-[#33ff00]/5">
+                            <div>
+                                <h2 className="text-[#33ff00] text-xl font-bold tracking-widest uppercase flex items-center gap-2">
+                                    EXPEDIENTE: {selectedCharacterForModal.nombre}
+                                </h2>
+                                <p className="text-[9px] text-[#33ff00]/60 mt-1">NIVEL DE ACCESO: CONFIDENCIAL</p>
+                            </div>
+                            <button 
+                                className="text-[#33ff00] hover:bg-[#33ff00] hover:text-black border border-[#33ff00] w-8 h-8 flex items-center justify-center transition-colors font-bold"
+                                onClick={closeCharacterModal}
+                            >
+                                X
+                            </button>
+                        </div>
 
-                            {/* Descripción */}
-                            <div className="info-section">
-                                <h4 className="font-semibold text-lg text-gray-300">📝 Descripción</h4>
-                                <p className="text-sm">{selectedCharacterForModal.descripcion}</p>
+                        {/* CONTENIDO SCROLLABLE */}
+                        <div className="p-6 overflow-y-auto custom-scrollbar space-y-6">
+                            
+                            {/* Estilos Scrollbar */}
+                            <style>{`
+                                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+                                .custom-scrollbar::-webkit-scrollbar-track { background: #111; }
+                                .custom-scrollbar::-webkit-scrollbar-thumb { background: #33ff00; border-radius: 0px; }
+                            `}</style>
+
+                            {/* SECCIÓN 1: IDENTIFICACIÓN VISUAL */}
+                            <div className="flex flex-col items-center">
+                                {selectedCharacterForModal.imagen ? (
+                                    <div className="relative group">
+                                        {/* Marco de la foto */}
+                                        <div className="absolute -top-2 -left-2 w-4 h-4 border-t-2 border-l-2 border-[#33ff00]"></div>
+                                        <div className="absolute -bottom-2 -right-2 w-4 h-4 border-b-2 border-r-2 border-[#33ff00]"></div>
+                                        
+                                        <img
+                                            src={selectedCharacterForModal.imagen}
+                                            alt={selectedCharacterForModal.nombre}
+                                            className="w-40 h-40 object-cover filter grayscale contrast-125 border border-[#33ff00]/50 group-hover:grayscale-0 transition-all duration-500"
+                                        />
+                                        
+                                        {/* Overlay de escaneo */}
+                                        <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(51,255,0,0.1)_50%)] bg-[length:100%_4px] pointer-events-none"></div>
+                                    </div>
+                                ) : (
+                                    <div className="w-32 h-32 border border-dashed border-[#33ff00]/50 flex items-center justify-center bg-black">
+                                        <span className="text-[#33ff00]/30 text-4xl">?</span>
+                                    </div>
+                                )}
                             </div>
 
-                            {/* Metadatos/Atributos */}
+                            {/* SECCIÓN 2: DESCRIPCIÓN */}
+                            <div className="border-l-2 border-[#33ff00] pl-4 bg-[#33ff00]/5 py-2">
+                                <h4 className="text-[#33ff00] text-xs font-bold uppercase tracking-wider mb-2">
+                                    {'>'} PERFIL PSICOLÓGICO / BIO
+                                </h4>
+                                <p className="text-sm text-gray-300 leading-relaxed font-sans">
+                                    {selectedCharacterForModal.descripcion}
+                                </p>
+                            </div>
+
+                            {/* SECCIÓN 3: METADATOS (GRID TÉCNICA) */}
                             {selectedCharacterForModal.metadata && (
-                                <div className="info-section mt-2">
-                                    <h4 className="font-semibold text-lg text-gray-300">📋 Atributos</h4>
-                                    <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                    <h4 className="text-[#33ff00] text-xs font-bold uppercase tracking-wider mb-3 border-b border-[#33ff00]/20 pb-1">
+                                        {'>'} ATRIBUTOS TÉCNICOS
+                                    </h4>
+                                    <div className="grid grid-cols-2 gap-3">
                                         {Object.entries(selectedCharacterForModal.metadata).map(([key, value]) => (
-                                            <div key={key} className="p-2 bg-gray-700 rounded-md">
-                                                <span className="font-medium text-blue-300">{key}:</span>{' '}
-                                                <span className="text-white">{String(value)}</span>
+                                            <div key={key} className="bg-black border border-[#33ff00]/20 p-2 flex flex-col hover:border-[#33ff00]/60 transition-colors">
+                                                <span className="text-[9px] text-[#33ff00]/60 uppercase tracking-widest mb-1">{key}</span>
+                                                <span className="text-white text-sm font-bold truncate" title={String(value)}>
+                                                    {String(value)}
+                                                </span>
                                             </div>
                                         ))}
                                     </div>
@@ -2677,12 +3520,14 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                             )}
                         </div>
 
-                        <div className="modal-actions mt-6">
+                        {/* FOOTER / BOTÓN CIERRE */}
+                        <div className="p-5 border-t border-[#33ff00]/30 bg-black">
                             <button
                                 onClick={closeCharacterModal}
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-semibold transition-all duration-300"
+                                className="w-full group relative py-3 border border-[#33ff00] text-[#33ff00] font-bold text-sm tracking-[0.2em] uppercase
+                                transition-all duration-300 hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_15px_rgba(51,255,0,0.4)]"
                             >
-                                Cerrar Ficha
+                                <span>[ CERRAR EXPEDIENTE ]</span>
                             </button>
                         </div>
                     </div>
