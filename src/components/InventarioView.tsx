@@ -102,6 +102,20 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
     return colors[r] || '#888';
   }
 
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null)
+
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -300, behavior: 'smooth' })
+    }
+  }
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' })
+    }
+  }
+
   if (loading) {
     return (
       <div className="iv-container flex items-center justify-center">
@@ -127,7 +141,7 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
 
   return (
     <div className="iv-container">
-      
+
       {/* HEADER */}
       <div className="iv-header">
         <div>
@@ -136,7 +150,7 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
         </div>
         {onBack && (
           <button onClick={onBack} className="iv-btn-view border-[#33ff00] text-[#33ff00]">
-            [ X ] SALIR
+            [ X ]
           </button>
         )}
       </div>
@@ -145,7 +159,7 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
         {/* Stats Bar */}
         <div className="iv-stats">
           <span>CAPACIDAD: <span className="iv-stat-val">ILIMITADA</span></span>
-          <span>ITEMS EN BODEGA: <span className="iv-stat-val" style={{color:'#33ff00'}}>{inventario.length}</span></span>
+          <span>ITEMS EN BODEGA: <span className="iv-stat-val" style={{ color: '#33ff00' }}>{inventario.length}</span></span>
         </div>
 
         {/* Filtros */}
@@ -172,38 +186,44 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
           <p>[ ! ] SECCIÓN VACÍA</p>
         </div>
       ) : (
-        <div className="iv-grid">
-          {filteredItems.map((item, index) => {
-            const color = getRarityColor(item.rareza);
-            return (
-              <div
-                key={index}
-                className="iv-card"
-                style={{ borderColor: selectedItem === item ? '#33ff00' : '#333' }}
-              >
-                <div className="iv-card-header">
-                  <div className="iv-icon-box">{getItemIcon(item.tipo)}</div>
-                  <span className="iv-rarity-badge" style={{ color: color, borderColor: color }}>
-                    {item.rareza || 'N/A'}
-                  </span>
-                </div>
+        <div className="iv-carousel-wrapper">
+          <button className="iv-nav-btn iv-nav-left" onClick={scrollLeft}>{'<'}</button>
 
-                <div className="iv-card-body">
-                  <span className="iv-card-type">{item.tipo}</span>
-                  <h3 className="iv-card-title">{item.nombre}</h3>
-                  <div className="iv-card-desc">
-                    {item.descripcion || 'DATOS NO DISPONIBLES.'}
+          <div className="iv-grid" ref={scrollContainerRef}>
+            {filteredItems.map((item, index) => {
+              const color = getRarityColor(item.rareza);
+              return (
+                <div
+                  key={index}
+                  className="iv-card"
+                  style={{ borderColor: selectedItem === item ? '#33ff00' : '#333' }}
+                >
+                  <div className="iv-card-header">
+                    <div className="iv-icon-box">{getItemIcon(item.tipo)}</div>
+                    <span className="iv-rarity-badge" style={{ color: color, borderColor: color }}>
+                      {item.rareza || 'N/A'}
+                    </span>
+                  </div>
+
+                  <div className="iv-card-body">
+                    <span className="iv-card-type">{item.tipo}</span>
+                    <h3 className="iv-card-title">{item.nombre}</h3>
+                    <div className="iv-card-desc">
+                      {item.descripcion || 'DATOS NO DISPONIBLES.'}
+                    </div>
+                  </div>
+
+                  <div className="iv-card-footer">
+                    <button onClick={() => setSelectedItem(item)} className="iv-btn-view">
+                      [ INSPECCIONAR ]
+                    </button>
                   </div>
                 </div>
+              );
+            })}
+          </div>
 
-                <div className="iv-card-footer">
-                  <button onClick={() => setSelectedItem(item)} className="iv-btn-view">
-                    [ INSPECCIONAR ]
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+          <button className="iv-nav-btn iv-nav-right" onClick={scrollRight}>{'>'}</button>
         </div>
       )}
 
@@ -230,7 +250,7 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
 
               <div className="iv-detail-row">
                 <div className="iv-detail-label">DESCRIPCIÓN TÉCNICA</div>
-                <div className="iv-detail-value" style={{lineHeight: '1.6'}}>
+                <div className="iv-detail-value" style={{ lineHeight: '1.6' }}>
                   {selectedItem.descripcion}
                 </div>
               </div>
@@ -238,7 +258,7 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
               <div className="iv-detail-row">
                 <div className="iv-detail-label">ORIGEN / FECHA</div>
                 <div className="iv-detail-value text-sm">
-                  {selectedItem.historia_origen || 'DESCONOCIDO'} 
+                  {selectedItem.historia_origen || 'DESCONOCIDO'}
                   <span className="text-[#666] ml-2">
                     [{new Date(selectedItem.fecha_obtencion).toLocaleDateString()}]
                   </span>

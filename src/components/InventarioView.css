@@ -7,7 +7,8 @@
   background-color: #050505;
   min-height: 100vh;
   color: #a8a8a8;
-  font-family: 'Courier Prime', monospace; /* Fuente Hacker */
+  font-family: 'Courier Prime', monospace;
+  /* Fuente Hacker */
   position: relative;
 }
 
@@ -16,9 +17,12 @@
   content: " ";
   display: block;
   position: absolute;
-  top: 0; left: 0; bottom: 0; right: 0;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-              linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
   z-index: 0;
   background-size: 100% 2px, 3px 100%;
   pointer-events: none;
@@ -117,13 +121,55 @@
   margin-left: 5px;
 }
 
-/* --- GRID --- */
+/* --- GRID (CARRUSEL HORIZONTAL) --- */
+.iv-carousel-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.iv-nav-btn {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid #33ff00;
+  color: #33ff00;
+  font-family: 'Courier Prime', monospace;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 10px 15px;
+  z-index: 10;
+  transition: all 0.2s;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iv-nav-btn:hover {
+  background: #33ff00;
+  color: #000;
+  box-shadow: 0 0 15px rgba(51, 255, 0, 0.5);
+}
+
 .iv-grid {
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 25px;
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 20px;
+  padding-right: 20px;
+  scroll-behavior: smooth;
+  flex-grow: 1;
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.iv-grid::-webkit-scrollbar {
+  display: none;
+  /* Chrome/Safari/Opera */
 }
 
 /* --- CARD (FICHA DE OBJETO) --- */
@@ -136,6 +182,9 @@
   position: relative;
   transition: all 0.3s;
   cursor: default;
+  min-width: 300px;
+  max-width: 300px;
+  flex-shrink: 0;
 }
 
 .iv-card:hover {
@@ -146,10 +195,20 @@
 
 /* Esquinas Decorativas */
 .iv-card::before {
-  content: ''; position: absolute; top: -1px; left: -1px; width: 10px; height: 10px;
-  border-top: 2px solid transparent; border-left: 2px solid transparent; transition: all 0.3s;
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid transparent;
+  border-left: 2px solid transparent;
+  transition: all 0.3s;
 }
-.iv-card:hover::before { border-color: #33ff00; }
+
+.iv-card:hover::before {
+  border-color: #33ff00;
+}
 
 .iv-card-header {
   display: flex;
@@ -161,10 +220,13 @@
 }
 
 .iv-icon-box {
-  width: 50px; height: 50px;
+  width: 50px;
+  height: 50px;
   background: #000;
   border: 1px solid #444;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.8rem;
 }
 
@@ -198,7 +260,8 @@
   font-size: 0.8rem;
   line-height: 1.4;
   color: #888;
-  height: 3em; /* Altura fija */
+  height: 3em;
+  /* Altura fija */
   overflow: hidden;
 }
 
@@ -229,57 +292,113 @@
 
 /* --- EMPTY STATE --- */
 .iv-empty {
-  text-align: center; padding: 4rem;
-  border: 1px dashed #333; color: #555;
-  text-transform: uppercase; letter-spacing: 2px;
+  text-align: center;
+  padding: 4rem;
+  border: 1px dashed #333;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
 /* --- MODAL DE DETALLE --- */
 .iv-modal-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background-color: rgba(0, 0, 0, 0.9); backdrop-filter: blur(5px);
-  display: flex; justify-content: center; align-items: center; z-index: 3000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
 }
 
 .iv-modal {
   background-color: #050505;
   border: 1px solid #33ff00;
-  width: 100%; max-width: 600px;
-  display: flex; flex-direction: column;
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 0 50px rgba(51, 255, 0, 0.2);
   position: relative;
 }
 
 .iv-modal-header {
-  padding: 20px; border-bottom: 1px solid #33ff00;
-  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #33ff00;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   background: rgba(51, 255, 0, 0.05);
 }
 
-.iv-modal-h2 { margin: 0; font-size: 1.5rem; color: #fff; text-transform: uppercase; }
+.iv-modal-h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #fff;
+  text-transform: uppercase;
+}
 
 .iv-modal-close {
-  background: transparent; border: 1px solid #33ff00;
-  color: #33ff00; width: 30px; height: 30px;
-  cursor: pointer; transition: all 0.2s;
+  background: transparent;
+  border: 1px solid #33ff00;
+  color: #33ff00;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
-.iv-modal-close:hover { background: #33ff00; color: #000; }
 
-.iv-modal-content { padding: 30px; display: flex; flex-direction: column; gap: 20px; }
+.iv-modal-close:hover {
+  background: #33ff00;
+  color: #000;
+}
 
-.iv-detail-row { border-bottom: 1px dashed #333; padding-bottom: 15px; }
+.iv-modal-content {
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.iv-detail-row {
+  border-bottom: 1px dashed #333;
+  padding-bottom: 15px;
+}
 
 .iv-detail-label {
-  font-size: 0.7rem; text-transform: uppercase;
-  color: #33ff00; margin-bottom: 5px; letter-spacing: 1px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #33ff00;
+  margin-bottom: 5px;
+  letter-spacing: 1px;
 }
 
-.iv-detail-value { font-size: 1rem; color: #ccc; }
+.iv-detail-value {
+  font-size: 1rem;
+  color: #ccc;
+}
 
-.iv-modal-footer { padding: 20px; border-top: 1px solid #333; text-align: right; }
+.iv-modal-footer {
+  padding: 20px;
+  border-top: 1px solid #333;
+  text-align: right;
+}
 
 .iv-btn-close-modal {
-  background: transparent; border: 1px solid #555; color: #888;
-  padding: 10px 20px; font-weight: 700; text-transform: uppercase; cursor: pointer;
+  background: transparent;
+  border: 1px solid #555;
+  color: #888;
+  padding: 10px 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
 }
-.iv-btn-close-modal:hover { border-color: #fff; color: #fff; }
+
+.iv-btn-close-modal:hover {
+  border-color: #fff;
+  color: #fff;
+}

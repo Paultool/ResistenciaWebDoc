@@ -97,11 +97,8 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
           <p>REGISTRO DE SUJETOS CLAVE</p>
         </div>
         {onBack && (
-          <button
-            onClick={onBack}
-            className="border border-[#33ff00] text-[#33ff00] bg-transparent px-4 py-2 font-bold uppercase hover:bg-[#33ff00] hover:text-black transition-all"
-          >
-            [ X ] CERRAR
+          <button onClick={onBack} className="iv-btn-view border-[#33ff00] text-[#33ff00]">
+            [ X ]
           </button>
         )}
       </div>
