@@ -1810,20 +1810,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     // --- FIN DE LA FUNCIÓN handleNextStep (CORREGIDA) ---
     // ==================================================================
 
-    // Determinar qué historias están desbloqueadas
-    const historiasConEstado = historias.map(historia => {
-        let isLocked = false;
 
-        // Si tiene dependencia, verificar si la historia madre fue visitada
-        if (historia.id_historia_dependencia) {
-            isLocked = !historiasVisitadas.includes(historia.id_historia_dependencia);
-        }
-
-        return {
-            ...historia,
-            isLocked
-        };
-    });
 
     // Función para retroceder al paso anterior
     const goBack = () => {
@@ -1894,150 +1881,99 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         const is3DModel = recursoActual?.tipo === '3d_model';
 
         // --- Lógica para Pasos de Decisión ---
-        if (isDecisionStep) {
-            return (
-                <div className="relative min-h-screen bg-black text-[#a8a8a8] p-4 md:p-8 overflow-y-auto font-mono selection:bg-[#33ff00] selection:text-black">
+       if (isDecisionStep) {
+            // Normalización de datos (Misma lógica de seguridad)
+            let opciones = [];
+            const rawOptions = step.opciones_decision;
 
-                    {/* Fondo Scanlines */}
-                    <div className="absolute inset-0 pointer-events-none z-0 opacity-20 fixed"
+            if (Array.isArray(rawOptions)) {
+                opciones = rawOptions;
+            } else if (rawOptions?.opciones_siguientes_json) {
+                opciones = rawOptions.opciones_siguientes_json;
+            } else if (typeof rawOptions === 'string') {
+                try {
+                    const parsed = JSON.parse(rawOptions);
+                    opciones = Array.isArray(parsed) ? parsed : parsed.opciones_siguientes_json || [];
+                } catch (e) {
+                    console.error("Error parseando opciones:", e);
+                }
+            }
+
+            return (
+                <div className="fixed inset-0 z-40 flex flex-col items-center justify-center pt-24 pb-10 px-4 font-mono selection:bg-red-500 selection:text-white overflow-y-auto">
+                    
+                    {/* 1. FONDO OSCURO (Para que resalte sobre el video/imagen de fondo) */}
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-0"></div>
+                    
+                    {/* Scanlines sutiles */}
+                    <div className="absolute inset-0 pointer-events-none opacity-10 z-0" 
                         style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
                     </div>
 
-                    <div className="relative z-10 max-w-7xl mx-auto">
+                    {/* 2. CONTENEDOR PRINCIPAL (Compacto) */}
+                    <div className="relative z-10 w-full max-w-5xl bg-black/90 border border-[#33ff00] shadow-[0_0_50px_rgba(51,255,0,0.1)] flex flex-col p-6 rounded-sm">
+                        
+                        {/* Decoración Esquinas */}
+                        <div className="absolute top-0 left-0 w-2 h-2 bg-[#33ff00]"></div>
+                        <div className="absolute top-0 right-0 w-2 h-2 bg-[#33ff00]"></div>
+                        <div className="absolute bottom-0 left-0 w-2 h-2 bg-[#33ff00]"></div>
+                        <div className="absolute bottom-0 right-0 w-2 h-2 bg-[#33ff00]"></div>
 
-                        {/* --- ENCABEZADO --- */}
-                        <div className="border-b border-[#33ff00]/30 pb-6 mb-10 flex flex-col md:flex-row justify-between items-end gap-4">
-                            <div>
-                                <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tighter mb-2 uppercase glitch-text">
-                                    SELECTOR_DE_MISIONES
-                                </h1>
-                                <p className="text-[#33ff00] text-xs md:text-sm tracking-widest uppercase">
-                                    {'>'} ACCESO A MEMORIA COLECTIVA. SELECCIONE NODO.
-                                </p>
+                        {/* A. HEADER COMPACTO (Barra de estado) */}
+                        <div className="flex items-center justify-between border-b border-[#33ff00]/30 pb-3 mb-6">
+                            <div className="flex items-center gap-2 text-red-500 animate-pulse">
+                                <span className="text-xl">⚠️</span>
+                                <span className="font-bold tracking-widest text-sm md:text-base">DECISIÓN_CRÍTICA</span>
                             </div>
-                            <div className="text-right text-[10px] text-[#33ff00]/50 font-mono border-l border-[#33ff00]/30 pl-4">
-                                STATUS: ONLINE<br />
-                                SECURE_CONN: TRUE
+                            <div className="text-[10px] text-[#33ff00]/60">
+                                WAITING_INPUT...
                             </div>
                         </div>
 
-                        {/* --- GRID DE TARJETAS --- */}
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
-                            {historiasConEstado.map((historia, index) => {
-                                const imagenFondo = historia.id_imagen_historia
-                                    ? recursosData.find(r => r.id_recurso === historia.id_imagen_historia)?.archivo
-                                    : null;
+                        {/* B. PREGUNTA (Clara y visible) */}
+                        <div className="mb-8 text-center">
+                            <h3 className="text-xl md:text-2xl text-white font-bold leading-tight">
+                                {contentText}
+                            </h3>
+                        </div>
 
-                                const isCompleted = historiasVisitadas.includes(historia.id_historia);
-
-                                const handleHistoriaClick = () => {
-                                    if (historia.isLocked) {
-                                        const historiaMadre = historias.find(h => h.id_historia === historia.id_historia_dependencia);
-                                        if (historiaMadre) {
-                                            setLockedHistoryModal({ historia, historiaMadre });
-                                        }
-                                    } else {
-                                        handleHistoriaSelect(historia.id_historia);
-                                    }
-                                };
-
-                                return (
-                                    <div
-                                        key={historia.id_historia}
-                                        className={`
-                                group relative border - 2 bg - black overflow - hidden flex flex - col
-                            transition - all duration - 300
-                                ${historia.isLocked
-                                                ? 'border-red-900/50 opacity-70 cursor-not-allowed grayscale'
-                                                : 'border-[#33ff00]/30 hover:border-[#33ff00] cursor-pointer hover:shadow-[0_0_25px_rgba(51,255,0,0.15)] hover:-translate-y-1'
-                                            }
-                            `}
-                                        onClick={handleHistoriaClick}
-                                        style={{ height: '520px' }} // Altura fija alta
+                        {/* C. GRID DE OPCIONES (Horizontal en PC, Vertical en Móvil) */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                            {opciones.length > 0 ? (
+                                opciones.map((opcion, index) => (
+                                    <button
+                                        key={index}
+                                        className="group relative w-full p-4 border border-[#33ff00] bg-black/80 text-left 
+                                        transition-all duration-300 ease-out
+                                        hover:border-red-500 hover:bg-red-900/10 hover:shadow-[0_0_20px_rgba(220,38,38,0.4)]"
+                                        onClick={() => handleNextStep(opcion.siguiente_paso_id)}
                                     >
-                                        {/* 1. IMAGEN (Ocupa la mitad superior) */}
-                                        <div className="h-[55%] relative overflow-hidden">
-                                            {imagenFondo ? (
-                                                <img
-                                                    src={imagenFondo}
-                                                    alt={historia.titulo}
-                                                    className={`w - full h - full object - cover transition - transform duration - 700 
-                                            ${historia.isLocked ? 'blur-sm' : 'group-hover:scale-110 group-hover:contrast-110'}
-                            `}
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full bg-[#111] flex items-center justify-center">
-                                                    <span className="text-[#33ff00]/20 font-bold">NO_IMG</span>
-                                                </div>
-                                            )}
-                                            {/* Overlay scanlines sobre imagen */}
-                                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-
-                                            {/* Badges Flotantes sobre la imagen */}
-                                            <div className="absolute top-3 left-3 right-3 flex justify-between z-10">
-                                                <span className="bg-black/80 border border-[#33ff00]/50 text-[#33ff00] text-[9px] px-1.5 py-0.5 font-bold backdrop-blur-sm">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="flex items-center gap-3">
+                                                {/* Índice */}
+                                                <span className="font-mono text-xs text-[#33ff00] group-hover:text-red-500 transition-colors border border-current px-1.5 py-0.5 rounded-sm">
                                                     0{index + 1}
                                                 </span>
-                                                {isCompleted && (
-                                                    <span className="bg-[#33ff00] text-black text-[9px] px-1.5 py-0.5 font-bold animate-pulse">
-                                                        COMPLETADO
-                                                    </span>
-                                                )}
-                                                {historia.isLocked && (
-                                                    <span className="bg-red-600 text-white text-[9px] px-1.5 py-0.5 font-bold flex items-center gap-1">
-                                                        🔒 BLOQUEADO
-                                                    </span>
-                                                )}
+                                                {/* Texto */}
+                                                <span className="text-sm md:text-base font-bold text-gray-200 group-hover:text-red-500 uppercase tracking-wide transition-colors">
+                                                    {opcion.texto}
+                                                </span>
                                             </div>
+                                            
+                                            {/* Icono Flecha (Cambia de color) */}
+                                            <span className="text-[#33ff00] group-hover:text-red-500 group-hover:translate-x-1 transition-all text-xl">
+                                                »
+                                            </span>
                                         </div>
-
-                                        {/* 2. PANEL DE DATOS (Siempre visible abajo) */}
-                                        <div className="h-[45%] bg-black border-t border-[#33ff00]/30 p-5 flex flex-col relative z-20">
-
-                                            {/* Título */}
-                                            <h2 className={`text - 2xl font - bold mb - 2 uppercase tracking - tighter leading - none ${historia.isLocked ? 'text-red-500' : 'text-white group-hover:text-[#33ff00]'} `}>
-                                                {historia.titulo}
-                                            </h2>
-
-                                            {/* Línea separadora */}
-                                            <div className="w-full h-[1px] bg-[#33ff00]/20 mb-3"></div>
-
-                                            {/* Descripción (Siempre visible) */}
-                                            <p className="text-xs text-gray-300 font-sans leading-relaxed line-clamp-3 mb-4 flex-grow">
-                                                {historia.descripcion}
-                                            </p>
-
-                                            {/* Mensaje de Error si está bloqueado */}
-                                            {historia.isLocked && historia.id_historia_dependencia && (
-                                                <div className="mb-3 text-[9px] text-red-400 font-mono border border-red-900/50 p-1 bg-red-900/10">
-                                                    REQ: {historias.find(h => h.id_historia === historia.id_historia_dependencia)?.titulo}
-                                                </div>
-                                            )}
-
-                                            {/* BOTONERA (Siempre visible si no está bloqueado) */}
-                                            {!historia.isLocked && (
-                                                <div className="mt-auto flex gap-2">
-                                                    <button className="flex-1 bg-[#33ff00]/10 border border-[#33ff00] text-[#33ff00] py-2 px-3 text-[10px] font-bold uppercase tracking-widest hover:bg-[#33ff00] hover:text-black transition-all flex justify-between items-center group/btn">
-                                                        <span>EJECUTAR</span>
-                                                        <span className="group-hover/btn:translate-x-1 transition-transform">{'>>'}</span>
-                                                    </button>
-
-                                                    <button
-                                                        className="w-10 border border-[#33ff00]/50 text-[#33ff00] hover:bg-[#33ff00] hover:text-black flex items-center justify-center transition-colors"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            console.log("Like");
-                                                        }}
-                                                    >
-                                                        ♥
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                                    </button>
+                                ))
+                            ) : (
+                                <div className="col-span-2 border border-dashed border-red-500 text-red-500 p-4 text-center text-sm">
+                                    [ ! ] ERROR: RUTAS NO ENCONTRADAS.
+                                </div>
+                            )}
                         </div>
+
                     </div>
                 </div>
             );
@@ -2322,6 +2258,21 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
         return null;
     };
+
+    // Determinar qué historias están desbloqueadas
+    const historiasConEstado = historias.map(historia => {
+        let isLocked = false;
+
+        // Si tiene dependencia, verificar si la historia madre fue visitada
+        if (historia.id_historia_dependencia) {
+            isLocked = !historiasVisitadas.includes(historia.id_historia_dependencia);
+        }
+
+        return {
+            ...historia,
+            isLocked
+        };
+    });
 
     // Renderizado principal
     if (!selectedHistoriaId) {

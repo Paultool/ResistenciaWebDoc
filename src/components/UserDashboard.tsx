@@ -46,8 +46,8 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void }> = ({ onNa
         totalUbicaciones: ubicaciones.length
       })
     } catch (error: any) {
-      console.error('Error cargando datos básicos:', error)
-      setError('Error al cargar los datos: ' + error.message)
+      console.error('Error:', error)
+      setError('FALLO DE SISTEMA: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -56,99 +56,91 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void }> = ({ onNa
   const initializarPerfilJugador = async () => {
     try {
       if (!user?.id) return
-
       await gameService.initializePlayerProfile(user.id)
-      console.log('✅ Perfil de jugador inicializado')
-      if (user?.email === 'paultool@gmail.com') {
-        setIsAdmin(true);
-      }
+      if (user?.email === 'paultool@gmail.com') setIsAdmin(true);
     } catch (error: any) {
-      console.error('Error inicializando perfil de jugador:', error)
+      console.error('Error init profile:', error)
     }
   }
 
   const handleSignOut = async () => {
     try {
-      // Intentar limpiar caché si el método existe
-      if (gameService.clearCache) {
-        gameService.clearCache()
-      }
-    } catch (e) {
-      console.warn('Error clearing cache:', e)
-    } finally {
-      // Siempre cerrar sesión
-      await signOut()
-    }
+      if (gameService.clearCache) gameService.clearCache()
+    } catch (e) { console.warn(e) } 
+    finally { await signOut() }
   }
 
   return (
     <div className="dashboard-container">
 
-      {/* 1. ENCABEZADO MINIMALISTA DE ESTADO */}
+      {/* 1. HEADER DE ESTADO */}
       <div className="dashboard-status-bar">
         <div className="status-label">
-          [ 🟢 ONLINE ] <span className="user-id-display">RESISTENTE: {user?.email}</span>
+          <span className="animate-pulse text-green-500">●</span>
+          <span className="hidden sm:inline ml-2">CONEXIÓN ESTABLECIDA |</span> 
+          <span className="user-id-display ml-2">OP: {user?.email?.split('@')[0]}</span>
         </div>
-        <button onClick={handleSignOut} className="btn btn-status-logout">
+        <button onClick={handleSignOut} className="btn-status-logout">
           [ EXIT ]
         </button>
       </div>
 
       {error && (
-        <div className="error-banner">
-          <p>❌ ERROR DE DATOS. <button onClick={cargarDatosBasicos} className="retry-btn">REINTENTAR</button></p>
+        <div className="border border-red-500 text-red-500 p-2 text-center text-xs mb-4 bg-red-500/10">
+          <p>⚠️ {error} <button onClick={cargarDatosBasicos} className="underline ml-2">REINTENTAR</button></p>
         </div>
       )}
 
       {loading ? (
-        <div className="loading-stats">
-          <p>⏳ CARGANDO INTERFAZ DE MISIÓN...</p>
+        <div className="text-center p-10 text-[#33ff00] text-sm animate-pulse">
+          <p>{'>'} CARGANDO INTERFAZ DE COMANDO...</p>
         </div>
       ) : (
         <>
-          {/* 2. GRID PRINCIPAL DE PANELES (OCUPA TODA LA VISTA) */}
+          {/* 2. GRID PRINCIPAL */}
           <div className="main-dashboard-grid">
 
-            {/* PANEL PRINCIPAL: ESTADÍSTICAS DEL JUGADOR (EL MÁS GRANDE) */}
+            {/* PANEL IZQ: ESTADÍSTICAS */}
             <div className="game-stats-panel">
-              <h3 className="section-title main-title">| REPORTE DE PROGRESO DE LA RESISTENCIA |</h3>
+              <h3 className="section-title main-title">{'>'} PROGRESO INDIVIDUAL</h3>
+              {/* GameStats debe heredar el tamaño de fuente del contenedor */}
               <GameStats showDetailed={true} />
             </div>
 
-            {/* PANEL LATERAL: MÉTRICAS DE CONTENIDO (COMPACTO) */}
+            {/* PANEL DER: MÉTRICAS GLOBALES */}
             <div className="data-metrics-panel">
-              <h3 className="section-title">| INVENTARIO DE DATOS |</h3>
+              <h3 className="section-title">DB GLOBAL</h3>
 
               <div className="info-grid">
                 <div className="info-card">
-                  <div className="info-icon">📖</div>
+                  <div className="info-icon">📂</div>
                   <div className="info-content">
                     <div className="info-number">{dashboardData.totalHistorias}</div>
-                    <div className="info-label">HISTORIAS</div>
+                    <div className="info-label">MISIONES</div>
                   </div>
                 </div>
 
+                {/* AQUÍ ESTABA EL ERROR DEL ICONO */}
                 <div className="info-card">
-                  <div className="info-icon">👥</div>
+                  <div className="info-icon">👥</div> 
                   <div className="info-content">
                     <div className="info-number">{dashboardData.totalPersonajes}</div>
-                    <div className="info-label">PERSONAJES</div>
+                    <div className="info-label">SUJETOS</div>
                   </div>
                 </div>
 
                 <div className="info-card">
-                  <div className="info-icon">🗺️</div>
+                  <div className="info-icon">📍</div>
                   <div className="info-content">
                     <div className="info-number">{dashboardData.totalUbicaciones}</div>
-                    <div className="info-label">UBICACIONES</div>
+                    <div className="info-label">PUNTOS</div>
                   </div>
                 </div>
               </div>
 
-              {/* OPCIONAL: Línea de status adicional para llenar el espacio */}
               <div className="side-panel-footer">
-                <p>Última actualización: {new Date().toLocaleTimeString()}</p>
-                {isAdmin && <p className="admin-status">[ ACCESO ADMIN ACTIVO ]</p>}
+                <p>SYNC: {new Date().toLocaleTimeString()}</p>
+                {isAdmin && <p className="admin-status">[ ROOT PRIVILEGES ]</p>}
               </div>
 
             </div>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { gameServiceUser as gameService } from '../services/GameServiceUser'
-import '../styles/resistance-theme.css'
 import './GameStats.css'
 
 interface GameStatsProps {
@@ -36,7 +35,6 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
       cargarHistoriasFavoritas()
     }
 
-    // Escuchar eventos de actualización de estadísticas
     const handleStatsUpdate = () => {
       if (user?.id) {
         setTimeout(() => {
@@ -47,7 +45,6 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
     }
 
     window.addEventListener('statsUpdated', handleStatsUpdate)
-
     return () => {
       window.removeEventListener('statsUpdated', handleStatsUpdate)
     }
@@ -55,21 +52,18 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
 
   const cargarEstadisticas = async () => {
     if (!user?.id) return
-
     try {
       setLoading(true)
       setError(null)
-
       const dashboardStats = await gameService.getDashboardStats(user.id)
-
       if (dashboardStats) {
         setStats(dashboardStats)
       } else {
-        setError('No se pudieron cargar las estadísticas')
+        setError('DATOS NO DISPONIBLES')
       }
     } catch (err: any) {
-      console.error('Error cargando estadísticas de juego:', err)
-      setError('Error al cargar las estadísticas: ' + err.message)
+      console.error('Error:', err)
+      setError('FALLO DE CONEXIÓN')
     } finally {
       setLoading(false)
     }
@@ -77,24 +71,19 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
 
   const cargarHistoriasFavoritas = async () => {
     if (!user?.id) return
-
     try {
       setLoadingFavorites(true)
       const favorites = await gameService.getFavoriteStoriesDetails(user.id)
       setFavoriteStories(favorites || [])
     } catch (err: any) {
-      console.error('Error cargando historias favoritas:', err)
+      console.error('Error favorites:', err)
     } finally {
       setLoadingFavorites(false)
     }
   }
 
   const handleFavoriteClick = (historiaId: number) => {
-    if (onNavigateToStory) {
-      onNavigateToStory(historiaId)
-    } else {
-      console.warn('No navigation handler provided for favorite story:', historiaId)
-    }
+    if (onNavigateToStory) onNavigateToStory(historiaId)
   }
 
   const getProgressPercentage = () => {
@@ -103,28 +92,21 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
     const xpNivelSiguiente = Math.pow(stats.nivel, 2) * 100
     const xpEnNivelActual = stats.xpTotal - xpNivelActual
     const xpNecesarioNivel = xpNivelSiguiente - xpNivelActual
-
     return Math.min(100, Math.max(0, (xpEnNivelActual / xpNecesarioNivel) * 100))
   }
 
   const getRankTitle = (nivel: number): string => {
-    if (nivel >= 20) return 'LÍDER LEGENDARIO'
-    if (nivel >= 15) return 'RESISTENTE ÉPICO'
-    if (nivel >= 10) return 'GUERRERO URBANO'
-    if (nivel >= 7) return 'LUCHADOR VETERANO'
-    if (nivel >= 5) return 'ACTIVISTA EXPERIMENTADO'
-    if (nivel >= 3) return 'APRENDIZ COMPROMETIDO'
-    return 'RESISTENTE NOVATO'
+    if (nivel >= 20) return 'LÍDER DE RESISTENCIA'
+    if (nivel >= 15) return 'OFICIAL TÁCTICO'
+    if (nivel >= 10) return 'AGENTE VETERANO'
+    if (nivel >= 5) return 'OPERADOR DE CAMPO'
+    return 'RECLUTA'
   }
 
   if (loading) {
     return (
       <div className={`resistance-dashboard loading ${className}`}>
-        <div className="terminal-loading">
-          <div className="loading-text mono-text-green">
-            <span className="cursor-blink">CARGANDO DATOS</span>
-          </div>
-        </div>
+        <div className="loading-text">{'>'} DESCIFRANDO PERFIL...</div>
       </div>
     )
   }
@@ -132,11 +114,9 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
   if (error || !stats) {
     return (
       <div className={`resistance-dashboard error ${className}`}>
-        <div className="terminal-error">
-          <p className="error-text mono-text-amber">❌ {error || 'ERROR: NO SE PUDIERON CARGAR LAS ESTADÍSTICAS'}</p>
-          <button onClick={cargarEstadisticas} className="terminal-btn">
-            🔄 REINTENTAR
-          </button>
+        <div>
+          <p className="error-text">[ ! ] {error}</p>
+          <button onClick={cargarEstadisticas} className="terminal-btn">REINTENTAR</button>
         </div>
       </div>
     )
@@ -146,102 +126,98 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
   const rankTitle = getRankTitle(stats.nivel)
 
   return (
-    <div className={`resistance-dashboard ${className} scanlines`}>
-      {/* SECCIÓN 1: NIVEL Y XP */}
+    <div className={`resistance-dashboard ${className}`}>
+      
+      {/* SECCIÓN 1: ESTATUS PRINCIPAL */}
       <div className="agent-status">
+        <div className="rank-title">{rankTitle}</div>
+        
         <div className="status-row">
-          <div className="level-badge mono-text-amber">
-            [LVL {stats.nivel}]
+          <div className="level-badge">
+            LVL {stats.nivel}
           </div>
+          
           <div className="xp-container">
             <div className="xp-bar">
               <div className="xp-fill" style={{ width: `${progressPercentage}%` }} />
             </div>
-            <div className="xp-text mono-text-amber">
-              {stats.xpTotal.toLocaleString()}/{(stats.xpTotal + stats.xpParaSiguienteNivel).toLocaleString()} XP
+            <div className="xp-text">
+              PROGRESO: {stats.xpTotal.toLocaleString()} / {(stats.xpTotal + stats.xpParaSiguienteNivel).toLocaleString()} XP
             </div>
           </div>
         </div>
-        <div className="rank-title mono-text-green">
-          {rankTitle}
-        </div>
       </div>
 
-      {/* SEPARADOR */}
+      {/* SEPARADOR VISUAL */}
       <div className="terminal-separator" />
 
       {showDetailed && (
         <>
-          {/* SECCIÓN 2: ESTADÍSTICAS */}
+          {/* SECCIÓN 2: ESTADÍSTICAS TÁCTICAS */}
           <div className="stats-grid">
             <div className="stat-item fade-in">
-              <div className="stat-icon">📚</div>
-              <div className="stat-number mono-text-white">{stats.historiasCompletadas}</div>
-              <div className="stat-label mono-text-muted">HISTORIAS</div>
+              <div className="stat-icon">📂</div>
+              <div className="stat-number">{stats.historiasCompletadas}</div>
+              <div className="stat-label">MISIONES</div>
             </div>
 
             <div className="stat-item fade-in" style={{ animationDelay: '0.1s' }}>
               <div className="stat-icon">👥</div>
-              <div className="stat-number mono-text-white">{stats.personajesConocidos}</div>
-              <div className="stat-label mono-text-muted">PERSONAJES</div>
+              <div className="stat-number">{stats.personajesConocidos}</div>
+              <div className="stat-label">CONTACTOS</div>
             </div>
 
             <div className="stat-item fade-in" style={{ animationDelay: '0.2s' }}>
               <div className="stat-icon">📍</div>
-              <div className="stat-number mono-text-white">{stats.ubicacionesVisitadas}</div>
-              <div className="stat-label mono-text-muted">UBICACIONES</div>
+              <div className="stat-number">{stats.ubicacionesVisitadas}</div>
+              <div className="stat-label">LUGARES</div>
             </div>
 
             <div className="stat-item fade-in" style={{ animationDelay: '0.3s' }}>
-              <div className="stat-icon">🏆</div>
-              <div className="stat-number mono-text-white">{stats.logrosDesbloqueados}</div>
-              <div className="stat-label mono-text-muted">LOGROS</div>
+              <div className="stat-icon">🎖️</div>
+              <div className="stat-number">{stats.logrosDesbloqueados}</div>
+              <div className="stat-label">MÉRITOS</div>
             </div>
 
             <div className="stat-item fade-in" style={{ animationDelay: '0.4s' }}>
               <div className="stat-icon">🎒</div>
-              <div className="stat-number mono-text-white">{stats.inventarioItems}</div>
-              <div className="stat-label mono-text-muted">OBJETOS</div>
+              <div className="stat-number">{stats.inventarioItems}</div>
+              <div className="stat-label">RECURSOS</div>
             </div>
 
             <div className="stat-item fade-in" style={{ animationDelay: '0.5s' }}>
               <div className="stat-icon">🔥</div>
-              <div className="stat-number mono-text-white">{stats.rachaDias}</div>
-              <div className="stat-label mono-text-muted">RACHA</div>
+              <div className="stat-number">{stats.rachaDias}</div>
+              <div className="stat-label">RACHA</div>
             </div>
           </div>
 
-          {/* SEPARADOR */}
           <div className="terminal-separator" />
 
-          {/* SECCIÓN 3: ARCHIVOS FAVORITOS */}
+          {/* SECCIÓN 3: ARCHIVOS PRIORITARIOS */}
           <div className="favorites-section">
-            <div className="favorites-header mono-text-green">
-              &gt;&gt;&gt; ARCHIVOS_FAVORITOS [{favoriteStories.length}]
+            <div className="favorites-header">
+              {'>'} ARCHIVOS PRIORITARIOS [{favoriteStories.length}]
             </div>
 
             {loadingFavorites ? (
-              <div className="favorites-loading">
-                <span className="mono-text-muted cursor-blink">CARGANDO</span>
-              </div>
+              <div className="favorites-empty">CARGANDO ÍNDICE...</div>
             ) : favoriteStories.length === 0 ? (
               <div className="favorites-empty">
-                <span className="mono-text-muted">[!] NO HAY ARCHIVOS CLASIFICADOS</span>
+                [ ! ] SIN ARCHIVOS MARCADOS
               </div>
             ) : (
               <div className="favorites-row">
-                {favoriteStories.map((historia, index) => (
+                {favoriteStories.map((historia) => (
                   <div
                     key={historia.id_historia}
-                    className="folder-item hover-glow-amber"
+                    className="folder-item"
                     onClick={() => handleFavoriteClick(historia.id_historia)}
                     title={historia.titulo}
                   >
                     <div className="folder-icon">📁</div>
-                    <div className="folder-name mono-text-amber">
-                      {historia.titulo && historia.titulo.length > 15
-                        ? historia.titulo.substring(0, 15) + '...'
-                        : historia.titulo || 'Sin título'}
+                    <div className="folder-name">
+                      {historia.titulo || 'ARCH_001'}
                     </div>
                   </div>
                 ))}

@@ -1,163 +1,185 @@
-/*
- * USER DASHBOARD CSS - VERSIÓN MONOCROMÁTICA ULTRA-PROFESIONAL Y DENSE (LAYOUT FINAL)
- * Objetivo: Estructura de cuadrícula (Grid 3/1) y compacidad máxima para asegurar la visibilidad de la barra de avance.
- */
+/* ============================================================
+   USER DASHBOARD - ESTILO "COMPACT TERMINAL" (FIX SCROLL)
+   ============================================================ */
 
 .dashboard-container {
-  padding: 1rem;
-  background: #0a0a0a; 
-  min-height: 100vh;
-  color: #c0c0c0;
-  font-family: 'Consolas', 'Courier New', monospace;
-  line-height: 1.3;
-  display: flex;
-  flex-direction: column;
+  /* FIJAR ALTURA Y HABILITAR SCROLL */
+  height: 100vh; 
+  width: 100%;
+  overflow-y: auto; /* Esto habilita el scroll vertical si se desborda */
+  overflow-x: hidden;
+  
+  padding: 10px; /* Padding mínimo */
+  background-color: #050505;
+  color: #a8a8a8;
+  font-family: 'Courier Prime', monospace;
+  position: relative;
+  font-size: 12px; /* Fuente base pequeña */
+  padding-bottom: 80px; /* Espacio extra abajo para que la BottomBar no tape contenido */
 }
 
-/* 1. ENCABEZADO MINIMALISTA DE ESTADO */
+/* Scrollbar Personalizado (Estilo Hacker) */
+.dashboard-container::-webkit-scrollbar { width: 8px; }
+.dashboard-container::-webkit-scrollbar-track { background: #000; }
+.dashboard-container::-webkit-scrollbar-thumb { background: #333; border: 1px solid #33ff00; }
+
+/* Scanlines sutiles */
+.dashboard-container::before {
+  content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+              linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 0; background-size: 100% 2px, 3px 100%; pointer-events: none;
+}
+
+/* --- 1. BARRA DE ESTADO (HEADER) ULTRA COMPACTA --- */
 .dashboard-status-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px; 
-  padding: 0.3rem 0.5rem; 
-  background: #111;
-  border-bottom: 1px solid #333;
-  font-size: 0.6rem;
-  color: #555;
-  text-transform: uppercase;
+  position: relative; z-index: 1;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 10px;
+  margin-bottom: 10px; /* Margen reducido */
+  background: rgba(51, 255, 0, 0.03);
+  border: 1px solid #33ff00;
 }
 
 .status-label {
-  color: #aaa;
+  font-size: 0.7rem; color: #33ff00; font-weight: 700; text-transform: uppercase;
+  display: flex; align-items: center; gap: 8px;
 }
 
-.user-id-display {
-  color: #CD853F;
-  margin-left: 10px;
-}
+.user-id-display { color: #fff; letter-spacing: 1px; }
 
 .btn-status-logout {
-  background: none;
-  border: none;
-  color: #CD853F;
-  font-weight: 600;
-  cursor: pointer;
-  transition: color 0.2s ease;
-  font-size: 0.6rem;
-  padding: 0;
-}
-.btn-status-logout:hover {
-  color: #fff;
-}
-
-
-/* 2. GRID PRINCIPAL DE PANELES (Desktop: Lado a Lado) */
-.main-dashboard-grid {
-  display: grid;
-  grid-template-columns: 3fr 1fr;
-  gap: 12px;
-  flex-grow: 1;
-  /* CLAVE: Aseguramos que el contenido fluya y no se recorte */
-  overflow-y: auto; 
-}
-
-/* Estilos de los paneles */
-.game-stats-panel,
-.data-metrics-panel {
-  background: #111;
-  border: 1px solid #222;
-  padding: 0.7rem;
-  border-radius: 2px;
-  height: auto; /* IMPORTANTE: Permitimos que el contenido determine la altura */
-  overflow: visible; /* Aseguramos que nada dentro sea cortado por este panel */
-}
-
-.game-stats-panel {
-  border-left: 4px solid #CD853F;
-}
-
-/* 3. TÍTULOS DE SECCIÓN */
-.section-title {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #999;
-  margin: 0 0 0.4rem 0;
-  display: block;
+  background: transparent; border: 1px solid #33ff00;
+  color: #33ff00; font-weight: 700; font-size: 0.65rem;
+  padding: 2px 8px; cursor: pointer; transition: all 0.2s;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  border-bottom: 1px dashed #333; 
-  padding-bottom: 2px;
 }
+.btn-status-logout:hover { background: #33ff00; color: #000; }
 
-.main-title {
-  color: #CD853F;
-  font-size: 0.8rem;
-}
-
-/* 4. MÉTRICAS (PANEL LATERAL - INFO-GRID) - MÍNIMA TIPOGRAFÍA */
-.info-grid {
+/* --- 2. GRID PRINCIPAL --- */
+.main-dashboard-grid {
+  position: relative; z-index: 1;
   display: grid;
-  grid-template-columns: 1fr; 
-  gap: 4px;
-  margin-top: 8px;
+  /* Ajuste de columnas: Izquierda 70%, Derecha 30% aprox */
+  grid-template-columns: 3fr 1fr; 
+  gap: 10px; /* Gap reducido */
+  align-items: start;
+}
+
+/* Estilos de Paneles */
+.game-stats-panel, .data-metrics-panel {
+  background: #080808; border: 1px solid #333;
+  padding: 10px; /* Padding interno reducido */
+  position: relative;
+}
+
+.game-stats-panel { border-left: 2px solid #33ff00; }
+.data-metrics-panel { border-right: 2px solid #333; }
+
+/* Decoración Esquinas */
+.game-stats-panel::before { content: ''; position: absolute; top: -1px; left: -1px; width: 6px; height: 6px; border-top: 2px solid #33ff00; border-left: 2px solid #33ff00; }
+.data-metrics-panel::after { content: ''; position: absolute; bottom: -1px; right: -1px; width: 6px; height: 6px; border-bottom: 2px solid #33ff00; border-right: 2px solid #33ff00; }
+
+/* --- TÍTULOS DE SECCIÓN --- */
+.section-title {
+  font-size: 0.8rem; /* Títulos pequeños */
+  font-weight: 700; color: #fff; margin: 0 0 10px 0;
+  text-transform: uppercase; letter-spacing: 1px;
+  border-bottom: 1px dashed #333; padding-bottom: 4px;
+}
+
+.main-title { color: #33ff00; }
+
+/* --- GRID DE MÉTRICAS (Lado Derecho) --- */
+.info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .info-card {
-  background: #151515;
-  border: 1px solid #222; 
-  padding: 4px; 
-  display: flex; 
-  align-items: center;
-  text-align: left;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #333; padding: 8px;
+  display: flex; align-items: center; gap: 10px;
+  transition: all 0.2s;
 }
 
-.info-icon {
-  font-size: 0.7rem; 
-  margin-right: 4px;
-  color: #777;
+.info-card:hover { border-color: #33ff00; background: rgba(51, 255, 0, 0.05); }
+
+.info-icon { font-size: 1rem; } 
+
+.info-content { display: flex; flex-direction: column; }
+
+.info-number { 
+  font-size: 1rem; font-weight: 700; color: #fff; line-height: 1; 
+}
+.info-label { 
+  font-size: 0.6rem; color: #666; font-weight: 700; letter-spacing: 1px; margin-top: 1px;
 }
 
-.info-number {
-  font-size: 0.6rem;
-  font-weight: 700;
-  color: #CD853F; 
-  display: inline-block;
-  margin-right: 4px;
-}
-
-.info-label {
-  font-size: 0.5rem; 
-  font-weight: 400;
-  color: #555;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-}
-
-/* Pie de panel lateral */
+/* Footer Lateral */
 .side-panel-footer {
-  margin-top: 10px;
-  padding-top: 5px;
-  border-top: 1px solid #222;
-  font-size: 0.55rem;
-  color: #555;
-  line-height: 1.5;
+  margin-top: 15px; padding-top: 8px; border-top: 1px solid #333;
+  font-size: 0.6rem; color: #555; text-align: right;
 }
 
-/* ESTILOS DE CARGA/ERROR */
-.loading-stats, .error-banner {
-  font-size: 0.8rem;
+.admin-status { color: #ff0000; font-weight: 700; margin-top: 2px; font-size: 0.6rem; }
+
+/* --- ESTILOS PARA GAME STATS (Heredados) --- */
+/* Esto fuerza a que el contenido dentro del panel de stats no sea gigante */
+.game-stats-panel h1, 
+.game-stats-panel h2, 
+.game-stats-panel h3 {
+    font-size: 1rem !important;
+    margin-bottom: 0.5rem !important;
+}
+.game-stats-panel p, 
+.game-stats-panel li, 
+.game-stats-panel span {
+    font-size: 0.8rem !important;
 }
 
-/* === RESPONSIVE PARA MÓVIL === */
+/* --- RESPONSIVE (MÓVIL) --- */
 @media (max-width: 900px) {
-  .main-dashboard-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
+  .dashboard-container {
+    height: auto; /* En móvil dejamos que crezca natural */
+    min-height: 100vh;
+    overflow-y: visible;
   }
-  
-  .data-metrics-panel .info-grid {
+
+  .main-dashboard-grid {
+    grid-template-columns: 1fr; /* Una sola columna */
+    gap: 15px;
+  }
+
+  /* Métricas horizontales en móvil para ahorrar espacio vertical */
+  .info-grid {
+    display: grid;
     grid-template-columns: repeat(3, 1fr); 
     gap: 5px;
+  }
+  
+  .info-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 5px;
+    gap: 2px;
+  }
+  
+  .info-icon { font-size: 0.9rem; }
+  .info-number { font-size: 0.9rem; }
+  .info-label { font-size: 0.55rem; }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container { padding: 5px; padding-bottom: 80px; }
+  
+  .info-grid {
+    grid-template-columns: 1fr; /* Vuelve a vertical si la pantalla es muy estrecha */
+  }
+  
+  .info-card {
+    flex-direction: row;
+    text-align: left;
   }
 }

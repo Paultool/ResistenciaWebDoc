@@ -4,11 +4,9 @@ import './AuthForm.css'
 
 interface AuthFormProps {
   onRequestFullscreen?: () => void; 
-  // 1. AGREGAR ESTA LÍNEA
   onClose?: () => void; 
 }
 
-// 2. AGREGAR onClose AQUÍ
 const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen, onClose }) => {
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
@@ -36,16 +34,16 @@ const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen, onClose }) => 
             onRequestFullscreen()
             await new Promise(resolve => setTimeout(resolve, 50)); 
           }
-          setMessage('Iniciando sistema...')
+          setMessage('ACCESS GRANTED. INITIALIZING...')
         }
       } else {
         if (password !== confirmPassword) {
-          setError('Las contraseñas no coinciden')
+          setError('PASSWORD MISMATCH')
           setLoading(false)
           return
         }
         if (password.length < 6) {
-          setError('La contraseña debe tener al menos 6 caracteres')
+          setError('PASSWORD TOO SHORT (MIN 6 CHARS)')
           setLoading(false)
           return
         }
@@ -58,11 +56,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen, onClose }) => 
              onRequestFullscreen()
              await new Promise(resolve => setTimeout(resolve, 50)); 
            }
-          setMessage('Registro exitoso. Verifica tu email.')
+          setMessage('REGISTRATION SUCCESS. CHECK EMAIL.')
         }
       }
     } catch (err: any) {
-      setError('Error del sistema: ' + err.message)
+      setError('SYSTEM ERROR: ' + err.message)
     } finally {
       setLoading(false)
     }
@@ -81,25 +79,26 @@ const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen, onClose }) => 
     <div className="af-container">
       <div className="af-card">
         
-        {/* 3. AGREGAR ESTE BLOQUE PARA EL BOTÓN */}
+        {/* Botón Cerrar Táctico */}
         {onClose && (
-            <button className="af-close-btn" onClick={onClose} type="button">
+            <button className="af-close-btn" onClick={onClose} type="button" title="ABORTAR CONEXIÓN">
                 ✕
             </button>
         )}
         
+        {/* Header Terminal */}
         <div className="af-header">
-          <h2 className="af-title">{isLogin ? 'ACCESO AL SISTEMA' : 'NUEVO RECLUTA'}</h2>
+          <h2 className="af-title">{isLogin ? 'SYSTEM LOGIN' : 'NEW USER'}</h2>
           <p className="af-subtitle">
             {isLogin 
-              ? 'Identifícate para continuar' 
-              : 'Únete a La Resistencia'}
+              ? '> IDENTIFÍCATE PARA ACCEDER' 
+              : '> INICIANDO PROTOCOLO DE RECLUTAMIENTO'}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="af-form">
           <div className="af-form-group">
-            <label className="af-label" htmlFor="email">Correo Electrónico</label>
+            <label className="af-label" htmlFor="email">ID DE USUARIO (EMAIL)</label>
             <input
               type="email"
               id="email"
@@ -113,7 +112,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen, onClose }) => 
           </div>
 
           <div className="af-form-group">
-            <label className="af-label" htmlFor="password">Código de Acceso</label>
+            <label className="af-label" htmlFor="password">CLAVE DE ACCESO</label>
             <input
               type="password"
               id="password"
@@ -129,7 +128,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen, onClose }) => 
 
           {!isLogin && (
             <div className="af-form-group">
-              <label className="af-label" htmlFor="confirmPassword">Confirmar Código</label>
+              <label className="af-label" htmlFor="confirmPassword">CONFIRMAR CLAVE</label>
               <input
                 type="password"
                 id="confirmPassword"
@@ -160,19 +159,19 @@ const AuthForm: React.FC<AuthFormProps> = ({ onRequestFullscreen, onClose }) => 
             disabled={loading}
             className="af-btn-submit"
           >
-            {loading ? 'PROCESANDO...' : (isLogin ? 'INGRESAR' : 'REGISTRARSE')}
+            {loading ? 'PROCESANDO...' : (isLogin ? '[ INICIAR SESIÓN ]' : '[ REGISTRARSE ]')}
           </button>
         </form>
 
         <div className="af-footer">
           <p className="af-text">
-            {isLogin ? '¿Aún no eres miembro?' : '¿Ya tienes credenciales?'}
+            {isLogin ? '¿SIN CREDENCIALES?' : '¿YA TIENES CUENTA?'}
             <button 
               type="button" 
               onClick={toggleMode}
               className="af-link"
             >
-              {isLogin ? 'Solicitar Acceso' : 'Ingresar'}
+              {isLogin ? 'SOLICITAR ACCESO' : 'INGRESAR'}
             </button>
           </p>
         </div>

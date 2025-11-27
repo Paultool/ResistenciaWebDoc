@@ -9,499 +9,76 @@ import HistoriaDetail from './components/HistoriaDetail';
 import AdminPanel from './components/AdminPanel';
 import FlujoNarrativoUsuario from './components/FlujoNarrativoUsuario';
 
-
-import { supabase, testConnection, obtenerHistorias, Historia, obtenerRecursosMultimedia } from './supabaseClient';
+import { supabase, testConnection, obtenerHistorias, Historia } from './supabaseClient';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './App.css';
 import './components/HistoriaDetail.css';
 
+// ==========================================================
+// --- ESTILOS GLOBALES PARA ANIMACIONES (INYECCIÓN) ---
+// ==========================================================
+const GlobalStyles = () => (
+  <style>{`
+    :root { --neon-green: #33ff00; }
+    
+    /* Animación de línea de escaneo */
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(400%); }
+    }
+    
+    /* Animación de revelado de texto */
+    @keyframes text-reveal {
+      0% { opacity: 0; letter-spacing: 1rem; filter: blur(10px); }
+      100% { opacity: 1; letter-spacing: 0.2em; filter: blur(0); }
+    }
+    
+    /* Parpadeo de cursor */
+    @keyframes blink-cursor {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* Overlay CRT */
+    .crt-overlay {
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                  linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+      background-size: 100% 2px, 6px 100%;
+      pointer-events: none;
+    }
+
+    /* Efecto Glitch en texto */
+    .text-glitch:hover {
+      text-shadow: 2px 0 red, -2px 0 blue;
+    }
+    
+    /* Utilidades Tácticas */
+    .font-mono { font-family: 'Courier Prime', 'Courier New', monospace; }
+    .tracking-widest { letter-spacing: 0.2em; }
+
+    
+  `}</style>
+);
 
 // ==========================================================
-// --- Componente Modal de Video YouTube (NUEVO) ---
+// --- COMPONENTES AUXILIARES (Modales, WIP, Cards) ---
 // ==========================================================
-const YouTubeVideoModal: React.FC<{ videoId: string; title: string; onClose: () => void }> = ({ videoId, title, onClose }) => {
-  // URL de embebido de YouTube. El parámetro 'autoplay=1' inicia la reproducción.
-  const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
 
-  return (
-    <div className="video-modal-overlay" onClick={onClose}>
-      <div className="video-modal-content" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="video-modal-close-btn">&times;</button>
-        <h3 className="video-modal-title">{title}</h3>
-        <div className="video-responsive">
-          <iframe
-            src={embedUrl}
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            title={title}
-          ></iframe>
-        </div>
-      </div>
-    </div>
-  );
+
+
+const LoginModal: React.FC<{ onClose: () => void; onRequestFullscreen: () => void }> = ({ onClose, onRequestFullscreen }) => {
+  return <AuthForm onRequestFullscreen={onRequestFullscreen} onClose={onClose} />;
 };
 
-
-// ==========================================================
-// --- Componente de Proceso (WIP) (ACTUALIZADO 2x2) ---
-// ==========================================================
-interface WorkInProgressViewProps {
-  onOpenVideoModal: (videoId: string, title: string) => void;
-}
-
-const WorkInProgressView: React.FC<WorkInProgressViewProps> = ({ onOpenVideoModal }) => {
-  const links = [
-    { name: 'PRIMER CORTE (Video)', type: 'video', videoId: '1MpN0MbBFlA', icon: 'fab fa-youtube' },
-    { name: 'GALERIA', type: 'link', url: 'https://pablonieto.jimdofree.com/2025/10/28/la-resistencia-wip/', icon: 'fas fa-camera-retro' },
-    { name: 'CARPETA DE PRODUCCION', type: 'link', url: 'https://drive.google.com/file/d/1MbjrWQTWGnUcngcSb2afQpiZjqqNFtqG/view?usp=sharing', icon: 'fas fa-folder-open' },
-    { name: 'GITHUB', type: 'link', url: 'https://github.com/Paultool/ResistenciaWebDoc', icon: 'fab fa-github' },
-  ];
-
-  return (
-    <div className="wip-container">
-      <h2 className="wip-header">🛠️ Proyecto en Progreso (WIP)</h2>
-      <p className="wip-description">
-        Esta es la documentación y recursos externos del proyecto "WebDoc La Resistencia".
-      </p>
-
-      {/* 🔑 CLAVE: La clase wip-links-grid define el layout 2x2 en App.css */}
-      <div className="wip-links-grid">
-        {links.map((link) => {
-          if (link.type === 'video') {
-            return (
-              <button
-                key={link.name}
-                onClick={() => onOpenVideoModal(link.videoId, link.name)}
-                className="wip-link-card"
-              >
-                <i className={`${link.icon} wip-icon`}></i>
-                <span className="wip-link-name">{link.name}</span>
-                <i className="fas fa-video wip-external-icon"></i>
-              </button>
-            );
-          }
-          return (
-            <a
-              key={link.name}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="wip-link-card"
-            >
-              <i className={`${link.icon} wip-icon`}></i>
-              <span className="wip-link-name">{link.name}</span>
-              <i className="fas fa-external-link-alt wip-external-icon"></i>
-            </a>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-// ==========================================================
-// --- Componente para mostrar una historia individual (Card) ---
-// ==========================================================
-interface HistoriaCardProps {
-  historia: Historia;
-  onViewDetail: (id: number) => void;
-}
-
-const HistoriaCard: React.FC<HistoriaCardProps> = ({ historia, onViewDetail }) => {
-  return (
-    <div className="historia-card">
-      <h3>{historia.titulo}</h3>
-      <p className="descripcion">{historia.descripcion}</p>
-      <div className="metadata">
-        <span className="fecha">
-          📅 {new Date(historia.fecha_creacion).toLocaleDateString('es-MX')}
-        </span>
-        <span className={`tipo ${historia.es_historia_principal ? 'principal' : 'secundaria'}`}>
-          {historia.es_historia_principal ? '⭐ Principal' : '📖 Secundaria'}
-        </span>
-        <span className="nivel">
-          🔒 Nivel {historia.nivel_acceso_requerido}
-        </span>
-      </div>
-      <div className="card-actions">
-        <button
-          onClick={() => onViewDetail(historia.id)}
-          className="btn btn-primary btn-sm"
-        >
-          👁️ Ver Detalle
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// ==========================================================
-// --- Componente principal de contenido (cuando está autenticado) ---
-// ==========================================================
-const MainContent: React.FC = () => {
-
-  const { user } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  // 🔑 ACTUALIZACIÓN: Se agrega 'wip' al tipo de vista
-  type View = 'dashboard' | 'historias' | 'personajes' | 'mapa' | 'inventario' | 'admin' | 'intro' | 'story-selection' | 'narrative-flow' | 'profile' | 'wip';
-  const [currentView, setCurrentView] = useState<View>('dashboard');
-
-  const [historias, setHistorias] = useState<Historia[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [conexionOk, setConexionOk] = useState(false);
-  const [selectedHistoriaId, setSelectedHistoriaId] = useState<number | null>(null);
-  const [selectedStory, setSelectedStory] = useState<any>(null);
-  const [userProfile, setUserProfile] = useState<any>({ user_id: null, xp_total: 0, ubicaciones_visitadas: [] });
-  const [flujoNarrativoHistoriaId, setFlujoNarrativoHistoriaId] = useState<number | null>(null);
-  const [view, setView] = useState('dashboard');
-  const [historiaId, setHistoriaId] = useState<number | null>(null);
-
-  // 🔑 NUEVO ESTADO: Para el modal de video
-  const [videoModalData, setVideoModalData] = useState<{ videoId: string; title: string } | null>(null);
-
-  const supabaseClient = supabase;
-
-  // ESTADO: Controla la visibilidad de la barra de navegación superior
-  const [showNavBar, setShowNavBar] = useState(true);
-
-  // Estado para controlar el menú hamburguesa en móvil
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  // FUNCIÓN: Maneja el inicio del flujo narrativo desde una historia específica
-  const handleStartNarrative = (historia: Historia) => {
-    setFlujoNarrativoHistoriaId(historia.id);
-    setCurrentView('historias');
-  };
-
-  // NUEVA FUNCIÓN: Maneja el inicio del flujo narrativo desde el mapa
-  const handleStartNarrativeFromMap = (historiaId: number) => {
-    console.log("🗺️ Mapa solicitó ir a historia:", historiaId);
-
-    // Configuramos el ID de la historia para el flujo narrativo
-    setFlujoNarrativoHistoriaId(historiaId);
-
-    // Cambiamos la vista actual a 'historias'
-    // Esto desmontará MapaViewS y montará FlujoNarrativoUsuario
-    setCurrentView('historias');
-  };
-
-
-  useEffect(() => {
-    const inicializar = async () => {
-      console.log('🔄 Inicializando aplicación La Resistencia...');
-
-      const conexionExitosa = await testConnection();
-      setConexionOk(conexionExitosa);
-
-      if (conexionExitosa && user) {
-        if (user.email === 'paultool@gmail.com') {
-          setIsAdmin(true);
-        }
-
-        await cargarHistorias();
-        await setupProfile();
-      } else if (!conexionExitosa) {
-        setError('No se pudo conectar a la base de datos');
-        setLoading(false);
-      } else {
-        setLoading(false);
-      }
-    };
-
-    inicializar();
-  }, [user]);
-
-  const cargarHistorias = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const historiasData = await obtenerHistorias();
-      setHistorias(historiasData);
-    } catch (err: any) {
-      console.error('❌ Error cargando historias:', err);
-      setError('Error al cargar las historias: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const setupProfile = async () => {
-    if (!user) return;
-
-    const fixedUserId = user.id;
-
-    const { data: profile, error } = await supabaseClient
-      .from('perfiles_jugador')
-      .select('*')
-      .eq('user_id', fixedUserId)
-      .single();
-
-    if (error && error.code !== 'PGRST116') {
-      console.error("Error al cargar el perfil del jugador:", error);
-    }
-
-    if (profile) {
-      setUserProfile(profile);
-    } else {
-      const { data: newProfile, error: createError } = await supabaseClient
-        .from('perfiles_jugador')
-        .insert({ user_id: fixedUserId })
-        .select()
-        .single();
-
-      if (createError) {
-        console.error("Error al crear un nuevo perfil:", createError);
-      } else {
-        setUserProfile(newProfile);
-      }
-    }
-  };
-
-  const handleUpdateProfile = async (recompensaPositiva: number, recompensaNegativa: number, ubicacion: string) => {
-    const totalXP = recompensaPositiva + recompensaNegativa;
-
-    const updatedUbicaciones = new Set(userProfile.ubicaciones_visitadas || []);
-    if (ubicacion) {
-      updatedUbicaciones.add(ubicacion);
-    }
-
-    const { data: updatedProfile, error } = await supabaseClient
-      .from('perfiles_jugador')
-      .update({
-        xp_total: userProfile.xp_total + totalXP,
-        fecha_ultimo_acceso: new Date().toISOString()
-      })
-      .eq('user_id', userProfile.user_id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error al actualizar el perfil:", error);
-    } else {
-      setUserProfile(updatedProfile);
-    }
-  };
-
-  const handleNavigateFromDashboard = (view: string) => {
-    setCurrentView(view as any);
-  };
-
-  const handleBackToDashboard = () => {
-    setCurrentView('dashboard');
-    setSelectedHistoriaId(null);
-    setFlujoNarrativoHistoriaId(null);
-  };
-
-  const handleViewDetail = (historiaId: number) => {
-    setSelectedHistoriaId(historiaId);
-  };
-
-  const closeDetail = () => {
-    setSelectedHistoriaId(null);
-  };
-
-  const handleStartNarrativeFromDetail = (historiaId: number) => {
-    const historiaSeleccionada = historias.find(h => h.id === historiaId);
-    if (historiaSeleccionada) {
-      handleStartNarrative(historiaSeleccionada);
-    }
-  };
-
-  const handleNavClick = (view: View) => {
-    setCurrentView(view);
-    setIsMobileMenuOpen(false);
-  };
-
-  const handleToggleNavBar = () => {
-    setShowNavBar(prev => !prev);
-    if (showNavBar) {
-      setIsMobileMenuOpen(false);
-    }
-  };
-
-  // 🔑 NUEVA FUNCIÓN: Abre el modal de video (usado en WIP)
-  const handleOpenVideoModal = (videoId: string, title: string) => {
-    setVideoModalData({ videoId, title });
-  };
-
-
-  const renderCurrentView = () => {
-
-    if (currentView === 'historias') {
-      if (flujoNarrativoHistoriaId) {
-        return (
-          <FlujoNarrativoUsuario
-            historiaId={flujoNarrativoHistoriaId}
-            onBack={handleBackToDashboard}
-            onUpdateProfile={handleUpdateProfile}
-          />
-        );
-      }
-      return <FlujoNarrativoUsuario onBack={handleBackToDashboard} onUpdateProfile={handleUpdateProfile} />;
-    }
-
-    if (selectedHistoriaId) {
-      return (
-        <HistoriaDetail
-          historiaId={selectedHistoriaId}
-          onClose={closeDetail}
-          onStartNarrative={() => handleStartNarrativeFromDetail(selectedHistoriaId)}
-        />
-      );
-    }
-
-    switch (currentView) {
-      case 'dashboard':
-        return <UserDashboard onNavigate={handleNavigateFromDashboard} />;
-
-
-      case 'personajes':
-        return <PersonajesView onBack={handleBackToDashboard} />;
-
-      case 'mapa':
-        return (
-          <MapaView
-            historias={historias}
-            // Pasamos las historias visitadas (asegúrate que userProfile tenga esto, o usa un array vacío temporalmente)
-            historiasVisitadas={userProfile?.historias_visitadas || []}
-            // ¡AQUÍ ESTÁ LA CLAVE! Pasamos la función que acabamos de crear
-            onStartNarrativeFromMap={handleStartNarrativeFromMap}
-          />
-        );
-      case 'inventario':
-        return <InventarioView onBack={handleBackToDashboard} />;
-
-      // 🔑 NUEVO: Caso para la vista WIP
-      case 'wip':
-        return <WorkInProgressView onOpenVideoModal={handleOpenVideoModal} />;
-
-      case 'admin':
-        return isAdmin ? <AdminPanel /> : <p>Acceso denegado.</p>;
-
-      default:
-        return <UserDashboard onNavigate={handleNavigateFromDashboard} />;
-    }
-  };
-
-  return (
-    <div className="app-authenticated">
-
-      {showNavBar && (
-        <nav className="elegant-navbar">
-          <div className="navbar-logo">
-            <h1>LA RESISTENCIA</h1>
-          </div>
-
-          <button
-            className="navbar-hamburger-btn"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Toggle navigation"
-            aria-expanded={isMobileMenuOpen}
-          >
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
-
-          <div className={`navbar-menu-container ${isMobileMenuOpen ? 'is-open' : ''}`}>
-            <div className="navbar-links">
-              <button
-                className="navbar-hide-btn"
-                onClick={handleToggleNavBar}
-                title="Ocultar Menú Superior"
-              >
-                <i className="fas fa-chevron-up"></i>
-              </button>
-              <button className={`nav-link-btn ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => handleNavClick('dashboard')}>Dashboard</button>
-              <button className={`nav-link-btn ${currentView === 'historias' ? 'active' : ''}`} onClick={() => handleNavClick('historias')}>Historias</button>
-              <button className={`nav-link-btn ${currentView === 'mapa' ? 'active' : ''}`} onClick={() => handleNavClick('mapa')}>Mapa</button>
-              <button className={`nav-link-btn ${currentView === 'inventario' ? 'active' : ''}`} onClick={() => handleNavClick('inventario')}>Inventario</button>
-              <button className={`nav-link-btn ${currentView === 'personajes' ? 'active' : ''}`} onClick={() => handleNavClick('personajes')}>Personajes</button>
-
-
-              {/* 🔑 NUEVO: Botón WIP */}
-              <button className={`nav-link-btn ${currentView === 'wip' ? 'active' : ''}`} onClick={() => handleNavClick('wip')}>WIP</button>
-
-              {isAdmin && (
-                <button className={`nav-link-btn ${currentView === 'admin' ? 'active' : ''}`} onClick={() => handleNavClick('admin')}>Admin</button>
-              )}
-            </div>
-
-            <div className="navbar-user-info">
-              {user?.email}
-            </div>
-
-          </div>
-        </nav>
-      )}
-
-      {!showNavBar && (
-        <button className="navbar-show-btn" onClick={handleToggleNavBar} title="Mostrar Menú Superior">
-          <i className="fas fa-chevron-down"></i>
-        </button>
-      )}
-
-      <main className={`app-main ${!showNavBar ? 'navbar-hidden' : ''}`}>
-        {renderCurrentView()}
-      </main>
-
-      {/* 🔑 NUEVO: Renderizado del modal de video para la sección autenticada */}
-      {videoModalData && (
-        <YouTubeVideoModal
-          videoId={videoModalData.videoId}
-          title={videoModalData.title}
-          onClose={() => setVideoModalData(null)}
-        />
-      )}
-
-    </div>
-  );
-};
-
-
-// ==========================================================
-// --- NUEVOS COMPONENTES PARA EL LANDING PAGE ---
-// ==========================================================
-
-// ==========================================================
-// --- Modal de Login (VERSIÓN CINEMATOGRÁFICA) ---
-// ==========================================================
-interface LoginModalProps {
-  onClose: () => void;
-  onRequestFullscreen: () => void;
-}
-
-const LoginModal: React.FC<LoginModalProps> = ({ onClose, onRequestFullscreen }) => {
-  // 🚨 CAMBIO RADICAL: Eliminamos "info-modal-overlay", "info-modal-content", 
-  // títulos duplicados y botones externos.
-  // Ahora AuthForm toma el control total de la pantalla.
-  return (
-    <AuthForm
-      onRequestFullscreen={onRequestFullscreen}
-      onClose={onClose} // Pasamos el control de cierre al formulario
-    />
-  );
-};
-
-
-/**
- * Contenido del Modal de Información (ACTUALIZADO)
- */
 const modalInfoContent = {
   acerca: {
     title: 'Acerca del Proyecto',
-    body: 'LA RESISTENCIA es un documental web interactivo que explora las narrativas urbanas de la resistencia social en la Ciudad de México. A través de historias inmersivas, mapas georeferenciados y elementos de RPG, buscamos documentar y preservar la memoria colectiva de la lucha social.'
+    body: 'LA RESISTENCIA es un documental web interactivo que explora las narrativas urbanas de la resistencia social en la Ciudad de México.'
   },
-  // 🔑 MODIFICACIÓN CLAVE: Cuerpo más limpio y envuelto en div.modal-links-grid
   'making-off': {
     title: 'Making Off y Recursos',
     body: `
-    Este proyecto fue realizado por un equipo multidisciplinario de cineastas, desarrolladores, diseñadores e investigadores. El proceso implicó una profunda investigación de campo, entrevistas, y el desarrollo de una plataforma tecnológica a medida para soportar la narrativa interactiva.
-    
     <div class="modal-links-grid">
         <button class="modal-link-btn js-open-video" data-video-id="1MpN0MbBFlA" data-video-title="PRIMER CORTE (Video)">
             <i class="fab fa-youtube"></i> PRIMER CORTE (Video)
@@ -515,22 +92,17 @@ const modalInfoContent = {
         <a href="https://github.com/Paultool/ResistenciaWebDoc" target="_blank" rel="noopener noreferrer" class="modal-link-btn">
             <i class="fab fa-github"></i> GITHUB
         </a>
-    </div>
-    `
+    </div>`
   },
   equipo: {
     title: 'Equipo',
-    body: 'Miembros clave del equipo:\n\n- Director: Pablo Benjamin Nieto Mercado\n- Productora: Melvin Records\n- Desarrollador Principal UX/UI: Paultool\n- Editor: Rodrigo Jardon\n- Investigador/a: Melvin Records'
+    body: 'Miembros clave del equipo:\n\n- Director: Juan Rodrigo Jardon Galeana \n- Productor: Pablo Benjamin Nieto Mercado\n- Desarrollador Principal UX/UI: Paultool\n- Editor: Marcelo Castillo Sabando'
   }
 };
 
-/**
- * Modal de Información (ACTUALIZADO)
- */
 interface InfoModalProps {
   contentKey: 'acerca' | 'making-off' | 'equipo';
   onClose: () => void;
-  // 🔑 NUEVA PROP: Handler opcional para abrir el video modal
   onOpenVideoModal?: (videoId: string, title: string) => void;
 }
 
@@ -538,81 +110,139 @@ const InfoModal: React.FC<InfoModalProps> = ({ contentKey, onClose, onOpenVideoM
   const { title, body } = modalInfoContent[contentKey];
   const modalContentRef = useRef<HTMLDivElement>(null);
 
-  // Función para convertir texto simple con saltos de línea (\n) a HTML
-  const formatBody = (text: string) => {
-    // Reemplazamos \n por <br/> y aseguramos que no haya espacio en blanco al inicio/fin
-    return text.trim().replace(/\n/g, '<br/>');
-  };
-
-  // Condicional: si es 'making-off' usamos el body con HTML. Si no, lo formateamos.
-  const renderedBody = contentKey === 'making-off'
-    ? body
-    : formatBody(body);
-
-  // 🔑 CLAVE: Determina el estilo whiteSpace para evitar saltos de línea no deseados
-  const textStyle = contentKey !== 'making-off'
-    ? { whiteSpace: 'pre-wrap' as const } // Aplica pre-wrap solo a acerca y equipo
-    : {}; // No aplica white-space a making-off (usa el default: normal)
-
-
-  // 🔑 HOOK: Para manejar el clic del botón de video dentro del HTML inyectado
   useEffect(() => {
     if (contentKey === 'making-off' && modalContentRef.current && onOpenVideoModal) {
       const modal = modalContentRef.current;
-      // Seleccionamos todos los botones con la clase de video
       const videoButtons = modal.querySelectorAll('.js-open-video');
-
       const handleVideoClick = (e: Event) => {
         const button = e.currentTarget as HTMLButtonElement;
         const videoId = button.getAttribute('data-video-id');
         const title = button.getAttribute('data-video-title') || 'Video';
-
         if (videoId) {
           e.preventDefault();
-          // 1. Cerrar el modal actual
           onClose();
-          // 2. Abrir el modal de video a través del handler
           onOpenVideoModal(videoId, title);
         }
       };
-
-      videoButtons.forEach(button => {
-        button.addEventListener('click', handleVideoClick);
-      });
-
-      return () => {
-        // Limpiamos los event listeners
-        videoButtons.forEach(button => {
-          button.removeEventListener('click', handleVideoClick);
-        });
-      };
+      videoButtons.forEach(button => button.addEventListener('click', handleVideoClick));
+      return () => videoButtons.forEach(button => button.removeEventListener('click', handleVideoClick));
     }
   }, [contentKey, onClose, onOpenVideoModal]);
 
   return (
     <div className="info-modal-overlay" onClick={onClose}>
-      <div
-        className="info-modal-content"
-        onClick={(e) => e.stopPropagation()}
-        ref={modalContentRef} // Asignamos la referencia
-      >
+      <div className="info-modal-content" onClick={(e) => e.stopPropagation()} ref={modalContentRef}>
         <button onClick={onClose} className="info-modal-close-btn">&times;</button>
         <h2 className="info-modal-title">{title}</h2>
-
-        <p
-          className="info-modal-body"
-          style={textStyle} // 🔑 APLICA EL ESTILO CONDICIONAL
-          // 🔑 USAMOS dangerouslySetInnerHTML AQUÍ
-          dangerouslySetInnerHTML={{ __html: renderedBody }}
-        />
+        <div className="info-modal-body" dangerouslySetInnerHTML={{ __html: contentKey === 'making-off' ? body : body.replace(/\n/g, '<br/>') }} />
       </div>
     </div>
   );
 };
 
-/**
- * Barra Inferior
- */
+interface WorkInProgressViewProps {
+  onOpenVideoModal: (videoId: string, title: string) => void;
+}
+
+const WorkInProgressView: React.FC<WorkInProgressViewProps> = ({ onOpenVideoModal }) => {
+  const links = [
+    { 
+        name: 'PRIMER CORTE (Video)', 
+        type: 'video', 
+        videoId: '1MpN0MbBFlA', 
+        icon: 'fab fa-youtube',
+        meta: 'MP4_STREAM // 1080p'
+    },
+    { 
+        name: 'GALERIA DE ARTE', 
+        type: 'link', 
+        url: 'https://pablonieto.jimdofree.com/2025/10/28/la-resistencia-wip/', 
+        icon: 'fas fa-camera-retro',
+        meta: 'IMG_ARCHIVE // EXTERNAL'
+    },
+    { 
+        name: 'CARPETA DE PRODUCCION', 
+        type: 'link', 
+        url: 'https://drive.google.com/file/d/1MbjrWQTWGnUcngcSb2afQpiZjqqNFtqG/view?usp=sharing', 
+        icon: 'fas fa-folder-open',
+        meta: 'PDF_DOSSIER // CLASSIFIED'
+    },
+    { 
+        name: 'REPOSITORIO GITHUB', 
+        type: 'link', 
+        url: 'https://github.com/Paultool/ResistenciaWebDoc', 
+        icon: 'fab fa-github',
+        meta: 'SOURCE_CODE // PUBLIC'
+    },
+  ];
+
+  return (
+    <div className="wip-container">
+      
+      {/* Header Táctico */}
+      <div className="wip-header">
+        <div>
+            <h2 className="wip-title-text">R&D_LAB</h2>
+            <p className="wip-subtitle">{'>'} AREA DE DESARROLLO Y RECURSOS EXTERNOS</p>
+        </div>
+        <div className="text-right hidden md:block text-[10px] text-[#33ff00]/50 font-mono">
+            ACCESS_LEVEL: BETA<br/>
+            BUILD: v.2.5.0
+        </div>
+      </div>
+
+      {/* Grid de Archivos */}
+      <div className="wip-links-grid">
+        {links.map((link, index) => {
+            const isVideo = link.type === 'video';
+            
+            // Renderizado condicional de Button o Anchor
+            const CardContent = () => (
+                <>
+                    <i className={`${link.icon} wip-icon`}></i>
+                    <span className="wip-link-name">{link.name}</span>
+                    <div className="wip-meta">
+                        <span>ID: 0{index + 1}_DAT</span>
+                        <span>{link.meta}</span>
+                    </div>
+                    <div className="absolute bottom-3 right-3">
+                        <i className={`fas ${isVideo ? 'fa-play' : 'fa-external-link-alt'} wip-external-icon`}></i>
+                    </div>
+                </>
+            );
+
+            if (isVideo) {
+                return (
+                    <button 
+                        key={link.name} 
+                        onClick={() => onOpenVideoModal(link.videoId!, link.name)} 
+                        className="wip-link-card text-left"
+                    >
+                        <CardContent />
+                    </button>
+                );
+            }
+
+            return (
+                <a 
+                    key={link.name} 
+                    href={link.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="wip-link-card"
+                >
+                    <CardContent />
+                </a>
+            );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ==========================================================
+// --- 1. COMPONENTE BOTTOM BAR (DEFINIDO AQUÍ PARA EVITAR ERROR) ---
+// ==========================================================
 interface BottomBarProps {
   onOpenModal: (contentKey: 'acerca' | 'making-off' | 'equipo') => void;
   onOpenLogin: () => void;
@@ -621,270 +251,430 @@ interface BottomBarProps {
 
 const BottomBar: React.FC<BottomBarProps> = ({ onOpenModal, onOpenLogin, onToggleVisibility }) => {
   return (
-    <footer className="bottom-bar">
-      {/* Botón de Tache (Ocultar) */}
-    
-       <button onClick={onOpenLogin} className="bottom-bar-btn">
-        LOGIN
-      </button>
-      <button onClick={() => onOpenModal('acerca')} className="bottom-bar-btn">
-        ACERCA
-      </button>
-      <button onClick={() => onOpenModal('making-off')} className="bottom-bar-btn">
-        WIP
-      </button>
-      <button onClick={() => onOpenModal('equipo')} className="bottom-bar-btn">
-        CREW
-      </button>
-        <button onClick={onToggleVisibility} className="bottom-bar-btn" title="Ocultar Información">
-        <i className="fas fa-times"></i>
-      </button>
-     
+    <footer className="fixed bottom-0 left-0 w-full z-[100] font-mono select-none animate-in slide-in-from-bottom-10 duration-700">
+      
+      {/* Línea de escaneo superior (Shimmer Effect) */}
+      <div className="w-full h-[1px] bg-[#33ff00]/20 relative overflow-hidden">
+          <div className="absolute top-0 left-0 h-full w-1/3 bg-gradient-to-r from-transparent via-[#33ff00] to-transparent animate-[shimmer_3s_infinite]"></div>
+      </div>
+
+      {/* Contenedor Ultra-Compacto */}
+      <div className="bg-black/95 backdrop-blur-md flex items-center justify-between md:justify-center h-12 px-4 md:gap-12 border-t border-[#33ff00]/10 shadow-[0_-10px_30px_rgba(0,0,0,0.8)]">
+
+          {/* Botón LOGIN (El más importante) */}
+          <button 
+              onClick={onOpenLogin} 
+              className="group flex items-center gap-2 text-[#33ff00] hover:text-white transition-colors text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase"
+          >
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[#33ff00]">{'>'}</span>
+              LOGIN
+          </button>
+
+          {/* Separador Visual (Solo Desktop) */}
+          <span className="hidden md:block text-[#33ff00]/20 text-[10px]">|</span>
+
+          {/* Botón ACERCA */}
+          <button 
+              onClick={() => onOpenModal('acerca')} 
+              className="group text-gray-500 hover:text-[#33ff00] transition-colors text-[10px] md:text-xs font-bold tracking-widest uppercase"
+          >
+              <span className="hidden group-hover:inline mr-1">[</span>
+              ACERCA
+              <span className="hidden group-hover:inline ml-1">]</span>
+          </button>
+
+          {/* Botón WIP */}
+          <button 
+              onClick={() => onOpenModal('making-off')} 
+              className="group text-gray-500 hover:text-[#33ff00] transition-colors text-[10px] md:text-xs font-bold tracking-widest uppercase"
+          >
+              <span className="hidden group-hover:inline mr-1">[</span>
+              WIP
+              <span className="hidden group-hover:inline ml-1">]</span>
+          </button>
+
+          {/* Botón CREW */}
+          <button 
+              onClick={() => onOpenModal('equipo')} 
+              className="group text-gray-500 hover:text-[#33ff00] transition-colors text-[10px] md:text-xs font-bold tracking-widest uppercase"
+          >
+              <span className="hidden group-hover:inline mr-1">[</span>
+              CREW
+              <span className="hidden group-hover:inline ml-1">]</span>
+          </button>
+
+          {/* Separador Visual (Solo Desktop) */}
+          <span className="hidden md:block text-[#33ff00]/20 text-[10px]">|</span>
+
+          {/* Botón SALIR (Icono minimalista) */}
+          <button 
+              onClick={onToggleVisibility} 
+              className="text-red-500/50 hover:text-red-500 transition-colors text-base flex items-center justify-center w-8"
+              title="Ocultar Interfaz"
+          >
+              ✕
+          </button>
+
+      </div>
     </footer>
   );
 };
 
-/**
- * Landing Page - Con introducción cinematográfica (ACTUALIZADO)
- */
+// ==========================================================
+// --- 2. COMPONENTE LANDING PAGE (USANDO BOTTOM BAR) ---
+// ==========================================================
 interface LandingPageProps {
   onLoginSuccess: () => void;
-  // Función para solicitar Fullscreen en el contenedor principal
   onRequestFullscreen: () => void;
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFullscreen }) => {
   const [showContent, setShowContent] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
-  const [showBottomBar, setShowBottomBar] = useState(true);
+  
+  // Estados para la barra
+  const [showBottomBar, setShowBottomBar] = useState(false); 
+  const [isBarVisible, setIsBarVisible] = useState(true);    
 
   const [infoModalContentKey, setInfoModalContentKey] = useState<'acerca' | 'making-off' | 'equipo' | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-
-  // 🔑 NUEVO ESTADO: Para el modal de video
   const [videoModalData, setVideoModalData] = useState<{ videoId: string; title: string } | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
-
   const videoSrc = "https://ia600103.us.archive.org/12/items/intro_resistencia/intro%20resistencia%20sub%20sp.mp4";
+
+  useEffect(() => {
+    if (showContent) {
+      const timer = setTimeout(() => setShowBottomBar(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [showContent]);
 
   const handleVideoEnd = () => {
     setShowContent(true);
-    if (videoRef.current) {
-      setIsMuted(videoRef.current.muted);
-    }
+    if (videoRef.current) setIsMuted(videoRef.current.muted);
   };
 
   const handleUnmuteClick = () => {
     const video = videoRef.current;
-
     if (video) {
       video.muted = false;
       video.volume = 0.7;
-
-      // 1. LLAMAMOS A LA FUNCIÓN DEL PADRE para Fullscreen
       onRequestFullscreen();
-
       setIsMuted(false);
-      video.play().catch(error => console.error("Error al intentar reproducir sin mute:", error));
+      video.play().catch(e => console.error("Error play:", e));
     }
   };
 
   const handleResisteClick = () => {
-    // Reafirma la pantalla completa
     onRequestFullscreen();
     setIsLoginModalOpen(true);
   };
 
-  useEffect(() => {
-    const video = videoRef.current;
-    if (video) {
-      video.volume = 0.7;
-    }
-  }, []);
-
-  const handleOpenLoginModal = () => {
-    onRequestFullscreen();
-    setIsLoginModalOpen(true);
-  };
-
-  const handleToggleBottomBar = () => {
-    setShowBottomBar(prev => !prev);
-  };
-
-  // 🔑 NUEVA FUNCIÓN: Manejador para abrir el modal de video
   const handleOpenVideoModal = (videoId: string, title: string) => {
     setVideoModalData({ videoId, title });
   };
 
-
   return (
-    <div className="landing-page">
+    <div className="relative w-full h-screen bg-black overflow-hidden font-mono selection:bg-[#33ff00] selection:text-black">
+      
+      {/* ATMÓSFERA VISUAL */}
       <video
         ref={videoRef}
-        className="landing-video-bg"
-        autoPlay
-        loop={false}
-        muted={isMuted}
-        playsInline
-        src={videoSrc}
-        key={videoSrc}
-        onEnded={handleVideoEnd}
+        className="absolute inset-0 w-full h-full object-cover z-0 opacity-50 grayscale contrast-125"
+        autoPlay loop={false} muted={isMuted} playsInline
+        src={videoSrc} key={videoSrc} onEnded={handleVideoEnd}
       >
-        Tu navegador no soporta el tag de video.
+        Tu navegador no soporta video.
       </video>
-      <div className="landing-overlay"></div>
 
-      {/* Botón de inicialización */}
-      {isMuted && !showContent && (
-        <button className="unmute-button" onClick={handleUnmuteClick}>
-          &gt; INICIALIZAR SISTEMA _
-        </button>
-      )}
+      {/* Capas FX */}
+      <div className="absolute inset-0 z-[1] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10"></div>
+      <div className="absolute inset-0 z-[2] pointer-events-none crt-overlay opacity-30"></div>
+      <div className="absolute inset-0 z-[1] pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,#000_120%)]"></div>
 
-      {/* El contenido final aparece con la transición al terminar el video */}
-      <main className={`landing-content ${showContent ? 'show' : 'hide'}`}>
+      {/* HUD SUPERIOR */}
+      <div className="absolute top-0 left-0 w-full p-6 z-20 flex justify-between items-start text-[9px] md:text-[10px] text-[#33ff00]/60 tracking-widest uppercase mix-blend-screen pointer-events-none">
+        <div className="flex flex-col gap-1">
+          <span>SIGNAL: <span className="text-[#33ff00] animate-pulse">ENCRYPTED</span></span>
+          <span>LOC: 19.4326° N, 99.1332° W</span>
+        </div>
+        <div className="text-right flex flex-col gap-1">
+          <span>REC: ● LIVE</span>
+          <span>SECURE_BOOT: TRUE</span>
+        </div>
+      </div>
 
-        {/* TÍTULO GLITCH */}
-        <h1
-          className="landing-glitch-title"
-          data-text="LA RESISTENCIA"
-        >
-          LA RESISTENCIA
-        </h1>
+      {/* NÚCLEO */}
+      <div className="relative z-30 w-full h-full flex flex-col items-center justify-center">
 
-        {/* SUBTÍTULO TÉCNICO */}
-        <p className="landing-tech-subtitle">
-          SYSTEM_READY :: PROTOCOL_CDMX_V2.4
-        </p>
+        {isMuted && !showContent && (
+          <button 
+            onClick={handleUnmuteClick}
+            className="group relative flex flex-col items-center gap-4 cursor-pointer transition-transform duration-700 hover:scale-105"
+          >
+            <div className="relative w-20 h-20 border border-[#33ff00] rounded-full flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full border border-[#33ff00] animate-[ping_2s_infinite] opacity-50"></div>
+              <span className="text-3xl text-[#33ff00] ml-1">▶</span>
+            </div>
+            <div className="bg-black/80 border border-[#33ff00]/30 px-4 py-2 backdrop-blur-sm">
+              <span className="text-[#33ff00] text-xs md:text-sm tracking-[0.3em] uppercase">
+                {'>'} INICIALIZAR_SISTEMA<span className="animate-[blink-cursor_1s_infinite]">_</span>
+              </span>
+            </div>
+          </button>
+        )}
 
-        {/* BOTÓN HACKER */}
-        <button onClick={handleResisteClick} className="landing-glitch-btn">
-          [ INGRESAR ]
-        </button>
+        <main className={`flex flex-col items-center text-center transition-all duration-1000 ease-out 
+          ${showContent ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-10 blur-sm pointer-events-none'}`}>
+          
+          <div className="mb-4 flex items-center gap-3 text-[#33ff00]/70 text-[10px] md:text-xs tracking-[0.4em] uppercase font-bold">
+            <span className="w-1 h-1 bg-[#33ff00]"></span>
+            PROTOCOL_V2.4 :: READY
+            <span className="w-1 h-1 bg-[#33ff00]"></span>
+          </div>
+          {/* TÍTULO CON CLASE GLITCH-YELLOW */}
+          <h1 
+            className="glitch-yellow text-5xl md:text-7xl lg:text-8xl font-black mb-10 tracking-tighter select-none z-10"
+            data-text="LA RESISTENCIA"
+            style={{ 
+              animation: showContent ? 'text-reveal 1.5s cubic-bezier(0.19, 1, 0.22, 1) forwards' : 'none' 
+            }}
+          >
+            LA RESISTENCIA
+          </h1>
 
-      </main>
+            <button 
+              onClick={handleResisteClick} 
+              className="group relative flex items-center gap-3 px-6 py-2 bg-black border border-[#33ff00] text-[#33ff00] font-mono text-xs font-bold uppercase tracking-widest overflow-hidden transition-all hover:shadow-[0_0_20px_rgba(51,255,0,0.5)] hover:border-[#33ff00]"
+            >
+              {/* Fondo animado de barrido */}
+              <div className="absolute inset-0 bg-[#33ff00] transform translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300 origin-left z-0"></div>
+              
+              {/* Contenido (Calavera + Texto) */}
+              <span className="relative z-10 flex items-center gap-2 group-hover:text-black transition-colors duration-300">
+                <span className="text-lg leading-none">☠</span>
+                RESISTE
+              </span>
+            </button>
 
+        </main>
+      </div>
 
-      {/* RENDERIZADO CONDICIONAL: Solo mostrar si showBottomBar es true */}
-      {showBottomBar && (
+      {/* BARRA INFERIOR */}
+      {showBottomBar && isBarVisible && (
         <BottomBar
           onOpenModal={setInfoModalContentKey}
-          onOpenLogin={handleOpenLoginModal}
-          onToggleVisibility={handleToggleBottomBar}
+          onOpenLogin={() => { onRequestFullscreen(); setIsLoginModalOpen(true); }}
+          onToggleVisibility={() => setIsBarVisible(false)}
         />
       )}
 
-      {/* Botón flotante para MOSTRAR (las rayitas) */}
-      {!showBottomBar && (
-        <button className="bottom-bar-show-btn" onClick={handleToggleBottomBar} title="Mostrar Información">
-          <i className="fas fa-bars"></i>
+      {showBottomBar && !isBarVisible && (
+        <button 
+          className="fixed bottom-4 right-4 z-50 text-[#33ff00] opacity-50 hover:opacity-100 text-2xl animate-pulse"
+          onClick={() => setIsBarVisible(true)}
+          title="Restaurar Interfaz"
+        >
+          +
         </button>
       )}
 
+      {/* MODALES */}
+      {infoModalContentKey && <InfoModal contentKey={infoModalContentKey} onClose={() => setInfoModalContentKey(null)} onOpenVideoModal={handleOpenVideoModal} />}
+      {isLoginModalOpen && <LoginModal onClose={() => setIsLoginModalOpen(false)} onRequestFullscreen={onRequestFullscreen} />}
+    </div>
+  );
+};
 
-      {/* Modales (Info y Login) */}
-      {infoModalContentKey && (
-        <InfoModal
-          contentKey={infoModalContentKey}
-          onClose={() => setInfoModalContentKey(null)}
-          onOpenVideoModal={handleOpenVideoModal}
-        />
+// ==========================================================
+// --- 3. CONTENIDO PRINCIPAL (LOGGED IN) ---
+// ==========================================================
+const MainContent: React.FC = () => {
+  const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [currentView, setCurrentView] = useState<'dashboard' | 'historias' | 'personajes' | 'mapa' | 'inventario' | 'admin' | 'wip'>('dashboard');
+  const [historias, setHistorias] = useState<Historia[]>([]);
+  const [selectedHistoriaId, setSelectedHistoriaId] = useState<number | null>(null);
+  const [flujoNarrativoHistoriaId, setFlujoNarrativoHistoriaId] = useState<number | null>(null);
+  const [videoModalData, setVideoModalData] = useState<{ videoId: string; title: string } | null>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [showNavBar, setShowNavBar] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const init = async () => {
+      if (user) {
+        setIsAdmin(user.email === 'paultool@gmail.com');
+        const hist = await obtenerHistorias();
+        setHistorias(hist);
+        // Cargar perfil
+        const { data } = await supabase.from('perfiles_jugador').select('*').eq('user_id', user.id).single();
+        if (data) setUserProfile(data);
+        else await supabase.from('perfiles_jugador').insert({ user_id: user.id });
+      }
+    };
+    init();
+  }, [user]);
+
+  const handleStartNarrative = (historia: Historia) => {
+    setFlujoNarrativoHistoriaId(historia.id);
+    setCurrentView('historias');
+  };
+
+  const handleStartNarrativeFromMap = (historiaId: number) => {
+    setFlujoNarrativoHistoriaId(historiaId);
+    setCurrentView('historias');
+  };
+
+  const handleUpdateProfile = async (pos: number, neg: number, loc: string) => {
+    // Lógica simplificada para actualizar perfil
+    if(userProfile) {
+        const xp = userProfile.xp_total + pos + neg;
+        await supabase.from('perfiles_jugador').update({ xp_total: xp }).eq('user_id', userProfile.user_id);
+    }
+  };
+
+  const renderCurrentView = () => {
+    if (currentView === 'historias') {
+      return <FlujoNarrativoUsuario historiaId={flujoNarrativoHistoriaId || undefined} onBack={() => setCurrentView('dashboard')} onUpdateProfile={handleUpdateProfile} />;
+    }
+    if (selectedHistoriaId) {
+      return <HistoriaDetail historiaId={selectedHistoriaId} onClose={() => setSelectedHistoriaId(null)} onStartNarrative={() => handleStartNarrative(historias.find(h=>h.id===selectedHistoriaId)!)} />;
+    }
+    switch (currentView) {
+      case 'dashboard': return <UserDashboard onNavigate={(v) => setCurrentView(v as any)} />;
+      case 'personajes': return <PersonajesView onBack={() => setCurrentView('dashboard')} />;
+      case 'mapa': return <MapaView historias={historias} historiasVisitadas={userProfile?.historias_visitadas || []} onStartNarrativeFromMap={handleStartNarrativeFromMap} initialCenter={[19.640645, -99.137597]} />;
+      case 'inventario': return <InventarioView onBack={() => setCurrentView('dashboard')} />;
+      case 'wip': return <WorkInProgressView onOpenVideoModal={(id, t) => setVideoModalData({ videoId: id, title: t })} />;
+      case 'admin': return isAdmin ? <AdminPanel /> : <p>Acceso denegado</p>;
+      default: return <UserDashboard onNavigate={(v) => setCurrentView(v as any)} />;
+    }
+  };
+
+  return (
+    <div className="app-authenticated">
+      {showNavBar && (
+          <nav className="term-navbar">
+              
+              {/* 1. LOGO */}
+              <div className="term-logo">
+                  <h1>
+                      <span className="term-cursor">{'>'}</span> LA_RESISTENCIA
+                  </h1>
+              </div>
+
+              {/* 2. BOTÓN HAMBURGUESA (Solo Móvil) */}
+              <button 
+                  className="term-hamburger-btn" 
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                  {isMobileMenuOpen ? 'X' : '[ MENU ]'}
+              </button>
+
+              {/* 3. CONTENEDOR DE MENÚ (Links + User) */}
+              <div className={`term-menu-container ${isMobileMenuOpen ? 'is-open' : ''}`}>
+                  
+                  <div className="term-links">
+                      {/* Botón Minimizar */}
+                      <button 
+                          className="term-hide-btn" 
+                          onClick={() => setShowNavBar(false)}
+                          title="Ocultar Interfaz"
+                      >
+                          [ X ]
+                      </button>
+
+                      {/* Enlaces Mapeados */}
+                      {[
+                          { id: 'dashboard', label: 'DASHBOARD' },
+                          { id: 'historias', label: 'MISIONES' },
+                          { id: 'mapa', label: 'GEOLOCALIZACIÓN' },
+                          { id: 'inventario', label: 'ALMACÉN' },
+                          { id: 'personajes', label: 'SUJETOS' },
+                          { id: 'wip', label: 'WIP_LAB' }
+                      ].map(item => (
+                          <button 
+                              key={item.id} 
+                              className={`term-link-btn ${currentView === item.id ? 'active' : ''}`} 
+                              onClick={() => { setCurrentView(item.id as any); setIsMobileMenuOpen(false); }}
+                          >
+                              {currentView === item.id ? `> ${item.label}` : item.label}
+                          </button>
+                      ))}
+
+                      {/* Admin */}
+                      {isAdmin && (
+                          <button 
+                              className={`term-link-btn ${currentView === 'admin' ? 'active' : ''}`} 
+                              style={{ color: '#ff0000', borderColor: currentView === 'admin' ? '#ff0000' : '#333' }}
+                              onClick={() => { setCurrentView('admin'); setIsMobileMenuOpen(false); }}
+                          >
+                              ADMIN
+                          </button>
+                      )}
+                  </div>
+
+                  {/* Info Usuario */}
+                  <div className="term-user-info">
+                      USR_ID: {user?.email?.split('@')[0] || 'GUEST'}
+                  </div>
+              </div>
+          </nav>
       )}
-
-      {isLoginModalOpen && (
-        <LoginModal
-          onClose={() => setIsLoginModalOpen(false)}
-          onRequestFullscreen={onRequestFullscreen}
-        />
+      {!showNavBar && (
+        <button 
+          className="term-restore-btn" 
+          onClick={() => setShowNavBar(true)}
+          title="Restaurar Interfaz"
+        >
+          <span className="term-restore-icon">▼</span>
+          DESPLEGAR_MENU
+        </button>
       )}
-
-      {videoModalData && (
-        <YouTubeVideoModal
-          videoId={videoModalData.videoId}
-          title={videoModalData.title}
-          onClose={() => setVideoModalData(null)}
-        />
-      )}
-
+      <main className={`app-main ${!showNavBar ? 'navbar-hidden' : ''}`}>
+        {renderCurrentView()}
+      </main>
 
     </div>
   );
 };
 
 // ==========================================================
-// --- Componente principal de la aplicación ---
+// --- 4. APP ROOT ---
 // ==========================================================
-function App(): JSX.Element {
+const AppContent: React.FC = () => {
+  const { user, loading } = useAuth();
+  const appRef = useRef<HTMLDivElement>(null);
+
+  const requestAppFullscreen = () => {
+    const el = appRef.current as any;
+    if (el) {
+        if (el.requestFullscreen) el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    }
+  };
+
+  if (loading) return <div className="app-loading"><div className="loading-container"><h1>🏛️ WebDoc La Resistencia</h1><p>⏳ Cargando...</p></div></div>;
+
+  return (
+    <div className="App" ref={appRef}>
+      <GlobalStyles />
+      <video className="glitch-overlay" autoPlay muted loop playsInline>
+        <source src="https://nz71ioy1keimlqqc.public.blob.vercel-storage.com/Fondo.webm" type="video/webm" />
+      </video>
+      {user ? <MainContent /> : <LandingPage onLoginSuccess={() => {}} onRequestFullscreen={requestAppFullscreen} />}
+    </div>
+  );
+};
+
+function App() {
   return (
     <AuthProvider>
       <AppContent />
     </AuthProvider>
   );
 }
-
-/**
- * Contenido de la aplicación
- * Decide qué mostrar: el Landing/Login (si no está autenticado)
- * o el MainContent (si sí lo está).
- */
-const AppContent: React.FC = () => {
-  const { user, loading } = useAuth();
-
-  // REFERENCIA: Al contenedor principal que no se desmonta (div.App)
-  const appRef = useRef<HTMLDivElement>(null);
-
-  // FUNCIÓN: Se encarga de solicitar Fullscreen en el elemento principal
-  const requestAppFullscreen = () => {
-    const appContainer = appRef.current;
-    if (appContainer) {
-      // Aseguramos la compatibilidad con diferentes navegadores
-      if (appContainer.requestFullscreen) {
-        appContainer.requestFullscreen();
-      } else if ((appContainer as any).mozRequestFullScreen) { /* Firefox */
-        (appContainer as any).mozRequestFullScreen();
-      } else if ((appContainer as any).webkitRequestFullscreen) { /* Chrome, Safari and Opera */
-        (appContainer as any).webkitRequestFullscreen();
-      } else if ((appContainer as any).msRequestFullscreen) { /* IE/Edge */
-        (appContainer as any).msRequestFullscreen();
-      }
-    }
-  };
-
-
-  if (loading) {
-    return (
-      <div className="app-loading">
-        <div className="loading-container">
-          <h1>🏛️ WebDoc La Resistencia</h1>
-          <p>⏳ Cargando aplicación...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="App" ref={appRef}> {/* ASIGNAMOS LA REFERENCIA AL CONTENEDOR APP */}
-
-      {/* 👇VIDEO DE TEXTURA 👇 */}
-      <video className="glitch-overlay" autoPlay muted loop playsInline>
-        <source src="https://nz71ioy1keimlqqc.public.blob.vercel-storage.com/Fondo.webm" type="video/webm" />
-      </video>
-      {/* 👆 FIN DEL VIDEO DE TEXTURA 👆 */}
-
-      {user ? (
-        // --- VISTA AUTENTICADA ---\
-        <MainContent />
-      ) : (
-        // --- VISTA PÚBLICA (LANDING CON MODAL) ---\
-        <LandingPage
-          onLoginSuccess={() => { /* No es necesario aquí ya que AuthContext se encarga */ }}
-          // PASAMOS LA FUNCIÓN DE FULLSCREEN A LANDINGPAGE
-          onRequestFullscreen={requestAppFullscreen}
-        />
-      )}
-    </div>
-  );
-};
 
 export default App;
