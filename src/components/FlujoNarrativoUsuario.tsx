@@ -1376,7 +1376,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     if (Array.isArray(stats.historias_visitadas)) {
                         visitedIds = stats.historias_visitadas.map((id: string) => parseInt(id.trim(), 10));
                     } else if (typeof stats.historias_visitadas === 'string') {
-                        visitedIds = stats.historias_visitadas.split(',').map(id => parseInt(id.trim(), 10));
+                        visitedIds = (stats.historias_visitadas as string).split(',').map(id => parseInt(id.trim(), 10));
                     }
                     setHistoriasVisitadas(visitedIds);
                 } else {
@@ -1731,10 +1731,10 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             console.log('Paso completo:', JSON.stringify(currentStep, null, 2));
 
             // *** ¡AQUÍ ES DONDE SE GUARDA LA HISTORIA! ***
-            const { error } = await gameServiceUser.completeStory(user.id, String(selectedHistoriaId));
-            if (!error) {
+            try {
+                await gameServiceUser.completeStory(user.id, String(selectedHistoriaId));
                 console.log(`✅ Historia ${selectedHistoriaId} completada para el usuario ${user.id}`);
-            } else {
+            } catch (error) {
                 console.error('❌ Error completando historia:', error);
             }
 
@@ -1810,6 +1810,20 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     // --- FIN DE LA FUNCIÓN handleNextStep (CORREGIDA) ---
     // ==================================================================
 
+    // Determinar qué historias están desbloqueadas
+    const historiasConEstado = historias.map(historia => {
+        let isLocked = false;
+
+        // Si tiene dependencia, verificar si la historia madre fue visitada
+        if (historia.id_historia_dependencia) {
+            isLocked = !historiasVisitadas.includes(historia.id_historia_dependencia);
+        }
+
+        return {
+            ...historia,
+            isLocked
+        };
+    });
 
     // Función para retroceder al paso anterior
     const goBack = () => {
@@ -1931,8 +1945,8 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                     <div
                                         key={historia.id_historia}
                                         className={`
-                                group relative border-2 bg-black overflow-hidden flex flex-col
-                                transition-all duration-300
+                                group relative border - 2 bg - black overflow - hidden flex flex - col
+                            transition - all duration - 300
                                 ${historia.isLocked
                                                 ? 'border-red-900/50 opacity-70 cursor-not-allowed grayscale'
                                                 : 'border-[#33ff00]/30 hover:border-[#33ff00] cursor-pointer hover:shadow-[0_0_25px_rgba(51,255,0,0.15)] hover:-translate-y-1'
@@ -1947,9 +1961,9 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                                 <img
                                                     src={imagenFondo}
                                                     alt={historia.titulo}
-                                                    className={`w-full h-full object-cover transition-transform duration-700 
+                                                    className={`w - full h - full object - cover transition - transform duration - 700 
                                             ${historia.isLocked ? 'blur-sm' : 'group-hover:scale-110 group-hover:contrast-110'}
-                                        `}
+                            `}
                                                 />
                                             ) : (
                                                 <div className="w-full h-full bg-[#111] flex items-center justify-center">
@@ -1981,7 +1995,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                         <div className="h-[45%] bg-black border-t border-[#33ff00]/30 p-5 flex flex-col relative z-20">
 
                                             {/* Título */}
-                                            <h2 className={`text-2xl font-bold mb-2 uppercase tracking-tighter leading-none ${historia.isLocked ? 'text-red-500' : 'text-white group-hover:text-[#33ff00]'}`}>
+                                            <h2 className={`text - 2xl font - bold mb - 2 uppercase tracking - tighter leading - none ${historia.isLocked ? 'text-red-500' : 'text-white group-hover:text-[#33ff00]'} `}>
                                                 {historia.titulo}
                                             </h2>
 
@@ -2052,13 +2066,13 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             if (is3DModel && showInitial3DPopup) {
                 return (
                     <div className={`
-                        absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50
-                        w-[95%] max-w-[600px] max-h-[90vh] overflow-y-auto
-                        bg-black/95 backdrop-blur-md 
-                        border border-[#33ff00] shadow-[0_0_30px_rgba(51,255,0,0.15)]
-                        text-[#a8a8a8] font-mono
-                        p-6 md:p-8 rounded-sm
-                    `}>
+                        absolute top - 1 / 2 left - 1 / 2 transform - translate - x - 1 / 2 - translate - y - 1 / 2 z - 50
+                            w - [95 %] max - w - [600px] max - h - [90vh] overflow - y - auto
+                            bg - black / 95 backdrop - blur - md 
+                        border border - [#33ff00] shadow - [0_0_30px_rgba(51, 255, 0, 0.15)]
+                            text - [#a8a8a8] font - mono
+                            p - 6 md: p - 8 rounded - sm
+                                `}>
                         {/* Encabezado estilo Terminal */}
                         <div className="border-b border-[#33ff00]/30 pb-4 mb-6 flex justify-between items-center">
                             <div>
@@ -2172,9 +2186,9 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
                     {/* Estilos para scrollbar personalizado (Solo para este componente) */}
                     <style>{`
-                        .tech-scroll::-webkit-scrollbar { width: 4px; }
-                        .tech-scroll::-webkit-scrollbar-track { background: #111; }
-                        .tech-scroll::-webkit-scrollbar-thumb { background: #33ff00; border-radius: 2px; }
+                                .tech - scroll::-webkit-scrollbar {width: 4px; }
+                        .tech-scroll::-webkit-scrollbar-track {background: #111; }
+                        .tech-scroll::-webkit-scrollbar-thumb {background: #33ff00; border-radius: 2px; }
                     `}</style>
 
                     <div className={`
@@ -2416,20 +2430,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             );
         }
 
-        // Determinar qué historias están desbloqueadas
-        const historiasConEstado = historias.map(historia => {
-            let isLocked = false;
 
-            // Si tiene dependencia, verificar si la historia madre fue visitada
-            if (historia.id_historia_dependencia) {
-                isLocked = !historiasVisitadas.includes(historia.id_historia_dependencia);
-            }
-
-            return {
-                ...historia,
-                isLocked
-            };
-        });
 
         // LOG DE DEPURACIÓN
         console.log("=== DEBUG BLOQUEO DE HISTORIAS ===");
