@@ -31,13 +31,12 @@
   }
 
   /* 🔑 CORRECCIÓN CLAVE: Asegurar que TODA la jerarquía raíz tenga 100% de altura */
-  html, body, #root { 
-    height: 100%; /* Esto es vital para que las reglas de altura funcionen */
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden; 
-    overflow-y: hidden; /* DESACTIVAMOS el scroll en el body para forzarlo en el contenido */
-  }
+  /* --- FIX GLOBAL DE SCROLL --- */
+html, body, #root {
+  height: 100%;
+  overflow: hidden; /* Evita doble scrollbar en el navegador */
+  background-color: #000;
+}
 }
 
 

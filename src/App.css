@@ -1234,14 +1234,14 @@
   color: black;
 }
 
+
+
 .app-main {
-  /* La Navbar mide 60px. Agregamos 60px + un poco de aire */
-  padding-top: 70px !important; 
-  
-  min-height: 100vh;
+  height: 100vh;
   width: 100%;
+  overflow: hidden; /* Dejamos que los hijos (pv-container, iv-container) manejen su scroll */
   position: relative;
-  z-index: 1; /* Asegura que esté debajo de la navbar (z-index: 9000) */
+  padding-top: 60px; /* Espacio para la Navbar superior */
 }
 
 /* Cuando ocultas la navbar, quitamos el padding para que no quede hueco */
@@ -1919,5 +1919,11 @@
   .landing-tech-subtitle {
     font-size: 0.8rem;
     letter-spacing: 2px;
+  }
+
+  html, body, #root {
+    height: 100%;
+    overflow: hidden; /* Evita doble scrollbar en el navegador */
+    background-color: #000;
   }
 }

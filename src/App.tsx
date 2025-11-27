@@ -146,94 +146,94 @@ interface WorkInProgressViewProps {
 
 const WorkInProgressView: React.FC<WorkInProgressViewProps> = ({ onOpenVideoModal }) => {
   const links = [
-    { 
-        name: 'PRIMER CORTE (Video)', 
-        type: 'video', 
-        videoId: '1MpN0MbBFlA', 
-        icon: 'fab fa-youtube',
-        meta: 'MP4_STREAM // 1080p'
+    {
+      name: 'PRIMER CORTE (Video)',
+      type: 'video',
+      videoId: '1MpN0MbBFlA',
+      icon: 'fab fa-youtube',
+      meta: 'MP4_STREAM // 1080p'
     },
-    { 
-        name: 'GALERIA DE ARTE', 
-        type: 'link', 
-        url: 'https://pablonieto.jimdofree.com/2025/10/28/la-resistencia-wip/', 
-        icon: 'fas fa-camera-retro',
-        meta: 'IMG_ARCHIVE // EXTERNAL'
+    {
+      name: 'GALERIA DE ARTE',
+      type: 'link',
+      url: 'https://pablonieto.jimdofree.com/2025/10/28/la-resistencia-wip/',
+      icon: 'fas fa-camera-retro',
+      meta: 'IMG_ARCHIVE // EXTERNAL'
     },
-    { 
-        name: 'CARPETA DE PRODUCCION', 
-        type: 'link', 
-        url: 'https://drive.google.com/file/d/1MbjrWQTWGnUcngcSb2afQpiZjqqNFtqG/view?usp=sharing', 
-        icon: 'fas fa-folder-open',
-        meta: 'PDF_DOSSIER // CLASSIFIED'
+    {
+      name: 'CARPETA DE PRODUCCION',
+      type: 'link',
+      url: 'https://drive.google.com/file/d/1MbjrWQTWGnUcngcSb2afQpiZjqqNFtqG/view?usp=sharing',
+      icon: 'fas fa-folder-open',
+      meta: 'PDF_DOSSIER // CLASSIFIED'
     },
-    { 
-        name: 'REPOSITORIO GITHUB', 
-        type: 'link', 
-        url: 'https://github.com/Paultool/ResistenciaWebDoc', 
-        icon: 'fab fa-github',
-        meta: 'SOURCE_CODE // PUBLIC'
+    {
+      name: 'REPOSITORIO GITHUB',
+      type: 'link',
+      url: 'https://github.com/Paultool/ResistenciaWebDoc',
+      icon: 'fab fa-github',
+      meta: 'SOURCE_CODE // PUBLIC'
     },
   ];
 
   return (
     <div className="wip-container">
-      
+
       {/* Header Táctico */}
       <div className="wip-header">
         <div>
-            <h2 className="wip-title-text">R&D_LAB</h2>
-            <p className="wip-subtitle">{'>'} AREA DE DESARROLLO Y RECURSOS EXTERNOS</p>
+          <h2 className="wip-title-text">R&D_LAB</h2>
+          <p className="wip-subtitle">{'>'} AREA DE DESARROLLO Y RECURSOS EXTERNOS</p>
         </div>
         <div className="text-right hidden md:block text-[10px] text-[#33ff00]/50 font-mono">
-            ACCESS_LEVEL: BETA<br/>
-            BUILD: v.2.5.0
+          ACCESS_LEVEL: BETA<br />
+          BUILD: v.2.5.0
         </div>
       </div>
 
       {/* Grid de Archivos */}
       <div className="wip-links-grid">
         {links.map((link, index) => {
-            const isVideo = link.type === 'video';
-            
-            // Renderizado condicional de Button o Anchor
-            const CardContent = () => (
-                <>
-                    <i className={`${link.icon} wip-icon`}></i>
-                    <span className="wip-link-name">{link.name}</span>
-                    <div className="wip-meta">
-                        <span>ID: 0{index + 1}_DAT</span>
-                        <span>{link.meta}</span>
-                    </div>
-                    <div className="absolute bottom-3 right-3">
-                        <i className={`fas ${isVideo ? 'fa-play' : 'fa-external-link-alt'} wip-external-icon`}></i>
-                    </div>
-                </>
-            );
+          const isVideo = link.type === 'video';
 
-            if (isVideo) {
-                return (
-                    <button 
-                        key={link.name} 
-                        onClick={() => onOpenVideoModal(link.videoId!, link.name)} 
-                        className="wip-link-card text-left"
-                    >
-                        <CardContent />
-                    </button>
-                );
-            }
+          // Renderizado condicional de Button o Anchor
+          const CardContent = () => (
+            <>
+              <i className={`${link.icon} wip-icon`}></i>
+              <span className="wip-link-name">{link.name}</span>
+              <div className="wip-meta">
+                <span>ID: 0{index + 1}_DAT</span>
+                <span>{link.meta}</span>
+              </div>
+              <div className="absolute bottom-3 right-3">
+                <i className={`fas ${isVideo ? 'fa-play' : 'fa-external-link-alt'} wip-external-icon`}></i>
+              </div>
+            </>
+          );
 
+          if (isVideo) {
             return (
-                <a 
-                    key={link.name} 
-                    href={link.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="wip-link-card"
-                >
-                    <CardContent />
-                </a>
+              <button
+                key={link.name}
+                onClick={() => onOpenVideoModal(link.videoId!, link.name)}
+                className="wip-link-card text-left"
+              >
+                <CardContent />
+              </button>
             );
+          }
+
+          return (
+            <a
+              key={link.name}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="wip-link-card"
+            >
+              <CardContent />
+            </a>
+          );
         })}
       </div>
     </div>
@@ -252,68 +252,68 @@ interface BottomBarProps {
 const BottomBar: React.FC<BottomBarProps> = ({ onOpenModal, onOpenLogin, onToggleVisibility }) => {
   return (
     <footer className="fixed bottom-0 left-0 w-full z-[100] font-mono select-none animate-in slide-in-from-bottom-10 duration-700">
-      
+
       {/* Línea de escaneo superior (Shimmer Effect) */}
       <div className="w-full h-[1px] bg-[#33ff00]/20 relative overflow-hidden">
-          <div className="absolute top-0 left-0 h-full w-1/3 bg-gradient-to-r from-transparent via-[#33ff00] to-transparent animate-[shimmer_3s_infinite]"></div>
+        <div className="absolute top-0 left-0 h-full w-1/3 bg-gradient-to-r from-transparent via-[#33ff00] to-transparent animate-[shimmer_3s_infinite]"></div>
       </div>
 
       {/* Contenedor Ultra-Compacto */}
       <div className="bg-black/95 backdrop-blur-md flex items-center justify-between md:justify-center h-12 px-4 md:gap-12 border-t border-[#33ff00]/10 shadow-[0_-10px_30px_rgba(0,0,0,0.8)]">
 
-          {/* Botón LOGIN (El más importante) */}
-          <button 
-              onClick={onOpenLogin} 
-              className="group flex items-center gap-2 text-[#33ff00] hover:text-white transition-colors text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase"
-          >
-              <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[#33ff00]">{'>'}</span>
-              LOGIN
-          </button>
+        {/* Botón LOGIN (El más importante) */}
+        <button
+          onClick={onOpenLogin}
+          className="group flex items-center gap-2 text-[#33ff00] hover:text-white transition-colors text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase"
+        >
+          <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[#33ff00]">{'>'}</span>
+          LOGIN
+        </button>
 
-          {/* Separador Visual (Solo Desktop) */}
-          <span className="hidden md:block text-[#33ff00]/20 text-[10px]">|</span>
+        {/* Separador Visual (Solo Desktop) */}
+        <span className="hidden md:block text-[#33ff00]/20 text-[10px]">|</span>
 
-          {/* Botón ACERCA */}
-          <button 
-              onClick={() => onOpenModal('acerca')} 
-              className="group text-gray-500 hover:text-[#33ff00] transition-colors text-[10px] md:text-xs font-bold tracking-widest uppercase"
-          >
-              <span className="hidden group-hover:inline mr-1">[</span>
-              ACERCA
-              <span className="hidden group-hover:inline ml-1">]</span>
-          </button>
+        {/* Botón ACERCA */}
+        <button
+          onClick={() => onOpenModal('acerca')}
+          className="group text-gray-500 hover:text-[#33ff00] transition-colors text-[10px] md:text-xs font-bold tracking-widest uppercase"
+        >
+          <span className="hidden group-hover:inline mr-1">[</span>
+          ACERCA
+          <span className="hidden group-hover:inline ml-1">]</span>
+        </button>
 
-          {/* Botón WIP */}
-          <button 
-              onClick={() => onOpenModal('making-off')} 
-              className="group text-gray-500 hover:text-[#33ff00] transition-colors text-[10px] md:text-xs font-bold tracking-widest uppercase"
-          >
-              <span className="hidden group-hover:inline mr-1">[</span>
-              WIP
-              <span className="hidden group-hover:inline ml-1">]</span>
-          </button>
+        {/* Botón WIP */}
+        <button
+          onClick={() => onOpenModal('making-off')}
+          className="group text-gray-500 hover:text-[#33ff00] transition-colors text-[10px] md:text-xs font-bold tracking-widest uppercase"
+        >
+          <span className="hidden group-hover:inline mr-1">[</span>
+          WIP
+          <span className="hidden group-hover:inline ml-1">]</span>
+        </button>
 
-          {/* Botón CREW */}
-          <button 
-              onClick={() => onOpenModal('equipo')} 
-              className="group text-gray-500 hover:text-[#33ff00] transition-colors text-[10px] md:text-xs font-bold tracking-widest uppercase"
-          >
-              <span className="hidden group-hover:inline mr-1">[</span>
-              CREW
-              <span className="hidden group-hover:inline ml-1">]</span>
-          </button>
+        {/* Botón CREW */}
+        <button
+          onClick={() => onOpenModal('equipo')}
+          className="group text-gray-500 hover:text-[#33ff00] transition-colors text-[10px] md:text-xs font-bold tracking-widest uppercase"
+        >
+          <span className="hidden group-hover:inline mr-1">[</span>
+          CREW
+          <span className="hidden group-hover:inline ml-1">]</span>
+        </button>
 
-          {/* Separador Visual (Solo Desktop) */}
-          <span className="hidden md:block text-[#33ff00]/20 text-[10px]">|</span>
+        {/* Separador Visual (Solo Desktop) */}
+        <span className="hidden md:block text-[#33ff00]/20 text-[10px]">|</span>
 
-          {/* Botón SALIR (Icono minimalista) */}
-          <button 
-              onClick={onToggleVisibility} 
-              className="text-red-500/50 hover:text-red-500 transition-colors text-base flex items-center justify-center w-8"
-              title="Ocultar Interfaz"
-          >
-              ✕
-          </button>
+        {/* Botón SALIR (Icono minimalista) */}
+        <button
+          onClick={onToggleVisibility}
+          className="text-red-500/50 hover:text-red-500 transition-colors text-base flex items-center justify-center w-8"
+          title="Ocultar Interfaz"
+        >
+          ✕
+        </button>
 
       </div>
     </footer>
@@ -331,10 +331,10 @@ interface LandingPageProps {
 const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFullscreen }) => {
   const [showContent, setShowContent] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
-  
+
   // Estados para la barra
-  const [showBottomBar, setShowBottomBar] = useState(false); 
-  const [isBarVisible, setIsBarVisible] = useState(true);    
+  const [showBottomBar, setShowBottomBar] = useState(true); // Cambiado a true para aparecer inmediatamente 
+  const [isBarVisible, setIsBarVisible] = useState(true);
 
   const [infoModalContentKey, setInfoModalContentKey] = useState<'acerca' | 'making-off' | 'equipo' | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -377,7 +377,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
 
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden font-mono selection:bg-[#33ff00] selection:text-black">
-      
+
       {/* ATMÓSFERA VISUAL */}
       <video
         ref={videoRef}
@@ -409,7 +409,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
       <div className="relative z-30 w-full h-full flex flex-col items-center justify-center">
 
         {isMuted && !showContent && (
-          <button 
+          <button
             onClick={handleUnmuteClick}
             className="group relative flex flex-col items-center gap-4 cursor-pointer transition-transform duration-700 hover:scale-105"
           >
@@ -427,36 +427,36 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
 
         <main className={`flex flex-col items-center text-center transition-all duration-1000 ease-out 
           ${showContent ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-10 blur-sm pointer-events-none'}`}>
-          
+
           <div className="mb-4 flex items-center gap-3 text-[#33ff00]/70 text-[10px] md:text-xs tracking-[0.4em] uppercase font-bold">
             <span className="w-1 h-1 bg-[#33ff00]"></span>
             PROTOCOL_V2.4 :: READY
             <span className="w-1 h-1 bg-[#33ff00]"></span>
           </div>
           {/* TÍTULO CON CLASE GLITCH-YELLOW */}
-          <h1 
+          <h1
             className="glitch-yellow text-5xl md:text-7xl lg:text-8xl font-black mb-10 tracking-tighter select-none z-10"
             data-text="LA RESISTENCIA"
-            style={{ 
-              animation: showContent ? 'text-reveal 1.5s cubic-bezier(0.19, 1, 0.22, 1) forwards' : 'none' 
+            style={{
+              animation: showContent ? 'text-reveal 1.5s cubic-bezier(0.19, 1, 0.22, 1) forwards' : 'none'
             }}
           >
             LA RESISTENCIA
           </h1>
 
-            <button 
-              onClick={handleResisteClick} 
-              className="group relative flex items-center gap-3 px-6 py-2 bg-black border border-[#33ff00] text-[#33ff00] font-mono text-xs font-bold uppercase tracking-widest overflow-hidden transition-all hover:shadow-[0_0_20px_rgba(51,255,0,0.5)] hover:border-[#33ff00]"
-            >
-              {/* Fondo animado de barrido */}
-              <div className="absolute inset-0 bg-[#33ff00] transform translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300 origin-left z-0"></div>
-              
-              {/* Contenido (Calavera + Texto) */}
-              <span className="relative z-10 flex items-center gap-2 group-hover:text-black transition-colors duration-300">
-                <span className="text-lg leading-none">☠</span>
-                RESISTE
-              </span>
-            </button>
+          <button
+            onClick={handleResisteClick}
+            className="group relative flex items-center gap-3 px-6 py-2 bg-black border border-[#33ff00] text-[#33ff00] font-mono text-xs font-bold uppercase tracking-widest overflow-hidden transition-all hover:shadow-[0_0_20px_rgba(51,255,0,0.5)] hover:border-[#33ff00]"
+          >
+            {/* Fondo animado de barrido */}
+            <div className="absolute inset-0 bg-[#33ff00] transform translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300 origin-left z-0"></div>
+
+            {/* Contenido (Calavera + Texto) */}
+            <span className="relative z-10 flex items-center gap-2 group-hover:text-black transition-colors duration-300">
+              <span className="text-lg leading-none">☠</span>
+              RESISTE
+            </span>
+          </button>
 
         </main>
       </div>
@@ -471,7 +471,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
       )}
 
       {showBottomBar && !isBarVisible && (
-        <button 
+        <button
           className="fixed bottom-4 right-4 z-50 text-[#33ff00] opacity-50 hover:opacity-100 text-2xl animate-pulse"
           onClick={() => setIsBarVisible(true)}
           title="Restaurar Interfaz"
@@ -529,9 +529,9 @@ const MainContent: React.FC = () => {
 
   const handleUpdateProfile = async (pos: number, neg: number, loc: string) => {
     // Lógica simplificada para actualizar perfil
-    if(userProfile) {
-        const xp = userProfile.xp_total + pos + neg;
-        await supabase.from('perfiles_jugador').update({ xp_total: xp }).eq('user_id', userProfile.user_id);
+    if (userProfile) {
+      const xp = userProfile.xp_total + pos + neg;
+      await supabase.from('perfiles_jugador').update({ xp_total: xp }).eq('user_id', userProfile.user_id);
     }
   };
 
@@ -540,7 +540,7 @@ const MainContent: React.FC = () => {
       return <FlujoNarrativoUsuario historiaId={flujoNarrativoHistoriaId || undefined} onBack={() => setCurrentView('dashboard')} onUpdateProfile={handleUpdateProfile} />;
     }
     if (selectedHistoriaId) {
-      return <HistoriaDetail historiaId={selectedHistoriaId} onClose={() => setSelectedHistoriaId(null)} onStartNarrative={() => handleStartNarrative(historias.find(h=>h.id===selectedHistoriaId)!)} />;
+      return <HistoriaDetail historiaId={selectedHistoriaId} onClose={() => setSelectedHistoriaId(null)} onStartNarrative={() => handleStartNarrative(historias.find(h => h.id === selectedHistoriaId)!)} />;
     }
     switch (currentView) {
       case 'dashboard': return <UserDashboard onNavigate={(v) => setCurrentView(v as any)} />;
@@ -556,76 +556,76 @@ const MainContent: React.FC = () => {
   return (
     <div className="app-authenticated">
       {showNavBar && (
-          <nav className="term-navbar">
-              
-              {/* 1. LOGO */}
-              <div className="term-logo">
-                  <h1>
-                      <span className="term-cursor">{'>'}</span> LA_RESISTENCIA
-                  </h1>
-              </div>
+        <nav className="term-navbar">
 
-              {/* 2. BOTÓN HAMBURGUESA (Solo Móvil) */}
-              <button 
-                  className="term-hamburger-btn" 
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          {/* 1. LOGO */}
+          <div className="term-logo">
+            <h1>
+              <span className="term-cursor">{'>'}</span> LA_RESISTENCIA
+            </h1>
+          </div>
+
+          {/* 2. BOTÓN HAMBURGUESA (Solo Móvil) */}
+          <button
+            className="term-hamburger-btn"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? 'X' : '[ MENU ]'}
+          </button>
+
+          {/* 3. CONTENEDOR DE MENÚ (Links + User) */}
+          <div className={`term-menu-container ${isMobileMenuOpen ? 'is-open' : ''}`}>
+
+            <div className="term-links">
+              {/* Botón Minimizar */}
+              <button
+                className="term-hide-btn"
+                onClick={() => setShowNavBar(false)}
+                title="Ocultar Interfaz"
               >
-                  {isMobileMenuOpen ? 'X' : '[ MENU ]'}
+                [ X ]
               </button>
 
-              {/* 3. CONTENEDOR DE MENÚ (Links + User) */}
-              <div className={`term-menu-container ${isMobileMenuOpen ? 'is-open' : ''}`}>
-                  
-                  <div className="term-links">
-                      {/* Botón Minimizar */}
-                      <button 
-                          className="term-hide-btn" 
-                          onClick={() => setShowNavBar(false)}
-                          title="Ocultar Interfaz"
-                      >
-                          [ X ]
-                      </button>
+              {/* Enlaces Mapeados */}
+              {[
+                { id: 'dashboard', label: 'DASHBOARD' },
+                { id: 'historias', label: 'MISIONES' },
+                { id: 'mapa', label: 'GEOLOCALIZACIÓN' },
+                { id: 'inventario', label: 'ALMACÉN' },
+                { id: 'personajes', label: 'SUJETOS' },
+                { id: 'wip', label: 'WIP_LAB' }
+              ].map(item => (
+                <button
+                  key={item.id}
+                  className={`term-link-btn ${currentView === item.id ? 'active' : ''}`}
+                  onClick={() => { setCurrentView(item.id as any); setIsMobileMenuOpen(false); }}
+                >
+                  {currentView === item.id ? `> ${item.label}` : item.label}
+                </button>
+              ))}
 
-                      {/* Enlaces Mapeados */}
-                      {[
-                          { id: 'dashboard', label: 'DASHBOARD' },
-                          { id: 'historias', label: 'MISIONES' },
-                          { id: 'mapa', label: 'GEOLOCALIZACIÓN' },
-                          { id: 'inventario', label: 'ALMACÉN' },
-                          { id: 'personajes', label: 'SUJETOS' },
-                          { id: 'wip', label: 'WIP_LAB' }
-                      ].map(item => (
-                          <button 
-                              key={item.id} 
-                              className={`term-link-btn ${currentView === item.id ? 'active' : ''}`} 
-                              onClick={() => { setCurrentView(item.id as any); setIsMobileMenuOpen(false); }}
-                          >
-                              {currentView === item.id ? `> ${item.label}` : item.label}
-                          </button>
-                      ))}
+              {/* Admin */}
+              {isAdmin && (
+                <button
+                  className={`term-link-btn ${currentView === 'admin' ? 'active' : ''}`}
+                  style={{ color: '#ff0000', borderColor: currentView === 'admin' ? '#ff0000' : '#333' }}
+                  onClick={() => { setCurrentView('admin'); setIsMobileMenuOpen(false); }}
+                >
+                  ADMIN
+                </button>
+              )}
+            </div>
 
-                      {/* Admin */}
-                      {isAdmin && (
-                          <button 
-                              className={`term-link-btn ${currentView === 'admin' ? 'active' : ''}`} 
-                              style={{ color: '#ff0000', borderColor: currentView === 'admin' ? '#ff0000' : '#333' }}
-                              onClick={() => { setCurrentView('admin'); setIsMobileMenuOpen(false); }}
-                          >
-                              ADMIN
-                          </button>
-                      )}
-                  </div>
-
-                  {/* Info Usuario */}
-                  <div className="term-user-info">
-                      USR_ID: {user?.email?.split('@')[0] || 'GUEST'}
-                  </div>
-              </div>
-          </nav>
+            {/* Info Usuario */}
+            <div className="term-user-info">
+              USR_ID: {user?.email?.split('@')[0] || 'GUEST'}
+            </div>
+          </div>
+        </nav>
       )}
       {!showNavBar && (
-        <button 
-          className="term-restore-btn" 
+        <button
+          className="term-restore-btn"
           onClick={() => setShowNavBar(true)}
           title="Restaurar Interfaz"
         >
@@ -651,8 +651,8 @@ const AppContent: React.FC = () => {
   const requestAppFullscreen = () => {
     const el = appRef.current as any;
     if (el) {
-        if (el.requestFullscreen) el.requestFullscreen();
-        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      if (el.requestFullscreen) el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
     }
   };
 
@@ -664,7 +664,7 @@ const AppContent: React.FC = () => {
       <video className="glitch-overlay" autoPlay muted loop playsInline>
         <source src="https://nz71ioy1keimlqqc.public.blob.vercel-storage.com/Fondo.webm" type="video/webm" />
       </video>
-      {user ? <MainContent /> : <LandingPage onLoginSuccess={() => {}} onRequestFullscreen={requestAppFullscreen} />}
+      {user ? <MainContent /> : <LandingPage onLoginSuccess={() => { }} onRequestFullscreen={requestAppFullscreen} />}
     </div>
   );
 };
