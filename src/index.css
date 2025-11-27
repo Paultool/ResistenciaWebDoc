@@ -26,8 +26,13 @@
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
+
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%
+  }
+
+  .fixed {
+    position: fixed;
   }
 
   /* 🔑 CORRECCIÓN CLAVE: Asegurar que TODA la jerarquía raíz tenga 100% de altura */
@@ -40,13 +45,28 @@
     /* Cambiado de hidden a auto para permitir scrollbars globales */
     background-color: #000;
   }
-}
 
+  /* --- ESTILOS GLOBALES DE SCROLLBAR (Gris con bordes verdes) --- */
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: #000;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: #333;
+    border: 1px solid #33ff00;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: #444;
+    border-color: #44ff11;
+  }
+}
 
 img {
   object-position: top;
-}
-
-.fixed {
-  position: fixed;
 }
