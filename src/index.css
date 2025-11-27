@@ -32,11 +32,14 @@
 
   /* 🔑 CORRECCIÓN CLAVE: Asegurar que TODA la jerarquía raíz tenga 100% de altura */
   /* --- FIX GLOBAL DE SCROLL --- */
-html, body, #root {
-  height: 100%;
-  overflow: hidden; /* Evita doble scrollbar en el navegador */
-  background-color: #000;
-}
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: auto;
+    /* Cambiado de hidden a auto para permitir scrollbars globales */
+    background-color: #000;
+  }
 }
 
 
