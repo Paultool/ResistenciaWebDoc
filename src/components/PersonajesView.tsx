@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { obtenerPersonajes, Personaje } from '../supabaseClient'
 import { gameServiceUser as gameService } from '../services/GameServiceUser'
 import { useAuth } from '../contexts/AuthContext'
@@ -14,6 +14,8 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedPersonaje, setSelectedPersonaje] = useState<Personaje | null>(null)
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     cargarPersonajes()
@@ -49,6 +51,18 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
     }
   }
 
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -300, behavior: 'smooth' })
+    }
+  }
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' })
+    }
+  }
+
   if (loading) {
     return (
       <div className="pv-container flex items-center justify-center">
@@ -75,7 +89,7 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
 
   return (
     <div className="pv-container">
-      
+
       {/* HEADER */}
       <div className="pv-header">
         <div>
@@ -83,8 +97,8 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
           <p>REGISTRO DE SUJETOS CLAVE</p>
         </div>
         {onBack && (
-          <button 
-            onClick={onBack} 
+          <button
+            onClick={onBack}
             className="border border-[#33ff00] text-[#33ff00] bg-transparent px-4 py-2 font-bold uppercase hover:bg-[#33ff00] hover:text-black transition-all"
           >
             [ X ] CERRAR
@@ -94,55 +108,62 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
 
       <div className="pv-stats">
         <span className="pv-stat-item">SUJETOS IDENTIFICADOS: <span className="pv-stat-highlight">{personajes.length}</span></span>
-        <span className="pv-stat-item">ESTADO: <span style={{color:'#33ff00'}}>EN LÍNEA</span></span>
+        <span className="pv-stat-item">ESTADO: <span style={{ color: '#33ff00' }}>EN LÍNEA</span></span>
       </div>
 
-      {/* GRID */}
-      <div className="pv-grid">
-        {personajes.map((personaje) => {
-          const atributos = personaje.metadata || {}
+      {/* CAROUSEL CONTAINER */}
+      <div className="pv-carousel-wrapper">
+        <button className="pv-nav-btn pv-nav-left" onClick={scrollLeft}>{'<'}</button>
 
-          return (
-            <div key={personaje.id} className="pv-card">
-              
-              {/* Imagen Mugshot */}
-              <div className="pv-image-container">
-                {personaje.imagen ? (
-                  <img src={personaje.imagen} alt={personaje.nombre} loading="lazy" />
-                ) : (
-                  <div className="pv-placeholder">?</div>
-                )}
+        {/* GRID */}
+        <div className="pv-grid" ref={scrollContainerRef}>
+          {personajes.map((personaje) => {
+            const atributos = personaje.metadata || {}
+
+            return (
+              <div key={personaje.id} className="pv-card">
+
+                {/* Imagen Mugshot */}
+                <div className="pv-image-container">
+                  {personaje.imagen ? (
+                    <img src={personaje.imagen} alt={personaje.nombre} loading="lazy" />
+                  ) : (
+                    <div className="pv-placeholder">?</div>
+                  )}
+                </div>
+
+                <div className="pv-info">
+                  <h3 className="pv-name">{personaje.nombre}</h3>
+                  <p className="pv-rol">{personaje.rol || 'ROL DESCONOCIDO'}</p>
+
+                  <p className="pv-desc">
+                    {personaje.descripcion || 'DATOS NO DISPONIBLES.'}
+                  </p>
+
+                  {atributos.edad && (
+                    <div className="pv-meta-row">
+                      <span className="pv-meta-label">EDAD:</span> {atributos.edad}
+                    </div>
+                  )}
+
+                  {atributos.profesion && (
+                    <div className="pv-meta-row">
+                      <span className="pv-meta-label">OCUPACIÓN:</span> {atributos.profesion}
+                    </div>
+                  )}
+                </div>
+
+                <div className="pv-actions">
+                  <button onClick={() => setSelectedPersonaje(personaje)} className="pv-btn">
+                    [ VER EXPEDIENTE ]
+                  </button>
+                </div>
               </div>
+            )
+          })}
+        </div>
 
-              <div className="pv-info">
-                <h3 className="pv-name">{personaje.nombre}</h3>
-                <p className="pv-rol">{personaje.rol || 'ROL DESCONOCIDO'}</p>
-                
-                <p className="pv-desc">
-                  {personaje.descripcion || 'DATOS NO DISPONIBLES.'}
-                </p>
-
-                {atributos.edad && (
-                  <div className="pv-meta-row">
-                    <span className="pv-meta-label">EDAD:</span> {atributos.edad}
-                  </div>
-                )}
-
-                {atributos.profesion && (
-                  <div className="pv-meta-row">
-                    <span className="pv-meta-label">OCUPACIÓN:</span> {atributos.profesion}
-                  </div>
-                )}
-              </div>
-
-              <div className="pv-actions">
-                <button onClick={() => setSelectedPersonaje(personaje)} className="pv-btn">
-                  [ VER EXPEDIENTE ]
-                </button>
-              </div>
-            </div>
-          )
-        })}
+        <button className="pv-nav-btn pv-nav-right" onClick={scrollRight}>{'>'}</button>
       </div>
 
       {/* MODAL EXPEDIENTE */}
@@ -161,7 +182,7 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
                 {selectedPersonaje.imagen ? (
                   <img src={selectedPersonaje.imagen} alt={selectedPersonaje.nombre} />
                 ) : (
-                  <div className="pv-placeholder" style={{color:'#33ff00', fontSize:'5rem'}}>?</div>
+                  <div className="pv-placeholder" style={{ color: '#33ff00', fontSize: '5rem' }}>?</div>
                 )}
               </div>
 
@@ -169,7 +190,7 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
               <div className="pv-modal-info">
                 <div>
                   <h4 className="pv-section-title">CLASIFICACIÓN / ROL</h4>
-                  <p className="pv-modal-desc" style={{ color: '#33ff00', fontWeight: 'bold', textTransform:'uppercase' }}>
+                  <p className="pv-modal-desc" style={{ color: '#33ff00', fontWeight: 'bold', textTransform: 'uppercase' }}>
                     {selectedPersonaje.rol || 'NO CLASIFICADO'}
                   </p>
                 </div>
@@ -199,7 +220,7 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
               <button
                 onClick={() => handleMeetCharacter(selectedPersonaje)}
                 className="pv-btn"
-                style={{ width: 'auto', display: 'inline-block', border:'1px solid #fff', color:'#fff' }}
+                style={{ width: 'auto', display: 'inline-block', border: '1px solid #fff', color: '#fff' }}
               >
                 [+] REGISTRAR ENCUENTRO (+25 XP)
               </button>

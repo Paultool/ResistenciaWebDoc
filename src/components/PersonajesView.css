@@ -95,6 +95,36 @@
 }
 
 /* --- GRID DE PERSONAJES (CARRUSEL HORIZONTAL) --- */
+.pv-carousel-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pv-nav-btn {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid #33ff00;
+  color: #33ff00;
+  font-family: 'Courier Prime', monospace;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 10px 15px;
+  z-index: 10;
+  transition: all 0.2s;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pv-nav-btn:hover {
+  background: #33ff00;
+  color: #000;
+  box-shadow: 0 0 15px rgba(51, 255, 0, 0.5);
+}
+
 .pv-grid {
   position: relative;
   z-index: 1;
@@ -106,6 +136,15 @@
   padding-right: 20px;
   /* Espacio al final del carrusel */
   scroll-behavior: smooth;
+  flex-grow: 1;
+  /* Ocultar scrollbar nativo si se usan botones, opcional */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.pv-grid::-webkit-scrollbar {
+  display: none;
+  /* Chrome/Safari/Opera */
 }
 
 /* Scrollbar personalizado para el carrusel - MÁS VISIBLE */

@@ -570,7 +570,7 @@ const MainContent: React.FC = () => {
             className="term-hamburger-btn"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-            {isMobileMenuOpen ? 'X' : '[ MENU ]'}
+            {isMobileMenuOpen ? '☠' : '[ MENU ]'}
           </button>
 
           {/* 3. CONTENEDOR DE MENÚ (Links + User) */}
@@ -583,7 +583,7 @@ const MainContent: React.FC = () => {
                 onClick={() => setShowNavBar(false)}
                 title="Ocultar Interfaz"
               >
-                [ X ]
+                ☠
               </button>
 
               {/* Enlaces Mapeados */}

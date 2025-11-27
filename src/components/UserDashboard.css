@@ -3,12 +3,10 @@
    ============================================================ */
 
 .dashboard-container {
-  /* FIJAR ALTURA Y HABILITAR SCROLL */
-  height: 100vh;
+  /* DEJAR QUE EL CONTENIDO FLUYA PARA USAR SCROLL GLOBAL */
+  min-height: 100vh;
   width: 100%;
-  overflow-y: auto;
-  /* Esto habilita el scroll vertical si se desborda */
-  overflow-x: hidden;
+  /* overflow removido para evitar doble barra */
 
   padding: 10px;
   /* Padding mínimo */
@@ -18,6 +16,8 @@
   z-index: 0;
   background-size: 100% 2px, 3px 100%;
   pointer-events: none;
+  padding-bottom: 80px;
+  /* Espacio extra abajo para que la BottomBar no tape contenido */
 }
 
 /* --- 1. BARRA DE ESTADO (HEADER) ULTRA COMPACTA --- */

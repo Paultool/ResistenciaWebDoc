@@ -120,7 +120,7 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void }> = ({ onNa
                   </div>
                 </div>
 
-                {/* AQUÍ ESTABA EL ERROR DEL ICONO */}
+                {/*sujetos*/}
                 <div className="info-card">
                   <div className="info-icon">👥</div> 
                   <div className="info-content">
