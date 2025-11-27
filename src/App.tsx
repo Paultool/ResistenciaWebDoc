@@ -623,22 +623,23 @@ const BottomBar: React.FC<BottomBarProps> = ({ onOpenModal, onOpenLogin, onToggl
   return (
     <footer className="bottom-bar">
       {/* Botón de Tache (Ocultar) */}
-      <button onClick={onToggleVisibility} className="bottom-bar-close-btn" title="Ocultar Información">
-        <i className="fas fa-times"></i>
-      </button>
-
-      <button onClick={() => onOpenModal('acerca')} className="bottom-bar-btn">
-        ACERCA DEL PROYECTO
-      </button>
-      <button onClick={() => onOpenModal('making-off')} className="bottom-bar-btn">
-        MAKING OFF
-      </button>
-      <button onClick={() => onOpenModal('equipo')} className="bottom-bar-btn">
-        EQUIPO
-      </button>
-      <button onClick={onOpenLogin} className="bottom-bar-btn">
+    
+       <button onClick={onOpenLogin} className="bottom-bar-btn">
         LOGIN
       </button>
+      <button onClick={() => onOpenModal('acerca')} className="bottom-bar-btn">
+        ACERCA
+      </button>
+      <button onClick={() => onOpenModal('making-off')} className="bottom-bar-btn">
+        WIP
+      </button>
+      <button onClick={() => onOpenModal('equipo')} className="bottom-bar-btn">
+        CREW
+      </button>
+        <button onClick={onToggleVisibility} className="bottom-bar-btn" title="Ocultar Información">
+        <i className="fas fa-times"></i>
+      </button>
+     
     </footer>
   );
 };

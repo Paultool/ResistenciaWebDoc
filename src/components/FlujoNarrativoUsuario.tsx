@@ -122,6 +122,7 @@ interface MapaViewProps {
     onStartNarrativeFromMap: (historiaId: number) => void;
     onBack: () => void;
     initialCenter: [number, number]; // <-- ¡Añade la nueva prop!
+    recursos: RecursoMultimediaData[];
 }
 
 const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNarrativoUsuarioProps) => {
@@ -160,6 +161,22 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     const { user, loading: authLoading } = useAuth();
     // Coordenadas por defecto (ej. Zócalo de CDMX), por si no hay historia
     const [mapCenter, setMapCenter] = useState<[number, number]>([19.4326, -99.1332]);
+
+    // Referencia para el contenedor del carrusel
+    const scrollContainerRef = React.useRef(null);
+
+    // Función para mover el carrusel con los botones
+    const scroll = (direction) => {
+        if (scrollContainerRef.current) {
+            const { current } = scrollContainerRef;
+            const scrollAmount = 350; // Cantidad de desplazamiento
+            if (direction === 'left') {
+                current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+            } else {
+                current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+            }
+        }
+    };
 
     const fetchPlayerStats = React.useCallback(async () => {
         if (!user) return;
@@ -1687,12 +1704,12 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     // Función para manejar el avance al siguiente paso
     const handleNextStep = async (nextStepId: number | null) => {
         const currentStep = flujoData[currentStepIndex];
-        
+
         // 1. Otorgar recompensas/personajes del paso ACTUAL (esto está bien aquí)
         if (currentStep.id_recompensa !== null) {
-              // buscamos el personaje en el arreglo de personajes cargados
+            // buscamos el personaje en el arreglo de personajes cargados
             const personaje = personajesData.find(p => p.id_personaje === currentStep.id_personaje);
-         
+
             if (personaje && user) {
                 const { error } = await gameServiceUser.knowCharacter(user.id, personaje.nombre);
                 if (!error) {
@@ -1854,78 +1871,159 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         const contentText = step.contenido || "";
         const isDecisionStep = step.tipo_paso === 'pregunta' || (step.opciones_decision?.opciones_siguientes_json && step.opciones_decision.opciones_siguientes_json.length > 0);
 
+        console.log(`[DEBUG] Rendering Step ID: ${step.id_flujo}, Tipo: ${step.tipo_paso}, Decision Step: ${isDecisionStep}`);
+        console.log(`[DEBUG] Step Content: ${contentText}`);
+
         // Obtener información del recurso
         const recursoActual = getRecurso(step.recursomultimedia_id);
         const isVideoOrAudio = recursoActual?.tipo === 'video' || recursoActual?.tipo === 'audio';
         const is3DModel = recursoActual?.tipo === '3d_model';
 
         // --- Lógica para Pasos de Decisión ---
-       if (isDecisionStep) {
+        if (isDecisionStep) {
             return (
-                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black p-6 font-mono selection:bg-[#33ff00] selection:text-black">
-                    
-                    {/* 1. Fondo Scanlines (Para continuidad atmosférica) */}
-                    <div className="absolute inset-0 pointer-events-none opacity-20" 
+                <div className="relative min-h-screen bg-black text-[#a8a8a8] p-4 md:p-8 overflow-y-auto font-mono selection:bg-[#33ff00] selection:text-black">
+
+                    {/* Fondo Scanlines */}
+                    <div className="absolute inset-0 pointer-events-none z-0 opacity-20 fixed"
                         style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
                     </div>
 
-                    {/* 2. Contenedor Principal (La Terminal de Decisión) */}
-                    <div className="relative w-full max-w-5xl bg-black/90 border-2 border-[#33ff00] p-8 md:p-12 shadow-[0_0_100px_rgba(51,255,0,0.15)]">
-                        
-                        {/* Decoración de Esquinas (Brackets) */}
-                        <div className="absolute -top-2 -left-2 w-8 h-8 border-t-4 border-l-4 border-[#33ff00]"></div>
-                        <div className="absolute -top-2 -right-2 w-8 h-8 border-t-4 border-r-4 border-[#33ff00]"></div>
-                        <div className="absolute -bottom-2 -left-2 w-8 h-8 border-b-4 border-l-4 border-[#33ff00]"></div>
-                        <div className="absolute -bottom-2 -right-2 w-8 h-8 border-b-4 border-r-4 border-[#33ff00]"></div>
+                    <div className="relative z-10 max-w-7xl mx-auto">
 
-                        {/* Encabezado de Alerta */}
-                        <div className="text-center mb-10">
-                            <div className="inline-block border-b border-[#33ff00] pb-2 mb-6">
-                                <h2 className="text-3xl md:text-5xl font-bold text-[#33ff00] tracking-tighter uppercase animate-pulse">
-                                    {'>'} INTERVENCIÓN REQUERIDA
-                                </h2>
+                        {/* --- ENCABEZADO --- */}
+                        <div className="border-b border-[#33ff00]/30 pb-6 mb-10 flex flex-col md:flex-row justify-between items-end gap-4">
+                            <div>
+                                <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tighter mb-2 uppercase glitch-text">
+                                    SELECTOR_DE_MISIONES
+                                </h1>
+                                <p className="text-[#33ff00] text-xs md:text-sm tracking-widest uppercase">
+                                    {'>'} ACCESO A MEMORIA COLECTIVA. SELECCIONE NODO.
+                                </p>
                             </div>
-                            
-                            {/* Texto de la Pregunta / Contexto */}
-                            <p className="text-lg md:text-2xl text-white leading-relaxed max-w-3xl mx-auto border-l-4 border-[#33ff00]/50 pl-6 text-left">
-                                {contentText}
-                            </p>
+                            <div className="text-right text-[10px] text-[#33ff00]/50 font-mono border-l border-[#33ff00]/30 pl-4">
+                                STATUS: ONLINE<br />
+                                SECURE_CONN: TRUE
+                            </div>
                         </div>
 
-                        {/* 3. Opciones de Decisión (Grid de Comandos) */}
-                        <div className="grid gap-6 md:grid-cols-1 max-w-3xl mx-auto">
-                            {step.opciones_decision?.opciones_siguientes_json?.map((opcion, index) => (
-                                <button
-                                    key={index}
-                                    className="group relative w-full py-6 px-8 border border-[#33ff00] bg-black text-left transition-all duration-200 
-                                    hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_30px_rgba(51,255,0,0.6)] hover:-translate-y-1"
-                                    onClick={() => handleNextStep(opcion.siguiente_paso_id)}
-                                >
-                                    {/* Efecto de 'Llenado' al hover (opcional, o usar bg directo) */}
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xl md:text-2xl font-bold tracking-wide uppercase">
-                                            <span className="mr-4 opacity-50 group-hover:opacity-100 font-mono">
-                                                0{index + 1}.
-                                            </span>
-                                            {opcion.texto}
-                                        </span>
-                                        
-                                        {/* Flecha reactiva */}
-                                        <span className="text-2xl font-bold opacity-0 group-hover:opacity-100 transform -translate-x-4 group-hover:translate-x-0 transition-all duration-300">
-                                            {'<<'} EJECUTAR
-                                        </span>
+                        {/* --- GRID DE TARJETAS --- */}
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
+                            {historiasConEstado.map((historia, index) => {
+                                const imagenFondo = historia.id_imagen_historia
+                                    ? recursosData.find(r => r.id_recurso === historia.id_imagen_historia)?.archivo
+                                    : null;
+
+                                const isCompleted = historiasVisitadas.includes(historia.id_historia);
+
+                                const handleHistoriaClick = () => {
+                                    if (historia.isLocked) {
+                                        const historiaMadre = historias.find(h => h.id_historia === historia.id_historia_dependencia);
+                                        if (historiaMadre) {
+                                            setLockedHistoryModal({ historia, historiaMadre });
+                                        }
+                                    } else {
+                                        handleHistoriaSelect(historia.id_historia);
+                                    }
+                                };
+
+                                return (
+                                    <div
+                                        key={historia.id_historia}
+                                        className={`
+                                group relative border-2 bg-black overflow-hidden flex flex-col
+                                transition-all duration-300
+                                ${historia.isLocked
+                                                ? 'border-red-900/50 opacity-70 cursor-not-allowed grayscale'
+                                                : 'border-[#33ff00]/30 hover:border-[#33ff00] cursor-pointer hover:shadow-[0_0_25px_rgba(51,255,0,0.15)] hover:-translate-y-1'
+                                            }
+                            `}
+                                        onClick={handleHistoriaClick}
+                                        style={{ height: '520px' }} // Altura fija alta
+                                    >
+                                        {/* 1. IMAGEN (Ocupa la mitad superior) */}
+                                        <div className="h-[55%] relative overflow-hidden">
+                                            {imagenFondo ? (
+                                                <img
+                                                    src={imagenFondo}
+                                                    alt={historia.titulo}
+                                                    className={`w-full h-full object-cover transition-transform duration-700 
+                                            ${historia.isLocked ? 'blur-sm' : 'group-hover:scale-110 group-hover:contrast-110'}
+                                        `}
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full bg-[#111] flex items-center justify-center">
+                                                    <span className="text-[#33ff00]/20 font-bold">NO_IMG</span>
+                                                </div>
+                                            )}
+                                            {/* Overlay scanlines sobre imagen */}
+                                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+
+                                            {/* Badges Flotantes sobre la imagen */}
+                                            <div className="absolute top-3 left-3 right-3 flex justify-between z-10">
+                                                <span className="bg-black/80 border border-[#33ff00]/50 text-[#33ff00] text-[9px] px-1.5 py-0.5 font-bold backdrop-blur-sm">
+                                                    0{index + 1}
+                                                </span>
+                                                {isCompleted && (
+                                                    <span className="bg-[#33ff00] text-black text-[9px] px-1.5 py-0.5 font-bold animate-pulse">
+                                                        COMPLETADO
+                                                    </span>
+                                                )}
+                                                {historia.isLocked && (
+                                                    <span className="bg-red-600 text-white text-[9px] px-1.5 py-0.5 font-bold flex items-center gap-1">
+                                                        🔒 BLOQUEADO
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* 2. PANEL DE DATOS (Siempre visible abajo) */}
+                                        <div className="h-[45%] bg-black border-t border-[#33ff00]/30 p-5 flex flex-col relative z-20">
+
+                                            {/* Título */}
+                                            <h2 className={`text-2xl font-bold mb-2 uppercase tracking-tighter leading-none ${historia.isLocked ? 'text-red-500' : 'text-white group-hover:text-[#33ff00]'}`}>
+                                                {historia.titulo}
+                                            </h2>
+
+                                            {/* Línea separadora */}
+                                            <div className="w-full h-[1px] bg-[#33ff00]/20 mb-3"></div>
+
+                                            {/* Descripción (Siempre visible) */}
+                                            <p className="text-xs text-gray-300 font-sans leading-relaxed line-clamp-3 mb-4 flex-grow">
+                                                {historia.descripcion}
+                                            </p>
+
+                                            {/* Mensaje de Error si está bloqueado */}
+                                            {historia.isLocked && historia.id_historia_dependencia && (
+                                                <div className="mb-3 text-[9px] text-red-400 font-mono border border-red-900/50 p-1 bg-red-900/10">
+                                                    REQ: {historias.find(h => h.id_historia === historia.id_historia_dependencia)?.titulo}
+                                                </div>
+                                            )}
+
+                                            {/* BOTONERA (Siempre visible si no está bloqueado) */}
+                                            {!historia.isLocked && (
+                                                <div className="mt-auto flex gap-2">
+                                                    <button className="flex-1 bg-[#33ff00]/10 border border-[#33ff00] text-[#33ff00] py-2 px-3 text-[10px] font-bold uppercase tracking-widest hover:bg-[#33ff00] hover:text-black transition-all flex justify-between items-center group/btn">
+                                                        <span>EJECUTAR</span>
+                                                        <span className="group-hover/btn:translate-x-1 transition-transform">{'>>'}</span>
+                                                    </button>
+
+                                                    <button
+                                                        className="w-10 border border-[#33ff00]/50 text-[#33ff00] hover:bg-[#33ff00] hover:text-black flex items-center justify-center transition-colors"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            console.log("Like");
+                                                        }}
+                                                    >
+                                                        ♥
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                </button>
-                            ))}
+                                );
+                            })}
                         </div>
-
-                        {/* Footer Técnico */}
-                        <div className="mt-12 text-center">
-                            <p className="text-[#33ff00]/40 text-xs uppercase tracking-[0.3em] animate-pulse">
-                                ESPERANDO INPUT DEL USUARIO...
-                            </p>
-                        </div>
-
                     </div>
                 </div>
             );
@@ -1955,57 +2053,102 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 return (
                     <div className={`
                         absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50
-                        w-[90%] max-w-[600px] 
+                        w-[95%] max-w-[600px] max-h-[90vh] overflow-y-auto
                         bg-black/95 backdrop-blur-md 
                         border border-[#33ff00] shadow-[0_0_30px_rgba(51,255,0,0.15)]
-                        text-[#a8a8a8] p-8 font-mono
+                        text-[#a8a8a8] font-mono
+                        p-6 md:p-8 rounded-sm
                     `}>
                         {/* Encabezado estilo Terminal */}
                         <div className="border-b border-[#33ff00]/30 pb-4 mb-6 flex justify-between items-center">
-                            <h2 className="text-[#33ff00] text-xl tracking-widest uppercase font-bold">
-                                {'>'} PROTOCOLO DE NAVEGACIÓN
-                            </h2>
-                            <span className="text-xs animate-pulse text-[#33ff00]">[ ONLINE ]</span>
+                            <div>
+                                <h2 className="text-[#33ff00] text-lg md:text-xl tracking-widest uppercase font-bold">
+                                    {'>'} PROTOCOLO DE NAVEGACIÓN
+                                </h2>
+                                <p className="text-[10px] text-[#33ff00]/60 uppercase mt-1">
+                                    SISTEMA: {isMobile ? 'INTERFAZ TÁCTIL DETECTADA' : 'PERIFÉRICOS DETECTADOS'}
+                                </p>
+                            </div>
+                            <span className="text-[10px] animate-pulse text-[#33ff00] border border-[#33ff00] px-2 py-1 hidden sm:block">
+                                [ ONLINE ]
+                            </span>
                         </div>
 
                         {/* Cuerpo de Texto */}
-                        <p className="text-base leading-relaxed mb-8">
-                            Para avanzar en la simulación, debes localizar y descifrar todos los <strong className="text-white bg-[#33ff00]/20 px-1">NODOS DE INTERÉS</strong> ocultos en la estructura.
+                        <p className="text-sm md:text-base leading-relaxed mb-8 text-center md:text-left">
+                            Para avanzar en la simulación, localiza y descifra los <strong className="text-white bg-[#33ff00]/20 px-1">NODOS DE INTERÉS</strong> ocultos.
                         </p>
 
-                        {/* Diagrama de Controles (Visualización de Teclas) */}
-                        <div className="flex flex-col sm:flex-row justify-center items-center gap-8 mb-8 bg-white/5 p-4 rounded border border-white/10">
+                        {/* --- DIAGRAMA DE CONTROLES (ADAPTATIVO) --- */}
+                        <div className="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-10 mb-8 bg-white/5 p-6 rounded border border-white/10">
 
-                            {/* Teclas WASD */}
-                            <div className="flex flex-col items-center">
-                                <div className="w-10 h-10 border border-[#33ff00] flex items-center justify-center text-[#33ff00] font-bold mb-1 rounded-sm">W</div>
-                                <div className="flex gap-1">
-                                    <div className="w-10 h-10 border border-[#33ff00] flex items-center justify-center text-[#33ff00] font-bold rounded-sm">A</div>
-                                    <div className="w-10 h-10 border border-[#33ff00] flex items-center justify-center text-[#33ff00] font-bold rounded-sm">S</div>
-                                    <div className="w-10 h-10 border border-[#33ff00] flex items-center justify-center text-[#33ff00] font-bold rounded-sm">D</div>
-                                </div>
-                                <span className="text-xs mt-2 uppercase tracking-wider">Movimiento</span>
-                            </div>
+                            {isMobile ? (
+                                /* === MÓVIL: JOYSTICK + GESTOS === */
+                                <>
+                                    <div className="flex flex-col items-center">
+                                        {/* Icono Joystick CSS */}
+                                        <div className="relative w-14 h-14 rounded-full border-2 border-[#33ff00] flex items-center justify-center mb-2">
+                                            <div className="w-6 h-6 bg-[#33ff00] rounded-full shadow-[0_0_10px_#33ff00] transform translate-y-2 translate-x-2 opacity-80"></div>
+                                            {/* Flechas decorativas */}
+                                            <div className="absolute top-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#33ff00]"></div>
+                                            <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#33ff00]"></div>
+                                            <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-1 bg-[#33ff00]"></div>
+                                            <div className="absolute right-1 top-1/2 -translate-y-1/2 w-1 h-1 bg-[#33ff00]"></div>
+                                        </div>
+                                        <span className="text-[10px] text-[#33ff00] font-bold uppercase tracking-wider">JOYSTICK VIRTUAL</span>
+                                        <span className="text-[9px] text-gray-500">Moverse</span>
+                                    </div>
 
-                            <div className="h-10 w-[1px] bg-[#33ff00]/30 hidden sm:block"></div>
+                                    <div className="h-[1px] w-full md:h-10 md:w-[1px] bg-[#33ff00]/30"></div>
 
-                            {/* Mouse */}
-                            <div className="flex flex-col items-center">
-                                <div className="relative w-12 h-16 border border-[#33ff00] rounded-full flex justify-center pt-3">
-                                    <div className="w-1 h-3 bg-[#33ff00] rounded-full animate-bounce"></div>
-                                </div>
-                                <span className="text-xs mt-3 uppercase tracking-wider">Mirar / Clic</span>
-                            </div>
+                                    <div className="flex flex-col items-center">
+                                        {/* Icono Touch/Swipe CSS */}
+                                        <div className="relative w-14 h-14 border border-dashed border-[#33ff00]/50 rounded-lg flex items-center justify-center mb-2 overflow-hidden">
+                                            <div className="w-4 h-4 bg-white/80 rounded-full animate-ping absolute"></div>
+                                            <div className="text-2xl">👆</div>
+                                        </div>
+                                        <span className="text-[10px] text-[#33ff00] font-bold uppercase tracking-wider">PANTALLA</span>
+                                        <span className="text-[9px] text-gray-500">Deslizar: Mirar / Tap: Interactuar</span>
+                                    </div>
+                                </>
+                            ) : (
+                                /* === ESCRITORIO: WASD + MOUSE === */
+                                <>
+                                    <div className="flex flex-col items-center">
+                                        <div className="w-8 h-8 border border-[#33ff00] flex items-center justify-center text-[#33ff00] font-bold mb-1 rounded-sm text-xs">W</div>
+                                        <div className="flex gap-1">
+                                            <div className="w-8 h-8 border border-[#33ff00] flex items-center justify-center text-[#33ff00] font-bold rounded-sm text-xs">A</div>
+                                            <div className="w-8 h-8 border border-[#33ff00] flex items-center justify-center text-[#33ff00] font-bold rounded-sm text-xs">S</div>
+                                            <div className="w-8 h-8 border border-[#33ff00] flex items-center justify-center text-[#33ff00] font-bold rounded-sm text-xs">D</div>
+                                        </div>
+                                        <span className="text-[10px] mt-2 uppercase tracking-wider text-[#33ff00]">TECLADO</span>
+                                        <span className="text-[9px] text-gray-500">Desplazamiento</span>
+                                    </div>
+
+                                    <div className="h-[1px] w-full md:h-10 md:w-[1px] bg-[#33ff00]/30"></div>
+
+                                    <div className="flex flex-col items-center">
+                                        <div className="relative w-10 h-14 border border-[#33ff00] rounded-full flex justify-center pt-3">
+                                            <div className="w-1 h-3 bg-[#33ff00] rounded-full animate-bounce"></div>
+                                            <div className="absolute top-0 w-full h-1/2 border-b border-[#33ff00]/30"></div>
+                                        </div>
+                                        <span className="text-[10px] mt-2 uppercase tracking-wider text-[#33ff00]">MOUSE</span>
+                                        <span className="text-[9px] text-gray-500">Clic + Arrastrar: Mirar</span>
+                                    </div>
+                                </>
+                            )}
                         </div>
 
                         {/* Botón de Acción */}
                         <button
-                            className="w-full group relative py-3 px-5 border border-[#33ff00] text-[#33ff00] font-bold tracking-widest uppercase
-                            transition-all duration-300 hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_20px_rgba(51,255,0,0.4)]"
+                            className="w-full group relative py-4 px-5 border border-[#33ff00] text-[#33ff00] font-bold tracking-widest uppercase text-sm md:text-base
+                            transition-all duration-300 hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_20px_rgba(51,255,0,0.4)] active:scale-95"
                             onClick={() => setShowInitial3DPopup(false)}
                         >
                             <span className="absolute inset-0 w-full h-full bg-[#33ff00]/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></span>
-                            <span className="relative">[ INICIAR RECONOCIMIENTO ]</span>
+                            <span className="relative flex items-center justify-center gap-2">
+                                [ INICIAR ]
+                            </span>
                         </button>
                     </div>
                 );
@@ -2023,48 +2166,81 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             if (is3DModel) {
                 buttonText = "Continuar Aventura →";
             }
-            // Render del pop-up
+            // Render del pop-up final
             return (
-                <div className={`
-                    absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30
-                    w-[90%] max-w-[650px] 
-                    bg-black/95 backdrop-blur-md 
-                    border border-[#33ff00] shadow-[0_0_40px_rgba(51,255,0,0.15)]
-                    p-8 md:p-12 font-mono
-                `}>
-                    {/* Decoración de Encabezado (Header Táctico) */}
-                    <div className="flex justify-between items-center mb-8 border-b border-[#33ff00]/30 pb-2">
-                        <span className="text-[#33ff00] text-xs tracking-[0.2em] uppercase animate-pulse">
-                            {'>'} NARRATIVA_ENTRANTE
-                        </span>
-                        <div className="flex gap-1">
-                            <div className="w-2 h-2 bg-[#33ff00]"></div>
-                            <div className="w-2 h-2 bg-[#33ff00]/50"></div>
-                            <div className="w-2 h-2 bg-[#33ff00]/20"></div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm font-mono">
+
+                    {/* Estilos para scrollbar personalizado (Solo para este componente) */}
+                    <style>{`
+                        .tech-scroll::-webkit-scrollbar { width: 4px; }
+                        .tech-scroll::-webkit-scrollbar-track { background: #111; }
+                        .tech-scroll::-webkit-scrollbar-thumb { background: #33ff00; border-radius: 2px; }
+                    `}</style>
+
+                    <div className={`
+                        relative w-full max-w-[650px] 
+                        bg-black/95 border border-[#33ff00]/60 
+                        shadow-[0_0_50px_rgba(51,255,0,0.2)]
+                        flex flex-col
+                        animate-in zoom-in-95 duration-300
+                    `}>
+
+                        {/* --- DECORACIÓN DE ESQUINAS (HUD) --- */}
+                        <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-[#33ff00] z-10"></div>
+                        <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-[#33ff00] z-10"></div>
+                        <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-[#33ff00] z-10"></div>
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-[#33ff00] z-10"></div>
+
+                        {/* --- HEADER --- */}
+                        <div className="flex justify-between items-center p-6 border-b border-[#33ff00]/20 bg-[#33ff00]/5">
+                            <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 bg-[#33ff00] animate-pulse"></span>
+                                <span className="text-[#33ff00] text-xs md:text-sm tracking-[0.2em] uppercase font-bold">
+                                    NARRATIVA_ENTRANTE
+                                </span>
+                            </div>
+
+                            {/* Decoración visual de bits */}
+                            <div className="flex gap-1 opacity-50">
+                                <div className="w-1 h-4 bg-[#33ff00]"></div>
+                                <div className="w-1 h-3 bg-[#33ff00]"></div>
+                                <div className="w-1 h-2 bg-[#33ff00]"></div>
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Cuerpo del Texto */}
-                    <p className="text-lg md:text-xl leading-relaxed mb-10 text-gray-200 border-l-2 border-[#33ff00] pl-6">
-                        {contentText}
-                    </p>
+                        {/* --- CONTENIDO SCROLLABLE --- */}
+                        <div className="p-6 md:p-10 max-h-[60vh] overflow-y-auto tech-scroll">
+                            <div className="border-l-2 border-[#33ff00] pl-4 md:pl-6">
+                                <p className="text-base md:text-xl leading-relaxed text-gray-200 font-medium drop-shadow-sm whitespace-pre-line">
+                                    {contentText}
+                                </p>
+                            </div>
+                        </div>
 
-                    {/* Botón Siguiente */}
-                    {step.id_siguiente_paso && (
-                        <button
-                            className="w-full group relative py-4 px-6 border border-[#33ff00] text-[#33ff00] font-bold text-lg tracking-widest uppercase
-                            transition-all duration-300 hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_20px_rgba(51,255,0,0.4)]"
-                            onClick={() => handleNextStep(step.id_siguiente_paso as number)}
-                        >
-                            <span className="relative z-10 flex items-center justify-center gap-3">
-                                {buttonText} <span className="group-hover:translate-x-2 transition-transform">{'>>'}</span>
-                            </span>
-                        </button>
-                    )}
-                    
-                    {/* Decoración de esquina inferior */}
-                    <div className="absolute bottom-2 right-2 text-[9px] text-[#33ff00]/30">
-                        END_OF_PACKET
+                        {/* --- FOOTER / ACCIONES --- */}
+                        <div className="p-6 border-t border-[#33ff00]/20 bg-black">
+                            {step.id_siguiente_paso && (
+                                <button
+                                    className="w-full group relative py-4 px-6 border border-[#33ff00] bg-transparent text-[#33ff00] font-bold text-base md:text-lg tracking-widest uppercase
+                                    transition-all duration-300 hover:bg-[#33ff00] hover:text-black shadow-[0_0_15px_rgba(51,255,0,0.1)] hover:shadow-[0_0_30px_rgba(51,255,0,0.5)]"
+                                    onClick={() => handleNextStep(step.id_siguiente_paso as number)}
+                                >
+                                    {/* Efecto de barrido al hacer hover */}
+                                    <span className="absolute inset-0 w-0 bg-[#33ff00] transition-all duration-[250ms] ease-out group-hover:w-full opacity-10"></span>
+
+                                    <span className="relative z-10 flex items-center justify-center gap-3">
+                                        {buttonText}
+                                        <span className="group-hover:translate-x-2 transition-transform duration-300">{'>>'}</span>
+                                    </span>
+                                </button>
+                            )}
+
+                            {/* Metadata inferior derecha */}
+                            <div className="absolute bottom-2 right-3 text-[8px] md:text-[10px] text-[#33ff00]/40 font-mono tracking-wider">
+                                PACKET_ID: {Date.now().toString().slice(-6)} // EOP
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             );
@@ -2076,9 +2252,9 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             return (
                 <div className={`
                     absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30
-                    w-[90%] max-w-lg 
+                    w-[95%] md:w-[90%] max-w-lg 
                     bg-black/95 backdrop-blur-md border border-[#33ff00] shadow-[0_0_50px_rgba(51,255,0,0.2)]
-                    p-10 font-mono text-center
+                    p-6 md:p-10 font-mono text-center
                     transition-all duration-500 ease-in-out
                     ${showStepContent ? 'visible opacity-100 scale-100' : 'opacity-0 pointer-events-none scale-95'}
                 `}>
@@ -2086,32 +2262,36 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#33ff00] to-transparent opacity-50"></div>
 
                     {/* Encabezado de Estado */}
-                    <div className="mb-8 border-b border-[#33ff00]/30 pb-4">
-                        <div className="text-4xl mb-2">
+                    <div className="mb-6 md:mb-8 border-b border-[#33ff00]/30 pb-4">
+                        <div className="text-3xl md:text-4xl mb-2">
                             {isChapterEnd ? '💾' : '🏁'}
                         </div>
-                        <h2 className="text-[#33ff00] text-2xl font-bold tracking-widest uppercase animate-pulse">
+
+                        {/* Título Responsivo: Letra más pequeña y menos espacio en móvil */}
+                        <h2 className="text-[#33ff00] text-lg md:text-2xl font-bold tracking-wide md:tracking-widest uppercase animate-pulse break-words leading-tight">
                             {isChapterEnd ? "> SECUENCIA_COMPLETADA" : "> CONEXIÓN_FINALIZADA"}
                         </h2>
-                        <p className="text-[10px] text-[#33ff00]/50 mt-1 tracking-[0.2em]">
+
+                        <p className="text-[8px] md:text-[10px] text-[#33ff00]/50 mt-2 tracking-[0.1em] md:tracking-[0.2em]">
                             DATOS GUARDADOS CORRECTAMENTE
                         </p>
                     </div>
 
                     {/* Cuerpo del Texto */}
-                    <p className="text-lg text-gray-300 leading-relaxed mb-10">
+                    <p className="text-sm md:text-lg text-gray-300 leading-relaxed mb-8 md:mb-10">
                         {contentText}
                     </p>
 
                     {/* Botón de Acción Táctico */}
                     <div className="flex justify-center">
                         <button
-                            className="group relative w-full py-4 px-6 border border-[#33ff00] text-[#33ff00] font-bold text-lg tracking-widest uppercase
+                            className="group relative w-full py-3 md:py-4 px-4 border border-[#33ff00] text-[#33ff00] font-bold text-xs md:text-lg tracking-wide md:tracking-widest uppercase
                             transition-all duration-300 hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_20px_rgba(51,255,0,0.5)]"
                             onClick={() => handleNextStep(step.id_siguiente_paso as number)}
                         >
-                            <span className="flex items-center justify-center gap-3 relative z-10">
-                                {isChapterEnd ? "[ INICIAR SIGUIENTE FASE ]" : "[ TERMINAR SIMULACIÓN ]"}
+                            <span className="flex items-center justify-center gap-2 relative z-10">
+                                {/* Texto ligeramente acortado o ajustado */}
+                                {isChapterEnd ? "[ SIGUIENTE FASE ]" : "[ TERMINAR SIMULACIÓN ]"}
                                 <span className="group-hover:translate-x-2 transition-transform">{'>>'}</span>
                             </span>
                         </button>
@@ -2133,7 +2313,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     if (!selectedHistoriaId) {
         if (loading) {
             return (
-                <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center font-mono text-[#33ff00]">
+                <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center font-mono text-[#33ff00] p-4">
 
                     {/* Fondo Scanlines */}
                     <div className="absolute inset-0 pointer-events-none opacity-20"
@@ -2141,26 +2321,28 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     </div>
 
                     {/* Loader Visual (Anillos Giratorios) */}
-                    <div className="relative w-24 h-24 mb-8">
+                    {/* Ajuste: w-20 h-20 en móvil, w-24 h-24 en escritorio (md) */}
+                    <div className="relative w-20 h-20 md:w-24 md:h-24 mb-6 md:mb-8 flex-shrink-0">
                         {/* Anillo Exterior */}
                         <div className="absolute inset-0 border-t-2 border-[#33ff00] rounded-full animate-spin shadow-[0_0_15px_#33ff00]"></div>
 
-                        {/* Anillo Interior (Gira al revés y más lento - simulación visual) */}
+                        {/* Anillo Interior */}
                         <div className="absolute inset-4 border-b-2 border-[#33ff00]/50 rounded-full animate-pulse"></div>
 
                         {/* Icono Central */}
-                        <div className="absolute inset-0 flex items-center justify-center text-3xl animate-bounce">
+                        <div className="absolute inset-0 flex items-center justify-center text-2xl md:text-3xl animate-bounce">
                             📂
                         </div>
                     </div>
 
                     {/* Texto de Estado */}
-                    <div className="text-center space-y-2 relative z-10">
-                        <h2 className="text-xl font-bold tracking-[0.3em] uppercase">
+                    <div className="text-center space-y-2 relative z-10 w-full max-w-md">
+                        {/* Ajuste: Texto más pequeño y menos espaciado en móvil para evitar desborde */}
+                        <h2 className="text-lg md:text-xl font-bold tracking-[0.15em] md:tracking-[0.3em] uppercase break-words leading-tight">
                             RECUPERANDO_HISTORIAS
                         </h2>
 
-                        <div className="flex justify-center gap-1 text-xs opacity-70">
+                        <div className="flex justify-center gap-1 text-[10px] md:text-xs opacity-70">
                             <span>CONECTANDO BASE DE DATOS</span>
                             <span className="animate-[ping_1.5s_infinite]">.</span>
                             <span className="animate-[ping_1.5s_infinite_0.2s]">.</span>
@@ -2169,7 +2351,8 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     </div>
 
                     {/* Footer Decorativo */}
-                    <div className="absolute bottom-10 text-[10px] text-[#33ff00]/30 tracking-widest">
+                    {/* Ajuste: Subirlo un poco en móvil (bottom-6) para que no lo tape la UI del navegador */}
+                    <div className="absolute bottom-6 md:bottom-10 text-[9px] md:text-[10px] text-[#33ff00]/30 tracking-widest text-center px-4">
                         SYSTEM_ID: RESISTENCIA_CORE_v2.5
                     </div>
 
@@ -2188,15 +2371,15 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         if (historias.length === 0) {
             return (
                 <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center font-mono select-none">
-    
+
                     {/* Fondo Scanlines */}
-                    <div className="absolute inset-0 pointer-events-none opacity-20" 
+                    <div className="absolute inset-0 pointer-events-none opacity-20"
                         style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
                     </div>
 
                     {/* Contenedor Central */}
                     <div className="relative p-12 border border-dashed border-[#33ff00]/30 bg-black/50 backdrop-blur-sm text-center max-w-md">
-                        
+
                         {/* Icono de Señal Perdida */}
                         <div className="text-6xl mb-6 opacity-50 animate-pulse filter grayscale hover:grayscale-0 transition-all duration-500">
                             📡
@@ -2259,153 +2442,183 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         });
         console.log("===================================");
 
+
+
         //MENU PRINCIPAL DE HISTORIAS
         return (
-    <div className="relative min-h-screen bg-black text-[#a8a8a8] p-4 md:p-8 overflow-y-auto font-mono selection:bg-[#33ff00] selection:text-black">
+            <div className="relative min-h-screen bg-black text-[#a8a8a8] font-mono selection:bg-[#33ff00] selection:text-black overflow-hidden flex flex-col">
 
-        {/* Fondo Scanlines */}
-        <div className="absolute inset-0 pointer-events-none z-0 opacity-20 fixed"
-            style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto">
-
-            {/* --- ENCABEZADO --- */}
-            <div className="border-b border-[#33ff00]/30 pb-6 mb-10 flex flex-col md:flex-row justify-between items-end gap-4">
-                <div>
-                    <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tighter mb-2 uppercase glitch-text">
-                        SELECTOR_DE_MISIONES
-                    </h1>
-                    <p className="text-[#33ff00] text-xs md:text-sm tracking-widest uppercase">
-                        {'>'} ACCESO A MEMORIA COLECTIVA. SELECCIONE NODO.
-                    </p>
+                {/* Fondo Scanlines */}
+                <div className="absolute inset-0 pointer-events-none z-0 opacity-20 fixed"
+                    style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
                 </div>
-                <div className="text-right text-[10px] text-[#33ff00]/50 font-mono border-l border-[#33ff00]/30 pl-4">
-                    STATUS: ONLINE<br />
-                    SECURE_CONN: TRUE
+
+                {/* --- ENCABEZADO COMPACTO --- */}
+                <div className="relative z-10 w-full border-b border-[#33ff00]/30 bg-black/80 backdrop-blur-sm p-4 md:px-8 flex justify-between items-center shrink-0">
+                    <div>
+                        <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tighter uppercase glitch-text leading-none">
+                            SELECTOR_DE_MISIONES
+                        </h1>
+                        <p className="text-[#33ff00] text-[10px] md:text-xs tracking-widest uppercase mt-1">
+                            {'>'} NODO: MEMORIA_COLECTIVA
+                        </p>
+                    </div>
+
+                    {/* Stats ocultas en móvil muy pequeño, visibles en desktop */}
+                    <div className="hidden md:block text-right text-[9px] text-[#33ff00]/50 font-mono border-l border-[#33ff00]/30 pl-3">
+                        SYS: ONLINE<br />
+                        CONN: SECURE
+                    </div>
                 </div>
-            </div>
 
-            {/* --- GRID DE TARJETAS --- */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
-                {historiasConEstado.map((historia, index) => {
-                    const imagenFondo = historia.id_imagen_historia
-                        ? recursosData.find(r => r.id_recurso === historia.id_imagen_historia)?.archivo
-                        : null;
+                {/* --- ÁREA PRINCIPAL (CARRUSEL) --- */}
+                <div className="relative z-10 flex-grow flex items-center w-full">
 
-                    const isCompleted = historiasVisitadas.includes(historia.id_historia);
+                    {/* Botón Navegación Izquierda (Solo Desktop) */}
+                    <button
+                        onClick={() => scroll('left')}
+                        className="hidden md:flex absolute left-4 z-50 w-12 h-12 border border-[#33ff00]/50 bg-black/50 text-[#33ff00] items-center justify-center hover:bg-[#33ff00] hover:text-black transition-all rounded-full backdrop-blur-md"
+                    >
+                        {'<'}
+                    </button>
 
-                    const handleHistoriaClick = () => {
-                        if (historia.isLocked) {
-                            const historiaMadre = historias.find(h => h.id_historia === historia.id_historia_dependencia);
-                            if (historiaMadre) {
-                                setLockedHistoryModal({ historia, historiaMadre });
-                            }
-                        } else {
-                            handleHistoriaSelect(historia.id_historia);
-                        }
-                    };
+                    {/* Botón Navegación Derecha (Solo Desktop) */}
+                    <button
+                        onClick={() => scroll('right')}
+                        className="hidden md:flex absolute right-4 z-50 w-12 h-12 border border-[#33ff00]/50 bg-black/50 text-[#33ff00] items-center justify-center hover:bg-[#33ff00] hover:text-black transition-all rounded-full backdrop-blur-md"
+                    >
+                        {'>'}
+                    </button>
 
-                    return (
-                        <div
-                            key={historia.id_historia}
-                            className={`
-                                group relative border-2 bg-black overflow-hidden flex flex-col
-                                transition-all duration-300
-                                ${historia.isLocked
-                                    ? 'border-red-900/50 opacity-70 cursor-not-allowed grayscale'
-                                    : 'border-[#33ff00]/30 hover:border-[#33ff00] cursor-pointer hover:shadow-[0_0_25px_rgba(51,255,0,0.15)] hover:-translate-y-1'
+                    {/* --- CONTENEDOR DE SCROLL HORIZONTAL --- */}
+                    <div
+                        ref={scrollContainerRef}
+                        className="w-full h-full flex items-center gap-6 overflow-x-auto px-6 md:px-16 snap-x snap-mandatory no-scrollbar py-8"
+                        style={{ scrollBehavior: 'smooth' }}
+                    >
+                        {historiasConEstado.map((historia, index) => {
+                            const imagenFondo = historia.id_imagen_historia
+                                ? recursosData.find(r => r.id_recurso === historia.id_imagen_historia)?.archivo
+                                : null;
+
+                            const isCompleted = historiasVisitadas.includes(historia.id_historia);
+
+                            const handleHistoriaClick = () => {
+                                if (historia.isLocked) {
+                                    const historiaMadre = historias.find(h => h.id_historia === historia.id_historia_dependencia);
+                                    if (historiaMadre) {
+                                        setLockedHistoryModal({ historia, historiaMadre });
+                                    }
+                                } else {
+                                    handleHistoriaSelect(historia.id_historia);
                                 }
-                            `}
-                            onClick={handleHistoriaClick}
-                            style={{ height: '520px' }} // Altura fija alta
-                        >
-                            {/* 1. IMAGEN (Ocupa la mitad superior) */}
-                            <div className="h-[55%] relative overflow-hidden">
-                                {imagenFondo ? (
-                                    <img
-                                        src={imagenFondo}
-                                        alt={historia.titulo}
-                                        className={`w-full h-full object-cover transition-transform duration-700 
-                                            ${historia.isLocked ? 'blur-sm' : 'group-hover:scale-110 group-hover:contrast-110'}
-                                        `}
-                                    />
-                                ) : (
-                                    <div className="w-full h-full bg-[#111] flex items-center justify-center">
-                                        <span className="text-[#33ff00]/20 font-bold">NO_IMG</span>
+                            };
+
+                            return (
+                                <div
+                                    key={historia.id_historia}
+                                    className={`
+                                        relative shrink-0 snap-center
+                                        w-[85vw] md:w-[400px] h-[60vh] md:h-[550px]
+                                        border-2 bg-black overflow-hidden flex flex-col transition-all duration-300
+                                        ${historia.isLocked
+                                            ? 'border-red-900/50 opacity-70 grayscale'
+                                            : 'border-[#33ff00]/40 hover:border-[#33ff00] hover:shadow-[0_0_30px_rgba(51,255,0,0.15)] hover:-translate-y-2'
+                                        }
+                                    `}
+                                    onClick={handleHistoriaClick}
+                                >
+                                    {/* 1. IMAGEN FULL (Fondo) */}
+                                    <div className="absolute inset-0 w-full h-full z-0">
+                                        {imagenFondo ? (
+                                            <img
+                                                src={imagenFondo}
+                                                alt={historia.titulo}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full bg-[#111] flex items-center justify-center">
+                                                <span className="text-[#33ff00]/20 font-bold">NO_SIGNAL</span>
+                                            </div>
+                                        )}
+                                        {/* Overlay de ruido */}
+                                        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+
+                                        {/* GRADIENTE DE LEGIBILIDAD (Crucial) */}
+                                        {/* Empieza transparente arriba y se vuelve negro sólido abajo para el texto */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
                                     </div>
-                                )}
-                                {/* Overlay scanlines sobre imagen */}
-                                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-                                
-                                {/* Badges Flotantes sobre la imagen */}
-                                <div className="absolute top-3 left-3 right-3 flex justify-between z-10">
-                                    <span className="bg-black/80 border border-[#33ff00]/50 text-[#33ff00] text-[9px] px-1.5 py-0.5 font-bold backdrop-blur-sm">
-                                        0{index + 1}
-                                    </span>
-                                    {isCompleted && (
-                                        <span className="bg-[#33ff00] text-black text-[9px] px-1.5 py-0.5 font-bold animate-pulse">
-                                            COMPLETADO
+
+                                    {/* 2. BADGES SUPERIORES */}
+                                    <div className="absolute top-4 left-4 right-4 flex justify-between z-20 pointer-events-none">
+                                        <span className="bg-black/80 border border-[#33ff00]/50 text-[#33ff00] text-[10px] px-2 py-1 uppercase font-bold backdrop-blur-md">
+                                            SEC_0{index + 1}
                                         </span>
-                                    )}
-                                    {historia.isLocked && (
-                                        <span className="bg-red-600 text-white text-[9px] px-1.5 py-0.5 font-bold flex items-center gap-1">
-                                            🔒 BLOQUEADO
-                                        </span>
-                                    )}
+                                        {isCompleted && (
+                                            <span className="bg-[#33ff00] text-black text-[10px] px-2 py-1 font-bold uppercase animate-pulse shadow-[0_0_10px_#33ff00]">
+                                                COMPLETADO
+                                            </span>
+                                        )}
+                                        {historia.isLocked && (
+                                            <span className="bg-red-600 text-white text-[10px] px-2 py-1 font-bold uppercase flex items-center gap-2">
+                                                🔒 BLOQUEADO
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* 3. CONTENIDO DE TEXTO (Overlay Inferior) */}
+                                    <div className="absolute bottom-0 left-0 right-0 p-6 z-20 flex flex-col">
+
+                                        {/* Título */}
+                                        <h2 className={`text-2xl md:text-3xl font-bold mb-2 uppercase tracking-tighter leading-none drop-shadow-xl ${historia.isLocked ? 'text-red-500' : 'text-white'}`}>
+                                            {historia.titulo}
+                                        </h2>
+
+                                        {/* Línea Separadora */}
+                                        <div className={`h-[2px] w-12 mb-3 ${historia.isLocked ? 'bg-red-900' : 'bg-[#33ff00]'}`}></div>
+
+                                        {/* Descripción */}
+                                        <p className="text-sm text-gray-300 font-sans leading-relaxed line-clamp-3 mb-4 drop-shadow-md">
+                                            {historia.narrativa}
+                                        </p>
+
+                                        {/* Mensaje de Bloqueo */}
+                                        {historia.isLocked && historia.id_historia_dependencia && (
+                                            <div className="mb-3 text-[10px] text-red-400 font-mono border border-red-900/50 p-2 bg-red-900/20">
+                                                ⚠️ REQ: {historias.find(h => h.id_historia === historia.id_historia_dependencia)?.titulo}
+                                            </div>
+                                        )}
+
+                                        {/* Botones */}
+                                        {!historia.isLocked && (
+                                            <div className="flex gap-3 pt-2">
+                                                <button className="flex-1 bg-[#33ff00]/10 border border-[#33ff00] text-[#33ff00] py-3 px-4 text-xs font-bold uppercase tracking-widest hover:bg-[#33ff00] hover:text-black transition-all flex justify-between items-center group/btn">
+                                                    <span>EJECUTAR</span>
+                                                    <span className="group-hover/btn:translate-x-1 transition-transform">{'>>'}</span>
+                                                </button>
+
+                                                <button
+                                                    className="w-12 flex items-center justify-center border border-[#33ff00]/50 text-[#33ff00] hover:bg-[#33ff00] hover:text-black transition-all"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        console.log("Like");
+                                                    }}
+                                                >
+                                                    ♥
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
+                            );
+                        })}
 
-                            {/* 2. PANEL DE DATOS (Siempre visible abajo) */}
-                            <div className="h-[45%] bg-black border-t border-[#33ff00]/30 p-5 flex flex-col relative z-20">
-                                
-                                {/* Título */}
-                                <h2 className={`text-2xl font-bold mb-2 uppercase tracking-tighter leading-none ${historia.isLocked ? 'text-red-500' : 'text-white group-hover:text-[#33ff00]'}`}>
-                                    {historia.titulo}
-                                </h2>
-
-                                {/* Línea separadora */}
-                                <div className="w-full h-[1px] bg-[#33ff00]/20 mb-3"></div>
-
-                                {/* Descripción (Siempre visible) */}
-                                <p className="text-xs text-gray-300 font-sans leading-relaxed line-clamp-3 mb-4 flex-grow">
-                                    {historia.descripcion}
-                                </p>
-
-                                {/* Mensaje de Error si está bloqueado */}
-                                {historia.isLocked && historia.id_historia_dependencia && (
-                                    <div className="mb-3 text-[9px] text-red-400 font-mono border border-red-900/50 p-1 bg-red-900/10">
-                                        REQ: {historias.find(h => h.id_historia === historia.id_historia_dependencia)?.titulo}
-                                    </div>
-                                )}
-
-                                {/* BOTONERA (Siempre visible si no está bloqueado) */}
-                                {!historia.isLocked && (
-                                    <div className="mt-auto flex gap-2">
-                                        <button className="flex-1 bg-[#33ff00]/10 border border-[#33ff00] text-[#33ff00] py-2 px-3 text-[10px] font-bold uppercase tracking-widest hover:bg-[#33ff00] hover:text-black transition-all flex justify-between items-center group/btn">
-                                            <span>EJECUTAR</span>
-                                            <span className="group-hover/btn:translate-x-1 transition-transform">{'>>'}</span>
-                                        </button>
-                                        
-                                        <button 
-                                            className="w-10 border border-[#33ff00]/50 text-[#33ff00] hover:bg-[#33ff00] hover:text-black flex items-center justify-center transition-colors"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                console.log("Like");
-                                            }}
-                                        >
-                                            ♥
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    );
-                })}
+                        {/* Espacio extra al final para que la última carta no quede pegada */}
+                        <div className="w-4 shrink-0"></div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-);
+        );
     }
 
     // --- LÓGICA DE RENDERIZADO CORREGIDA ---
@@ -2414,9 +2627,9 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     // Esto previene la condición de carrera (race condition).
     if (loading) {
         return (
-            <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center font-mono">
+            <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center font-mono p-4">
 
-                {/* Estilos de animación inline para no depender de config externa */}
+                {/* Estilos de animación inline */}
                 <style>{`
                     @keyframes scan-bar {
                         0% { transform: translateX(-100%); }
@@ -2433,19 +2646,20 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
                 </div>
 
-                {/* Contenedor Central */}
-                <div className="relative w-[90%] max-w-md p-8 border-x border-[#33ff00]/30 bg-black/50 backdrop-blur-sm text-center">
+                {/* Contenedor Central Adaptativo */}
+                <div className="relative w-[95%] md:w-[90%] max-w-md p-6 md:p-8 border-x border-[#33ff00]/30 bg-black/50 backdrop-blur-sm text-center">
 
                     {/* Decoración Superior e Inferior */}
                     <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#33ff00] to-transparent"></div>
                     <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#33ff00] to-transparent"></div>
 
-                    {/* Texto Principal */}
-                    <h2 className="text-[#33ff00] text-xl font-bold tracking-[0.2em] mb-2 animate-pulse">
+                    {/* Texto Principal: Tamaño y espaciado dinámicos */}
+                    <h2 className="text-[#33ff00] text-lg md:text-xl font-bold tracking-[0.1em] md:tracking-[0.2em] mb-2 animate-pulse break-words">
                         {'>'} ACCEDIENDO_MEMORIA
                     </h2>
 
-                    <p className="text-[#33ff00]/60 text-xs uppercase tracking-widest mb-8">
+                    {/* Subtítulo */}
+                    <p className="text-[#33ff00]/60 text-[10px] md:text-xs uppercase tracking-widest mb-6 md:mb-8">
                         Desencriptando fragmentos narrativos...
                     </p>
 
@@ -2455,7 +2669,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     </div>
 
                     {/* Datos ficticios de carga */}
-                    <div className="flex justify-between text-[10px] text-[#33ff00]/40 font-mono mt-2">
+                    <div className="flex justify-between text-[9px] md:text-[10px] text-[#33ff00]/40 font-mono mt-2">
                         <span>BUFFER: 64KB</span>
                         <span>ESTADO: SYNC</span>
                     </div>
@@ -2675,224 +2889,189 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             </div>
             {/* Fin del div principal */}
 
-           {playerStats && (
-                <div
-                    id="bottomBar"
-                    className={`
-                        fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40
-                        transition-all duration-500 ease-in-out
-                        ${!showBottomBar ? 'translate-y-[200%] opacity-0' : 'translate-y-0 opacity-100'}
-                    `}
-                >
-                    {/* Contenedor Principal del HUD */}
-                    <div className="bg-black/90 backdrop-blur-md border border-[#33ff00] shadow-[0_0_20px_rgba(51,255,0,0.2)] flex items-stretch rounded-sm overflow-hidden">
 
-                        {/* Botón Cerrar (Estilo Terminal) */}
-                        <button
-                            className="bg-[#33ff00]/10 hover:bg-[#33ff00] text-[#33ff00] hover:text-black px-3 py-2 transition-colors border-r border-[#33ff00]/30 flex items-center justify-center font-mono font-bold"
-                            onClick={() => setShowBottomBar(false)}
-                            title="Minimizar HUD"
-                        >
-                            ✕
-                        </button>
 
-                        {/* Módulo XP (Estadística Principal) */}
-                        <div className="flex items-center gap-3 px-5 py-2 border-r border-[#33ff00]/30 min-w-[100px] justify-center">
-                            <span className="text-xl filter grayscale contrast-125">⚡</span>
-                            <div className="flex flex-col leading-none">
-                                <span className="text-[10px] text-[#33ff00] font-mono tracking-widest uppercase opacity-70">XP_TOTAL</span>
-                                <span className="text-white font-mono text-lg font-bold tabular-nums">
-                                    {playerStats.xp_total || 0}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Iconos de Herramientas (Grid Interactiva) */}
-                        <div className="flex">
-
-                            {/* Mapa */}
-                            <div
-                                className="group flex flex-col items-center justify-center px-5 py-2 cursor-pointer hover:bg-[#33ff00]/10 transition-all border-r border-[#33ff00]/20 min-w-[70px]"
-                                onClick={handleOpenMap}
-                                title="Acceder a Geolocalización"
-                            >
-                                <span className="text-lg mb-1 group-hover:scale-110 transition-transform filter grayscale group-hover:grayscale-0">🗺️</span>
-                                <span className="text-[9px] text-[#33ff00] font-mono tracking-wider group-hover:text-white">MAPA</span>
-                            </div>
-
-                            {/* Inventario */}
-                            <div
-                                className="group flex flex-col items-center justify-center px-5 py-2 cursor-pointer hover:bg-[#33ff00]/10 transition-all border-r border-[#33ff00]/20 min-w-[70px]"
-                                onClick={() => setShowInventory(true)}
-                                title="Ver Inventario"
-                            >
-                                <div className="relative">
-                                    <span className="text-lg mb-1 block group-hover:scale-110 transition-transform filter grayscale group-hover:grayscale-0">📦</span>
-                                    {(playerStats.inventario?.length || 0) > 0 && (
-                                        <span className="absolute -top-1 -right-2 bg-[#33ff00] text-black text-[9px] font-bold px-1 rounded-sm">
-                                            {playerStats.inventario?.length}
-                                        </span>
-                                    )}
-                                </div>
-                                <span className="text-[9px] text-[#33ff00] font-mono tracking-wider group-hover:text-white">INV</span>
-                            </div>
-
-                            {/* Personajes */}
-                            <div
-                                className="group flex flex-col items-center justify-center px-5 py-2 cursor-pointer hover:bg-[#33ff00]/10 transition-all border-r border-[#33ff00]/20 min-w-[70px]"
-                                onClick={() => setShowCharacters(true)}
-                                title="Personajes Conocidos"
-                            >
-                                <div className="relative">
-                                    <span className="text-lg mb-1 block group-hover:scale-110 transition-transform filter grayscale group-hover:grayscale-0">👥</span>
-                                    <span className="absolute -top-1 -right-2 bg-[#33ff00] text-black text-[9px] font-bold px-1 rounded-sm">
-                                        {playerStats.personajes_conocidos?.length || 0}
-                                    </span>
-                                </div>
-                                <span className="text-[9px] text-[#33ff00] font-mono tracking-wider group-hover:text-white">CREW</span>
-                            </div>
-
-                            {/* Historias (Nota: Agregué border-r aquí para separar del Fullscreen) */}
-                            <div
-                                className="group flex flex-col items-center justify-center px-5 py-2 cursor-pointer hover:bg-[#33ff00]/10 transition-all border-r border-[#33ff00]/20 min-w-[70px]"
-                                onClick={() => setShowStories(true)}
-                                title="Historias Desbloqueadas"
-                            >
-                                <div className="relative">
-                                    <span className="text-lg mb-1 block group-hover:scale-110 transition-transform filter grayscale group-hover:grayscale-0">📚</span>
-                                    <span className="absolute -top-1 -right-2 bg-[#33ff00] text-black text-[9px] font-bold px-1 rounded-sm">
-                                        {playerStats.historias_visitadas?.length || 0}
-                                    </span>
-                                </div>
-                                <span className="text-[9px] text-[#33ff00] font-mono tracking-wider group-hover:text-white">LOGS</span>
-                            </div>
-
-                            {/* NUEVO: Botón Fullscreen Integrado */}
-                            <div
-                                className="group flex flex-col items-center justify-center px-5 py-2 cursor-pointer hover:bg-[#33ff00]/10 transition-all min-w-[70px]"
-                                onClick={toggleFullscreen}
-                                title={isFullscreen ? 'Salir de Pantalla Completa' : 'Pantalla Completa'}
-                            >
-                                <span className="text-lg mb-1 group-hover:scale-110 transition-transform filter grayscale group-hover:grayscale-0 text-white">
-                                    {isFullscreen ? '⇲' : '⛶'}
-                                </span>
-                                <span className="text-[9px] text-[#33ff00] font-mono tracking-wider group-hover:text-white">
-                                    {isFullscreen ? 'EXIT' : 'VIEW'}
-                                </span>
-                            </div>
-
-                        </div>
-
-                        {/* Decoración Final (Línea de estado) */}
-                        <div className="w-1 bg-[#33ff00] animate-pulse"></div>
-                    </div>
-                </div>
-            )}
-
-            {/* Botón flotante para mostrar barra (Estilo Icono de Sistema) */}
+            {/*-- BOTTOM HUD BAR --*/}
+            {/* 1. BOTÓN RESTAURAR (Solo si está oculta) */}
             {!showBottomBar && (
                 <button
-                    className="fixed bottom-6 left-6 z-50 
-                    bg-black/90 text-[#33ff00] border border-[#33ff00] 
-                    w-12 h-12 flex items-center justify-center
-                    shadow-[0_0_15px_rgba(51,255,0,0.3)]
-                    hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_25px_rgba(51,255,0,0.6)]
-                    transition-all duration-300 group"
                     onClick={() => setShowBottomBar(true)}
-                    title="Restaurar HUD"
+                    className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 
+                    bg-black/90 border border-[#33ff00] text-[#33ff00] 
+                    w-10 h-10 flex items-center justify-center rounded-full shadow-[0_0_15px_rgba(51,255,0,0.4)] 
+                    hover:bg-[#33ff00] hover:text-black transition-all animate-in slide-in-from-bottom-10"
+                    title="Abrir HUD"
                 >
-                    <span className="text-xl group-hover:rotate-90 transition-transform duration-300">⚙️</span>
+                    ▲
                 </button>
             )}
 
-            {is3DModel && (
-                <div className="absolute top-4 right-4 z-50 flex flex-col gap-3 font-mono select-none">
+            {/* 2. BARRA INFERIOR COMPACTA */}
+            {playerStats && (
+                <div
+                    id="bottomBar"
+                    className={`
+                        fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40
+                        w-[95%] md:w-auto max-w-4xl transition-all duration-500 ease-in-out
+                        ${!showBottomBar ? 'translate-y-[200%] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100 pointer-events-auto'}
+                    `}
+                >
+                    <div className="bg-black/95 backdrop-blur-md border border-[#33ff00] shadow-[0_0_15px_rgba(51,255,0,0.2)] flex items-stretch rounded-sm overflow-visible h-12">
 
-                    {/* 1. Contador de Hotspots (Estilo Display LCD) */}
-                    <div className="bg-black/90 border border-[#33ff00]/50 backdrop-blur-sm py-2 px-4 rounded-sm shadow-[0_0_15px_rgba(51,255,0,0.1)] flex flex-col items-end">
-                        <span className="text-[9px] text-[#33ff00] tracking-widest uppercase mb-1 opacity-70">NODOS ACTIVOS</span>
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-white text-lg font-bold leading-none">{discoveredHotspots}</span>
-                            <span className="text-[#33ff00] text-sm">/</span>
-                            <span className="text-[#33ff00] text-sm leading-none">{totalHotspotsRef.current}</span>
-                        </div>
-                    </div>
+                        {/* A. SECCIÓN FIJA IZQUIERDA (Controles Sistema + Stats) */}
+                        <div className="flex flex-shrink-0 border-r border-[#33ff00]/30 bg-black/60">
 
-                    {/* 2. Control de Volumen (Botón cuadrado + Menú lateral) */}
-                    {backgroundMusicUrl && (
-                        <div className="relative group">
+                            {/* Minimizar */}
                             <button
-                                onClick={() => setShowVolumeControl(!showVolumeControl)}
-                                className={`
-                                    w-10 h-10 flex items-center justify-center rounded-sm border transition-all duration-300
-                                    ${showVolumeControl
-                                        ? 'bg-[#33ff00] text-black border-[#33ff00] shadow-[0_0_10px_rgba(51,255,0,0.5)]'
-                                        : 'bg-black/80 text-[#33ff00] border-[#33ff00]/30 hover:border-[#33ff00] hover:bg-[#33ff00]/10'
-                                    }
-                                `}
-                                title="Sistema de Audio"
+                                className="w-8 hover:bg-[#33ff00] text-[#33ff00] hover:text-black transition-colors flex items-center justify-center font-bold text-xs border-r border-[#33ff00]/20"
+                                onClick={() => setShowBottomBar(false)}
                             >
-                                🔊
+                                ▼
                             </button>
 
-                            {/* Panel Flotante a la Izquierda */}
-                            {showVolumeControl && (
-                                <div className="absolute top-0 right-12 bg-black/95 border border-[#33ff00] p-3 rounded-sm shadow-2xl flex items-center gap-3 min-w-[150px] animate-in fade-in slide-in-from-right-2 duration-200">
-                                    <span className="text-[10px] text-[#33ff00] font-bold w-6">VOL</span>
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max="1"
-                                        step="0.1"
-                                        value={backgroundMusicVolume}
-                                        onChange={(e) => setBackgroundMusicVolume(parseFloat(e.target.value))}
-                                        className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-[#33ff00]"
-                                    />
-                                    <span className="text-[10px] text-white w-8 text-right">{Math.round(backgroundMusicVolume * 100)}%</span>
+                            {/* Fullscreen (Movido aquí) */}
+                            <button
+                                className="w-8 hover:bg-[#33ff00] text-white hover:text-black transition-colors flex items-center justify-center text-sm border-r border-[#33ff00]/20"
+                                onClick={toggleFullscreen}
+                                title="Pantalla Completa"
+                            >
+                                {isFullscreen ? '⇲' : '⛶'}
+                            </button>
+
+                            {/* XP Compacto */}
+                            <div className="flex flex-col justify-center px-3 min-w-[60px] text-center">
+                                <span className="text-[8px] text-[#33ff00] tracking-wider leading-none mb-0.5">XP</span>
+                                <span className="text-white font-mono text-xs font-bold leading-none">{playerStats.xp_total}</span>
+                            </div>
+
+                            {/* Nodos (Solo 3D) */}
+                            {is3DModel && (
+                                <div className="flex flex-col justify-center px-3 border-l border-[#33ff00]/20 min-w-[60px] text-center animate-in fade-in">
+                                    <span className="text-[8px] text-[#33ff00] tracking-wider leading-none mb-0.5">NODOS</span>
+                                    <span className="text-white font-mono text-xs font-bold leading-none">
+                                        {discoveredHotspots}/{totalHotspotsRef.current}
+                                    </span>
                                 </div>
                             )}
                         </div>
-                    )}
 
-                    {/* 3. Control de Cámara (Botón cuadrado + Menú lateral) */}
-                    <div className="relative group">
-                        <button
-                            onClick={() => setShowHeightControl(!showHeightControl)}
-                            className={`
-                                w-10 h-10 flex items-center justify-center rounded-sm border transition-all duration-300
-                                ${showHeightControl
-                                    ? 'bg-[#33ff00] text-black border-[#33ff00] shadow-[0_0_10px_rgba(51,255,0,0.5)]'
-                                    : 'bg-black/80 text-[#33ff00] border-[#33ff00]/30 hover:border-[#33ff00] hover:bg-[#33ff00]/10'
-                                }
-                            `}
-                            title="Calibración de Cámara"
-                        >
-                            📷
-                        </button>
+                        {/* B. SECCIÓN DERECHA SCROLLABLE (Herramientas) */}
+                        <div className="flex overflow-x-auto no-scrollbar flex-grow items-stretch">
 
-                        {/* Panel Flotante a la Izquierda */}
-                        {showHeightControl && (
-                            <div className="absolute top-0 right-12 bg-black/95 border border-[#33ff00] p-3 rounded-sm shadow-2xl flex items-center gap-3 min-w-[150px] animate-in fade-in slide-in-from-right-2 duration-200">
-                                <span className="text-[10px] text-[#33ff00] font-bold w-6">ALT</span>
-                                <input
-                                    type="range"
-                                    min="-3"
-                                    max="2"
-                                    step="0.1"
-                                    value={cameraHeight}
-                                    onChange={(e) => setCameraHeight(parseFloat(e.target.value))}
-                                    className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-[#33ff00]"
-                                />
-                                <span className="text-[10px] text-white w-8 text-right">{cameraHeight.toFixed(1)}m</span>
-                            </div>
-                        )}
+                            {/* Item Generador (Mapa, Inv, Crew, Logs) */}
+                            {[
+                                { icon: '🗺️', label: 'MAPA', action: handleOpenMap },
+                                { icon: '📦', label: 'INV', action: () => setShowInventory(true), badge: playerStats.inventario?.length },
+                                { icon: '👥', label: 'CREW', action: () => setShowCharacters(true), badge: playerStats.personajes_conocidos?.length },
+                                { icon: '📚', label: 'LOGS', action: () => setShowStories(true), badge: playerStats.historias_visitadas?.length }
+                            ].map((btn, idx) => (
+                                <div
+                                    key={idx}
+                                    className="group relative flex flex-col items-center justify-center px-3 cursor-pointer hover:bg-[#33ff00]/10 transition-all border-r border-[#33ff00]/10 min-w-[55px] flex-shrink-0"
+                                    onClick={btn.action}
+                                >
+                                    {/* Badge si existe */}
+                                    {btn.badge ? (
+                                        <span className="absolute top-1 right-1 bg-[#33ff00] text-black text-[8px] font-bold px-1 rounded-[2px] leading-tight">
+                                            {btn.badge}
+                                        </span>
+                                    ) : null}
+
+                                    <span className="text-base mb-0.5 grayscale group-hover:grayscale-0 transition-all">{btn.icon}</span>
+                                    <span className="text-[8px] text-[#33ff00] font-mono tracking-wider group-hover:text-white">{btn.label}</span>
+                                </div>
+                            ))}
+
+                            {/* --- CONTROLES 3D (Audio y Cámara) --- */}
+
+                            {/* Audio Control */}
+                            {is3DModel && backgroundMusicUrl && (
+                                <div className="relative flex flex-col items-center justify-center px-3 cursor-pointer hover:bg-[#33ff00]/10 transition-all border-r border-[#33ff00]/10 min-w-[55px] flex-shrink-0 group">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowVolumeControl(!showVolumeControl);
+                                            setShowHeightControl(false);
+                                        }}
+                                        className="flex flex-col items-center w-full h-full justify-center outline-none"
+                                    >
+                                        <span className={`text-base mb-0.5 transition-colors ${showVolumeControl ? 'text-[#33ff00]' : 'text-gray-400 group-hover:text-white'}`}>🔊</span>
+                                        <span className="text-[8px] text-[#33ff00] font-mono tracking-wider">VOL</span>
+                                    </button>
+
+                                    {/* Slider Popup */}
+                                    {showVolumeControl && (
+                                        <div className="fixed bottom-16 left-1/2 transform -translate-x-1/2 z-[100] bg-black border border-[#33ff00] shadow-[0_0_30px_rgba(51,255,0,0.5)] w-[50px] h-[160px] flex flex-col items-center rounded-sm animate-in slide-in-from-bottom-2">
+                                            {/* Header con Cerrar */}
+                                            <div className="w-full flex justify-center border-b border-[#33ff00]/30 py-1 mb-2 bg-[#33ff00]/10 cursor-pointer hover:bg-red-900/50 group/close" onClick={() => setShowVolumeControl(false)}>
+                                                <span className="text-[10px] text-[#33ff00] group-hover/close:text-red-500">▼</span>
+                                            </div>
+
+                                            {/* Slider Wrapper */}
+                                            <div className="h-[90px] flex items-center justify-center w-full">
+                                                <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="1"
+                                                    step="0.1"
+                                                    value={backgroundMusicVolume}
+                                                    onChange={(e) => setBackgroundMusicVolume(parseFloat(e.target.value))}
+                                                    className="h-[80px] w-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-[#33ff00]"
+                                                    style={{ writingMode: 'vertical-lr', direction: 'rtl', WebkitAppearance: 'slider-vertical' }}
+                                                />
+                                            </div>
+                                            <span className="text-[9px] text-white font-mono mt-2">{Math.round(backgroundMusicVolume * 100)}%</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Camara Control */}
+                            {is3DModel && (
+                                <div className="relative flex flex-col items-center justify-center px-3 cursor-pointer hover:bg-[#33ff00]/10 transition-all min-w-[55px] flex-shrink-0 group">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowHeightControl(!showHeightControl);
+                                            setShowVolumeControl(false);
+                                        }}
+                                        className="flex flex-col items-center w-full h-full justify-center outline-none"
+                                    >
+                                        <span className={`text-base mb-0.5 transition-colors ${showHeightControl ? 'text-[#33ff00]' : 'text-gray-400 group-hover:text-white'}`}>📷</span>
+                                        <span className="text-[8px] text-[#33ff00] font-mono tracking-wider">CAM</span>
+                                    </button>
+
+                                    {/* Slider Popup */}
+                                    {showHeightControl && (
+                                        <div className="fixed bottom-16 left-1/2 transform -translate-x-1/2 z-[100] bg-black border border-[#33ff00] shadow-[0_0_30px_rgba(51,255,0,0.5)] w-[50px] h-[160px] flex flex-col items-center rounded-sm animate-in slide-in-from-bottom-2">
+                                            {/* Header con Cerrar */}
+                                            <div className="w-full flex justify-center border-b border-[#33ff00]/30 py-1 mb-2 bg-[#33ff00]/10 cursor-pointer hover:bg-red-900/50 group/close" onClick={() => setShowHeightControl(false)}>
+                                                <span className="text-[10px] text-[#33ff00] group-hover/close:text-red-500">▼</span>
+                                            </div>
+
+                                            {/* Slider Wrapper */}
+                                            <div className="h-[90px] flex items-center justify-center w-full">
+                                                <input
+                                                    type="range"
+                                                    min="-3"
+                                                    max="2"
+                                                    step="0.1"
+                                                    value={cameraHeight}
+                                                    onChange={(e) => setCameraHeight(parseFloat(e.target.value))}
+                                                    className="h-[80px] w-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-[#33ff00]"
+                                                    style={{ writingMode: 'vertical-lr', direction: 'rtl', WebkitAppearance: 'slider-vertical' }}
+                                                />
+                                            </div>
+                                            <span className="text-[9px] text-white font-mono mt-2">{cameraHeight.toFixed(1)}m</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                        </div>
                     </div>
-
                 </div>
             )}
-
-
-
             {is3DModel && !showStepContent && (
                 <div className="absolute top-0 left-0 w-full h-full z-50 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center font-mono">
 
@@ -2952,74 +3131,87 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 </div>
             )}
 
-           
+
 
             {/* Joystick Virtual para Móvil */}
             {isMobile && is3DModel && (
-                <div className="absolute bottom-20 left-6 z-50 select-none touch-none" style={{ width: '150px', height: '150px' }}>
-
-                    {/* Decoración de fondo (Mira Táctica) */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
-                        <div className="w-[80%] h-[1px] bg-[#33ff00]"></div>
-                        <div className="h-[80%] w-[1px] bg-[#33ff00] absolute"></div>
-                        <div className="w-2 h-2 border border-[#33ff00] rounded-full bg-black relative z-0"></div>
+                <div
+                    className={`
+                        fixed z-40 select-none touch-none 
+                        transition-all duration-500 ease-in-out
+                        left-2  /* Más a la izquierda */
+                        ${showInitial3DPopup ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'}
+                        ${showBottomBar ? 'bottom-20' : 'bottom-4'} /* Dinámico: Sube si hay barra, baja si no */
+                    `}
+                    style={{ width: '150px', height: '150px' }}
+                >
+                    {/* Base del Joystick (Círculo decorativo) */}
+                    <div className="absolute inset-0 rounded-full border border-[#33ff00]/30 bg-black/20 backdrop-blur-sm shadow-[0_0_15px_rgba(51,255,0,0.1)] pointer-events-none">
+                        {/* Mira central decorativa */}
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-[#33ff00] rounded-full opacity-50"></div>
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[100px] h-[1px] bg-[#33ff00]/10"></div>
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[1px] h-[100px] bg-[#33ff00]/10"></div>
                     </div>
 
-                    <div className="relative w-full h-full">
-                        {/* Estilo común para los botones */}
-                        {/* Nota: Usamos 'active:bg-[#33ff00]' para que se ilumine al tocar */}
+                    {/* Contenedor de Botones (Grid 3x3) */}
+                    <div className="relative w-full h-full grid grid-cols-3 grid-rows-3">
 
-                        {/* Botón Arriba (W) */}
-                        <button
-                            id="mobile-btn-up"
-                            className="absolute top-0 left-1/2 transform -translate-x-1/2 
-                            w-12 h-12 bg-black/80 border border-[#33ff00] text-[#33ff00] rounded-sm
-                            shadow-[0_0_10px_rgba(51,255,0,0.2)] backdrop-blur-sm
-                            active:bg-[#33ff00] active:text-black active:scale-95 active:shadow-[0_0_20px_rgba(51,255,0,0.6)]
-                            transition-all duration-75 flex items-center justify-center font-bold text-xl"
-                            style={{ touchAction: 'none' }}
-                        >
-                            ▲
-                        </button>
+                        {/* Fila 1: ARRIBA */}
+                        <div className="col-start-2 row-start-1 flex items-end justify-center pb-1">
+                            <button
+                                id="mobile-btn-up"
+                                className="w-12 h-12 rounded-t-lg rounded-b-sm bg-black/60 border border-[#33ff00]/50 text-[#33ff00] 
+                                active:bg-[#33ff00] active:text-black active:shadow-[0_0_15px_#33ff00] transition-all
+                                flex items-center justify-center text-xl font-bold"
+                                style={{ touchAction: 'none' }}
+                            // AGREGA AQUÍ TUS EVENTOS onPointerDown SI LOS TIENES CENTRALIZADOS
+                            >
+                                ▲
+                            </button>
+                        </div>
 
-                        {/* Botón Izquierda (A) */}
-                        <button
-                            id="mobile-btn-left"
-                            className="absolute top-1/2 left-0 transform -translate-y-1/2 
-                            w-12 h-12 bg-black/80 border border-[#33ff00] text-[#33ff00] rounded-sm
-                            shadow-[0_0_10px_rgba(51,255,0,0.2)] backdrop-blur-sm
-                            active:bg-[#33ff00] active:text-black active:scale-95 active:shadow-[0_0_20px_rgba(51,255,0,0.6)]
-                            transition-all duration-75 flex items-center justify-center font-bold text-xl"
-                            style={{ touchAction: 'none' }}
-                        >
-                            ◀
-                        </button>
+                        {/* Fila 2: IZQUIERDA - CENTRO - DERECHA */}
+                        <div className="col-start-1 row-start-2 flex items-center justify-end pr-1">
+                            <button
+                                id="mobile-btn-left"
+                                className="w-12 h-12 rounded-l-lg rounded-r-sm bg-black/60 border border-[#33ff00]/50 text-[#33ff00] 
+                                active:bg-[#33ff00] active:text-black active:shadow-[0_0_15px_#33ff00] transition-all
+                                flex items-center justify-center text-xl font-bold"
+                                style={{ touchAction: 'none' }}
+                            >
+                                ◀
+                            </button>
+                        </div>
 
-                        {/* Botón Derecha (D) */}
-                        <button
-                            id="mobile-btn-right"
-                            className="absolute top-1/2 right-0 transform -translate-y-1/2 
-                            w-12 h-12 bg-black/80 border border-[#33ff00] text-[#33ff00] rounded-sm
-                            shadow-[0_0_10px_rgba(51,255,0,0.2)] backdrop-blur-sm
-                            active:bg-[#33ff00] active:text-black active:scale-95 active:shadow-[0_0_20px_rgba(51,255,0,0.6)]
-                            transition-all duration-75 flex items-center justify-center font-bold text-xl"
-                            style={{ touchAction: 'none' }}
-                        >
-                            ▶
-                        </button>
+                        {/* Centro Decorativo */}
+                        <div className="col-start-2 row-start-2 flex items-center justify-center pointer-events-none">
+                            <div className="w-8 h-8 rounded-full border border-[#33ff00]/30 flex items-center justify-center"></div>
+                        </div>
 
-                        {/* Botón Abajo (S) */}
-                        <button
-                            id="mobile-btn-down"
-                            className="absolute bottom-0 left-1/2 transform -translate-x-1/2 
-                            w-12 h-12 bg-black/80 border border-[#33ff00] text-[#33ff00] rounded-sm
-                            shadow-[0_0_10px_rgba(51,255,0,0.2)] backdrop-blur-sm
-                            active:bg-[#33ff00] active:text-black active:scale-95 active:shadow-[0_0_20px_rgba(51,255,0,0.6)]
-                            transition-all duration-75 flex items-center justify-center font-bold text-xl"
-                            style={{ touchAction: 'none' }}
-                        >
-                            ▼
-                        </button>
+                        <div className="col-start-3 row-start-2 flex items-center justify-start pl-1">
+                            <button
+                                id="mobile-btn-right"
+                                className="w-12 h-12 rounded-r-lg rounded-l-sm bg-black/60 border border-[#33ff00]/50 text-[#33ff00] 
+                                active:bg-[#33ff00] active:text-black active:shadow-[0_0_15px_#33ff00] transition-all
+                                flex items-center justify-center text-xl font-bold"
+                                style={{ touchAction: 'none' }}
+                            >
+                                ▶
+                            </button>
+                        </div>
+
+                        {/* Fila 3: ABAJO */}
+                        <div className="col-start-2 row-start-3 flex items-start justify-center pt-1">
+                            <button
+                                id="mobile-btn-down"
+                                className="w-12 h-12 rounded-b-lg rounded-t-sm bg-black/60 border border-[#33ff00]/50 text-[#33ff00] 
+                                active:bg-[#33ff00] active:text-black active:shadow-[0_0_15px_#33ff00] transition-all
+                                flex items-center justify-center text-xl font-bold"
+                                style={{ touchAction: 'none' }}
+                            >
+                                ▼
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -3030,110 +3222,95 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 className="fixed inset-0 bg-black/95 backdrop-blur-xl flex flex-col z-[999999] font-mono"
                 style={{ display: hotspotModal ? 'flex' : 'none' }}
             >
-                {/* Fondo de Scanlines (Decorativo) */}
+                {/* Fondo de Scanlines */}
                 <div className="absolute inset-0 pointer-events-none z-0 opacity-20"
                     style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
                 </div>
 
-                {/* --- ENCABEZADO DEL VISOR --- */}
-                <div className="relative z-50 flex justify-between items-start p-6 border-b border-[#33ff00]/30 bg-[#33ff00]/5">
-                    <div>
-                        <h3 className="text-[#33ff00] text-2xl font-bold tracking-widest uppercase flex items-center gap-3">
-                            <span className="w-3 h-3 bg-[#33ff00] animate-pulse"></span>
-                            {hotspotModal?.title || 'ARCHIVO SIN TÍTULO'}
-                        </h3>
-                        <p className="text-xs text-[#33ff00]/60 mt-1 pl-6 uppercase">
-                            TIPO: {hotspotModal?.contentType} | ACCESO: AUTORIZADO
-                        </p>
+                {/* --- ENCABEZADO COMPACTO (Fijo arriba, sin robar mucho espacio) --- */}
+                <div className="relative z-50 flex justify-between items-center px-4 py-2 border-b border-[#33ff00]/30 bg-[#33ff00]/5 shrink-0 h-12">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                        <span className="w-2 h-2 bg-[#33ff00] animate-pulse shrink-0"></span>
+                        <div className="flex flex-col">
+                            <h3 className="text-[#33ff00] text-xs md:text-base font-bold tracking-widest uppercase truncate max-w-[200px] md:max-w-md leading-none">
+                                {hotspotModal?.title || 'ARCHIVO_DESCONOCIDO'}
+                            </h3>
+                        </div>
                     </div>
 
                     <button
-                        className="group flex items-center gap-2 bg-black border border-[#33ff00]/50 hover:border-[#33ff00] hover:bg-[#33ff00] px-4 py-2 transition-all duration-300"
+                        className="flex items-center justify-center bg-black border border-[#33ff00]/50 hover:bg-[#33ff00] w-8 h-8 transition-all duration-300 shrink-0 group"
                         onClick={closeHotspotModal}
-                        title="Cerrar Visualización"
                     >
-                        <span className="text-[#33ff00] text-sm font-bold group-hover:text-black">[ ESC ] CERRAR CONEXIÓN</span>
+                        <span className="text-[#33ff00] text-sm font-bold group-hover:text-black">X</span>
                     </button>
                 </div>
 
-                {/* --- ÁREA DE CONTENIDO --- */}
-                <div className="relative flex-1 w-full h-full p-8 flex items-center justify-center overflow-hidden">
+                {/* --- ÁREA DE CONTENIDO (FULL SCREEN REAL) --- */}
+                {/* Quitamos cualquier padding (p-8) y usamos flex-col para llenar */}
+                <div className="relative flex-1 w-full h-full bg-black overflow-hidden flex flex-col">
 
-                    {/* Decoración de esquinas del marco */}
-                    <div className="absolute top-8 left-8 w-4 h-4 border-t-2 border-l-2 border-[#33ff00]"></div>
-                    <div className="absolute top-8 right-8 w-4 h-4 border-t-2 border-r-2 border-[#33ff00]"></div>
-                    <div className="absolute bottom-8 left-8 w-4 h-4 border-b-2 border-l-2 border-[#33ff00]"></div>
-                    <div className="absolute bottom-8 right-8 w-4 h-4 border-b-2 border-r-2 border-[#33ff00]"></div>
+                    {/* Esquinas decorativas (Flotantes, no empujan contenido) */}
+                    <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[#33ff00] pointer-events-none z-50 opacity-50"></div>
+                    <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-[#33ff00] pointer-events-none z-50 opacity-50"></div>
+                    <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-[#33ff00] pointer-events-none z-50 opacity-50"></div>
+                    <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-[#33ff00] pointer-events-none z-50 opacity-50"></div>
 
-                    <div className="relative z-10 w-full h-full flex justify-center items-center max-h-[80vh]">
+                    <div className="w-full h-full relative flex items-center justify-center">
 
                         {/* IMAGEN */}
                         {hotspotModal?.contentType === 'imagen' && (
-                            <div className="relative border border-[#33ff00]/20 p-1 bg-black shadow-[0_0_30px_rgba(51,255,0,0.1)]">
-                                <img
-                                    src={hotspotModal.url}
-                                    alt={hotspotModal.title}
-                                    className="max-h-[75vh] max-w-full object-contain"
-                                />
-                                <div className="absolute bottom-2 right-2 text-[10px] bg-black/80 text-[#33ff00] px-2 border border-[#33ff00]/30">IMG_RENDER</div>
-                            </div>
+                            <img
+                                src={hotspotModal.url}
+                                alt={hotspotModal.title}
+                                className="w-full h-full object-contain" // Imagen mantiene proporción para no deformarse
+                            />
                         )}
 
-                        {/* VIDEO */}
+                        {/* VIDEO (CORREGIDO: object-cover para llenar todo) */}
                         {hotspotModal?.contentType === 'video' && (
-                            <div className="border border-[#33ff00]/30 bg-black p-1 shadow-2xl">
-                                <video
-                                    src={hotspotModal.url}
-                                    controls
-                                    autoPlay
-                                    loop
-                                    className="max-h-[75vh] max-w-full"
-                                    onCanPlay={(e) => handleMediaAutoplay(e.currentTarget)}
-                                />
-                            </div>
+                            <video
+                                src={hotspotModal.url}
+                                controls
+                                autoPlay
+                                className="w-full h-full object-cover" // <--- ESTE ES EL CAMBIO. 'cover' elimina los bordes negros (hace zoom).
+                                onCanPlay={(e) => handleMediaAutoplay(e.currentTarget)}
+                            />
                         )}
 
-                        {/* AUDIO */}
+                        {/* AUDIO (Centrado) */}
                         {hotspotModal?.contentType === 'audio' && (
-                            <div className="bg-black border border-[#33ff00] p-10 rounded-sm flex flex-col items-center shadow-[0_0_50px_rgba(51,255,0,0.2)] max-w-md w-full">
-                                <div className="text-[#33ff00] text-6xl mb-6 animate-pulse">
-                                    🔊
-                                </div>
-                                <div className="w-full mb-4 h-8 flex items-center justify-center gap-1">
-                                    {/* Visualizador falso animado */}
-                                    {[...Array(10)].map((_, i) => (
+                            <div className="w-full max-w-md p-6 border border-[#33ff00]/30 bg-black/80 flex flex-col items-center gap-6 m-4 relative z-10">
+                                <div className="text-[#33ff00] text-6xl animate-pulse">🔊</div>
+                                <div className="w-full h-8 flex items-center justify-center gap-1">
+                                    {[...Array(15)].map((_, i) => (
                                         <div key={i} className="w-1 bg-[#33ff00]" style={{
                                             height: `${Math.random() * 100}%`,
                                             animation: `pulse 0.5s infinite ${Math.random()}s`
                                         }}></div>
                                     ))}
                                 </div>
-                                <p className="text-[#33ff00] text-sm mb-4 tracking-widest">REPRODUCIENDO AUDIO...</p>
-
-                                {/* Truco: Invertimos los colores del player nativo para que se vea oscuro/verde */}
                                 <audio
                                     src={hotspotModal.url}
                                     controls
                                     autoPlay
-                                    className="w-full min-w-[300px] filter invert hue-rotate-180 contrast-150 opacity-80"
+                                    className="w-full filter invert hue-rotate-180 contrast-150 opacity-90"
                                     onCanPlay={(e) => handleMediaAutoplay(e.currentTarget)}
                                 />
                             </div>
                         )}
 
-                        {/* INTERACTIVE / IFRAME */}
+                        {/* INTERACTIVE / IFRAME (APP - Full Screen Absoluto) */}
                         {hotspotModal?.contentType === 'interactive' && (
-                            <div className="w-full h-full border border-[#33ff00]/50 bg-black">
-                                <iframe
-                                    ref={iframeRef}
-                                    id="interactive-iframe"
-                                    src={hotspotModal.url}
-                                    title={hotspotModal.title}
-                                    className="w-full h-full"
-                                    style={{ border: 'none' }}
-                                    allowFullScreen
-                                ></iframe>
-                            </div>
+                            <iframe
+                                ref={iframeRef}
+                                id="interactive-iframe"
+                                src={hotspotModal.url}
+                                title={hotspotModal.title}
+                                className="absolute inset-0 w-full h-full block" // 'absolute inset-0' fuerza a pegar los bordes
+                                style={{ border: 'none', background: '#000' }}
+                                allowFullScreen
+                            ></iframe>
                         )}
                     </div>
                 </div>
@@ -3430,10 +3607,10 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             {/* Modal de la FICHA del Personaje (Ficha del PersonajeView) */}
             {selectedCharacterForModal && (
                 <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/85 backdrop-blur-sm font-mono" style={{ display: 'flex' }}>
-    
+
                     {/* Contenedor Principal del Expediente */}
                     <div className="relative w-[90%] max-w-lg bg-black/95 border border-[#33ff00] shadow-[0_0_40px_rgba(51,255,0,0.15)] flex flex-col max-h-[90vh] overflow-hidden">
-                        
+
                         {/* Decoración de Esquinas */}
                         <div className="absolute top-0 left-0 w-3 h-3 bg-[#33ff00] z-10"></div>
                         <div className="absolute top-0 right-0 w-3 h-3 bg-[#33ff00] z-10"></div>
@@ -3448,7 +3625,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                 </h2>
                                 <p className="text-[9px] text-[#33ff00]/60 mt-1">NIVEL DE ACCESO: CONFIDENCIAL</p>
                             </div>
-                            <button 
+                            <button
                                 className="text-[#33ff00] hover:bg-[#33ff00] hover:text-black border border-[#33ff00] w-8 h-8 flex items-center justify-center transition-colors font-bold"
                                 onClick={closeCharacterModal}
                             >
@@ -3458,7 +3635,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
                         {/* CONTENIDO SCROLLABLE */}
                         <div className="p-6 overflow-y-auto custom-scrollbar space-y-6">
-                            
+
                             {/* Estilos Scrollbar */}
                             <style>{`
                                 .custom-scrollbar::-webkit-scrollbar { width: 6px; }
@@ -3473,13 +3650,13 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                         {/* Marco de la foto */}
                                         <div className="absolute -top-2 -left-2 w-4 h-4 border-t-2 border-l-2 border-[#33ff00]"></div>
                                         <div className="absolute -bottom-2 -right-2 w-4 h-4 border-b-2 border-r-2 border-[#33ff00]"></div>
-                                        
+
                                         <img
                                             src={selectedCharacterForModal.imagen}
                                             alt={selectedCharacterForModal.nombre}
                                             className="w-40 h-40 object-cover filter grayscale contrast-125 border border-[#33ff00]/50 group-hover:grayscale-0 transition-all duration-500"
                                         />
-                                        
+
                                         {/* Overlay de escaneo */}
                                         <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(51,255,0,0.1)_50%)] bg-[length:100%_4px] pointer-events-none"></div>
                                     </div>
@@ -3527,7 +3704,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                 className="w-full group relative py-3 border border-[#33ff00] text-[#33ff00] font-bold text-sm tracking-[0.2em] uppercase
                                 transition-all duration-300 hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_15px_rgba(51,255,0,0.4)]"
                             >
-                                <span>[ CERRAR EXPEDIENTE ]</span>
+                                <span>[ CERRAR ]</span>
                             </button>
                         </div>
                     </div>

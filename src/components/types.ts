@@ -65,10 +65,10 @@ export interface HotspotConfig {
     successRecompensaId?: number; // Recompensa por éxito en app interactiva
     failureRecompensaId?: number; // Penalización/Recompensa por fallo
     rentalAppConfig?: RentalAppConfig; // Config extra si es una App
-    position?: { 
-        x: number; 
-        y: number; 
-        z: number; 
+    position?: {
+        x: number;
+        y: number;
+        z: number;
     };
     backgroundMusic?: string;
 }
@@ -132,4 +132,5 @@ export interface MapaViewProps {
     onStartNarrativeFromMap: (historiaId: number) => void;
     onBack: () => void;
     initialCenter: [number, number];
+    recursos: RecursoMultimediaData[];
 }
