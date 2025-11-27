@@ -10,7 +10,7 @@
   font-family: 'Courier Prime', monospace;
   position: relative;
   overflow-y: auto;
-  overflow-x: hidden;
+  /* overflow-x removido para permitir scroll horizontal del carrusel */
 }
 
 .pv-container::-webkit-scrollbar {
@@ -103,21 +103,30 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 20px;
+  padding-right: 20px;
+  /* Espacio al final del carrusel */
   scroll-behavior: smooth;
 }
 
-/* Scrollbar personalizado para el carrusel */
+/* Scrollbar personalizado para el carrusel - MÁS VISIBLE */
 .pv-grid::-webkit-scrollbar {
-  height: 8px;
+  height: 12px;
 }
 
 .pv-grid::-webkit-scrollbar-track {
   background: #000;
+  border: 1px solid #333;
 }
 
 .pv-grid::-webkit-scrollbar-thumb {
-  background: #333;
-  border: 1px solid #33ff00;
+  background: #33ff00;
+  border: 2px solid #000;
+  cursor: pointer;
+}
+
+.pv-grid::-webkit-scrollbar-thumb:hover {
+  background: #44ff11;
+  box-shadow: 0 0 10px rgba(51, 255, 0, 0.5);
 }
 
 /* --- CARD (FICHA TÁCTICA) - Más pequeña --- */
