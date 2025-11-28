@@ -15,7 +15,6 @@
   font-family: 'Courier Prime', monospace;
   z-index: 0;
   background-size: 100% 2px, 3px 100%;
-  pointer-events: none;
   padding-bottom: 80px;
   /* Espacio extra abajo para que la BottomBar no tape contenido */
 }

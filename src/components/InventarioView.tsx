@@ -142,18 +142,6 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
   return (
     <div className="iv-container">
 
-      {/* HEADER */}
-      <div className="iv-header">
-        <div>
-          <h2>INVENTARIO</h2>
-          <p>RECURSOS Y EVIDENCIAS ALMACENADAS</p>
-        </div>
-        {onBack && (
-          <button onClick={onBack} className="iv-btn-view border-[#33ff00] text-[#33ff00]">
-            [ X ]
-          </button>
-        )}
-      </div>
 
       <div className="iv-controls">
         {/* Stats Bar */}

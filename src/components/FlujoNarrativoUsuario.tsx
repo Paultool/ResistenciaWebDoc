@@ -1881,7 +1881,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         const is3DModel = recursoActual?.tipo === '3d_model';
 
         // --- Lógica para Pasos de Decisión ---
-       if (isDecisionStep) {
+        if (isDecisionStep) {
             // Normalización de datos (Misma lógica de seguridad)
             let opciones = [];
             const rawOptions = step.opciones_decision;
@@ -1901,18 +1901,18 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
             return (
                 <div className="fixed inset-0 z-40 flex flex-col items-center justify-center pt-24 pb-10 px-4 font-mono selection:bg-red-500 selection:text-white overflow-y-auto">
-                    
+
                     {/* 1. FONDO OSCURO (Para que resalte sobre el video/imagen de fondo) */}
                     <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-0"></div>
-                    
+
                     {/* Scanlines sutiles */}
-                    <div className="absolute inset-0 pointer-events-none opacity-10 z-0" 
+                    <div className="absolute inset-0 pointer-events-none opacity-10 z-0"
                         style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
                     </div>
 
                     {/* 2. CONTENEDOR PRINCIPAL (Compacto) */}
                     <div className="relative z-10 w-full max-w-5xl bg-black/90 border border-[#33ff00] shadow-[0_0_50px_rgba(51,255,0,0.1)] flex flex-col p-6 rounded-sm">
-                        
+
                         {/* Decoración Esquinas */}
                         <div className="absolute top-0 left-0 w-2 h-2 bg-[#33ff00]"></div>
                         <div className="absolute top-0 right-0 w-2 h-2 bg-[#33ff00]"></div>
@@ -1959,7 +1959,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                                     {opcion.texto}
                                                 </span>
                                             </div>
-                                            
+
                                             {/* Icono Flecha (Cambia de color) */}
                                             <span className="text-[#33ff00] group-hover:text-red-500 group-hover:translate-x-1 transition-all text-xl">
                                                 »
@@ -2002,13 +2002,13 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             if (is3DModel && showInitial3DPopup) {
                 return (
                     <div className={`
-                        absolute top - 1 / 2 left - 1 / 2 transform - translate - x - 1 / 2 - translate - y - 1 / 2 z - 50
-                            w - [95 %] max - w - [600px] max - h - [90vh] overflow - y - auto
-                            bg - black / 95 backdrop - blur - md 
-                        border border - [#33ff00] shadow - [0_0_30px_rgba(51, 255, 0, 0.15)]
-                            text - [#a8a8a8] font - mono
-                            p - 6 md: p - 8 rounded - sm
-                                `}>
+                        fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999]
+                        w-[95%] max-w-[600px] max-h-[90vh] overflow-y-auto
+                        bg-black/95 backdrop-blur-md 
+                        border border-[#33ff00] shadow-[0_0_30px_rgba(51,255,0,0.15)]
+                        text-[#a8a8a8] font-mono
+                        p-6 md:p-8 rounded-sm
+                    `}>
                         {/* Encabezado estilo Terminal */}
                         <div className="border-b border-[#33ff00]/30 pb-4 mb-6 flex justify-between items-center">
                             <div>
@@ -2396,7 +2396,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
 
 
-        //MENU PRINCIPAL DE HISTORIAS
+        //MENU PRINCIPAL LISTADO DE HISTORIAS
         return (
             <div className="relative min-h-screen bg-black text-[#a8a8a8] font-mono selection:bg-[#33ff00] selection:text-black overflow-hidden flex flex-col">
 
@@ -2405,23 +2405,6 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
                 </div>
 
-                {/* --- ENCABEZADO COMPACTO --- */}
-                <div className="relative z-10 w-full border-b border-[#33ff00]/30 bg-black/80 backdrop-blur-sm p-4 md:px-8 flex justify-between items-center shrink-0">
-                    <div>
-                        <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tighter uppercase glitch-text leading-none">
-                            SELECTOR_DE_MISIONES
-                        </h1>
-                        <p className="text-[#33ff00] text-[10px] md:text-xs tracking-widest uppercase mt-1">
-                            {'>'} NODO: MEMORIA_COLECTIVA
-                        </p>
-                    </div>
-
-                    {/* Stats ocultas en móvil muy pequeño, visibles en desktop */}
-                    <div className="hidden md:block text-right text-[9px] text-[#33ff00]/50 font-mono border-l border-[#33ff00]/30 pl-3">
-                        SYS: ONLINE<br />
-                        CONN: SECURE
-                    </div>
-                </div>
 
                 {/* --- ÁREA PRINCIPAL (CARRUSEL) --- */}
                 <div className="relative z-10 flex-grow flex items-center w-full">
@@ -2467,17 +2450,21 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                             };
 
                             return (
+
                                 <div
                                     key={historia.id_historia}
                                     className={`
-                                        relative shrink-0 snap-center
-                                        w-[85vw] md:w-[400px] h-[60vh] md:h-[550px]
-                                        border-2 bg-black overflow-hidden flex flex-col transition-all duration-300
-                                        ${historia.isLocked
-                                            ? 'border-red-900/50 opacity-70 grayscale'
-                                            : 'border-[#33ff00]/40 hover:border-[#33ff00] hover:shadow-[0_0_30px_rgba(51,255,0,0.15)] hover:-translate-y-2'
-                                        }
-                                    `}
+                                            relative shrink-0 snap-center
+                                            
+                                            /* MÓVIL: 85% del alto visible real del dispositivo */
+                                            w-[85vw] h-[66dvh]
+                                            
+                                            /* ESCRITORIO */
+                                            md:w-[300px] md:h-[500px]
+
+                                            border-2 bg-black overflow-hidden flex flex-col transition-all duration-300
+                                       
+                                        `}
                                     onClick={handleHistoriaClick}
                                 >
                                     {/* 1. IMAGEN FULL (Fondo) */}

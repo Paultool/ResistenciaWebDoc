@@ -154,21 +154,21 @@ const WorkInProgressView: React.FC<WorkInProgressViewProps> = ({ onOpenVideoModa
       meta: 'MP4_STREAM // 1080p'
     },
     {
-      name: 'GALERIA DE ARTE',
+      name: 'GALERIA',
       type: 'link',
       url: 'https://pablonieto.jimdofree.com/2025/10/28/la-resistencia-wip/',
       icon: 'fas fa-camera-retro',
       meta: 'IMG_ARCHIVE // EXTERNAL'
     },
     {
-      name: 'CARPETA DE PRODUCCION',
+      name: 'DOSSIER',
       type: 'link',
-      url: 'https://drive.google.com/file/d/1MbjrWQTWGnUcngcSb2afQpiZjqqNFtqG/view?usp=sharing',
+      url: 'https://melvinrecords.gt.tc/resistencia/dossier/',
       icon: 'fas fa-folder-open',
-      meta: 'PDF_DOSSIER // CLASSIFIED'
+      meta: 'INTERACTIVE_DOSSIER // CLASSIFIED'
     },
     {
-      name: 'REPOSITORIO GITHUB',
+      name: 'GITHUB',
       type: 'link',
       url: 'https://github.com/Paultool/ResistenciaWebDoc',
       icon: 'fab fa-github',
@@ -179,17 +179,6 @@ const WorkInProgressView: React.FC<WorkInProgressViewProps> = ({ onOpenVideoModa
   return (
     <div className="wip-container">
 
-      {/* Header Táctico */}
-      <div className="wip-header">
-        <div>
-          <h2 className="wip-title-text">R&D_LAB</h2>
-          <p className="wip-subtitle">{'>'} AREA DE DESARROLLO Y RECURSOS EXTERNOS</p>
-        </div>
-        <div className="text-right hidden md:block text-[10px] text-[#33ff00]/50 font-mono">
-          ACCESS_LEVEL: BETA<br />
-          BUILD: v.2.5.0
-        </div>
-      </div>
 
       {/* Grid de Archivos */}
       <div className="wip-links-grid">
@@ -570,7 +559,7 @@ const MainContent: React.FC = () => {
             className="term-hamburger-btn"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-            {isMobileMenuOpen ? '☠' : '[ MENU ]'}
+            {isMobileMenuOpen ? '☠' : '☠'}
           </button>
 
           {/* 3. CONTENEDOR DE MENÚ (Links + User) */}

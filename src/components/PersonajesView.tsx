@@ -90,19 +90,6 @@ const PersonajesView: React.FC<PersonajesViewProps> = ({ onBack }) => {
   return (
     <div className="pv-container">
 
-      {/* HEADER */}
-      <div className="pv-header">
-        <div>
-          <h2>BASE DE DATOS</h2>
-          <p>REGISTRO DE SUJETOS CLAVE</p>
-        </div>
-        {onBack && (
-          <button onClick={onBack} className="iv-btn-view border-[#33ff00] text-[#33ff00]">
-            [ X ]
-          </button>
-        )}
-      </div>
-
       <div className="pv-stats">
         <span className="pv-stat-item">SUJETOS IDENTIFICADOS: <span className="pv-stat-highlight">{personajes.length}</span></span>
         <span className="pv-stat-item">ESTADO: <span style={{ color: '#33ff00' }}>EN LÍNEA</span></span>
