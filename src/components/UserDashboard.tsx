@@ -11,7 +11,7 @@ interface DashboardData {
   totalUbicaciones: number
 }
 
-const UserDashboard: React.FC<{ onNavigate?: (view: string) => void }> = ({ onNavigate }) => {
+const UserDashboard: React.FC<{ onNavigate?: (view: string) => void; onStartNarrative?: (id: number) => void }> = ({ onNavigate, onStartNarrative }) => {
   const { user, signOut } = useAuth()
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     totalHistorias: 0,
@@ -66,7 +66,7 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void }> = ({ onNa
   const handleSignOut = async () => {
     try {
       if (gameService.clearCache) gameService.clearCache()
-    } catch (e) { console.warn(e) } 
+    } catch (e) { console.warn(e) }
     finally { await signOut() }
   }
 
@@ -77,7 +77,7 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void }> = ({ onNa
       <div className="dashboard-status-bar">
         <div className="status-label">
           <span className="animate-pulse text-green-500">●</span>
-          <span className="hidden sm:inline ml-2">CONEXIÓN ESTABLECIDA |</span> 
+          <span className="hidden sm:inline ml-2">CONEXIÓN ESTABLECIDA |</span>
           <span className="user-id-display ml-2">OP: {user?.email?.split('@')[0]}</span>
         </div>
         <button onClick={handleSignOut} className="btn-status-logout">
@@ -104,7 +104,7 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void }> = ({ onNa
             <div className="game-stats-panel">
               <h3 className="section-title main-title">{'>'} PROGRESO INDIVIDUAL</h3>
               {/* GameStats debe heredar el tamaño de fuente del contenedor */}
-              <GameStats showDetailed={true} />
+              <GameStats showDetailed={true} onNavigateToStory={onStartNarrative} />
             </div>
 
             {/* PANEL DER: MÉTRICAS GLOBALES */}
@@ -122,7 +122,7 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void }> = ({ onNa
 
                 {/*sujetos*/}
                 <div className="info-card">
-                  <div className="info-icon">👥</div> 
+                  <div className="info-icon">👥</div>
                   <div className="info-content">
                     <div className="info-number">{dashboardData.totalPersonajes}</div>
                     <div className="info-label">SUJETOS</div>

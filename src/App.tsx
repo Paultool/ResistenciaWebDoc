@@ -532,13 +532,13 @@ const MainContent: React.FC = () => {
       return <HistoriaDetail historiaId={selectedHistoriaId} onClose={() => setSelectedHistoriaId(null)} onStartNarrative={() => handleStartNarrative(historias.find(h => h.id === selectedHistoriaId)!)} />;
     }
     switch (currentView) {
-      case 'dashboard': return <UserDashboard onNavigate={(v) => setCurrentView(v as any)} />;
+      case 'dashboard': return <UserDashboard onNavigate={(v) => setCurrentView(v as any)} onStartNarrative={handleStartNarrativeFromMap} />;
       case 'personajes': return <PersonajesView onBack={() => setCurrentView('dashboard')} />;
       case 'mapa': return <MapaView historias={historias} historiasVisitadas={userProfile?.historias_visitadas || []} onStartNarrativeFromMap={handleStartNarrativeFromMap} initialCenter={[19.640645, -99.137597]} />;
       case 'inventario': return <InventarioView onBack={() => setCurrentView('dashboard')} />;
       case 'wip': return <WorkInProgressView onOpenVideoModal={(id, t) => setVideoModalData({ videoId: id, title: t })} />;
       case 'admin': return isAdmin ? <AdminPanel /> : <p>Acceso denegado</p>;
-      default: return <UserDashboard onNavigate={(v) => setCurrentView(v as any)} />;
+      default: return <UserDashboard onNavigate={(v) => setCurrentView(v as any)} onStartNarrative={handleStartNarrativeFromMap} />;
     }
   };
 
