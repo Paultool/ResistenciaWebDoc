@@ -902,8 +902,8 @@ class GameServiceUser {
                         .select('id_ubicacion')
                         .in('id_historia', historiasIds);
 
-                    console.log('🔍 [getDashboardStats] Resultado query - Error:', storiesError);
-                    console.log('🔍 [getDashboardStats] Resultado query - Data:', storiesData);
+                    console.log('🔍 [getDashboardStats] Resultado query historia- Error:', storiesError);
+                    console.log('🔍 [getDashboardStats] Resultado query historia- Data:', storiesData);
 
                     if (!storiesError && storiesData) {
                         // Filtramos nulos por si acaso
@@ -982,25 +982,39 @@ class GameServiceUser {
      */
     async getKnownCharacters(userId: string): Promise<any[]> {
         try {
+            console.log('🔍 [getKnownCharacters] Obteniendo personajes conocidos para usuario:', userId);
             const stats = await this.getPlayerStats(userId);
             if (!stats || !stats.personajes_conocidos || stats.personajes_conocidos.length === 0) {
+                console.log('🔍 [getKnownCharacters] No se encontraron personajes conocidos para el usuario');
                 return [];
             }
+            console.log('🔍 [getKnownCharacters] Personajes conocidos obtenidos:', stats.personajes_conocidos);
 
-            // Si personajes_conocidos son IDs numéricos
+            // Intentamos identificar si son IDs numéricos
             const characterIds = stats.personajes_conocidos
                 .map(id => Number(id))
                 .filter(id => !isNaN(id));
 
-            if (characterIds.length === 0) return [];
+            // Si encontramos IDs numéricos, consultamos la base de datos
+            if (characterIds.length > 0) {
+                console.log('🔍 [getKnownCharacters] IDs numéricos encontrados:', characterIds);
+                const { data, error } = await supabase
+                    .from('personaje')
+                    .select('id_personaje, nombre, descripcion')
+                    .in('id_personaje', characterIds);
 
-            const { data, error } = await supabase
-                .from('personaje')
-                .select('id_personaje, nombre, descripcion')
-                .in('id_personaje', characterIds);
+                if (error) throw error;
+                return data || [];
+            }
 
-            if (error) throw error;
-            return data || [];
+            // Si NO hay IDs numéricos (son nombres de texto), los devolvemos directamente
+            // El Dashboard espera objetos con la propiedad 'nombre'
+            console.log('🔍 [getKnownCharacters] Usando nombres almacenados directamente');
+            return stats.personajes_conocidos.map(nombre => ({
+                nombre: nombre,
+                descripcion: 'Personaje conocido'
+            }));
+
         } catch (error: any) {
             console.error("Error fetching known characters:", error.message);
             return [];
