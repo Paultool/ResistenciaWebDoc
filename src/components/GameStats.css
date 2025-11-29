@@ -13,157 +13,284 @@
 /* --- ESTADOS DE CARGA / ERROR --- */
 .resistance-dashboard.loading,
 .resistance-dashboard.error {
-  display: flex; align-items: center; justify-content: center;
-  min-height: 200px; text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  text-align: center;
 }
 
 .loading-text {
-  color: #33ff00; font-size: 1.2rem; font-weight: 700;
+  color: #33ff00;
+  font-size: 1.2rem;
+  font-weight: 700;
   animation: blink 1s infinite;
 }
 
-.error-text { color: #ff0000; font-size: 0.8rem; margin-bottom: 10px; }
+.error-text {
+  color: #ff0000;
+  font-size: 0.8rem;
+  margin-bottom: 10px;
+}
 
 .terminal-btn {
-  background: transparent; border: 1px solid #fff; color: #fff;
-  padding: 5px 15px; cursor: pointer; text-transform: uppercase;
+  background: transparent;
+  border: 1px solid #fff;
+  color: #fff;
+  padding: 5px 15px;
+  cursor: pointer;
+  text-transform: uppercase;
   font-family: 'Courier Prime', monospace;
 }
-.terminal-btn:hover { background: #fff; color: #000; }
+
+.terminal-btn:hover {
+  background: #fff;
+  color: #000;
+}
 
 /* --- SECCIÓN 1: ESTATUS DE AGENTE --- */
 .agent-status {
-  display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
 .status-row {
-  display: flex; align-items: center; gap: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
 /* Badge de Nivel */
 .level-badge {
-  font-size: 1.5rem; font-weight: 700; color: #33ff00;
-  border: 2px solid #33ff00; padding: 5px 10px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #33ff00;
+  border: 2px solid #33ff00;
+  padding: 5px 10px;
   background: rgba(51, 255, 0, 0.1);
   box-shadow: 0 0 15px rgba(51, 255, 0, 0.2);
   line-height: 1;
 }
 
 /* Barra de XP */
-.xp-container { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+.xp-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
 
 .xp-bar {
-  height: 10px; width: 100%; background: #111;
-  border: 1px solid #333; position: relative; overflow: hidden;
+  height: 10px;
+  width: 100%;
+  background: #111;
+  border: 1px solid #333;
+  position: relative;
+  overflow: hidden;
 }
 
 .xp-fill {
-  height: 100%; background: #33ff00;
+  height: 100%;
+  background: #33ff00;
   box-shadow: 0 0 10px #33ff00;
   position: relative;
 }
 
 /* Efecto brillo en la barra */
 .xp-fill::after {
-  content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
-  transform: translateX(-100%); animation: shimmer 2s infinite;
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 2s infinite;
 }
 
 .xp-text {
-  font-size: 0.7rem; color: #666; text-align: right; font-weight: 700;
+  font-size: 0.7rem;
+  color: #666;
+  text-align: right;
+  font-weight: 700;
 }
 
 .rank-title {
-  font-size: 0.9rem; color: #fff; font-weight: 700; letter-spacing: 2px;
-  text-transform: uppercase; border-bottom: 1px dashed #333; padding-bottom: 5px;
+  font-size: 0.9rem;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-bottom: 1px dashed #333;
+  padding-bottom: 5px;
 }
 
 /* SEPARADOR */
 .terminal-separator {
-  height: 1px; background: #333; margin: 20px 0;
+  height: 1px;
+  background: #333;
+  margin: 20px 0;
   position: relative;
 }
+
 .terminal-separator::after {
-  content: ''; position: absolute; right: 0; top: -2px;
-  width: 50px; height: 5px; background: #33ff00;
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -2px;
+  width: 50px;
+  height: 5px;
+  background: #33ff00;
 }
 
 /* --- SECCIÓN 2: GRID DE ESTADÍSTICAS --- */
 .stats-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
 }
 
 .stat-item {
   background: rgba(255, 255, 255, 0.02);
-  border: 1px solid #333; padding: 10px;
-  display: flex; flex-direction: column; align-items: center;
-  transition: all 0.2s; position: relative; overflow: hidden;
+  border: 1px solid #333;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
 }
 
 .stat-item:hover {
-  border-color: #33ff00; background: rgba(51, 255, 0, 0.05);
+  border-color: #33ff00;
+  background: rgba(51, 255, 0, 0.05);
   transform: translateY(-2px);
 }
 
-.stat-icon { font-size: 1.2rem; margin-bottom: 5px; filter: grayscale(100%); }
-.stat-item:hover .stat-icon { filter: grayscale(0%); }
+.stat-icon {
+  font-size: 1.2rem;
+  margin-bottom: 5px;
+  filter: grayscale(100%);
+}
+
+.stat-item:hover .stat-icon {
+  filter: grayscale(0%);
+}
 
 .stat-number {
-  font-size: 1.2rem; font-weight: 700; color: #fff; line-height: 1;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
 }
 
 .stat-label {
-  font-size: 0.6rem; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px;
+  font-size: 0.6rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 2px;
 }
 
 /* --- SECCIÓN 3: FAVORITOS (ARCHIVOS) --- */
-.favorites-section { margin-top: 10px; }
+.favorites-section {
+  margin-top: 10px;
+}
 
 .favorites-header {
-  font-size: 0.8rem; color: #33ff00; font-weight: 700; margin-bottom: 15px;
-  text-transform: uppercase; letter-spacing: 1px;
+  font-size: 0.8rem;
+  color: #33ff00;
+  font-weight: 700;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .favorites-row {
-  display: flex; gap: 10px; flex-wrap: wrap;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .folder-item {
-  background: #000; border: 1px solid #333; padding: 10px;
-  width: 100px; display: flex; flex-direction: column; align-items: center;
-  cursor: pointer; transition: all 0.2s;
+  background: #000;
+  border: 1px solid #333;
+  padding: 10px;
+  width: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .folder-item:hover {
-  border-color: #33ff00; box-shadow: 0 0 10px rgba(51, 255, 0, 0.2);
+  border-color: #33ff00;
+  box-shadow: 0 0 10px rgba(51, 255, 0, 0.2);
 }
 
-.folder-icon { font-size: 1.5rem; margin-bottom: 5px; }
+.folder-icon {
+  font-size: 1.5rem;
+  margin-bottom: 5px;
+}
 
 .folder-name {
-  font-size: 0.6rem; color: #aaa; text-align: center;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;
+  font-size: 0.6rem;
+  color: #aaa;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
 }
-.folder-item:hover .folder-name { color: #fff; }
+
+.folder-item:hover .folder-name {
+  color: #fff;
+}
 
 .favorites-empty {
-  border: 1px dashed #333; padding: 15px; text-align: center; font-size: 0.7rem; color: #555;
+  border: 1px dashed #333;
+  padding: 15px;
+  text-align: center;
+  font-size: 0.7rem;
+  color: #555;
 }
 
 /* ANIMACIONES */
 @keyframes shimmer {
-  100% { transform: translateX(100%); }
-}
-@keyframes blink {
-  50% { opacity: 0; }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
-.fade-in { animation: fadeIn 0.5s ease-out forwards; opacity: 0; }
-@keyframes fadeIn { to { opacity: 1; } }
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
 
 /* RESPONSIVE */
 @media (max-width: 768px) {
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .level-badge { font-size: 1.2rem; }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .level-badge {
+    font-size: 1.2rem;
+  }
 }

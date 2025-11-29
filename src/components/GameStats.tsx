@@ -7,6 +7,7 @@ interface GameStatsProps {
   className?: string
   showDetailed?: boolean
   onNavigateToStory?: (historiaId: number) => void
+  onStatClick?: (type: 'missions' | 'contacts' | 'locations' | 'merits' | 'resources') => void
 }
 
 interface DashboardStats {
@@ -21,7 +22,7 @@ interface DashboardStats {
   inventarioItems: number
 }
 
-const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = true, onNavigateToStory }) => {
+const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = true, onNavigateToStory, onStatClick }) => {
   const { user } = useAuth()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -127,16 +128,16 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
 
   return (
     <div className={`resistance-dashboard ${className}`}>
-      
+
       {/* SECCIÓN 1: ESTATUS PRINCIPAL */}
       <div className="agent-status">
         <div className="rank-title">{rankTitle}</div>
-        
+
         <div className="status-row">
           <div className="level-badge">
             LVL {stats.nivel}
           </div>
-          
+
           <div className="xp-container">
             <div className="xp-bar">
               <div className="xp-fill" style={{ width: `${progressPercentage}%` }} />
@@ -155,31 +156,31 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
         <>
           {/* SECCIÓN 2: ESTADÍSTICAS TÁCTICAS */}
           <div className="stats-grid">
-            <div className="stat-item fade-in">
+            <div className="stat-item fade-in clickable" onClick={() => onStatClick?.('missions')}>
               <div className="stat-icon">📂</div>
               <div className="stat-number">{stats.historiasCompletadas}</div>
               <div className="stat-label">MISIONES</div>
             </div>
 
-            <div className="stat-item fade-in" style={{ animationDelay: '0.1s' }}>
+            <div className="stat-item fade-in clickable" style={{ animationDelay: '0.1s' }} onClick={() => onStatClick?.('contacts')}>
               <div className="stat-icon">👥</div>
               <div className="stat-number">{stats.personajesConocidos}</div>
               <div className="stat-label">CONTACTOS</div>
             </div>
 
-            <div className="stat-item fade-in" style={{ animationDelay: '0.2s' }}>
+            <div className="stat-item fade-in clickable" style={{ animationDelay: '0.2s' }} onClick={() => onStatClick?.('locations')}>
               <div className="stat-icon">📍</div>
               <div className="stat-number">{stats.ubicacionesVisitadas}</div>
               <div className="stat-label">LUGARES</div>
             </div>
 
-            <div className="stat-item fade-in" style={{ animationDelay: '0.3s' }}>
+            <div className="stat-item fade-in clickable" style={{ animationDelay: '0.3s' }} onClick={() => onStatClick?.('merits')}>
               <div className="stat-icon">🎖️</div>
               <div className="stat-number">{stats.logrosDesbloqueados}</div>
               <div className="stat-label">MÉRITOS</div>
             </div>
 
-            <div className="stat-item fade-in" style={{ animationDelay: '0.4s' }}>
+            <div className="stat-item fade-in clickable" style={{ animationDelay: '0.4s' }} onClick={() => onStatClick?.('resources')}>
               <div className="stat-icon">🎒</div>
               <div className="stat-number">{stats.inventarioItems}</div>
               <div className="stat-label">RECURSOS</div>

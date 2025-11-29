@@ -172,7 +172,7 @@ class GameServiceUser {
             return null;
         }
     }
-
+    // Funcion para aplicar XP directamente
     async aplicarXPDirecto(userId: string, xpAmount: number, razon: string) {
         console.log(`[SERVICE] Modificando XP: ${xpAmount} para usuario: ${userId}. Razón: ${razon}`);
 
@@ -947,6 +947,178 @@ class GameServiceUser {
         // Si implementamos caché en memoria en el futuro, limpiarlo aquí
         this.playerStats = null;
     }
+
+    /**
+     * Obtiene las historias completadas con detalles completos
+     */
+    async getCompletedStories(userId: string): Promise<any[]> {
+        try {
+            const stats = await this.getPlayerStats(userId);
+            if (!stats || !stats.historias_visitadas || stats.historias_visitadas.length === 0) {
+                return [];
+            }
+
+            const historiasIds = stats.historias_visitadas
+                .map(id => Number(id))
+                .filter(id => !isNaN(id));
+
+            if (historiasIds.length === 0) return [];
+
+            const { data, error } = await supabase
+                .from('historia')
+                .select('id_historia, titulo, narrativa, id_ubicacion ( nombre )')
+                .in('id_historia', historiasIds);
+
+            if (error) throw error;
+            return data || [];
+        } catch (error: any) {
+            console.error("Error fetching completed stories:", error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene los personajes conocidos con detalles completos
+     */
+    async getKnownCharacters(userId: string): Promise<any[]> {
+        try {
+            const stats = await this.getPlayerStats(userId);
+            if (!stats || !stats.personajes_conocidos || stats.personajes_conocidos.length === 0) {
+                return [];
+            }
+
+            // Si personajes_conocidos son IDs numéricos
+            const characterIds = stats.personajes_conocidos
+                .map(id => Number(id))
+                .filter(id => !isNaN(id));
+
+            if (characterIds.length === 0) return [];
+
+            const { data, error } = await supabase
+                .from('personaje')
+                .select('id_personaje, nombre, descripcion')
+                .in('id_personaje', characterIds);
+
+            if (error) throw error;
+            return data || [];
+        } catch (error: any) {
+            console.error("Error fetching known characters:", error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene las ubicaciones visitadas con detalles completos
+     */
+    async getVisitedLocations(userId: string): Promise<any[]> {
+        try {
+            const stats = await this.getPlayerStats(userId);
+            if (!stats || !stats.historias_visitadas || stats.historias_visitadas.length === 0) {
+                return [];
+            }
+
+            const historiasIds = stats.historias_visitadas
+                .map(id => Number(id))
+                .filter(id => !isNaN(id));
+
+            if (historiasIds.length === 0) return [];
+
+            const { data: storiesData, error: storiesError } = await supabase
+                .from('historia')
+                .select('id_ubicacion')
+                .in('id_historia', historiasIds);
+
+            if (storiesError) throw storiesError;
+
+            // Obtener IDs únicos de ubicaciones
+            const locationIds = [...new Set(storiesData
+                ?.filter(s => s.id_ubicacion)
+                .map(s => s.id_ubicacion))];
+
+            if (locationIds.length === 0) return [];
+
+            const { data, error } = await supabase
+                .from('ubicacion')
+                .select('id_ubicacion, nombre, descripcion, coordenadas')
+                .in('id_ubicacion', locationIds);
+
+            if (error) throw error;
+            return data || [];
+        } catch (error: any) {
+            console.error("Error fetching visited locations:", error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene los logros desbloqueados con detalles
+     */
+    async getUnlockedRewards(userId: string): Promise<any[]> {
+        try {
+            const stats = await this.getPlayerStats(userId);
+            if (!stats || !stats.logros_desbloqueados || stats.logros_desbloqueados.length === 0) {
+                return [];
+            }
+
+            // Los logros desbloqueados son strings descriptivos
+            return stats.logros_desbloqueados.map(logro => ({
+                nombre: this.getAchievementName(logro),
+                descripcion: this.getAchievementDescription(logro),
+                id: logro
+            }));
+        } catch (error: any) {
+            console.error("Error fetching unlocked rewards:", error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene los items del inventario
+     */
+    async getInventoryItems(userId: string): Promise<any[]> {
+        try {
+            const stats = await this.getPlayerStats(userId);
+            if (!stats || !stats.inventario || stats.inventario.length === 0) {
+                return [];
+            }
+
+            return stats.inventario;
+        } catch (error: any) {
+            console.error("Error fetching inventory items:", error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene el nombre amigable de un logro
+     */
+    private getAchievementName(achievementId: string): string {
+        const names: { [key: string]: string } = {
+            'primera_historia': 'Primera Historia',
+            'explorador_novato': 'Explorador Novato',
+            'narrador_experto': 'Narrador Experto',
+            'resistente_veterano': 'Resistente Veterano',
+            'socialite_urbano': 'Socialite Urbano',
+            'explorador_urbano': 'Explorador Urbano'
+        };
+        return names[achievementId] || achievementId;
+    }
+
+    /**
+     * Obtiene la descripción de un logro
+     */
+    private getAchievementDescription(achievementId: string): string {
+        const descriptions: { [key: string]: string } = {
+            'primera_historia': 'Completaste tu primera historia',
+            'explorador_novato': 'Completaste 5 historias',
+            'narrador_experto': 'Completaste 10 historias',
+            'resistente_veterano': 'Alcanzaste el nivel 5',
+            'socialite_urbano': 'Conociste 5 personajes',
+            'explorador_urbano': 'Visitaste 10 ubicaciones diferentes'
+        };
+        return descriptions[achievementId] || 'Logro desbloqueado';
+    }
 }
 
 export const gameServiceUser = GameServiceUser.getInstance();
+

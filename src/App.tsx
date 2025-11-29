@@ -74,23 +74,14 @@ const LoginModal: React.FC<{ onClose: () => void; onRequestFullscreen: () => voi
 const modalInfoContent = {
   acerca: {
     title: 'Acerca del Proyecto',
-    body: 'LA RESISTENCIA es un documental web interactivo que explora las narrativas urbanas de la resistencia social en la Ciudad de México.'
+    body: 'SERIE WEB INMERSIVA // DOCU-JUEGO  </br> <br/>"Expulsado por la gentrificación de la Ciudad de México, un ingeniero se retira a la periferia industrial para convertir el garaje familiar en una trinchera digital. En este docu-juego inmersivo, el usuario hereda su lucha: gestionar la escasez, reparar electrónica rota y tejer una comunidad para sobrevivir en un sistema diseñado para borrarte."'
   },
   'making-off': {
     title: 'Making Off y Recursos',
     body: `
     <div class="modal-links-grid">
-        <button class="modal-link-btn js-open-video" data-video-id="1MpN0MbBFlA" data-video-title="PRIMER CORTE (Video)">
-            <i class="fab fa-youtube"></i> PRIMER CORTE (Video)
-        </button>
-        <a href="https://pablonieto.jimdofree.com/2025/10/28/la-resistencia-wip/" target="_blank" rel="noopener noreferrer" class="modal-link-btn">
-            <i class="fas fa-camera-retro"></i> GALERIA
-        </a>
-        <a href="https://drive.google.com/file/d/1MbjrWQTWGnUcngcSb2afQpiZjqqNFtqG/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="modal-link-btn">
-            <i class="fas fa-folder-open"></i> CARPETA DE PRODUCCION
-        </a>
-        <a href="https://github.com/Paultool/ResistenciaWebDoc" target="_blank" rel="noopener noreferrer" class="modal-link-btn">
-            <i class="fab fa-github"></i> GITHUB
+        <a href="https://melvinrecords.gt.tc/resistencia/dossier/" target="_blank" rel="noopener noreferrer" class="modal-link-btn">
+            <i class="fas fa-folder-open"></i> DOSSIER
         </a>
     </div>`
   },
