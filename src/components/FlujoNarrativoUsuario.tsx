@@ -66,6 +66,11 @@ interface HistoriaData {
     orden?: number;
 }
 
+// Type for historia with lock state computed
+type HistoriaConEstado = HistoriaData & {
+    isLocked: boolean;
+};
+
 interface RecompensaData {
     id_recompensa: number;
     nombre: string;
@@ -1391,11 +1396,12 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 setLoading(false);
             }
         };
-
         fetchAllData();
 
         if (user) {
             gameServiceUser.getPlayerStats(user.id).then(stats => {
+                setPlayerStats(stats);
+
                 if (stats && stats.historias_visitadas) {
                     let visitedIds: number[] = [];
                     if (Array.isArray(stats.historias_visitadas)) {
@@ -2299,6 +2305,29 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         };
     });
 
+    // Crear un mapa de imágenes una sola vez
+    const imagenesMap = React.useMemo(() => {
+        const map = new Map();
+        recursosData.forEach(r => {
+            map.set(r.id_recurso, r.archivo);
+        });
+        return map;
+    }, [recursosData]);
+
+    //  Crear una factory para manejar el clic en historias
+    const handleHistoriaClickFactory = React.useCallback((historia: HistoriaConEstado) => {
+        return () => {
+            if (historia.isLocked) {
+                const historiaMadre = historias.find(h => h.id_historia === historia.id_historia_dependencia);
+                if (historiaMadre) {
+                    setLockedHistoryModal({ historia, historiaMadre });
+                }
+            } else {
+                handleHistoriaSelect(historia.id_historia);
+            }
+        };
+    }, [historias, handleHistoriaSelect]);
+
     // Renderizado principal
     if (!selectedHistoriaId) {
         if (loading) {
@@ -2454,25 +2483,21 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     <div
                         ref={scrollContainerRef}
                         className="w-full h-full flex items-center gap-6 overflow-x-auto px-6 md:px-16 snap-x snap-mandatory no-scrollbar py-8"
-                        style={{ scrollBehavior: 'smooth' }}
+                        style={{
+                            scrollBehavior: 'smooth',
+                            WebkitOverflowScrolling: 'touch',
+                            transform: 'translateZ(0)',
+                            backfaceVisibility: 'hidden'
+                        }}
                     >
                         {historiasConEstado.map((historia, index) => {
                             const imagenFondo = historia.id_imagen_historia
-                                ? recursosData.find(r => r.id_recurso === historia.id_imagen_historia)?.archivo
+                                ? imagenesMap.get(historia.id_imagen_historia) || null
                                 : null;
 
                             const isCompleted = historiasVisitadas.includes(historia.id_historia);
 
-                            const handleHistoriaClick = () => {
-                                if (historia.isLocked) {
-                                    const historiaMadre = historias.find(h => h.id_historia === historia.id_historia_dependencia);
-                                    if (historiaMadre) {
-                                        setLockedHistoryModal({ historia, historiaMadre });
-                                    }
-                                } else {
-                                    handleHistoriaSelect(historia.id_historia);
-                                }
-                            };
+
 
                             return (
 
@@ -2490,7 +2515,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                             border-2 bg-black overflow-hidden flex flex-col transition-all duration-300
                                        
                                         `}
-                                    onClick={handleHistoriaClick}
+                                    onClick={handleHistoriaClickFactory(historia)}
                                 >
                                     {/* 1. IMAGEN FULL (Fondo) */}
                                     <div className="absolute inset-0 w-full h-full z-0">
@@ -2499,6 +2524,8 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                                 src={imagenFondo}
                                                 alt={historia.titulo}
                                                 className="w-full h-full object-cover"
+                                                loading="lazy"
+                                                decoding="async"
                                             />
                                         ) : (
                                             <div className="w-full h-full bg-[#111] flex items-center justify-center">
@@ -2506,11 +2533,12 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                             </div>
                                         )}
                                         {/* Overlay de ruido */}
-                                        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-
+                                        <div className="absolute inset-0 opacity-20" style={{
+                                            backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px)'
+                                        }}></div>
                                         {/* GRADIENTE DE LEGIBILIDAD (Crucial) */}
                                         {/* Empieza transparente arriba y se vuelve negro sólido abajo para el texto */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
                                     </div>
 
                                     {/* 2. BADGES SUPERIORES */}
@@ -2680,8 +2708,8 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
                     {/* Botón de Acción */}
                     <button
-                        className="w-full group relative py-4 px-6 border border-[#33ff00] text-[#33ff00] font-bold text-lg tracking-widest uppercase
-                        transition-all duration-300 hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_30px_rgba(51,255,0,0.4)]"
+                        className="... transition-transform duration-300 ..."
+                        style={{ willChange: 'transform' }}
                         onClick={handleReturnToMenu}
                     >
                         <span className="absolute inset-0 w-full h-full bg-[#33ff00]/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></span>
