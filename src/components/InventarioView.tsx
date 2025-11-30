@@ -140,122 +140,177 @@ const InventarioView: React.FC<InventarioViewProps> = ({ onBack }) => {
   }
 
   return (
-    <div className="iv-container">
+    <div className="relative min-h-screen bg-black text-[#a8a8a8] font-mono selection:bg-[#33ff00] selection:text-black overflow-hidden flex flex-col">
 
+      {/* Fondo Scanlines */}
+      <div className="absolute inset-0 pointer-events-none z-0 opacity-20 fixed"
+        style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
+      </div>
 
-      <div className="iv-controls">
-        {/* Stats Bar */}
-        <div className="iv-stats">
-          <span>CAPACIDAD: <span className="iv-stat-val">ILIMITADA</span></span>
-          <span>ITEMS EN BODEGA: <span className="iv-stat-val" style={{ color: '#33ff00' }}>{inventario.length}</span></span>
+      {/* Header de Estadísticas */}
+      <div className="relative z-10 p-4 flex flex-col md:flex-row justify-between items-center border-b border-[#33ff00]/30 bg-black/80 backdrop-blur-sm gap-4 md:gap-0">
+        <div className="flex gap-6 text-xs md:text-sm">
+          <span className="text-[#33ff00]">CAPACIDAD: <span className="font-bold text-white">ILIMITADA</span></span>
+          <span className="text-[#33ff00]">ITEMS EN BODEGA: <span className="font-bold text-white">{inventario.length}</span></span>
         </div>
 
-        {/* Filtros */}
-        <div className="iv-filter-bar">
+        {/* Filtros Estilizados */}
+        <div className="flex flex-wrap justify-center gap-2">
           {CATEGORIAS.map(cat => {
             const count = countByCategory(cat.id);
             if (cat.id !== 'todos' && count === 0) return null;
             return (
               <button
                 key={cat.id}
-                className={`iv-filter-btn ${activeCategory === cat.id ? 'active' : ''}`}
                 onClick={() => setActiveCategory(cat.id)}
+                className={`
+                            px-3 py-1 text-[10px] md:text-xs uppercase font-bold border transition-all
+                            ${activeCategory === cat.id
+                    ? 'bg-[#33ff00] text-black border-[#33ff00]'
+                    : 'bg-black text-[#33ff00] border-[#33ff00]/30 hover:border-[#33ff00]'}
+                        `}
               >
                 {cat.label} [{count}]
               </button>
             );
           })}
         </div>
+
+        {onBack && (
+          <button onClick={onBack} className="text-[#33ff00] hover:text-white border border-[#33ff00] px-3 py-1 text-xs uppercase">
+            [ VOLVER ]
+          </button>
+        )}
       </div>
 
-      {/* GRID CONTENT */}
-      {filteredItems.length === 0 ? (
-        <div className="iv-empty">
-          <p>[ ! ] SECCIÓN VACÍA</p>
-        </div>
-      ) : (
-        <div className="iv-carousel-wrapper">
-          <button className="iv-nav-btn iv-nav-left" onClick={scrollLeft}>{'<'}</button>
+      {/* --- ÁREA PRINCIPAL (CARRUSEL) --- */}
+      <div className="relative z-10 flex-grow flex items-center w-full overflow-hidden">
 
-          <div className="iv-grid" ref={scrollContainerRef}>
-            {filteredItems.map((item, index) => {
-              const color = getRarityColor(item.rareza);
-              return (
-                <div
-                  key={index}
-                  className="iv-card"
-                  style={{ borderColor: selectedItem === item ? '#33ff00' : '#333' }}
-                >
-                  <div className="iv-card-header">
-                    <div className="iv-icon-box">{getItemIcon(item.tipo)}</div>
-                    <span className="iv-rarity-badge" style={{ color: color, borderColor: color }}>
-                      {item.rareza || 'N/A'}
-                    </span>
-                  </div>
+        {filteredItems.length === 0 ? (
+          <div className="w-full flex flex-col items-center justify-center opacity-50">
+            <span className="text-4xl mb-2">📦</span>
+            <p className="text-[#33ff00] font-bold">[ ! ] SECCIÓN VACÍA</p>
+          </div>
+        ) : (
+          <>
+            {/* Botón Navegación Izquierda */}
+            <button
+              onClick={scrollLeft}
+              className="hidden md:flex absolute left-4 z-50 w-12 h-12 border border-[#33ff00]/50 bg-black/50 text-[#33ff00] items-center justify-center hover:bg-[#33ff00] hover:text-black transition-all rounded-full backdrop-blur-md"
+            >
+              {'<'}
+            </button>
 
-                  <div className="iv-card-body">
-                    <span className="iv-card-type">{item.tipo}</span>
-                    <h3 className="iv-card-title">{item.nombre}</h3>
-                    <div className="iv-card-desc">
-                      {item.descripcion || 'DATOS NO DISPONIBLES.'}
+            {/* Botón Navegación Derecha */}
+            <button
+              onClick={scrollRight}
+              className="hidden md:flex absolute right-4 z-50 w-12 h-12 border border-[#33ff00]/50 bg-black/50 text-[#33ff00] items-center justify-center hover:bg-[#33ff00] hover:text-black transition-all rounded-full backdrop-blur-md"
+            >
+              {'>'}
+            </button>
+
+            {/* --- CONTENEDOR DE SCROLL --- */}
+            <div
+              ref={scrollContainerRef}
+              className="w-full h-full flex items-center gap-6 overflow-x-auto px-6 md:px-16 snap-x snap-mandatory no-scrollbar py-8"
+              style={{ scrollBehavior: 'smooth' }}
+            >
+              {filteredItems.map((item, index) => {
+                const color = getRarityColor(item.rareza);
+                return (
+                  <div
+                    key={index}
+                    className="
+                                    relative shrink-0 snap-center
+                                    w-[85vw] landscape:w-[400px] landscape:h-[80vh] h-[60vh]
+                                    md:w-[300px] md:h-[500px]
+                                    border-2 bg-black overflow-hidden flex flex-col transition-all duration-300
+                                    hover:shadow-[0_0_20px_rgba(51,255,0,0.1)]
+                                "
+                    style={{ borderColor: selectedItem === item ? '#33ff00' : (item.rareza === 'clave' ? '#ff0000' : '#33ff0030') }}
+                  >
+                    {/* Header de la Carta */}
+                    <div className="p-4 border-b border-gray-800 flex justify-between items-start bg-gradient-to-b from-gray-900 to-black">
+                      <div className="text-4xl filter drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">
+                        {getItemIcon(item.tipo)}
+                      </div>
+                      <span
+                        className="text-[10px] font-bold uppercase px-2 py-1 border"
+                        style={{ color: color, borderColor: color, backgroundColor: `${color}10` }}
+                      >
+                        {item.rareza || 'COMÚN'}
+                      </span>
+                    </div>
+
+                    {/* Cuerpo de la Carta */}
+                    <div className="p-4 flex flex-col justify-between flex-grow">
+                      <div>
+                        <span className="text-[10px] text-gray-500 uppercase tracking-widest block mb-1">{item.tipo}</span>
+                        <h3 className="text-lg font-bold text-white uppercase mb-2 leading-tight">{item.nombre}</h3>
+                        <p className="text-xs text-gray-400 line-clamp-4 font-sans border-l-2 border-gray-800 pl-2">
+                          {item.descripcion || 'DATOS NO DISPONIBLES.'}
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => setSelectedItem(item)}
+                        className="mt-4 w-full border border-[#33ff00] text-[#33ff00] py-2 text-xs font-bold uppercase hover:bg-[#33ff00] hover:text-black transition-all"
+                      >
+                        [ INSPECCIONAR ]
+                      </button>
                     </div>
                   </div>
+                );
+              })}
+              <div className="w-4 shrink-0"></div>
+            </div>
+          </>
+        )}
+      </div>
 
-                  <div className="iv-card-footer">
-                    <button onClick={() => setSelectedItem(item)} className="iv-btn-view">
-                      [ INSPECCIONAR ]
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <button className="iv-nav-btn iv-nav-right" onClick={scrollRight}>{'>'}</button>
-        </div>
-      )}
-
-      {/* MODAL DETALLE */}
+      {/* MODAL DETALLE (Estilo Hacker) */}
       {selectedItem && (
-        <div className="iv-modal-overlay" onClick={() => setSelectedItem(null)}>
-          <div className="iv-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setSelectedItem(null)}>
+          <div className="relative w-full max-w-2xl bg-black border border-[#33ff00] shadow-[0_0_50px_rgba(51,255,0,0.2)] flex flex-col max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
 
-            <div className="iv-modal-header">
-              <h2 className="iv-modal-h2">{selectedItem.nombre}</h2>
-              <button onClick={() => setSelectedItem(null)} className="iv-modal-close">X</button>
-            </div>
-
-            <div className="iv-modal-content">
-              <div className="iv-detail-row">
-                <div className="iv-detail-label">CLASIFICACIÓN</div>
-                <div className="iv-detail-value flex gap-2 items-center">
-                  <span className="iv-rarity-badge" style={{ color: getRarityColor(selectedItem.rareza) }}>
-                    {selectedItem.rareza}
+            {/* Header Modal */}
+            <div className="p-6 border-b border-[#33ff00]/30 flex justify-between items-start bg-[#33ff00]/5">
+              <div>
+                <h2 className="text-2xl font-bold text-white uppercase mb-1">{selectedItem.nombre}</h2>
+                <div className="flex gap-2 items-center">
+                  <span className="text-xs font-bold px-2 py-0.5 border" style={{ color: getRarityColor(selectedItem.rareza), borderColor: getRarityColor(selectedItem.rareza) }}>
+                    {selectedItem.rareza || 'COMÚN'}
                   </span>
-                  <span className="text-sm text-[#666] uppercase">| {selectedItem.tipo}</span>
+                  <span className="text-xs text-gray-500 uppercase">| {selectedItem.tipo}</span>
                 </div>
               </div>
+              <button onClick={() => setSelectedItem(null)} className="text-[#33ff00] hover:text-white font-bold text-xl">X</button>
+            </div>
 
-              <div className="iv-detail-row">
-                <div className="iv-detail-label">DESCRIPCIÓN TÉCNICA</div>
-                <div className="iv-detail-value" style={{ lineHeight: '1.6' }}>
+            {/* Contenido Modal */}
+            <div className="p-6 overflow-y-auto custom-scrollbar">
+              <div className="mb-6">
+                <h4 className="text-[#33ff00] text-xs uppercase tracking-[0.2em] mb-2 border-b border-[#33ff00]/30 pb-1">DESCRIPCIÓN TÉCNICA</h4>
+                <p className="text-gray-300 text-sm leading-relaxed font-sans border-l-2 border-[#33ff00] pl-4">
                   {selectedItem.descripcion}
-                </div>
+                </p>
               </div>
 
-              <div className="iv-detail-row">
-                <div className="iv-detail-label">ORIGEN / FECHA</div>
-                <div className="iv-detail-value text-sm">
-                  {selectedItem.historia_origen || 'DESCONOCIDO'}
-                  <span className="text-[#666] ml-2">
-                    [{new Date(selectedItem.fecha_obtencion).toLocaleDateString()}]
-                  </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-[#111] p-3 border border-gray-800">
+                  <span className="block text-gray-500 text-[10px] uppercase">ORIGEN</span>
+                  <span className="block text-white text-sm">{selectedItem.historia_origen || 'DESCONOCIDO'}</span>
+                </div>
+                <div className="bg-[#111] p-3 border border-gray-800">
+                  <span className="block text-gray-500 text-[10px] uppercase">FECHA DE ADQUISICIÓN</span>
+                  <span className="block text-white text-sm">{new Date(selectedItem.fecha_obtencion).toLocaleDateString()}</span>
                 </div>
               </div>
             </div>
 
-            <div className="iv-modal-footer">
-              <button onClick={() => setSelectedItem(null)} className="iv-btn-close-modal">
+            {/* Footer Modal */}
+            <div className="p-4 border-t border-[#33ff00]/30 bg-black">
+              <button onClick={() => setSelectedItem(null)} className="w-full bg-[#33ff00]/10 border border-[#33ff00] text-[#33ff00] py-3 font-bold uppercase tracking-widest hover:bg-[#33ff00] hover:text-black transition-all">
                 CERRAR VISUALIZACIÓN
               </button>
             </div>
