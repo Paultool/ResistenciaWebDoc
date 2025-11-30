@@ -15,6 +15,7 @@ interface HistoriaDetailProps {
   historiaId: number
   onClose: () => void
   onStartNarrative: (historia: Historia) => void
+  isLocked?: boolean // <--- NUEVO PROP
 }
 
 // Interfaces
@@ -41,7 +42,7 @@ interface HistoriaCompleta extends Historia {
   personaje: Personaje[];
 }
 
-const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, onStartNarrative }) => {
+const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, onStartNarrative, isLocked }) => {
   const { user } = useAuth()
   const [historia, setHistoria] = useState<HistoriaCompleta | null>(null)
   const [personajes, setPersonajes] = useState<Personaje[]>([]);
@@ -141,9 +142,9 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
 
     // ... Lógica de YouTube igual ... 
     const getYouTubeId = (url: string) => {
-        const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
-        const match = url.match(regex);
-        return match ? match[1] : null;
+      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+      const match = url.match(regex);
+      return match ? match[1] : null;
     };
     const youtubeId = getYouTubeId(recurso.archivo);
     if (youtubeId) {
@@ -169,7 +170,7 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
   if (loading) {
     return (
       <div className="hd-overlay">
-        <div className="hd-modal" style={{justifyContent:'center', alignItems:'center', border:'none', background:'transparent', boxShadow:'none'}}>
+        <div className="hd-modal" style={{ justifyContent: 'center', alignItems: 'center', border: 'none', background: 'transparent', boxShadow: 'none' }}>
           <div className="text-[#33ff00] text-xl animate-pulse font-bold tracking-widest">
             {'>'} ACCEDIENDO AL NODO...
           </div>
@@ -181,7 +182,7 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
   if (error || !historia) {
     return (
       <div className="hd-overlay">
-        <div className="hd-modal" style={{height:'auto', padding:'40px', textAlign:'center'}}>
+        <div className="hd-modal" style={{ height: 'auto', padding: '40px', textAlign: 'center' }}>
           <p className="text-red-500 mb-6 font-bold">{error || 'NODO NO ENCONTRADO O CORRUPTO.'}</p>
           <button onClick={onClose} className="hd-btn hd-btn-sec">
             [ CERRAR CONEXIÓN ]
@@ -194,12 +195,12 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
   return (
     <div className="hd-overlay">
       <div className="hd-modal">
-        
+
         {/* Decoración de Esquinas Tácticas */}
-        <div style={{position:'absolute', top:0, left:0, width:'10px', height:'10px', borderTop:'2px solid #33ff00', borderLeft:'2px solid #33ff00', zIndex:10}}></div>
-        <div style={{position:'absolute', top:0, right:0, width:'10px', height:'10px', borderTop:'2px solid #33ff00', borderRight:'2px solid #33ff00', zIndex:10}}></div>
-        <div style={{position:'absolute', bottom:0, left:0, width:'10px', height:'10px', borderBottom:'2px solid #33ff00', borderLeft:'2px solid #33ff00', zIndex:10}}></div>
-        <div style={{position:'absolute', bottom:0, right:0, width:'10px', height:'10px', borderBottom:'2px solid #33ff00', borderRight:'2px solid #33ff00', zIndex:10}}></div>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '10px', height: '10px', borderTop: '2px solid #33ff00', borderLeft: '2px solid #33ff00', zIndex: 10 }}></div>
+        <div style={{ position: 'absolute', top: 0, right: 0, width: '10px', height: '10px', borderTop: '2px solid #33ff00', borderRight: '2px solid #33ff00', zIndex: 10 }}></div>
+        <div style={{ position: 'absolute', bottom: 0, left: 0, width: '10px', height: '10px', borderBottom: '2px solid #33ff00', borderLeft: '2px solid #33ff00', zIndex: 10 }}></div>
+        <div style={{ position: 'absolute', bottom: 0, right: 0, width: '10px', height: '10px', borderBottom: '2px solid #33ff00', borderRight: '2px solid #33ff00', zIndex: 10 }}></div>
 
         <div className="hd-header">
           <div className="hd-header-top">
@@ -246,37 +247,45 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
               <h3 className="hd-section-title">{'>'} RESUMEN DE INTELIGENCIA</h3>
               <p className="hd-description">{historia.narrativa}</p>
 
-              <div className="hd-actions">
-                <button
-                  className={`hd-btn ${canAccess ? '' : 'hd-btn-disabled'}`}
-                  onClick={handleComenzarHistoria}
-                  disabled={!canAccess || isCompleting}
-                >
-                  {isCompleting ? (
-                    'PROCESANDO...'
-                  ) : hasStarted ? (
-                    '[ SECUENCIA INICIADA ]'
-                  ) : canAccess ? (
-                    `[ INICIAR SIMULACIÓN ]`
-                  ) : (
-                    `BLOQUEADO: NIVEL ${historia.nivel_acceso_requerido} REQUERIDO`
+              {/* CAMBIO: Si está bloqueado (isLocked), mostramos mensaje y ocultamos botones */}
+              {isLocked ? (
+                <div className="p-4 border border-yellow-500 bg-yellow-500/10 text-yellow-500 text-center font-bold tracking-widest mt-6 animate-pulse">
+                  [ ! ] NODO ENCRIPTADO - REQUIERE DESBLOQUEO PREVIO
+                </div>
+              ) : (
+
+                <div className="hd-actions">
+                  <button
+                    className={`hd-btn ${canAccess ? '' : 'hd-btn-disabled'}`}
+                    onClick={handleComenzarHistoria}
+                    disabled={!canAccess || isCompleting}
+                  >
+                    {isCompleting ? (
+                      'PROCESANDO...'
+                    ) : hasStarted ? (
+                      '[ SECUENCIA INICIADA ]'
+                    ) : canAccess ? (
+                      `[ INICIAR SIMULACIÓN ]`
+                    ) : (
+                      `BLOQUEADO: NIVEL ${historia.nivel_acceso_requerido} REQUERIDO`
+                    )}
+                  </button>
+
+                  {!canAccess && (
+                    <div className="hd-access-msg">
+                      TU NIVEL: {playerStats?.nivel || 1} // REQUERIDO: {historia.nivel_acceso_requerido}
+                    </div>
                   )}
-                </button>
 
-                {!canAccess && (
-                  <div className="hd-access-msg">
-                    TU NIVEL: {playerStats?.nivel || 1} // REQUERIDO: {historia.nivel_acceso_requerido}
-                  </div>
-                )}
-
-                <button
-                  className="hd-btn hd-btn-sec"
-                  onClick={handleToggleFavorite}
-                  disabled={isFavoritingLoading}
-                >
-                  {isFavoritingLoading ? '...' : isFavorited ? '[-] REMOVER DE PRIORITARIOS' : '[+] MARCAR PRIORITARIO'}
-                </button>
-              </div>
+                  <button
+                    className="hd-btn hd-btn-sec"
+                    onClick={handleToggleFavorite}
+                    disabled={isFavoritingLoading}
+                  >
+                    {isFavoritingLoading ? '...' : isFavorited ? '[-] REMOVER DE PRIORITARIOS' : '[+] MARCAR PRIORITARIO'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
