@@ -204,6 +204,30 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         }
     }, [user]); // Añade 'user' como dependencia
 
+    // Estado para el favorito
+    const [favoritingHistoriaId, setFavoritingHistoriaId] = useState<number | null>(null);
+
+    // Función para marcar una historia como favorita
+    const handleToggleFavorite = async (historiaId: number, e: React.MouseEvent) => {
+        e.stopPropagation();
+
+        if (!user?.id || favoritingHistoriaId === historiaId) return;
+        try {
+            setFavoritingHistoriaId(historiaId);
+            const historiaIdStr = String(historiaId);
+            await gameServiceUser.toggleFavoriteStory(user.id, historiaIdStr);
+
+            // CRÍTICO: Recargar stats INMEDIATAMENTE para actualizar la UI
+            await fetchPlayerStats();
+
+            console.log(`Historia ${historiaId} favorito actualizado`);
+        } catch (error: any) {
+            console.error('Error toggling favorite:', error);
+        } finally {
+            setFavoritingHistoriaId(null);
+        }
+    };
+
     // ====================================================================
     // FUNCIÓN REEMPLAZADA: closeHotspotModal
     // ====================================================================
@@ -236,6 +260,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         // Reanuda audio...
         console.log('[closeHotspotModal] Modal cerrado y iframe reseteado.');
     }, []); // Se mantiene sin dependencias internas
+
 
 
     // Función de manejo centralizado de recompensas/costos, envuelta en useCallback
@@ -2412,7 +2437,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     {/* Botón Navegación Izquierda (Solo Desktop) */}
                     <button
                         onClick={() => scroll('left')}
-                        className="hidden md:flex absolute left-4 z-50 w-12 h-12 border border-[#33ff00]/50 bg-black/50 text-[#33ff00] items-center justify-center hover:bg-[#33ff00] hover:text-black transition-all rounded-full backdrop-blur-md"
+                        className="flex absolute left-4 z-50 w-12 h-12 border border-[#33ff00]/50 bg-black/50 text-[#33ff00] items-center justify-center hover:bg-[#33ff00] hover:text-black transition-all rounded-full backdrop-blur-md"
                     >
                         {'<'}
                     </button>
@@ -2420,7 +2445,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     {/* Botón Navegación Derecha (Solo Desktop) */}
                     <button
                         onClick={() => scroll('right')}
-                        className="hidden md:flex absolute right-4 z-50 w-12 h-12 border border-[#33ff00]/50 bg-black/50 text-[#33ff00] items-center justify-center hover:bg-[#33ff00] hover:text-black transition-all rounded-full backdrop-blur-md"
+                        className="flex absolute right-4 z-50 w-12 h-12 border border-[#33ff00]/50 bg-black/50 text-[#33ff00] items-center justify-center hover:bg-[#33ff00] hover:text-black transition-all rounded-full backdrop-blur-md"
                     >
                         {'>'}
                     </button>
@@ -2537,13 +2562,12 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                                 </button>
 
                                                 <button
-                                                    className="w-12 flex items-center justify-center border border-[#33ff00]/50 text-[#33ff00] hover:bg-[#33ff00] hover:text-black transition-all"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        console.log("Like");
-                                                    }}
+                                                    className="w-12 flex items-center justify-center border border-[#33ff00]/50 text-[#33ff00] hover:bg-[#33ff00] hover:text-black transition-all disabled:opacity-50"
+                                                    onClick={(e) => handleToggleFavorite(historia.id_historia, e)}
+                                                    disabled={favoritingHistoriaId === historia.id_historia}
+                                                    title={playerStats?.historias_favoritas?.includes(String(historia.id_historia)) ? "Remover de favoritos" : "Agregar a favoritos"}
                                                 >
-                                                    ♥
+                                                    {favoritingHistoriaId === historia.id_historia ? '...' : (playerStats?.historias_favoritas?.includes(String(historia.id_historia)) ? '♥' : '♡')}
                                                 </button>
                                             </div>
                                         )}
