@@ -269,7 +269,7 @@ class GameServiceUser {
      * @param recompensaId El ID de la recompensa.
      * @param historiaId El ID de la historia que se está completando.
      */
-    async otorgarRecompensa(userId: string, recompensaId: number, historiaId: string) {
+    async otorgarRecompensa(userId: string, recompensaId: number, historiaId: string, marcarComoVisitada: boolean = false) {
         try {
             console.log('🔵 [otorgarRecompensa] INICIO');
             console.log('🔵 [otorgarRecompensa] userId:', userId, 'tipo:', typeof userId);
@@ -312,29 +312,27 @@ class GameServiceUser {
                     valor: recompensa.valor,
                     cantidad: 1,
                     tipo: recompensa.tipo,
-                    historia_origen: recompensa.historia_origen,
+                    historia_origen: historiaId, // ✅ FIX: Usar el parámetro historiaId en lugar de recompensa.historia_origen
                     fecha_obtencion: new Date().toISOString(),
                     rareza: 'común' // Asumiendo que la rareza no está en la tabla de recompensas                        
                 };
                 nuevoInventario.push(nuevoItem);
             }
-
             const historiasActuales = currentProfile.historias_visitadas || [];
             let nuevasHistorias = [...historiasActuales];
-            if (!nuevasHistorias.includes(historiaId)) {
+
+            // ✅ Solo agregar si se especifica explícitamente
+            if (marcarComoVisitada && !nuevasHistorias.includes(historiaId)) {
                 nuevasHistorias.push(historiaId);
             }
-
-            console.log('🔵 [otorgarRecompensa] nuevasHistorias ANTES de update:', nuevasHistorias);
-            console.log('🔵 [otorgarRecompensa] Cada elemento:', nuevasHistorias.map(h => `${h} (${typeof h})`));
+            console.log('🔵 [otorgarRecompensa] nuevoInventario:', JSON.stringify(nuevoInventario, null, 2));
 
             const updateData = {
                 xp_total: newXp,
                 inventario: nuevoInventario,
-                historias_visitadas: nuevasHistorias
+                ...(marcarComoVisitada ? { historias_visitadas: nuevasHistorias } : {})  // ✅ Condicional
             };
             console.log('🔵 [otorgarRecompensa] Datos a enviar a Supabase:', JSON.stringify(updateData, null, 2));
-
             const { data, error } = await supabase
                 .from('perfiles_jugador')
                 .update(updateData)

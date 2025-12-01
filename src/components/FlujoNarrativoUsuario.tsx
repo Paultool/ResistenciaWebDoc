@@ -317,7 +317,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             const { data: finalStats, error: recompensaError } = await gameServiceUser.otorgarRecompensa(
                 userId,
                 recompensaIdToApply,
-                String(historiaId)
+                String(selectedHistoriaId)
             );
 
             if (!recompensaError && finalStats) {
@@ -397,7 +397,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 await gameServiceUser.otorgarRecompensa(
                     user.id,
                     resultOption.recompensaId,
-                    String(historiaId)
+                    String(selectedHistoriaId)
                 );
                 await fetchPlayerStats(); // Refrescar stats
             }
@@ -423,9 +423,10 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         currentStepIndex,
         user,
         closeHotspotModal,
-        getRecurso, // <-- ¡AÑADE ESTA DEPENDENCIA!
-        fetchPlayerStats, // <-- ¡AÑADE ESTA DEPENDENCIA!
-        historiaId // <-- ¡AÑADE ESTA DEPENDENCIA!
+        getRecurso,
+        fetchPlayerStats,
+        historiaId,
+        selectedHistoriaId
     ]);
 
     // NUEVA FUNCIÓN para manejar la apertura del modal del mapa
@@ -1817,19 +1818,6 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             return;
         }
 
-
-        // 4. Lógica para tipo_paso 'app'
-        if (currentStep.tipo_paso === 'app' && selectedHistoriaId !== null && user) {
-            console.log('=== DEBUG: PASO APP ===');
-            console.log('Historia ID:', selectedHistoriaId, '(tipo:', typeof selectedHistoriaId, ')');
-
-            console.log('=======================');
-
-            // Volver al menú de historias
-            setSelectedHistoriaId(null);
-            setCurrentStepIndex(0);
-            return;
-        }
 
         // 5. Lógica de avance normal (para pasos 'narrativo' y 'pregunta')
         setShowStepContent(false);

@@ -517,7 +517,7 @@ const MainContent: React.FC = () => {
 
   const renderCurrentView = () => {
     if (currentView === 'historias') {
-      return <FlujoNarrativoUsuario historiaId={flujoNarrativoHistoriaId || undefined} onBack={() => setCurrentView('dashboard')} onUpdateProfile={handleUpdateProfile} />;
+      return <FlujoNarrativoUsuario historiaId={flujoNarrativoHistoriaId || undefined} onBack={() => { setFlujoNarrativoHistoriaId(null); setCurrentView('dashboard'); }} onUpdateProfile={handleUpdateProfile} />;
     }
     if (selectedHistoriaId) {
       return <HistoriaDetail historiaId={selectedHistoriaId} onClose={() => setSelectedHistoriaId(null)} onStartNarrative={() => handleStartNarrative(historias.find(h => h.id === selectedHistoriaId)!)} />;
@@ -525,7 +525,7 @@ const MainContent: React.FC = () => {
     switch (currentView) {
       case 'dashboard': return <UserDashboard onNavigate={(v) => setCurrentView(v as any)} onStartNarrative={handleStartNarrativeFromMap} />;
       case 'personajes': return <PersonajesView onBack={() => setCurrentView('dashboard')} />;
-      case 'mapa': return <MapaView historias={historias} historiasVisitadas={userProfile?.historias_visitadas || []} onStartNarrativeFromMap={handleStartNarrativeFromMap} initialCenter={[19.640645, -99.137597]} />;
+      case 'mapa': return <MapaView historias={historias} historiasVisitadas={userProfile?.historias_visitadas || []} onStartNarrativeFromMap={handleStartNarrativeFromMap} />;
       case 'inventario': return <InventarioView onBack={() => setCurrentView('dashboard')} />;
       case 'wip': return <WorkInProgressView onOpenVideoModal={(id, t) => setVideoModalData({ videoId: id, title: t })} />;
       case 'admin': return isAdmin ? <AdminPanel /> : <p>Acceso denegado</p>;
@@ -578,7 +578,11 @@ const MainContent: React.FC = () => {
                 <button
                   key={item.id}
                   className={`term-link-btn ${currentView === item.id ? 'active' : ''}`}
-                  onClick={() => { setCurrentView(item.id as any); setIsMobileMenuOpen(false); }}
+                  onClick={() => {
+                    if (item.id === 'historias') setFlujoNarrativoHistoriaId(null);
+                    setCurrentView(item.id as any);
+                    setIsMobileMenuOpen(false);
+                  }}
                 >
                   {currentView === item.id ? `> ${item.label}` : item.label}
                 </button>
