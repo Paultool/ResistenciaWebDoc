@@ -167,6 +167,12 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     // Coordenadas por defecto (ej. Zócalo de CDMX), por si no hay historia
     const [mapCenter, setMapCenter] = useState<[number, number]>([19.4326, -99.1332]);
 
+    // Check if current story is completed
+    const isStoryCompleted = React.useMemo(() => {
+        if (!selectedHistoriaId || !playerStats?.historias_visitadas) return false;
+        return playerStats.historias_visitadas.includes(String(selectedHistoriaId));
+    }, [selectedHistoriaId, playerStats?.historias_visitadas]);
+
     // Referencia para el contenedor del carrusel
     const scrollContainerRef = React.useRef(null);
 
@@ -1729,16 +1735,16 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         setShowEndMessage(false); // Ensure end message is hidden
     };
 
+
+
     // ==================================================================
     // --- FUNCIÓN handleNextStep (CORREGIDA) ---
     // ==================================================================
     // Función para manejar el avance al siguiente paso
     const handleNextStep = async (nextStepId: number | null) => {
         const currentStep = flujoData[currentStepIndex];
-
-        // 1. Otorgar recompensas/personajes del paso ACTUAL (esto está bien aquí)
-        if (currentStep.id_recompensa !== null) {
-            // buscamos el personaje en el arreglo de personajes cargados
+        // Otorgar recompensa si existe (SOLO si la historia NO está completada)
+        if (currentStep.id_recompensa !== null && !isStoryCompleted) {
             const personaje = personajesData.find(p => p.id_personaje === currentStep.id_personaje);
 
             if (personaje && user) {
@@ -1842,16 +1848,14 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     // ==================================================================
 
 
-
-    // Función para retroceder al paso anterior
+    // Función para retroceder al paso anterior (solo para historias completadas)
     const goBack = () => {
         if (currentStepIndex > 0) {
             setShowStepContent(false);
             setCurrentStepIndex(currentStepIndex - 1);
         }
     };
-
-    // Función para avanzar al siguiente paso
+    // Función para avanzar al siguiente paso (solo para historias completadas)
     const goNext = () => {
         if (currentStepIndex < flujoData.length - 1) {
             setShowStepContent(false);
@@ -2813,7 +2817,12 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         key={mediaSrc}
                         src={mediaSrc}
                         autoPlay
-                        onEnded={() => currentStep.id_siguiente_paso && handleNextStep(currentStep.id_siguiente_paso)}
+                        onEnded={() => {
+                            // Solo avanza si la historia NO está completada
+                            if (!isStoryCompleted) {
+                                handleNextStep(currentStep.id_siguiente_paso);
+                            }
+                        }}
                     />
                 )}
 
@@ -2824,7 +2833,12 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         key={mediaSrc}
                         src={mediaSrc}
                         autoPlay
-                        onEnded={() => currentStep.id_siguiente_paso && handleNextStep(currentStep.id_siguiente_paso)}
+                        onEnded={() => {
+                            // Solo avanza si la historia NO está completada
+                            if (!isStoryCompleted) {
+                                handleNextStep(currentStep.id_siguiente_paso);
+                            }
+                        }}
                     />
                 )}
                 {recursoActual?.tipo === 'interactive' && (
@@ -3739,8 +3753,28 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     </div>
                 </div>
             )}
+            {/* Botones de Navegación Manual (Solo para historias completadas) */}
+            {isStoryCompleted && selectedHistoriaId && (
+                <>
+                    <button
+                        onClick={goBack}
+                        disabled={currentStepIndex === 0}
+                        className="fixed left-4 top-1/2 transform -translate-y-1/2 z-50 bg-black/70 hover:bg-black/90 text-[#33ff00] border border-[#33ff00] p-3 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Paso Anterior"
+                    >
+                        ◀
+                    </button>
+                    <button
+                        onClick={goNext}
+                        disabled={currentStepIndex === flujoData.length - 1}
+                        className="fixed right-4 top-1/2 transform -translate-y-1/2 z-50 bg-black/70 hover:bg-black/90 text-[#33ff00] border border-[#33ff00] p-3 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Siguiente Paso"
+                    >
+                        ▶
+                    </button>
+                </>
+            )}
         </div>
     );
 };
-
 export default FlujoNarrativoUsuario;
