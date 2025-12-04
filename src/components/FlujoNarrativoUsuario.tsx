@@ -7,6 +7,7 @@ import MapaView from './MapaView';
 import { Personaje } from '../supabaseClient';
 import { obtenerFichaPersonajePorId } from '../supabaseClient';
 import { fail } from 'assert';
+import { fetchAndConvertSubtitle } from '../utils/subtitleUtils';
 
 // 🔑 Acepta historiaId como prop
 interface FlujoNarrativoUsuarioProps {
@@ -166,6 +167,8 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     const { user, loading: authLoading } = useAuth();
     // Coordenadas por defecto (ej. Zócalo de CDMX), por si no hay historia
     const [mapCenter, setMapCenter] = useState<[number, number]>([19.4326, -99.1332]);
+    const [subtitleUrl, setSubtitleUrl] = useState<string | null>(null);
+    const [subtitlesEnabled, setSubtitlesEnabled] = useState(false);
 
     // Check if current story is completed
     const isStoryCompleted = React.useMemo(() => {
@@ -1424,6 +1427,50 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         }
 
     }, [selectedHistoriaId, user, authLoading, fetchPlayerStats]);
+
+    // useEffect para cargar subtítulos si existen en los metadatos
+    useEffect(() => {
+        let isMounted = true;
+        let currentSubtitleUrl: string | null = null;
+
+        const loadSubtitles = async () => {
+            const currentStep = flujoData[currentStepIndex];
+            if (!currentStep) return;
+
+            const recursoActual = getRecurso(currentStep.recursomultimedia_id);
+
+            if (recursoActual?.tipo === 'video' && recursoActual.metadatos) {
+                try {
+                    const meta = JSON.parse(recursoActual.metadatos);
+                    if (meta.subtitlesUrl) {
+                        console.log("Cargando subtítulos desde:", meta.subtitlesUrl);
+                        const url = await fetchAndConvertSubtitle(meta.subtitlesUrl);
+                        if (isMounted && url) {
+                            currentSubtitleUrl = url;
+                            setSubtitleUrl(url);
+                            console.log("Subtítulos convertidos y cargados.");
+                        }
+                    } else {
+                        if (isMounted) setSubtitleUrl(null);
+                    }
+                } catch (e) {
+                    console.error("Error al parsear metadatos para subtítulos:", e);
+                    if (isMounted) setSubtitleUrl(null);
+                }
+            } else {
+                if (isMounted) setSubtitleUrl(null);
+            }
+        };
+
+        loadSubtitles();
+
+        return () => {
+            isMounted = false;
+            if (currentSubtitleUrl) {
+                URL.revokeObjectURL(currentSubtitleUrl);
+            }
+        };
+    }, [currentStepIndex, flujoData, recursosData]); // Dependencias similares al efecto de media
 
     // useEffect para manejar la carga y reproducción de recursos multimedia al cambiar de paso
     useEffect(() => {
@@ -2816,18 +2863,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
                 {/* CAMBIO CLAVE para avance automático */}
                 {recursoActual?.tipo === 'video' && (
-                    <video
-                        ref={videoRef}
-                        key={mediaSrc}
-                        src={mediaSrc}
-                        autoPlay
-                        onEnded={() => {
-                            // Solo avanza si la historia NO está completada
-                            if (!isStoryCompleted) {
-                                handleNextStep(currentStep.id_siguiente_paso);
-                            }
-                        }}
-                    />
+                    <video ref={videoRef} key={mediaSrc} src={mediaSrc} autoPlay onEnded={() => { if (!isStoryCompleted) { handleNextStep(currentStep.id_siguiente_paso); } }}>{subtitleUrl && subtitlesEnabled && (<track kind="subtitles" src={subtitleUrl} srcLang="en" label="English" default />)}</video>
                 )}
                 {recursoActual?.tipo === 'interactive' && (
                     <canvas id="interactiveCanvas"></canvas>
@@ -2915,12 +2951,23 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         <div className="flex flex-shrink-0 border-r border-[#33ff00]/30 bg-black/60">
 
                             {/* Minimizar */}
+
                             <button
                                 className="w-8 hover:bg-[#33ff00] text-[#33ff00] hover:text-black transition-colors flex items-center justify-center font-bold text-xs border-r border-[#33ff00]/20"
                                 onClick={() => setShowBottomBar(false)}
                             >
                                 ▼
                             </button>
+                            {/* Subtítulos */}
+                            {recursoActual?.tipo === 'video' && (
+                                <button
+                                    className={`w-10 hover:bg-[#33ff00] hover:text-black transition-colors flex items-center justify-center font-bold text-xs border-r border-[#33ff00]/20 ${subtitlesEnabled ? 'text-[#33ff00]' : 'text-gray-500'}`}
+                                    onClick={() => setSubtitlesEnabled(!subtitlesEnabled)}
+                                    title={subtitlesEnabled ? 'Desactivar Subtítulos' : 'Activar Subtítulos'}
+                                >
+                                    CC
+                                </button>
+                            )}
 
                             {/* Fullscreen (Movido aquí) */}
                             <button
@@ -2930,6 +2977,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                             >
                                 {isFullscreen ? '⇲' : '⛶'}
                             </button>
+
 
                             {/* XP Compacto */}
                             <div className="flex flex-col justify-center px-3 min-w-[60px] text-center">

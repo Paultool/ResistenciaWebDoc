@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { fetchAndConvertSubtitle } from './utils/subtitleUtils';
 import AuthForm from './components/AuthForm';
 import UserDashboard from './components/UserDashboard';
 import PersonajesView from './components/PersonajesView';
@@ -227,9 +228,11 @@ interface BottomBarProps {
   onOpenModal: (contentKey: 'acerca' | 'making-off' | 'equipo') => void;
   onOpenLogin: () => void;
   onToggleVisibility: () => void;
+  subtitlesEnabled: boolean;
+  onToggleSubtitles: () => void;
 }
 
-const BottomBar: React.FC<BottomBarProps> = ({ onOpenModal, onOpenLogin, onToggleVisibility }) => {
+const BottomBar: React.FC<BottomBarProps> = ({ onOpenModal, onOpenLogin, onToggleVisibility, subtitlesEnabled, onToggleSubtitles }) => {
   return (
     <footer className="fixed bottom-0 left-0 w-full z-[100] font-mono select-none animate-in slide-in-from-bottom-10 duration-700">
 
@@ -286,6 +289,17 @@ const BottomBar: React.FC<BottomBarProps> = ({ onOpenModal, onOpenLogin, onToggl
         {/* Separador Visual (Solo Desktop) */}
         <span className="hidden md:block text-[#33ff00]/20 text-[10px]">|</span>
 
+        {/* Botón SUBS */}
+        <button
+          onClick={onToggleSubtitles}
+          className={`group transition-colors text-[10px] md:text-xs font-bold tracking-widest uppercase ${subtitlesEnabled ? 'text-[#33ff00]' : 'text-gray-500 hover:text-[#33ff00]'}`}
+          title={subtitlesEnabled ? 'Desactivar Subtítulos' : 'Activar Subtítulos'}
+        >
+          <span className="hidden group-hover:inline mr-1">[</span>
+          {subtitlesEnabled ? 'CC ✓' : 'CC'}
+          <span className="hidden group-hover:inline ml-1">]</span>
+        </button>
+
         {/* Botón SALIR (Icono minimalista) */}
         <button
           onClick={onToggleVisibility}
@@ -319,9 +333,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
   const [infoModalContentKey, setInfoModalContentKey] = useState<'acerca' | 'making-off' | 'equipo' | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [videoModalData, setVideoModalData] = useState<{ videoId: string; title: string } | null>(null);
+  const [subtitleUrl, setSubtitleUrl] = useState<string | null>(null);
+  const [subtitlesEnabled, setSubtitlesEnabled] = useState(true);
 
   const videoRef = useRef<HTMLVideoElement>(null);
-  const videoSrc = "https://ia600103.us.archive.org/12/items/intro_resistencia/intro%20resistencia%20sub%20sp.mp4";
+  const videoSrc = "https://ia800103.us.archive.org/12/items/intro_resistencia/intro%20resistencia%20.mp4";
 
   useEffect(() => {
     if (showContent) {
@@ -329,6 +345,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
       return () => clearTimeout(timer);
     }
   }, [showContent]);
+
+  useEffect(() => {
+    // Ejemplo de carga de subtítulos para el video de fondo (si existiera un SRT)
+    const srtUrl = "/subtitles/intro-resistencia.srt";
+    fetchAndConvertSubtitle(srtUrl).then(url => setSubtitleUrl(url));
+  }, []);
 
   const handleVideoEnd = () => {
     setShowContent(true);
@@ -359,14 +381,27 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
     <div className="relative w-full h-screen bg-black overflow-hidden font-mono selection:bg-[#33ff00] selection:text-black">
 
       {/* ATMÓSFERA VISUAL */}
-      <video
-        ref={videoRef}
-        className="absolute inset-0 w-full h-full object-cover z-0 opacity-50 grayscale contrast-125"
-        autoPlay loop={false} muted={isMuted} playsInline
-        src={videoSrc} key={videoSrc} onEnded={handleVideoEnd}
-      >
-        Tu navegador no soporta video.
-      </video>
+      <div className="absolute inset-0 z-0">
+        <video
+          ref={videoRef}
+          className="absolute inset-0 w-full h-full object-cover opacity-70"
+          autoPlay loop={false} muted={isMuted} playsInline
+          src={videoSrc} key={videoSrc} onEnded={handleVideoEnd}
+        >
+          {subtitleUrl && subtitlesEnabled && (
+            <track
+              kind="subtitles"
+              src={subtitleUrl}
+              srcLang="en"
+              label="English"
+              default
+            />
+          )}
+          Tu navegador no soporta video.
+        </video>
+        {/* Capa de efecto gris separada */}
+        <div className="absolute inset-0 bg-black/30 mix-blend-saturation pointer-events-none"></div>
+      </div>
 
       {/* Capas FX */}
       <div className="absolute inset-0 z-[1] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10"></div>
@@ -447,6 +482,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
           onOpenModal={setInfoModalContentKey}
           onOpenLogin={() => { onRequestFullscreen(); setIsLoginModalOpen(true); }}
           onToggleVisibility={() => setIsBarVisible(false)}
+          subtitlesEnabled={subtitlesEnabled}
+          onToggleSubtitles={() => setSubtitlesEnabled(!subtitlesEnabled)}
         />
       )}
 
