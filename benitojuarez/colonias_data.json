@@ -1,0 +1,117 @@
+{
+  "IZTACCIHUATL": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+12%" },
+    "graficaData": { "renta": 20000, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  },
+  "CREDITO CONSTRUCTOR": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+12%" },
+    "graficaData": { "renta": 20000, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  },
+  "CIUDAD DE LOS DEPORTES": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+18%" },
+    "graficaData": { "renta": 21000, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Medio" }
+  },
+  "MIGUEL ALEMAN": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+15%" },
+    "graficaData": { "renta": 19000, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  },
+  "CENTRO URBANO PRESIDENTE ALEMAN (U HAB)": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+10%" },
+    "graficaData": { "renta": 17500, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Medio" }
+  },
+  "GENERAL PEDRO MARIA ANAYA": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+13%" },
+    "graficaData": { "renta": 19500, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  },
+  "SAN JOSE INSURGENTES": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+22%" },
+    "graficaData": { "renta": 23000, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  },
+  "DEL VALLE IV": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+16%" },
+    "graficaData": { "renta": 22000, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  },
+  "PORTALES I": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+12%" },
+    "graficaData": { "renta": 18000, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  },
+  "NARVARTE VI": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+14%" },
+    "graficaData": { "renta": 21000, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  },
+  "NONOALCO": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+11%" },
+    "graficaData": { "renta": 18500, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Medio" }
+  },
+  "MERCED GOMEZ": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+13%" },
+    "graficaData": { "renta": 19500, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  },
+  "INSURGENTES SAN BORJA": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+17%" },
+    "graficaData": { "renta": 22500, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  },
+  "ATENOR SALAS": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+9%" },
+    "graficaData": { "renta": 17000, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Bajo" }
+  },
+  "DEL VALLE V": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+15%" },
+    "graficaData": { "renta": 21500, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  },
+  "SAN PEDRO DE LOS  PINOS": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+14%" },
+    "graficaData": { "renta": 20000, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Medio" }
+  },
+  "NOCHE BUENA": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+14%" },
+    "graficaData": { "renta": 20500, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  },
+  "DEL VALLE II": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+13%" },
+    "graficaData": { "renta": 22000, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  },
+  "ALAMOS II": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+22%" },
+    "graficaData": { "renta": 19500, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  },
+  "ACTIPAN": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+16%" },
+    "graficaData": { "renta": 21000, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  },
+  "NARVARTE PONIENTE": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+14%" },
+    "graficaData": { "renta": 21000, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  },
+  "NARVARTE ORIENTE": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+15%" },
+    "graficaData": { "renta": 20500, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  },
+  "DEL VALLE CENTRO": {
+    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+11%" },
+    "graficaData": { "renta": 23500, "artista": 15000, "ingeniero": 30000 },
+    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  }
+}

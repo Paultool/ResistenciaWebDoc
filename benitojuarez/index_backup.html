@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,12 +9,11 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         /* Estilos del contenedor de la app (sin cambios) */
-        body,
-        html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: ui-sans-serif, system-ui;
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            height: 100%; 
+            font-family: ui-sans-serif, system-ui; 
             background-color: #1a202c;
             color: #e2e8f0;
             display: flex;
@@ -23,97 +21,50 @@
             justify-content: center;
             min-height: 100vh;
         }
-
-        #app-container {
+        
+        #app-container { 
             position: relative;
-            width: 90vw;
+            width: 90vw; 
             height: 80vh;
             max-width: 1100px;
             max-height: 750px;
             border-radius: 0.5rem;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             background-color: #1a202c;
         }
-
-        #map {
-            height: 100%;
-            width: 100%;
+        
+        #map { 
+            height: 100%; 
+            width: 100%; 
         }
 
         /* Estilos del Pop-up (sin cambios) */
-        .leaflet-popup-content {
-            background: #2d3748;
-            color: #e2e8f0;
-            border-radius: 0.5rem;
-        }
-
-        .leaflet-popup-tip {
-            background: #2d3748;
-        }
-
-        .bar-container {
-            height: 1rem;
-            background: #374151;
-            border-radius: 0.25rem;
-            overflow: hidden;
-            margin: 0.25rem 0;
-        }
-
-        .bar-fill {
-            height: 100%;
-            transition: width 0.3s;
-        }
-
-        .gentrificacion-badge {
-            padding: 0.125rem 0.25rem;
-            border-radius: 0.125rem;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
-
-        .alto {
-            background: #ef4444;
-            color: white;
-        }
-
-        .medio {
-            background: #f59e0b;
-            color: white;
-        }
-
-        .bajo {
-            background: #10b981;
-            color: white;
-        }
-
-        #loading {
-            z-index: 1000;
-        }
-
-        #close-button {
-            z-index: 1001;
-        }
+        .leaflet-popup-content { background: #2d3748; color: #e2e8f0; border-radius: 0.5rem; }
+        .leaflet-popup-tip { background: #2d3748; }
+        .bar-container { height: 1rem; background: #374151; border-radius: 0.25rem; overflow: hidden; margin: 0.25rem 0; }
+        .bar-fill { height: 100%; transition: width 0.3s; }
+        .gentrificacion-badge { padding: 0.125rem 0.25rem; border-radius: 0.125rem; font-size: 0.75rem; font-weight: bold; }
+        .alto { background: #ef4444; color: white; } 
+        .medio { background: #f59e0b; color: white; } 
+        .bajo { background: #10b981; color: white; } 
+        #loading { z-index: 1000; }
+        #close-button { z-index: 1001; }
     </style>
 </head>
-
 <body>
     <div id="app-container">
         <div id="map"></div>
         <div id="loading" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
             <div class="text-center">
-                <svg class="animate-spin h-8 w-8 text-purple-500 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg"
-                    fill="none" viewBox="0 0 24 24">
+                <svg class="animate-spin h-8 w-8 text-purple-500 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                    </path>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 <p class="text-purple-400" id="popup-message">Cargando datos de la colonia...</p>
             </div>
         </div>
-        <button id="close-button"
-            class="absolute top-4 right-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg hidden">
+        <button id="close-button" class="absolute top-4 right-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg hidden">
             Siguiente Paso
         </button>
     </div>
@@ -155,9 +106,9 @@
         // Envío al flujo narrativo (MODIFICADO)
         function sendResult(status) {
             if (appConfig && window.parent) {
-
+                
                 // --- INICIO DE LA MODIFICACIÓN ---
-
+                
                 // 1. El 'source' DEBE coincidir con el que 'FlujoNarrativoUsuario' espera.
                 //    Usaremos 'RentalApp' ya que tu flujo principal ya escucha ese nombre.
                 //
@@ -165,14 +116,14 @@
                 //    solo notifica el 'status' y un 'costoXP' (que aquí es 0).
                 //    'FlujoNarrativoUsuario' se encargará de leer el 'flowConfig'
                 //    para asignar la recompensa y el siguiente paso.
-
+                
                 const result = {
                     source: 'RentalApp', // ¡CAMBIO CLAVE! (antes 'MapaInteractivoApp')
                     type: 'app-result',
                     status: status,      // 'success' o 'failure'
                     costoXP: 0,          // Esta app no tiene costo ni ganancia directa de XP
                     message: status === 'success' ? `Exploraste ${lastColoniaData?.name || 'una colonia'}.` : 'Fallo en mapa.'
-
+                    
                     // Ya no enviamos 'successRecompensaId' ni 'failureRecompensaId'
                     // porque eso lo gestiona 'FlujoNarrativoUsuario' con el 'flowConfig'.
                 };
@@ -205,7 +156,7 @@
                 const response = await fetch(FULL_KML_URL);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 kmlText = await response.text();
-
+                
                 if (!kmlText.includes('<kml')) throw new Error('No KML');
 
                 kmlText = sanitizeKML(kmlText);
@@ -220,7 +171,7 @@
                     if (!hrefElem) throw new Error('No <href> en stub');
                     const hrefCDATAText = hrefElem.textContent.trim();
                     const realHref = hrefCDATAText.replace(/^\[CDATA\[(.*)\]\]$/, '$1');
-
+                    
                     const realResponse = await fetch(realHref);
                     if (!realResponse.ok) throw new Error(`Real HTTP ${realResponse.status}`);
                     kmlText = await realResponse.text();
@@ -228,7 +179,7 @@
                     const realDoc = new DOMParser().parseFromString(kmlText, 'text/xml');
                     const realError = realDoc.querySelector('parsererror');
                     if (realError) throw new Error('Real malformado: ' + realError.textContent);
-
+                    
                     polygonCount = addPolysFromDoc(realDoc, allPolys);
                 } else {
                     console.log('[Mapa] Full KML detectado – parseando direct...');
@@ -265,7 +216,7 @@
             }
 
             if (polygonCount === 0) console.error('Error: 0 polígonos. Ver console.');
-
+            
             document.getElementById('close-button').classList.remove('hidden');
         }
 
@@ -286,14 +237,14 @@
                             .bindPopup(`<b>${name}</b><br>Click para datos.`)
                             .addTo(map)
                             .addTo(allPolys);
-
+                        
                         // Centra el mapa antes de cargar los datos
                         const center = poly.getBounds().getCenter();
                         poly.on('click', () => {
                             map.panTo(center);
                             loadColoniaData(name, center);
                         });
-
+                        
                         count++;
                     }
                 }
@@ -327,11 +278,11 @@
             document.getElementById('loading').classList.remove('hidden');
             document.getElementById('popup-message').textContent = `Cargando datos para ${name}...`;
 
-            const referenceValues = {
-                salarioIngeniero: 30000,
+            const referenceValues = { 
+                salarioIngeniero: 30000, 
                 salarioArtista: playerXP
             };
-
+            
             const context = {
                 location: `${name} Benito Juárez CDMX`,
                 topics: ['renta promedio', 'aumento plusvalia', 'gentrificacion'],
@@ -352,10 +303,10 @@
                 const mockData = {
                     mapaData: { titulo: 'Aumento de Plusvalía', valor: '+15%' },
                     censoData: { titulo: 'Nivel de Gentrificación', valor: 'Medio' },
-                    graficaData: {
-                        renta: 18000,
+                    graficaData: { 
+                        renta: 18000, 
                         artista: playerXP,
-                        ingeniero: 30000
+                        ingeniero: 30000 
                     }
                 };
                 lastColoniaData = { name, data: mockData };
@@ -363,67 +314,6 @@
             } finally {
                 document.getElementById('loading').classList.add('hidden');
             }
-        }
-
-        // On-click: Cargar datos (MODIFICADO - ahora usa datos hardcodeados)
-        async function loadColoniaData(name, center) {
-            if (currentPopup) currentPopup.remove();
-            document.getElementById('loading').classList.remove('hidden');
-            document.getElementById('popup-message').textContent = `Cargando datos para ${name}...`;
-
-            // Datos hardcodeados de todas las colonias (extraídos de la API de Gemini)
-            const COLONIAS_DATA = {
-                "IZTACCIHUATL": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+12%" }, "graficaData": { "renta": 20000, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" } },
-                "CREDITO CONSTRUCTOR": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+12%" }, "graficaData": { "renta": 20000, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" } },
-                "CIUDAD DE LOS DEPORTES": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+18%" }, "graficaData": { "renta": 21000, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Medio" } },
-                "MIGUEL ALEMAN": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+15%" }, "graficaData": { "renta": 19000, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" } },
-                "CENTRO URBANO PRESIDENTE ALEMAN (U HAB)": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+10%" }, "graficaData": { "renta": 17500, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Medio" } },
-                "GENERAL PEDRO MARIA ANAYA": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+13%" }, "graficaData": { "renta": 19500, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" } },
-                "SAN JOSE INSURGENTES": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+22%" }, "graficaData": { "renta": 23000, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" } },
-                "DEL VALLE IV": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+16%" }, "graficaData": { "renta": 22000, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" } },
-                "PORTALES I": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+12%" }, "graficaData": { "renta": 18000, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" } },
-                "NARVARTE VI": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+14%" }, "graficaData": { "renta": 21000, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" } },
-                "NONOALCO": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+11%" }, "graficaData": { "renta": 18500, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Medio" } },
-                "MERCED GOMEZ": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+13%" }, "graficaData": { "renta": 19500, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" } },
-                "INSURGENTES SAN BORJA": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+17%" }, "graficaData": { "renta": 22500, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" } },
-                "ATENOR SALAS": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+9%" }, "graficaData": { "renta": 17000, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Bajo" } },
-                "DEL VALLE V": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+15%" }, "graficaData": { "renta": 21500, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" } },
-                "SAN PEDRO DE LOS  PINOS": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+14%" }, "graficaData": { "renta": 20000, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Medio" } },
-                "NOCHE BUENA": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+14%" }, "graficaData": { "renta": 20500, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" } },
-                "DEL VALLE II": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+13%" }, "graficaData": { "renta": 22000, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" } },
-                "ALAMOS II": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+22%" }, "graficaData": { "renta": 19500, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" } },
-                "ACTIPAN": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+16%" }, "graficaData": { "renta": 21000, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" } },
-                "NARVARTE PONIENTE": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+14%" }, "graficaData": { "renta": 21000, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" } },
-                "NARVARTE ORIENTE": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+15%" }, "graficaData": { "renta": 20500, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" } },
-                "DEL VALLE CENTRO": { "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+11%" }, "graficaData": { "renta": 23500, "artista": 15000, "ingeniero": 30000 }, "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" } }
-            };
-
-            // Simular un pequeño delay para que se vea el loading
-            await new Promise(resolve => setTimeout(resolve, 300));
-
-            // Buscar datos hardcodeados
-            let data = COLONIAS_DATA[name];
-
-            if (!data) {
-                console.warn(`[Mapa] No hay datos hardcodeados para ${name}, usando mock data`);
-                data = {
-                    mapaData: { titulo: 'Aumento de Plusvalía', valor: '+15%' },
-                    censoData: { titulo: 'Nivel de Gentrificación', valor: 'Medio' },
-                    graficaData: {
-                        renta: 18000,
-                        artista: playerXP,
-                        ingeniero: 30000
-                    }
-                };
-            } else {
-                // Actualizar el valor de artista con el XP del jugador
-                data = JSON.parse(JSON.stringify(data)); // Clonar para no modificar el original
-                data.graficaData.artista = playerXP;
-            }
-
-            lastColoniaData = { name, data };
-            showColoniaPopup(data, center);
-            document.getElementById('loading').classList.add('hidden');
         }
 
         // Función showColoniaPopup (Sin cambios en layout)
@@ -477,10 +367,10 @@
                     <p class="text-xs text-center mt-2 text-gray-400">Datos 2024-2025 via IA.</p>
                 </div>
             `;
-
+            
             const panPadding = L.point(50, 50);
-            currentPopup = L.popup({
-                closeButton: true,
+            currentPopup = L.popup({ 
+                closeButton: true, 
                 maxWidth: 320,
                 autoPan: true,
                 autoPanPadding: panPadding
@@ -490,9 +380,9 @@
         // --- Listeners (Ajuste menor) ---
         window.addEventListener('message', (event) => {
             if (!event.data || event.data.source !== 'FlujoNarrativoUsuario') return;
-
+            
             console.log("[Mapa] Configuración recibida:", event.data);
-
+            
             appConfig = event.data;
 
             if (event.data.playerStats) {
@@ -515,7 +405,7 @@
                 console.error("[Mapa] Error al parsear appData:", e, appConfig.appData);
                 document.getElementById('close-button').textContent = 'Siguiente Paso';
             }
-
+            
             loadMap();
         });
 
@@ -531,15 +421,14 @@
             console.log("[Mapa] Modo de prueba (sin parent) activado.");
             const mockConfig = {
                 source: 'FlujoNarrativoUsuario',
-                appData: '{"title":"Mapa Interactivo","message":"Click en una colonia para datos.","buttonText":"Cerrar Observatorio"}',
+                appData: '{"title":"Mapa Interactivo","message":"Click en una colonia para datos.","buttonText":"Cerrar Observatorio"}', 
                 playerStats: {
                     puntuacion: 15000,
-                    inventario: [{ nombre: "item_prueba", descripcion: "..." }]
+                    inventario: [{nombre: "item_prueba", descripcion: "..."}]
                 }
             };
             window.postMessage(mockConfig, '*');
         }
     </script>
 </body>
-
 </html>

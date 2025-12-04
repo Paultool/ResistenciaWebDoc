@@ -645,9 +645,11 @@ const AppContent: React.FC = () => {
   return (
     <div className="App" ref={appRef}>
       <GlobalStyles />
+      {/*
       <video className="glitch-overlay" autoPlay muted loop playsInline>
-        <source src="https://nz71ioy1keimlqqc.public.blob.vercel-storage.com/Fondo.webm" type="video/webm" />
+        <source src="https://ia903404.us.archive.org/18/items/fondo_202511/Fondo.mp4" type="video/webm" />
       </video>
+      */}
       {user ? <MainContent /> : <LandingPage onLoginSuccess={() => { }} onRequestFullscreen={requestAppFullscreen} />}
     </div>
   );
