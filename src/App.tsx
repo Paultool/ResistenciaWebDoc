@@ -348,7 +348,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
 
   useEffect(() => {
     // Ejemplo de carga de subtítulos para el video de fondo (si existiera un SRT)
-    const srtUrl = "/subtitles/intro-resistencia.srt";
+    const srtUrl = "https://melvinrecords.gt.tc/resistencia/subtitles/intro-resistencia.srt";
     fetchAndConvertSubtitle(srtUrl).then(url => setSubtitleUrl(url));
   }, []);
 

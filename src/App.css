@@ -2064,3 +2064,19 @@ video::-webkit-media-text-track-display {
   /* Ajusta este valor según la altura de tu barra (~60px) */
   transform: translateY(-70px);
 }
+
+
+/* Subtítulos específicos para videos en Hotspot Modal (sin bottom bar) */
+.hotspot-video::-webkit-media-text-track-display {
+  transform: translateY(-10px);
+  /* Más abajo porque no hay bottom bar */
+}
+
+.hotspot-video::cue {
+  background: rgba(0, 0, 0, 0.85);
+  color: #33ff00;
+  font-family: 'Courier Prime', 'Courier New', monospace;
+  font-size: 1.1em;
+  text-shadow: 0 0 5px #33ff00, 0 0 10px #33ff00;
+  padding: 0.3em 0.5em;
+}

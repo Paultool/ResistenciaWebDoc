@@ -108,6 +108,7 @@ interface HotspotConfig {
     contentType: 'imagen' | 'video' | 'audio' | 'interactive' | 'backgroundMusic'; // Tipo de contenido
     title: string;
     url: string; // URL del contenido (imagen, video, audio)
+    subtitlesUrl?: string; // Opcional: URL del archivo SRT
     recompensaId?: number; // Opcional: Recompensa asociada
     personajeId?: number; // Opcional: Personaje a conocer
     successRecompensaId?: number; //app recompensa positiva
@@ -167,9 +168,12 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     const { user, loading: authLoading } = useAuth();
     // Coordenadas por defecto (ej. Zócalo de CDMX), por si no hay historia
     const [mapCenter, setMapCenter] = useState<[number, number]>([19.4326, -99.1332]);
+    // Subtitles
     const [subtitleUrl, setSubtitleUrl] = useState<string | null>(null);
     const [subtitlesEnabled, setSubtitlesEnabled] = useState(false);
-
+    // Hotspot Subtitles
+    const [hotspotSubtitleUrl, setHotspotSubtitleUrl] = useState<string | null>(null);
+    const [hotspotSubtitlesEnabled, setHotspotSubtitlesEnabled] = useState(false);
     // Check if current story is completed
     const isStoryCompleted = React.useMemo(() => {
         if (!selectedHistoriaId || !playerStats?.historias_visitadas) return false;
@@ -1471,6 +1475,22 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             }
         };
     }, [currentStepIndex, flujoData, recursosData]); // Dependencias similares al efecto de media
+
+    // useEffect para convertir subtítulos del hotspot
+    useEffect(() => {
+        if (hotspotModal?.subtitlesUrl) {
+            fetchAndConvertSubtitle(hotspotModal.subtitlesUrl)
+                .then(url => setHotspotSubtitleUrl(url))
+                .catch(() => setHotspotSubtitleUrl(null));
+        } else {
+            setHotspotSubtitleUrl(null);
+        }
+        return () => {
+            if (hotspotSubtitleUrl) {
+                URL.revokeObjectURL(hotspotSubtitleUrl);
+            }
+        };
+    }, [hotspotModal]);
 
     // useEffect para manejar la carga y reproducción de recursos multimedia al cambiar de paso
     useEffect(() => {
@@ -3308,15 +3328,29 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                             />
                         )}
 
-                        {/* VIDEO (CORREGIDO: object-cover para llenar todo) */}
+                        {/* VIDEO */}
                         {hotspotModal?.contentType === 'video' && (
-                            <video
-                                src={hotspotModal.url}
-                                controls
-                                autoPlay
-                                className="w-full h-full object-cover" // <--- ESTE ES EL CAMBIO. 'cover' elimina los bordes negros (hace zoom).
-                                onCanPlay={(e) => handleMediaAutoplay(e.currentTarget)}
-                            />
+                            <div className="relative w-full h-full">
+                                <video
+                                    src={hotspotModal.url}
+                                    controls
+                                    autoPlay
+                                    className="w-full h-full object-cover hotspot-video"
+                                    onCanPlay={(e) => handleMediaAutoplay(e.currentTarget)}
+                                >
+                                    {hotspotSubtitleUrl && subtitlesEnabled && (
+                                        <track kind="subtitles" src={hotspotSubtitleUrl} srcLang="en" label="English" default />
+                                    )}
+                                </video>
+                                {hotspotModal.subtitlesUrl && (
+                                    <button
+                                        className={`absolute bottom-4 right-4 z-50 px-2 py-1 text-xs font-bold uppercase transition-colors ${subtitlesEnabled ? 'bg-[#33ff00] text-black' : 'bg-black/70 text-gray-400 border border-gray-600'}`}
+                                        onClick={() => setSubtitlesEnabled(!subtitlesEnabled)}
+                                    >
+                                        CC
+                                    </button>
+                                )}
+                            </div>
                         )}
 
                         {/* AUDIO (Centrado) */}
