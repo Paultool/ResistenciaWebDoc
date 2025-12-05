@@ -1711,20 +1711,30 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     useEffect(() => {
         if (!isMobile || !selectedHistoriaId) return;
 
-        let moveInterval: NodeJS.Timeout | null = null;
         let currentKeys: Set<string> = new Set();
+
+        // Referencias a los event listeners para poder removerlos
+        const listeners: Map<HTMLElement, Array<{ event: string, handler: EventListener }>> = new Map();
 
         const simulateKeyPress = (key: string, press: boolean) => {
             const camera = document.querySelector('a-camera');
-            if (!camera) return;
+            if (!camera) {
+                console.warn('⚠️ Cámara A-Frame no encontrada');
+                return;
+            }
 
             const wasdControls = (camera as any).components['wasd-controls'];
-            if (!wasdControls) return;
+            if (!wasdControls) {
+                console.warn('⚠️ wasd-controls no encontrado en la cámara');
+                return;
+            }
 
             if (press) {
                 wasdControls.keys[key] = true;
+                console.log(`🎮 Tecla ${key} presionada`);
             } else {
                 wasdControls.keys[key] = false;
+                console.log(`🎮 Tecla ${key} liberada`);
             }
         };
 
@@ -1743,47 +1753,71 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             currentKeys.clear();
         };
 
+        const preventDefaults = (e: Event) => {
+            if (e.cancelable) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        };
+
+        // Función helper para agregar listeners y guardar referencia
+        const addListener = (btn: HTMLElement, eventName: string, handler: EventListener, options?: any) => {
+            btn.addEventListener(eventName, handler, options);
+            if (!listeners.has(btn)) {
+                listeners.set(btn, []);
+            }
+            listeners.get(btn)!.push({ event: eventName, handler });
+        };
+
         // Esperar a que la escena cargue
         const timeout = setTimeout(() => {
-            // Vincular botones
             const btnUp = document.getElementById('mobile-btn-up');
             const btnDown = document.getElementById('mobile-btn-down');
             const btnLeft = document.getElementById('mobile-btn-left');
             const btnRight = document.getElementById('mobile-btn-right');
 
-            const preventDefaults = (e: Event) => {
-                e.preventDefault();
-                e.stopPropagation();
-            };
+            console.log("📱 Intentando vincular controles móviles...", {
+                up: !!btnUp, down: !!btnDown, left: !!btnLeft, right: !!btnRight
+            });
 
             if (btnUp) {
-                btnUp.addEventListener('touchstart', (e) => { preventDefaults(e); startMoving('KeyW'); }, { passive: false });
-                btnUp.addEventListener('touchend', (e) => { preventDefaults(e); stopMoving('KeyW'); }, { passive: false });
-                btnUp.addEventListener('touchcancel', (e) => { preventDefaults(e); stopMoving('KeyW'); }, { passive: false });
+                addListener(btnUp, 'touchstart', (e) => { preventDefaults(e); startMoving('KeyW'); }, { passive: false });
+                addListener(btnUp, 'touchend', (e) => { preventDefaults(e); stopMoving('KeyW'); }, { passive: false });
+                addListener(btnUp, 'touchcancel', (e) => { preventDefaults(e); stopMoving('KeyW'); }, { passive: false });
             }
             if (btnDown) {
-                btnDown.addEventListener('touchstart', (e) => { preventDefaults(e); startMoving('KeyS'); }, { passive: false });
-                btnDown.addEventListener('touchend', (e) => { preventDefaults(e); stopMoving('KeyS'); }, { passive: false });
-                btnDown.addEventListener('touchcancel', (e) => { preventDefaults(e); stopMoving('KeyS'); }, { passive: false });
+                addListener(btnDown, 'touchstart', (e) => { preventDefaults(e); startMoving('KeyS'); }, { passive: false });
+                addListener(btnDown, 'touchend', (e) => { preventDefaults(e); stopMoving('KeyS'); }, { passive: false });
+                addListener(btnDown, 'touchcancel', (e) => { preventDefaults(e); stopMoving('KeyS'); }, { passive: false });
             }
             if (btnLeft) {
-                btnLeft.addEventListener('touchstart', (e) => { preventDefaults(e); startMoving('KeyA'); }, { passive: false });
-                btnLeft.addEventListener('touchend', (e) => { preventDefaults(e); stopMoving('KeyA'); }, { passive: false });
-                btnLeft.addEventListener('touchcancel', (e) => { preventDefaults(e); stopMoving('KeyA'); }, { passive: false });
+                addListener(btnLeft, 'touchstart', (e) => { preventDefaults(e); startMoving('KeyA'); }, { passive: false });
+                addListener(btnLeft, 'touchend', (e) => { preventDefaults(e); stopMoving('KeyA'); }, { passive: false });
+                addListener(btnLeft, 'touchcancel', (e) => { preventDefaults(e); stopMoving('KeyA'); }, { passive: false });
             }
             if (btnRight) {
-                btnRight.addEventListener('touchstart', (e) => { preventDefaults(e); startMoving('KeyD'); }, { passive: false });
-                btnRight.addEventListener('touchend', (e) => { preventDefaults(e); stopMoving('KeyD'); }, { passive: false });
-                btnRight.addEventListener('touchcancel', (e) => { preventDefaults(e); stopMoving('KeyD'); }, { passive: false });
+                addListener(btnRight, 'touchstart', (e) => { preventDefaults(e); startMoving('KeyD'); }, { passive: false });
+                addListener(btnRight, 'touchend', (e) => { preventDefaults(e); stopMoving('KeyD'); }, { passive: false });
+                addListener(btnRight, 'touchcancel', (e) => { preventDefaults(e); stopMoving('KeyD'); }, { passive: false });
             }
-        }, 1500);
+
+            console.log(`✅ ${listeners.size} botones vinculados con ${Array.from(listeners.values()).reduce((sum, arr) => sum + arr.length, 0)} listeners totales`);
+        }, 1000);
 
         return () => {
             clearTimeout(timeout);
             stopAll();
-        };
-    }, [isMobile, selectedHistoriaId]);
 
+            // 🔥 CRÍTICO: Remover TODOS los event listeners
+            listeners.forEach((eventList, btn) => {
+                eventList.forEach(({ event, handler }) => {
+                    btn.removeEventListener(event, handler);
+                });
+            });
+            listeners.clear();
+            console.log('🧹 Listeners de joystick removidos');
+        };
+    }, [isMobile, selectedHistoriaId, currentStepIndex]);
 
     // ==================================================================
     // --- NUEVA FUNCIÓN PARA VOLVER AL MENÚ (ACTUALIZADA) ---
