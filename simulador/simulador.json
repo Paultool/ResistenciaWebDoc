@@ -1,0 +1,65 @@
+{
+    "appConfig": {
+        "title": "Gestor de Financiamiento v3.0",
+        "goal": 20000,
+        "days": 30,
+        "message": "Sra. Edith espera el pago...",
+        "grants": [
+            {
+                "id": "FONCA",
+                "name": "FONCA - JOVENES",
+                "cost": 1500,
+                "days": 10,
+                "chance": 0.20,
+                "gainMin": 4000,
+                "gainMax": 9000,
+                "reqItem": "Portafolio"
+            },
+            {
+                "id": "IMCINE",
+                "name": "IMCINE - GUION",
+                "cost": 2500,
+                "days": 12,
+                "chance": 0.15,
+                "gainMin": 8000,
+                "gainMax": 15000,
+                "reqItem": "Portafolio"
+            },
+            {
+                "id": "PECDA",
+                "name": "PECDA ESTATAL",
+                "cost": 800,
+                "days": 7,
+                "chance": 0.35,
+                "gainMin": 2000,
+                "gainMax": 5000,
+                "reqItem": null
+            },
+            {
+                "id": "FREELANCE",
+                "name": "CHAMBITA FREELANCER",
+                "cost": 0,
+                "days": 3,
+                "chance": 1.0,
+                "gainMin": 800,
+                "gainMax": 1500,
+                "reqItem": null,
+                "isFreelance": true
+            }
+        ]
+    },
+    "flowConfig": {
+        "opciones_siguientes_json": [
+            {
+                "texto": "success",
+                "siguiente_paso_id": 28,
+                "recompensaId": 8
+            },
+            {
+                "texto": "failure",
+                "siguiente_paso_id": 28,
+                "recompensaId": 7
+            }
+        ]
+    }
+}

@@ -1,413 +1,727 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Búsqueda de Renta</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>SISTEMA DE ASIGNACIÓN DE VIVIENDA</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        /* =========================================
+           TERMINAL TECHNO NOIR THEME
+           ========================================= */
+        :root {
+            --bg-primary: #050505;
+            --bg-secondary: #0a0a0a;
+            --text-primary: #00ff00;
+            /* Terminal Green */
+            --text-secondary: #CD853F;
+            /* Amber/Gold */
+            --text-error: #ff3333;
+            --text-dim: #444;
+            --border-primary: #00ff00;
+            --border-secondary: #CD853F;
+
+            --font-mono: 'Courier New', 'Consolas', monospace;
+
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+        }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #2c3e50; /* Fondo gris azulado oscuro */
-            color: #ecf0f1; /* Texto gris claro */
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            /* Prevent scrollbar from canvas */
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            padding: 0.25rem; /* Padding mínimo para frame */
+            text-transform: uppercase;
+        }
+
+        /* Scanlines Overlay */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: linear-gradient(to bottom,
+                    rgba(255, 255, 255, 0),
+                    rgba(255, 255, 255, 0) 50%,
+                    rgba(0, 0, 0, 0.2) 50%,
+                    rgba(0, 0, 0, 0.2));
+            background-size: 100% 4px;
+            z-index: 10;
+        }
+
+        /* Container Principal */
+        .terminal-container {
+            width: 95%;
+            /* Responsive width */
+            max-width: 400px;
+            /* Smaller max width */
+            max-height: 98vh;
+            /* Prevent vertical overflow */
+            overflow-y: auto;
+            /* Allow scrolling if needed */
+            padding: var(--spacing-sm);
+            /* Reduced padding */
+            background-color: rgba(10, 10, 10, 0.95);
+            border: 1px solid var(--border-primary);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
+            position: relative;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Glitch Animation for Border */
+        @keyframes border-flicker {
+            0% {
+                border-color: var(--border-primary);
+            }
+
+            50% {
+                border-color: #004400;
+            }
+
+            100% {
+                border-color: var(--border-primary);
+            }
+        }
+
+        .terminal-container {
+            animation: border-flicker 4s infinite;
+        }
+
+        /* Header */
+        h1 {
+            font-size: 1rem;
+            /* Smaller font */
+            border-bottom: 1px solid var(--border-primary);
+            padding-bottom: 4px;
+            margin-top: 0;
+            margin-bottom: var(--spacing-sm);
+            text-shadow: 0 0 5px var(--text-primary);
+            letter-spacing: 1px;
             text-align: center;
         }
 
-        .card {
-            background-color: #34495e; /* Azul medianoche */
-            border-radius: 0.5rem; /* Bordes redondeados suaves */
-            padding: 0.5rem; /* Padding más compacto */
-            max-width: 450px; /* Ancho aumentado para layout horizontal */
+        /* Content Layout */
+        .ad-layout {
+            display: flex;
+            flex-direction: column;
+            /* Stack vertically on small screens default */
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-sm);
+            align-items: center;
+        }
+
+        /* Media Query for slightly larger screens to go horizontal */
+        @media (min-width: 350px) {
+            .ad-layout {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+        }
+
+        .ad-image-box {
+            width: 100px;
+            /* Smaller image */
+            height: 100px;
+            border: 1px solid var(--border-secondary);
+            padding: 2px;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .ad-image-box::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 255, 0, 0.1);
+            /* Green tint */
+            pointer-events: none;
+        }
+
+        .ad-image-box img {
             width: 100%;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.6); /* Sombra sutil */
-            border: 1px solid #f1c40f; /* Borde amarillo acento */
-            animation: bounceIn 0.6s ease-out; /* Animación de entrada rápida */
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%) contrast(1.2);
         }
 
-        @keyframes bounceIn {
-            0% { opacity: 0; transform: scale(0.9); }
-            60% { opacity: 1; transform: scale(1.02); }
-            100% { transform: scale(1); }
+        .ad-details {
+            flex: 1;
+            font-size: 0.7rem;
+            /* Smaller text */
+            line-height: 1.3;
+            width: 100%;
         }
 
-        .ad-container {
-            display: flex; /* Layout horizontal para anuncio */
-            flex-direction: row; /* Elementos lado a lado */
-            align-items: center; /* Alineación vertical centro */
-            margin-bottom: 0.25rem; /* Espacio mínimo abajo */
-            gap: 0.5rem; /* Espacio entre imagen y descripción */
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+            border-bottom: 1px dashed #333;
+            padding-bottom: 1px;
         }
 
-        .text-neon-yellow {
-            color: #f1c40f; /* Amarillo neón para acentos */
+        .label {
+            color: var(--text-secondary);
         }
 
-        .btn-action {
-            background-color: #2ecc71; /* Verde esmeralda */
-            color: #2c3e50; /* Texto oscuro */
-            font-weight: 600; /* Peso de fuente medio */
-            padding: 0.4rem 0.8rem; /* Padding pequeño */
-            border-radius: 0.25rem; /* Bordes suaves */
-            transition: background-color 0.3s, transform 0.1s; /* Transiciones suaves */
+        .value {
+            color: var(--text-primary);
+            font-weight: bold;
         }
 
-        .btn-action:hover:not(:disabled) {
-            background-color: #27ae60; /* Verde más oscuro en hover */
-            transform: translateY(-1px); /* Efecto de elevación */
+        /* Timer */
+        .timer-box {
+            margin: 5px 0;
+            text-align: right;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
         }
 
-        .btn-action:disabled {
-            background-color: #7f8c8d; /* Gris desactivado */
+        /* Buttons */
+        .actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid var(--border-primary);
+            color: var(--text-primary);
+            padding: 8px;
+            /* Smaller padding */
+            font-family: var(--font-mono);
+            font-weight: bold;
+            font-size: 0.8rem;
+            /* Smaller font */
+            text-transform: uppercase;
+            cursor: pointer;
+            flex: 1;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--text-primary);
+            color: #000;
+            box-shadow: 0 0 15px var(--text-primary);
+        }
+
+        button:disabled {
+            border-color: var(--text-dim);
+            color: var(--text-dim);
             cursor: not-allowed;
+            pointer-events: none;
         }
 
-        .btn-close {
-            background-color: #e74c3c; /* Rojo alizarina */
+        .btn-cancel {
+            border-color: var(--text-error);
+            color: var(--text-error);
         }
 
-        .btn-close:hover:not(:disabled) {
-            background-color: #c0392b; /* Rojo más oscuro en hover */
+        .btn-cancel:hover:not(:disabled) {
+            background: var(--text-error);
+            color: #000;
+            box-shadow: 0 0 15px var(--text-error);
         }
 
-        #ad-image {
-            width: 40%; /* Ancho reducido para layout horizontal */
-            height: auto; /* Altura automática */
-            border-radius: 0.25rem; /* Bordes suaves */
-            border: 1px solid #f1c40f; /* Borde amarillo */
+        /* Bleeding Layout (Canvas) */
+        #bleed-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            /* Behind container, above bg */
+            display: none;
         }
 
-        #ad-description {
-            font-size: 0.75rem; /* Tamaño pequeño (text-xs) */
-            font-style: italic; /* Estilo itálico para anuncio */
-            flex: 1; /* Ocupa el espacio restante */
-            margin: 0; /* Sin márgenes extra */
+        /* Error State Text */
+        .glitch-text {
+            position: relative;
+            animation: glitch 1s linear infinite;
+        }
+
+        @keyframes glitch {
+
+            2%,
+            64% {
+                transform: translate(2px, 0) skew(0deg);
+            }
+
+            4%,
+            60% {
+                transform: translate(-2px, 0) skew(0deg);
+            }
+
+            62% {
+                transform: translate(0, 0) skew(5deg);
+            }
+        }
+
+        .message-box {
+            min-height: 3rem;
+            margin-bottom: var(--spacing-md);
+            font-size: 0.85rem;
+            border: 1px solid transparent;
+            padding: var(--spacing-sm);
+        }
+
+        .error-mode .terminal-container {
+            border-color: var(--text-error);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+        }
+
+        .error-mode h1 {
+            border-color: var(--text-error);
+            color: var(--text-error);
+            text-shadow: 0 0 5px var(--text-error);
+        }
+
+        .error-mode .value {
+            color: var(--text-error);
+        }
+
+        /* Narrative Text for Error */
+        .narrative-error {
+            color: var(--text-error);
+            font-style: italic;
+            font-size: 0.75rem;
+            text-transform: none;
+            /* Allow normal case for narrative */
+            margin-top: 10px;
+            border-left: 2px solid var(--text-error);
+            padding-left: 10px;
+            line-height: 1.4;
         }
     </style>
 </head>
+
 <body>
 
-    <div id="game-container" class="card">
-        <div class="ad-container">
-            <img id="ad-image" src="" alt="Anuncio de Departamento">
-            <p id="ad-description"></p>
+    <div class="scanlines"></div>
+    <canvas id="bleed-canvas"></canvas>
+
+    <div id="game-container" class="terminal-container">
+        <h1 id="title">BUSQUEDA_ACTIVA...</h1>
+
+        <div class="ad-layout">
+            <div class="ad-image-box">
+                <img id="ad-image" src="" alt="NO_SIGNAL">
+            </div>
+
+            <div class="ad-details">
+                <div class="data-row">
+                    <span class="label">UBICACION:</span>
+                    <span class="value">NARVARTE_SEC_04</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">COSTO:</span>
+                    <span class="value" id="cost-value">--- XP</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">REQUISITO:</span>
+                    <span class="value" id="req-value">---</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">FONDO_ACTUAL:</span>
+                    <span class="value" id="xp-value">--- XP</span>
+                </div>
+
+                <p id="ad-description" style="margin-top: 10px; color: #aaa; font-size: 0.7rem;"></p>
+            </div>
         </div>
-        <h1 id="title" class="text-xl font-extrabold mb-1 text-neon-yellow">Búsqueda de Renta</h1>
-        <p id="message" class="mb-2 text-sm"></p>
-        
-        <div id="countdown-timer" class="mb-1 text-md font-bold"></div>
-        
-        <div id="action-area" class="flex flex-row justify-between space-x-1">
-            <button id="action-btn" class="btn-action flex-1 text-sm" disabled>
-                Intentar Negociación
-            </button>
-            <button id="close-btn" class="btn-close flex-1 text-white font-bold py-1 px-2 rounded-md transition-all duration-300 text-sm">
-                Cerrar
-            </button>
+
+        <div class="message-box" id="message-area">
+            <!-- Messages go here -->
         </div>
-        
-    </div>
 
-    <script>
-        // Lista de 12 inmuebles basados en investigación de rentas en Narvarte, CDMX
-        // Variados por costo (bajo: 100-300 XP, medio: 301-600, alto: 601-900, premium: 901+) y dificultad (low: ítems básicos, medium: intermedios, high: avanzados)
-        // Selección: Basada en |price| para costo, y si appConfig.difficulty existe ('low','medium','high'), sino inferir de |price|/300
-        const inmuebles = [
-            // Bajo costo, low difficulty
-            { description: '🏠 Departamento compacto de 1 recámara con cocina integral y baño completo en Narvarte Poniente. Ideal para solteros, cerca de parques.', imageUrl: 'https://via.placeholder.com/180x100?text=Depto+1+Rec+Narvarte+Bajo' },
-            // Bajo costo, medium
-            { description: '🏠 Acogedor depto de 1 rec con balcón pequeño, elevador y seguridad 24/7 en Narvarte Oriente. Cerca de metro y tiendas.', imageUrl: 'https://via.placeholder.com/180x100?text=Depto+1+Rec+Balcón+Narvarte' },
-            // Bajo costo, high
-            { description: '🏠 Depto económico de 1 recámara amueblado con vista a jardín, estacionamiento techado en Narvarte. Mantenimiento incluido.', imageUrl: 'https://via.placeholder.com/180x100?text=Depto+Amueblado+1+Rec+Narvarte' },
-            // Medio costo, low
-            { description: '🏠 Espacioso departamento de 2 recámaras con 1 baño, cocina equipada y área de lavado en Narvarte Poniente. Cerca de avenidas principales.', imageUrl: 'https://via.placeholder.com/180x100?text=Depto+2+Rec+Narvarte+Medio' },
-            // Medio, medium
-            { description: '🏠 Moderno depto de 2 rec con balcón, 2 baños y elevador en Narvarte Oriente. Rodeado de restaurantes y parques.', imageUrl: 'https://via.placeholder.com/180x100?text=Depto+2+Rec+Balcon+Narvarte' },
-            // Medio, high
-            { description: '🏠 Departamento amueblado de 2 recámaras con terraza privada de 10m², seguridad y estacionamiento en Narvarte. Vista verde.', imageUrl: 'https://via.placeholder.com/180x100?text=Depto+2+Rec+Terraza+Narvarte' },
-            // Alto costo, low
-            { description: '🏠 Amplio depto de 3 recámaras con 2 baños, cocina integral y sala comedor en Narvarte Poniente. Cerca de escuelas y transporte.', imageUrl: 'https://via.placeholder.com/180x100?text=Depto+3+Rec+Narvarte+Alto' },
-            // Alto, medium
-            { description: '🏠 Elegante departamento de 3 rec con balcón panorámico, elevador y 2 estacionamientos en Narvarte Oriente. Zona premium.', imageUrl: 'https://via.placeholder.com/180x100?text=Depto+3+Rec+Panoramico+Narvarte' },
-            // Alto, high
-            { description: '🏠 Lujoso depto amueblado de 3 recámaras con terraza, jacuzzi y vista al parque en Narvarte. Seguridad 24/7.', imageUrl: 'https://via.placeholder.com/180x100?text=Depto+3+Rec+Lujoso+Narvarte' },
-            // Premium costo, low
-            { description: '🏠 Exclusivo penthouse de 4 recámaras con roof garden, 3 baños y cocina gourmet en Narvarte Poniente. Alta demanda.', imageUrl: 'https://via.placeholder.com/180x100?text=Penthouse+4+Rec+Narvarte+Premium' },
-            // Premium, medium
-            { description: '🏠 Departamento premium de 4 rec con terraza amplia, elevador privado y 3 estacionamientos en Narvarte Oriente. Vista espectacular.', imageUrl: 'https://via.placeholder.com/180x100?text=Depto+4+Rec+Terraza+Narvarte' },
-            // Premium, high
-            { description: '🏠 Magnífico depto de lujo de 4 recámaras totalmente amueblado con piscina compartida y gym en Narvarte. Zona elite.', imageUrl: 'https://via.placeholder.com/180x100?text=Depto+Lujo+4+Rec+Narvarte' }
-        ];
+        <div class="timer-box" id="timer-box">
+            TIMEOUT: <span id="timer-val">30</span>s
+        </div>
 
-        // --- Variables globales de configuración (seteadas por el parent) ---
-        let appConfig = {};
-        let playerInventory = [];
-        let playerXP = 0; 
-        let successRecompensaId = null;
-        let failureRecompensaId = null;
-        let timerInterval = null;
-        let isConfigLoaded = false; // Bandera para evitar doble inicialización
+        <div class="actions">
+            <button id="btn-action">INICIAR NEGOCIACION</button>
+            <button id="btn-close" class="btn-cancel">CANCELAR OP</button>
+        </div>
 
-        // --- Elementos de la UI (se inicializarán en DOMContentLoaded) ---
-        let titleEl;
-        let messageEl;
-        let actionBtn;
-        let closeBtn;
-        let timerEl;
-        let adImageEl;
-        let adDescriptionEl;
-        let sent = false;  // Flag para prevenir duplicados
+        <script>
+            // --- DATA ---
+            // Lista de 12 inmuebles con imagenes generadas (Ciclo de 3 imagenes disponibles debido a limite de cuota)
+            const inmuebles = [
+                { description: 'UNIDAD HABITACIONAL MINIMA. 1 REC. SANITARIO COMPARTIDO.', imageUrl: '../public/images/rental/unit_01.png' },
+                { description: 'DEPTO BAJO NIVEL. 1 REC. BALCON EXT. SIN SEGURIDAD.', imageUrl: '../public/images/rental/unit_02.png' },
+                { description: 'CUARTO SERVICIO RENOVADO. 1 REC. MUEBLES BASICOS.', imageUrl: '../public/images/rental/unit_03.png' },
+                { description: 'ESTANDAR HABITACIONAL. 2 REC. 1 BAÑO. ZONA TRANSITO.', imageUrl: '../public/images/rental/unit_01.png' },
+                { description: 'DEPTO MEDIO. 2 REC. ELEVADOR. VIGILANCIA PARCIAL.', imageUrl: '../public/images/rental/unit_02.png' },
+                { description: 'UNIDAD FAMILIAR. 2 REC. TERRAZA. ACCESO CONTROLADO.', imageUrl: '../public/images/rental/unit_03.png' },
+                { description: 'RESIDENCIA ALTA. 3 REC. UBICACION CENTRAL.', imageUrl: '../public/images/rental/unit_01.png' },
+                { description: 'PISO EJECUTIVO. 3 REC. VISTA PANORAMICA. 2 EST.', imageUrl: '../public/images/rental/unit_02.png' },
+                { description: 'LOFT PREMIUM. 3 REC. AMUEBLADO. SMART HOME.', imageUrl: '../public/images/rental/unit_03.png' },
+                { description: 'PENTHOUSE. 4 REC. ROOF GARDEN. ACCESO BIOMETRICO.', imageUrl: '../public/images/rental/unit_01.png' },
+                { description: 'SKY SUITE. 4 REC. PRIVACIDAD TOTAL. HELIPUERTO.', imageUrl: '../public/images/rental/unit_02.png' },
+                { description: 'ELITE BUNKER. 4 REC. SEGURIDAD MILITAR. LUJO.', imageUrl: '../public/images/rental/unit_03.png' }
+            ];
 
-        // --- Función para obtener elementos del DOM ---
-        function initializeDOM() {
-            titleEl = document.getElementById('title');
-            messageEl = document.getElementById('message');
-            actionBtn = document.getElementById('action-btn');
-            closeBtn = document.getElementById('close-btn');
-            timerEl = document.getElementById('countdown-timer');
-            adImageEl = document.getElementById('ad-image');
-            adDescriptionEl = document.getElementById('ad-description');
-        }
+            // --- STATE ---
+            let appConfig = {};
+            let playerInventory = [];
+            let playerXP = 0;
+            let successRecompensaId = null;
+            let failureRecompensaId = null;
+            let timerInterval = null;
+            let isConfigLoaded = false;
+            let sent = false;
 
-        // --- Función para seleccionar inmueble basado en costo y dificultad ---
-        function selectInmueble(rentaAbsoluta, difficulty) {
-            // Inferir difficulty si no se envía (basado en requiredItem o default 'medium')
-            if (!difficulty) {
-                difficulty = 'medium'; // Default
-                if (appConfig.requiredItem && appConfig.requiredItem.length > 10) difficulty = 'high'; // Ejemplo simple de inferencia
-            }
-            
-            // Mapear difficulty a índice base: low=0, medium=1, high=2
-            const diffIndex = { low: 0, medium: 1, high: 2 }[difficulty] || 1;
-            
-            // Mapear costo a grupo: bajo=0, medio=1, alto=2, premium=3
-            let costGroup = 0;
-            if (rentaAbsoluta > 900) costGroup = 3;
-            else if (rentaAbsoluta > 600) costGroup = 2;
-            else if (rentaAbsoluta > 300) costGroup = 1;
-            
-            // Índice final: costGroup * 3 + diffIndex
-            const index = costGroup * 3 + diffIndex;
-            return inmuebles[index % inmuebles.length]; // Seguridad por si index >11
-        }
+            // --- DOM ELEMENTS ---
+            const titleEl = document.getElementById('title');
+            const imgEl = document.getElementById('ad-image');
+            const msgArea = document.getElementById('message-area');
+            const timerValEl = document.getElementById('timer-val');
+            const btnAction = document.getElementById('btn-action');
+            const btnClose = document.getElementById('btn-close');
 
-        // --- Función para enviar el resultado al parent (Canvas) ---
-        /**
-         * @param {('success' | 'failure')} status - Estado del resultado.
-         * @param {string} message - Mensaje descriptivo.
-         * @param {number} [costoXP=0] - Costo de XP (negativo) o ganancia (positivo).
-         */
-        function sendResult(status, message, costoXP = 0) {
+            const valCost = document.getElementById('cost-value');
+            const valReq = document.getElementById('req-value');
+            const valXp = document.getElementById('xp-value');
+            const valDesc = document.getElementById('ad-description');
 
-            if (sent) {
-                console.log("[RentalApp] Resultado ya enviado. Ignorando duplicado.");
-                return;
-            }
-            sent = true;
-            
-            // 🛑 CRÍTICO 1: Deshabilita TODOS los botones de forma preventiva.
-            if(actionBtn) actionBtn.disabled = true;
-            if(closeBtn) closeBtn.disabled = true;
+            const bleedCanvas = document.getElementById('bleed-canvas');
+            const gameContainer = document.getElementById('game-container');
 
-            // Detener el intervalo ANTES de enviar el mensaje para cerrar el modal
-            if (timerInterval) {
-                clearInterval(timerInterval);
-                timerInterval = null;
+            // --- LOGIC ---
+
+            // Helper to select an inmueble based on difficulty
+            function selectInmueble(price, difficulty) {
+                // Ensure difficulty is a number and within bounds
+                const diff = Math.max(0, Math.min(inmuebles.length - 1, difficulty || 0));
+                return inmuebles[diff];
             }
 
-            let recompensaId = status === 'success' ? successRecompensaId : failureRecompensaId;
+            function initializeGame() {
+                // Setup Text
+                const rentaAbsoluta = Math.abs(appConfig.price || 100);
 
-            const result = {
-                source: 'RentalApp',
-                type: 'app-result',
-                status: status,
-                recompensaId: recompensaId,
-                costoXP: costoXP, // EL COSTO DE RENTA/XP SE ENVÍA AQUÍ (Valor negativo si es costo)
-                message: message 
-            };
-            
-            // Envía el mensaje al parent para cerrar el modal y aplicar recompensas/costos.
-            window.parent.postMessage(result, '*');
+                // Populate Values
+                valCost.textContent = `${rentaAbsoluta.toLocaleString()} XP`; // Format price
+                valReq.textContent = appConfig.requiredItem || "N/A";
+                valXp.textContent = `${playerXP.toLocaleString()} XP`; // Format XP
 
+                // Select Property
+                const selected = selectInmueble(rentaAbsoluta, appConfig.difficulty);
 
-            console.log("[RentalApp] Enviando resultado al parent:", result);  // ← Agrega esto
-            window.parent.postMessage(result, '*');
-            
-            // 🛑 CRÍTICO 2: Limpia el contenido del juego para una salida limpia
-            // Esto asegura que el iframe quede en un estado 'muerto' después del resultado.
-            const container = document.getElementById('game-container');
-            if (container) {
-                container.innerHTML = `<p class="text-lg text-neon-yellow">Procesando...</p>`;
+                // Use the specific description from the list if available, or generate one if fallback needed
+                // The user requested to use the specific descriptions list
+                valDesc.innerText = selected.description;
+                imgEl.src = selected.imageUrl;
+
+                // Setup Buttons
+                btnAction.onclick = handleAction;
+                btnClose.onclick = () => sendResult('failure', "OPERACION CANCELADA POR USUARIO.", 0);
+
+                // Start Timer
+                startTimer(30);
             }
-        }
 
+            function handleAction() {
+                btnAction.disabled = true;
+                if (timerInterval) clearInterval(timerInterval);
 
-        // --- Manejo de la Lógica del Juego ---
-        
-        function handleAction() {
-            // Deshabilita el botón de acción principal inmediatamente para evitar doble clic.
-            actionBtn.disabled = true;
-            
-            // Detener el temporizador, ya que la acción se ha tomado
-            if (timerInterval) clearInterval(timerInterval);
+                const rentaAbsoluta = Math.abs(appConfig.price || 100);
+                const rentaXP = -rentaAbsoluta;
 
-            const rentaAbsoluta = Math.abs(appConfig.price || 100);
-            const rentaXP = -rentaAbsoluta; 
-
-            // 1. **[VERIFICACIÓN XP]** Revisar si el jugador tiene suficiente XP
-            if (playerXP < rentaAbsoluta) {
-                setupInsufficientFunds(rentaAbsoluta);
-                return;
-            }
-            
-            // 2. Revisar si el jugador tiene el ítem requerido
-            const hasRequiredItem = playerInventory.some(item => item.nombre === appConfig.requiredItem);
-
-
-            if (hasRequiredItem) {
-                // Éxito: Tiene ítem y tiene fondos
-                setupSuccess(rentaXP);
-            } else {
-                // Fallo: Tiene fondos, pero le falta el ítem
-                setupFailure();
-            }
-        }
-
-        function setupInitialView() {
-            const rentaAbsoluta = Math.abs(appConfig.price || 100);
-            titleEl.textContent = "💰 Negociación de Renta";
-            
-            // Seleccionar inmueble basado en costo y dificultad (si se envía en appConfig.difficulty)
-            const selected = selectInmueble(rentaAbsoluta, appConfig.difficulty);
-            adImageEl.src = selected.imageUrl;
-            adDescriptionEl.innerHTML = `${selected.description} <br><span style="font-style: normal; font-weight: bold;">Costo: ${rentaAbsoluta.toLocaleString()} XP | Requiere: ${appConfig.requiredItem || 'Ninguno'} | Tus XP: ${playerXP.toLocaleString()} | 30s para decidir.</span>`;
-
-            // Limpiar el mensaje separado para integrar todo en el anuncio
-            messageEl.innerHTML = '';
-
-            // Configuración inicial de botones
-            actionBtn.textContent = "¡Intentar Negociación!";
-            actionBtn.disabled = false;
-            actionBtn.style.display = 'block';
-            actionBtn.onclick = handleAction;
-
-            closeBtn.textContent = "Cancelar (Pierde Oportunidad)";
-            closeBtn.disabled = false;
-            closeBtn.classList.remove('btn-action');
-            closeBtn.classList.add('btn-close');
-            closeBtn.onclick = () => sendResult('failure', "Cancelaste la negociación.", 0);
-
-            startTimer(30);
-        }
-
-        // Se llama si el jugador no tiene suficiente XP
-        function setupInsufficientFunds(rentaAbsoluta) {
-            titleEl.textContent = "📉 Fondos Insuficientes";
-            messageEl.innerHTML = `No tienes suficiente XP para pagar la renta de **${rentaAbsoluta.toLocaleString()} XP**. Necesitas ahorrar más.`;
-            
-            // Transición de botones
-            actionBtn.style.display = 'none'; 
-            closeBtn.classList.add('btn-close');
-            closeBtn.classList.remove('btn-action');
-            closeBtn.textContent = "Entendido";
-            
-            // El botón "Continuar" llama a sendResult con status 'failure' y costo 0
-            closeBtn.onclick = () => sendResult('failure', "Fallo por falta de XP.", 0);
-        }
-
-
-        // Se llama al éxito con el costo de XP de la renta
-        function setupSuccess(rentaXP) {
-            titleEl.textContent = "🏠 ¡Departamento Conseguido!";
-            messageEl.innerHTML = `¡Felicidades! La renta te costó **${Math.abs(rentaXP).toLocaleString()} XP**.`;
-            
-            // Transición de botones
-            actionBtn.style.display = 'none'; // Ocultar el botón de acción
-            closeBtn.classList.remove('btn-close');
-            closeBtn.classList.add('btn-action');
-            closeBtn.textContent = "Continuar";
-            
-            // El botón "Continuar" llama a sendResult con status 'success' y el costo de XP
-            closeBtn.onclick = () => sendResult('success', "Renta conseguida.", rentaXP);
-        }
-
-        function setupFailure() {
-            titleEl.textContent = "🚫 Oportunidad Perdida";
-            messageEl.innerHTML = `¡Documentos rechazados! Te faltó **${appConfig.requiredItem}**. Busca en otro lugar.`;
-            
-            // Transición de botones
-            actionBtn.style.display = 'none'; // Ocultar el botón de acción
-            closeBtn.classList.add('btn-close');
-            closeBtn.classList.remove('btn-action');
-            closeBtn.textContent = "Continuar";
-            
-            // El botón "Continuar" llama a sendResult con status 'failure' y costo 0
-            closeBtn.onclick = () => sendResult('failure', "Renta fallida.", 0);
-        }
-
-        // --- Mecánica Auxiliar: Temporizador ---
-        function startTimer(seconds) {
-            let timeLeft = seconds;
-            timerEl.innerHTML = `<span id="timer">${timeLeft}</span> segundos restantes`;
-            
-            timerInterval = setInterval(() => {
-                timeLeft -= 1;
-                timerEl.innerHTML = `<span id="timer">${timeLeft}</span> segundos restantes`;
-
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                    // El `sendResult` deshabilita el resto de los botones
-                    timerEl.textContent = "¡Tiempo agotado!";
-                    // Se envía el resultado de failure por tiempo agotado
-                    sendResult('failure', "Demasiado lento. Te lo ganaron.", 0);
+                // 1. CHECK XP
+                if (playerXP < rentaAbsoluta) {
+                    setupInsufficientFunds(rentaAbsoluta);
+                    return;
                 }
-            }, 1000);
-        }
 
-        // --- Inicialización: Recibir configuración del Parent (Asegura que el DOM esté listo) ---
-        window.addEventListener('DOMContentLoaded', () => {
-            
-            initializeDOM(); // Inicializa las referencias a los elementos del DOM
-            window.addEventListener('message', (event) => {
-                if (event.data && event.data.source === 'FlujoNarrativoUsuario' && event.data.appData) {
-                    
-                    // 🛑 CRÍTICO: Bloquea si ya se recibió la configuración para prevenir doble ejecución
-                    if (isConfigLoaded) {
-                        console.log("[RentalApp] Configuración ya cargada. Ignorando mensaje duplicado.");
-                        return;
+                // 2. CHECK ITEM
+                // Normalizar string para comparación (opcional pero recomendado)
+                const required = (appConfig.requiredItem || "").toLowerCase();
+                const hasRequiredItem = playerInventory.some(item => (item.nombre || "").toLowerCase() === required);
+
+                // Si no requiere item, pasa directo (aunque la config siempre trae uno)
+                if (!appConfig.requiredItem || hasRequiredItem) {
+                    setupSuccess(rentaXP);
+                } else {
+                    setupFailureItem();
+                }
+            }
+
+            // --- SCENARIOS ---
+
+            function setupInsufficientFunds(rentaAbsoluta) {
+                // VISUAL FLIP
+                document.body.classList.add('error-mode');
+                titleEl.textContent = "FATAL ERROR: 0xDEADBEEF";
+                titleEl.classList.add('glitch-text');
+
+                // REJECTED HOUSE ICON
+                msgArea.innerHTML = `
+                <div class="glitch-text" style="color:var(--text-error); font-weight:bold; margin-bottom:15px; text-align:center;">
+                    CREDITO INSUFICIENTE. ACCESO DENEGADO.
+                </div>
+                <div style="display:flex; justify-content:center; align-items:center; height:120px;">
+                    <svg width="100" height="100" viewBox="0 0 100 100" style="filter: drop-shadow(0 0 8px var(--text-error)); animation: glitch 2s infinite;">
+                        <!-- House -->
+                        <path d="M20,90 L20,40 L50,10 L80,40 L80,90 Z" fill="none" stroke="var(--text-error)" stroke-width="2" />
+                        <rect x="35" y="55" width="30" height="35" fill="none" stroke="var(--text-error)" stroke-width="2" />
+                        
+                        <!-- X Mark -->
+                        <line x1="10" y1="10" x2="90" y2="90" stroke="var(--text-error)" stroke-width="6" stroke-linecap="round" />
+                        <line x1="90" y1="10" x2="10" y2="90" stroke="var(--text-error)" stroke-width="6" stroke-linecap="round" />
+                    </svg>
+                </div>
+            `;
+
+                // TRIGGER BLEEDING EFFECT
+                triggerBleedingEffect();
+
+                // UI UPDATE
+                btnAction.style.display = 'none';
+                btnClose.textContent = "ACEPTAR DESTINO";
+                btnClose.onclick = () => sendResult('failure', "Fallo critico: Fondos insuficientes.", 0);
+            }
+
+            function setupSuccess(rentaXP) {
+                titleEl.textContent = "CONTRATO APROBADO";
+                titleEl.style.color = "var(--text-primary)";
+                titleEl.classList.remove('glitch-text'); // Ensure no glitch on title
+
+                // ACCEPTED HOUSE ICON
+                msgArea.innerHTML = `
+                <div style="color:var(--text-primary); font-weight:bold; margin-bottom:15px; text-align:center;">
+                    ESTATUS: VIVIENDA ASEGURADA (1 MES)
+                </div>
+                <div style="display:flex; justify-content:center; align-items:center; height:120px; animation: pulse 2s infinite;">
+                    <svg width="100" height="100" viewBox="0 0 100 100" style="filter: drop-shadow(0 0 10px var(--text-primary));">
+                        <!-- House -->
+                        <path d="M20,90 L20,40 L50,10 L80,40 L80,90 Z" fill="none" stroke="var(--text-primary)" stroke-width="3" />
+                        <rect x="35" y="55" width="30" height="35" fill="none" stroke="var(--text-primary)" stroke-width="2" />
+                        
+                        <!-- Heart / Key / Emotion element -->
+                         <path d="M50 35 C 40 25, 30 40, 50 60 C 70 40, 60 25, 50 35" fill="var(--text-primary)" opacity="0.8" />
+                        
+                        <!-- Check Mark over house -->
+                         <path d="M70 70 L 85 85 L 105 55" fill="none" stroke="var(--text-primary)" stroke-width="4" transform="translate(-10, -10)" />
+                    </svg>
+                </div>
+                <div style="text-align:center; margin-top:10px; font-size:0.8rem; color:var(--text-primary);">
+                    COSTO DE OPERACION: ${Math.abs(rentaXP).toLocaleString()} XP
+                </div>
+            `;
+
+                btnAction.style.display = 'none';
+                btnClose.classList.remove('btn-cancel');
+                btnClose.style.borderColor = "var(--text-primary)";
+                btnClose.style.color = "var(--text-primary)";
+                btnClose.textContent = "FIRMAR Y POSEER";
+                btnClose.onclick = () => sendResult('success', "Renta adquirida. Contrato 1 mes.", rentaXP);
+
+                // Optional: Play success sound or visual flair
+                gameContainer.style.boxShadow = "0 0 30px rgba(0, 255, 0, 0.4)";
+            }
+
+            function setupFailureItem() {
+                titleEl.textContent = "DENEGADO: FALTA REQUISITO";
+                msgArea.innerHTML = `
+                <span style="color:var(--text-secondary); display:block; text-align:center;">
+                    ERROR VALIDACION DOCUMENTAL.
+                    <br>
+                    SISTEMA REQUIERE: 
+                    <br>
+                    <strong style="color:var(--text-primary); font-size:1.1rem;">[ ${appConfig.requiredItem} ]</strong>
+                </span>
+            `;
+
+                btnAction.style.display = 'none';
+                btnClose.textContent = "RETIRARSE";
+                btnClose.onclick = () => sendResult('failure', "Falta item requerido.", 0);
+            }
+
+            // --- BLEEDING PIXEL EFFECT ---
+            function triggerBleedingEffect() {
+                bleedCanvas.style.display = 'block';
+                const ctx = bleedCanvas.getContext('2d');
+                bleedCanvas.width = window.innerWidth;
+                bleedCanvas.height = window.innerHeight;
+
+                const pixels = [];
+                const colWidth = 10;
+                const cols = Math.ceil(bleedCanvas.width / colWidth);
+
+                // Initialize drops
+                for (let i = 0; i < cols; i++) {
+                    if (Math.random() > 0.8) { // Only some columns bleed
+                        pixels.push({
+                            x: i * colWidth,
+                            y: Math.random() * -100,
+                            speed: 2 + Math.random() * 5,
+                            length: 5 + Math.random() * 20
+                        });
                     }
-                    isConfigLoaded = true; // Marca como cargado
-                    
-                    console.log("[RentalApp] Configuración recibida:", event.data);
-                    
-                    const data = JSON.parse(event.data.appData);
-                    appConfig = data;
-                    
-                    // Mapear el inventario para facilitar la búsqueda por nombre
-                    playerInventory = event.data.playerStats.inventario.map(item => ({
-                        ...item,
-                        nombre: item.nombre 
-                    }));
-
-                    // OBTENER EL XP DEL JUGADOR
-                    playerXP = event.data.playerStats.puntuacion || 0;
-                    
-                    successRecompensaId = event.data.successRecompensaId;
-                    failureRecompensaId = event.data.failureRecompensaId;
-                    
-                    setupInitialView();
                 }
-            });
-        });
 
-    </script>
+                function animate() {
+                    // Fade effect for trails
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                    ctx.fillRect(0, 0, bleedCanvas.width, bleedCanvas.height);
+
+                    ctx.fillStyle = '#ff0000'; // Pure Red
+
+                    // Add new drops randomly
+                    if (Math.random() > 0.9) {
+                        pixels.push({
+                            x: Math.floor(Math.random() * cols) * colWidth,
+                            y: -20,
+                            speed: 2 + Math.random() * 8,
+                            length: 5 + Math.random() * 10
+                        });
+                    }
+
+                    for (let i = 0; i < pixels.length; i++) {
+                        const p = pixels[i];
+                        ctx.fillRect(p.x, p.y, colWidth, p.length);
+                        p.y += p.speed;
+
+                        // Remove if off screen
+                        if (p.y > bleedCanvas.height) {
+                            pixels.splice(i, 1);
+                            i--;
+                        }
+                    }
+
+                    requestAnimationFrame(animate);
+                }
+
+                animate();
+            }
+
+            // --- UTILS & HELPERS ---
+
+            function generateDescription(price, difficulty) {
+                // Arrays of phrases based on difficulty/vibe
+                const easyPrefixes = ["ESTUDIO COMPACTO.", "HABITACION COMPARTIDA.", "CUARTO DE AZOTEA.", "ANEXO DE SERVICIO."];
+                const mediumPrefixes = ["DEPTO. 2 REC.", "UNIDAD FAMILIAR.", "LOFT RENOVADO.", "PISO MEDIO."];
+                const hardPrefixes = ["PENTHOUSE EXCLUSIVO.", "RESIDENCIA PRIVADA.", "SUITE DE LUJO.", "BUNKER CORPORATIVO."];
+
+                const suffixes = [
+                    "ZONA ALTA PLUSVALIA.",
+                    "UBICACION ESTRATEGICA.",
+                    "ACCESO A TRANSPORTE.",
+                    "VIGILANCIA AUTOMATIZADA.",
+                    "CONTRATO MENSUAL.",
+                    "DISPONIBILIDAD INMEDIATA."
+                ];
+
+                let text = "";
+                let diff = (difficulty || "medium").toLowerCase();
+
+                // Determine category by Price or Difficulty
+                // Using price ranges from logs: 11k-15k (Low?), 17k-22k (Med), 26k-35k (High)
+
+                if (price >= 25000 || diff === 'dificil') {
+                    text += hardPrefixes[Math.floor(Math.random() * hardPrefixes.length)];
+                    text += " ACABADOS PREMIUM. AMUEBLADO.";
+                } else if (price >= 16000 || diff === 'medio') {
+                    text += mediumPrefixes[Math.floor(Math.random() * mediumPrefixes.length)];
+                    text += " SERVICIOS INCLUIDOS.";
+                } else {
+                    text += easyPrefixes[Math.floor(Math.random() * easyPrefixes.length)];
+                    text += " ESPACIO MINIMO.";
+                }
+
+                // Add random suffix
+                text += " " + suffixes[Math.floor(Math.random() * suffixes.length)];
+
+                return text;
+            }
+
+            function startTimer(seconds) {
+                let timeLeft = seconds;
+                timerValEl.textContent = timeLeft;
+
+                // Clear existing interval if any (safety)
+                if (timerInterval) clearInterval(timerInterval);
+
+                timerInterval = setInterval(() => {
+                    timeLeft -= 1;
+                    timerValEl.textContent = timeLeft;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                        sendResult('failure', "TIEMPO_AGOTADO.", 0);
+                    }
+                }, 1000);
+            }
+
+            function sendResult(status, message, costoXP = 0) {
+                if (sent) return;
+                sent = true;
+
+                btnAction.disabled = true;
+                btnClose.disabled = true;
+                if (timerInterval) clearInterval(timerInterval);
+
+                let recompensaId = status === 'success' ? successRecompensaId : failureRecompensaId;
+                const result = {
+                    source: 'RentalApp',
+                    type: 'app-result',
+                    status: status,
+                    recompensaId: recompensaId,
+                    costoXP: costoXP,
+                    message: message
+                };
+
+                window.parent.postMessage(result, '*');
+                gameContainer.innerHTML = `<h1 class="glitch-text">CONEXION TERMINADA</h1>`;
+            }
+
+            // --- INITIALIZATION ---
+            window.addEventListener('DOMContentLoaded', () => {
+                window.addEventListener('message', (event) => {
+                    if (event.data && event.data.source === 'FlujoNarrativoUsuario' && event.data.appData) {
+                        if (isConfigLoaded) return;
+                        isConfigLoaded = true;
+
+                        const data = JSON.parse(event.data.appData);
+                        appConfig = data;
+
+                        if (event.data.playerStats) {
+                            playerInventory = event.data.playerStats.inventario.map(item => ({
+                                ...item,
+                                nombre: item.nombre
+                            }));
+                            playerXP = event.data.playerStats.puntuacion || 0;
+                        }
+
+                        successRecompensaId = event.data.successRecompensaId;
+                        failureRecompensaId = event.data.failureRecompensaId;
+
+                        initializeGame();
+                    }
+                });
+            });
+        </script>
 </body>
+
 </html>

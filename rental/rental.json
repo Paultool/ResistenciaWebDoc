@@ -1,0 +1,167 @@
+[
+    {
+        "meshName": "BuildingMesh-00069",
+        "contentType": "video",
+        "title": "Diagonal de San Antonio 1222 #18",
+        "url": "https://ia600403.us.archive.org/21/items/narvarte-loco-sol-compress/Narvarte%20Compress/Narvarte%20Compress.mp4",
+        "subtitlesUrl": "https://melvinrecords.gt.tc/resistencia/subtitles/narvarte.srt",
+        "personajeId": 6,
+        "recompensaId": 11
+    },
+    {
+        "meshName": "BuildingMesh-00064",
+        "contentType": "video",
+        "title": "Loco Sol",
+        "url": "https://ia800403.us.archive.org/21/items/narvarte-loco-sol-compress/Narvarte%20Loco%20Sol%20Compress/Narvarte%20Loco%20Sol%20COMPRESS.mp4",
+        "personajeId": 6,
+        "recompensaId": 14
+    },
+    {
+        "meshName": "BuildingMesh-00093",
+        "contentType": "interactive",
+        "title": "Busca Departamento",
+        "url": "https://melvinrecords.gt.tc/resistencia/rental",
+        "personajeId": 6,
+        "successRecompensaId": 10,
+        "failureRecompensaId": 7,
+        "rentalAppConfig": {
+            "difficulty": "Medio",
+            "price": 18000,
+            "requiredItem": "Referencia Laboral"
+        }
+    },
+    {
+        "meshName": "BuildingMesh-00002",
+        "contentType": "interactive",
+        "title": "Busca Departamento",
+        "url": "https://melvinrecords.gt.tc/resistencia/rental",
+        "personajeId": 6,
+        "successRecompensaId": 10,
+        "failureRecompensaId": 7,
+        "rentalAppConfig": {
+            "difficulty": "Facil",
+            "price": 12000,
+            "requiredItem": "Documento de Identidad"
+        }
+    },
+    {
+        "meshName": "BuildingMesh-00008",
+        "contentType": "interactive",
+        "title": "Busca Departamento",
+        "url": "https://melvinrecords.gt.tc/resistencia/rental",
+        "personajeId": 6,
+        "successRecompensaId": 10,
+        "failureRecompensaId": 7,
+        "rentalAppConfig": {
+            "difficulty": "Facil",
+            "price": 11000,
+            "requiredItem": "Documento de Identidad"
+        }
+    },
+    {
+        "meshName": "BuildingMesh-00058",
+        "contentType": "interactive",
+        "title": "Busca Departamento",
+        "url": "https://melvinrecords.gt.tc/resistencia/rental",
+        "personajeId": 6,
+        "successRecompensaId": 10,
+        "failureRecompensaId": 7,
+        "rentalAppConfig": {
+            "difficulty": "Medio",
+            "price": 20000,
+            "requiredItem": "Referencia Laboral"
+        }
+    },
+    {
+        "meshName": "BuildingMesh-00105",
+        "contentType": "interactive",
+        "title": "Busca Departamento",
+        "url": "https://melvinrecords.gt.tc/resistencia/rental",
+        "personajeId": 6,
+        "successRecompensaId": 10,
+        "failureRecompensaId": 7,
+        "rentalAppConfig": {
+            "difficulty": "Medio",
+            "price": 22000,
+            "requiredItem": "Garante de Alquiler"
+        }
+    },
+    {
+        "meshName": "BuildingMesh-00108",
+        "contentType": "interactive",
+        "title": "Busca Departamento",
+        "url": "https://melvinrecords.gt.tc/resistencia/rental",
+        "personajeId": 6,
+        "successRecompensaId": 10,
+        "failureRecompensaId": 7,
+        "rentalAppConfig": {
+            "difficulty": "Dificil",
+            "price": 28000,
+            "requiredItem": "Pase de Seguridad Nivel 3"
+        }
+    },
+    {
+        "meshName": "BuildingMesh-00113",
+        "contentType": "interactive",
+        "title": "Busca Departamento",
+        "url": "https://melvinrecords.gt.tc/resistencia/rental",
+        "personajeId": 6,
+        "successRecompensaId": 10,
+        "failureRecompensaId": 7,
+        "rentalAppConfig": {
+            "difficulty": "Dificil",
+            "price": 35000,
+            "requiredItem": "Pase de Seguridad Nivel 3"
+        }
+    },
+    {
+        "meshName": "BuildingMesh-00122",
+        "contentType": "interactive",
+        "title": "Busca Departamento",
+        "url": "https://melvinrecords.gt.tc/resistencia/rental",
+        "personajeId": 6,
+        "successRecompensaId": 10,
+        "failureRecompensaId": 7,
+        "rentalAppConfig": {
+            "difficulty": "Medio",
+            "price": 17000,
+            "requiredItem": "Referencia Laboral"
+        }
+    },
+    {
+        "meshName": "BuildingMesh-00135",
+        "contentType": "interactive",
+        "title": "Busca Departamento",
+        "url": "https://melvinrecords.gt.tc/resistencia/rental",
+        "personajeId": 6,
+        "successRecompensaId": 10,
+        "failureRecompensaId": 7,
+        "rentalAppConfig": {
+            "difficulty": "Dificil",
+            "price": 26000,
+            "requiredItem": "Pase de Seguridad Nivel 3"
+        }
+    },
+    {
+        "meshName": "BuildingMesh-00146",
+        "contentType": "interactive",
+        "title": "Busca Departamento",
+        "url": "https://melvinrecords.gt.tc/resistencia/rental",
+        "personajeId": 6,
+        "successRecompensaId": 10,
+        "failureRecompensaId": 7,
+        "rentalAppConfig": {
+            "difficulty": "Facil",
+            "price": 13000,
+            "requiredItem": "Documento de Identidad"
+        }
+    },
+    {
+        "meshName": "backgroundMusic",
+        "contentType": "backgroundMusic",
+        "title": "audio fondo",
+        "url": "https://melvinrecords.gt.tc/resistencia/assets/mp3/narvarte1.mp3",
+        "url_load_animation": "https://atogaijnlssrgkvilsyp.supabase.co/storage/v1/object/public/videos/flapper.gif",
+        "backgroundMusic": ""
+    }
+]
