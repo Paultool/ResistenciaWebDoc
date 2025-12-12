@@ -389,6 +389,7 @@
             let timerInterval = null;
             let isConfigLoaded = false;
             let sent = false;
+            let initialXP = 0; // Track initial XP for delta calculation
 
             // --- DOM ELEMENTS ---
             const titleEl = document.getElementById('title');
@@ -408,10 +409,10 @@
 
             // --- LOGIC ---
 
-            // Helper to select an inmueble based on difficulty
+            // Helper to select an inmueble based on difficulty (0-11 index)
             function selectInmueble(price, difficulty) {
                 // Ensure difficulty is a number and within bounds
-                const diff = Math.max(0, Math.min(inmuebles.length - 1, difficulty || 0));
+                const diff = Math.max(0, Math.min(inmuebles.length - 1, parseInt(difficulty) || 0));
                 return inmuebles[diff];
             }
 
@@ -674,7 +675,9 @@
                 }, 1000);
             }
 
-            function sendResult(status, message, costoXP = 0) {
+
+
+            function sendResult(status, message, costoXP) {
                 if (sent) return;
                 sent = true;
 
@@ -682,13 +685,15 @@
                 btnClose.disabled = true;
                 if (timerInterval) clearInterval(timerInterval);
 
+                console.log(`[RentalApp] Sending result - Status: ${status}, Cost XP: ${costoXP}`);
+
                 let recompensaId = status === 'success' ? successRecompensaId : failureRecompensaId;
                 const result = {
                     source: 'RentalApp',
                     type: 'app-result',
                     status: status,
                     recompensaId: recompensaId,
-                    costoXP: costoXP,
+                    costoXP: costoXP, // Always send the actual cost
                     message: message
                 };
 
@@ -712,6 +717,7 @@
                                 nombre: item.nombre
                             }));
                             playerXP = event.data.playerStats.puntuacion || 0;
+                            initialXP = playerXP; // Store initial XP
                         }
 
                         successRecompensaId = event.data.successRecompensaId;

@@ -16,6 +16,16 @@
                 "reqItem": "Portafolio"
             },
             {
+                "id": "FONCA",
+                "name": "FONCA - COINVERSIONES",
+                "cost": 2500,
+                "days": 10,
+                "chance": 0.10,
+                "gainMin": 6000,
+                "gainMax": 12000,
+                "reqItem": "Portafolio"
+            },
+            {
                 "id": "IMCINE",
                 "name": "IMCINE - GUION",
                 "cost": 2500,
@@ -23,6 +33,16 @@
                 "chance": 0.15,
                 "gainMin": 8000,
                 "gainMax": 15000,
+                "reqItem": "Portafolio"
+            },
+            {
+                "id": "IMCINE",
+                "name": "IMCINE - PRODUCCION",
+                "cost": 4500,
+                "days": 15,
+                "chance": 0.19,
+                "gainMin": 10000,
+                "gainMax": 20000,
                 "reqItem": "Portafolio"
             },
             {
@@ -43,6 +63,17 @@
                 "chance": 1.0,
                 "gainMin": 800,
                 "gainMax": 1500,
+                "reqItem": null,
+                "isFreelance": true
+            },
+            {
+                "id": "FREELANCE",
+                "name": "FREELANCER SISTEMAS",
+                "cost": 0,
+                "days": 3,
+                "chance": 0.5,
+                "gainMin": 1000,
+                "gainMax": 2000,
                 "reqItem": null,
                 "isFreelance": true
             }

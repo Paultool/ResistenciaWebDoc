@@ -1,117 +1,962 @@
 {
   "IZTACCIHUATL": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+12%" },
-    "graficaData": { "renta": 20000, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+12%"
+    },
+    "graficaData": {
+      "renta": 20000,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
   },
   "CREDITO CONSTRUCTOR": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+12%" },
-    "graficaData": { "renta": 20000, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+12%"
+    },
+    "graficaData": {
+      "renta": 20000,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
   },
   "CIUDAD DE LOS DEPORTES": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+18%" },
-    "graficaData": { "renta": 21000, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Medio" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+18%"
+    },
+    "graficaData": {
+      "renta": 21000,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio"
+    }
   },
   "MIGUEL ALEMAN": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+15%" },
-    "graficaData": { "renta": 19000, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+15%"
+    },
+    "graficaData": {
+      "renta": 19000,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
   },
   "CENTRO URBANO PRESIDENTE ALEMAN (U HAB)": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+10%" },
-    "graficaData": { "renta": 17500, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Medio" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+10%"
+    },
+    "graficaData": {
+      "renta": 17500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio"
+    }
   },
   "GENERAL PEDRO MARIA ANAYA": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+13%" },
-    "graficaData": { "renta": 19500, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+13%"
+    },
+    "graficaData": {
+      "renta": 19500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
   },
   "SAN JOSE INSURGENTES": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+22%" },
-    "graficaData": { "renta": 23000, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+22%"
+    },
+    "graficaData": {
+      "renta": 23000,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
   },
   "DEL VALLE IV": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+16%" },
-    "graficaData": { "renta": 22000, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+16%"
+    },
+    "graficaData": {
+      "renta": 22000,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
   },
   "PORTALES I": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+12%" },
-    "graficaData": { "renta": 18000, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+12%"
+    },
+    "graficaData": {
+      "renta": 18000,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
   },
   "NARVARTE VI": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+14%" },
-    "graficaData": { "renta": 21000, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+14%"
+    },
+    "graficaData": {
+      "renta": 21000,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
   },
   "NONOALCO": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+11%" },
-    "graficaData": { "renta": 18500, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Medio" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+11%"
+    },
+    "graficaData": {
+      "renta": 18500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio"
+    }
   },
   "MERCED GOMEZ": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+13%" },
-    "graficaData": { "renta": 19500, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+13%"
+    },
+    "graficaData": {
+      "renta": 19500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
   },
   "INSURGENTES SAN BORJA": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+17%" },
-    "graficaData": { "renta": 22500, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+17%"
+    },
+    "graficaData": {
+      "renta": 22500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
   },
   "ATENOR SALAS": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+9%" },
-    "graficaData": { "renta": 17000, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Bajo" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+9%"
+    },
+    "graficaData": {
+      "renta": 17000,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Bajo"
+    }
   },
   "DEL VALLE V": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+15%" },
-    "graficaData": { "renta": 21500, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+15%"
+    },
+    "graficaData": {
+      "renta": 21500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
   },
   "SAN PEDRO DE LOS  PINOS": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+14%" },
-    "graficaData": { "renta": 20000, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Medio" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+14%"
+    },
+    "graficaData": {
+      "renta": 20000,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio"
+    }
   },
   "NOCHE BUENA": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+14%" },
-    "graficaData": { "renta": 20500, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+14%"
+    },
+    "graficaData": {
+      "renta": 20500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
   },
   "DEL VALLE II": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+13%" },
-    "graficaData": { "renta": 22000, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+13%"
+    },
+    "graficaData": {
+      "renta": 22000,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
   },
   "ALAMOS II": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+22%" },
-    "graficaData": { "renta": 19500, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+22%"
+    },
+    "graficaData": {
+      "renta": 19500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
   },
   "ACTIPAN": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+16%" },
-    "graficaData": { "renta": 21000, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+16%"
+    },
+    "graficaData": {
+      "renta": 21000,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
   },
-  "NARVARTE PONIENTE": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+14%" },
-    "graficaData": { "renta": 21000, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  "VILLA DE CORTES": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+12%"
+    },
+    "graficaData": {
+      "renta": 15800,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio"
+    }
   },
-  "NARVARTE ORIENTE": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+15%" },
-    "graficaData": { "renta": 20500, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  "ERMITA": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+11%"
+    },
+    "graficaData": {
+      "renta": 15500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio"
+    }
   },
-  "DEL VALLE CENTRO": {
-    "mapaData": { "titulo": "Aumento de Plusvalía", "valor": "+11%" },
-    "graficaData": { "renta": 23500, "artista": 15000, "ingeniero": 30000 },
-    "censoData": { "titulo": "Nivel de Gentrificación", "valor": "Alto" }
+  "MARIA DEL CARMEN": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+13%"
+    },
+    "graficaData": {
+      "renta": 16000,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio"
+    }
+  },
+  "RESIDENCIAL EMPERADORES": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+11%"
+    },
+    "graficaData": {
+      "renta": 17000,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio"
+    }
+  },
+  "PERIODISTA FRANCISCO ZARCO": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+12%"
+    },
+    "graficaData": {
+      "renta": 16800,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio"
+    }
+  },
+  "MIXCOAC": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+12%"
+    },
+    "graficaData": {
+      "renta": 19800,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
+  },
+  "SAN JUAN": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+10%"
+    },
+    "graficaData": {
+      "renta": 19200,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
+  },
+  "STA CRUZ ATOYAC": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+12%"
+    },
+    "graficaData": {
+      "renta": 20500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
+  },
+  "DEL VALLE III": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+9%"
+    },
+    "graficaData": {
+      "renta": 23800,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
+  },
+  "DEL VALLE VI": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+9%"
+    },
+    "graficaData": {
+      "renta": 23800,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
+  },
+  "PORTALES II": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+16%"
+    },
+    "graficaData": {
+      "renta": 16800,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio-Alto"
+    }
+  },
+  "NARVARTE II": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+14%"
+    },
+    "graficaData": {
+      "renta": 21500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
+  },
+  "POSTAL": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+12%"
+    },
+    "graficaData": {
+      "renta": 14200,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Bajo-Medio"
+    }
+  },
+  "OCHO DE AGOSTO": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+11%"
+    },
+    "graficaData": {
+      "renta": 18500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio-Alto"
+    }
+  },
+  "AMERICAS UNIDAS-DEL LAGO": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+12%"
+    },
+    "graficaData": {
+      "renta": 16800,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio"
+    }
+  },
+  "EXTREMADURA INSURGENTES": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+10%"
+    },
+    "graficaData": {
+      "renta": 21500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
+  },
+  "ALBERT": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+13%"
+    },
+    "graficaData": {
+      "renta": 14500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio"
+    }
+  },
+  "MODERNA": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+14%"
+    },
+    "graficaData": {
+      "renta": 16500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio"
+    }
+  },
+  "NATIVITAS": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+13%"
+    },
+    "graficaData": {
+      "renta": 16200,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio"
+    }
+  },
+  "SAN SIMON TICUMAC": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+15%"
+    },
+    "graficaData": {
+      "renta": 16500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio"
+    }
+  },
+  "DEL VALLE I": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+9%"
+    },
+    "graficaData": {
+      "renta": 23800,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
+  },
+  "VERTIZ NARVARTE": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+13%"
+    },
+    "graficaData": {
+      "renta": 19800,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
+  },
+  "XOCO": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+14%"
+    },
+    "graficaData": {
+      "renta": 27500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Muy Alto"
+    }
+  },
+  "ALAMOS I": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+15%"
+    },
+    "graficaData": {
+      "renta": 18200,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio-Alto"
+    }
+  },
+  "NARVARTE IV": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+14%"
+    },
+    "graficaData": {
+      "renta": 21500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
+  },
+  "PIEDAD NARVARTE": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+13%"
+    },
+    "graficaData": {
+      "renta": 20000,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
+  },
+  "PORTALES ORIENTE": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+16%"
+    },
+    "graficaData": {
+      "renta": 16800,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio-Alto"
+    }
+  },
+  "NARVARTE V": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+14%"
+    },
+    "graficaData": {
+      "renta": 21500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
+  },
+  "PORTALES III": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+16%"
+    },
+    "graficaData": {
+      "renta": 16800,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio-Alto"
+    }
+  },
+  "DEL VALLE VII": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+9%"
+    },
+    "graficaData": {
+      "renta": 23800,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
+  },
+  "NAPOLES (AMPL)": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+10%"
+    },
+    "graficaData": {
+      "renta": 26500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Muy Alto"
+    }
+  },
+  "LETRAN VALLE": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+14%"
+    },
+    "graficaData": {
+      "renta": 19500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
+  },
+  "NIOS HEROES DE CHAPULTEPEC": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+12%"
+    },
+    "graficaData": {
+      "renta": 17500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio"
+    }
+  },
+  "ZACAHUITZCO": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+13%"
+    },
+    "graficaData": {
+      "renta": 17200,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio"
+    }
+  },
+  "NARVARTE III": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+14%"
+    },
+    "graficaData": {
+      "renta": 21500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
+  },
+  "MIRAVALLE": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+11%"
+    },
+    "graficaData": {
+      "renta": 14800,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio"
+    }
+  },
+  "JOSEFA ORTIZ DE DOMINGUEZ": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+12%"
+    },
+    "graficaData": {
+      "renta": 15200,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio"
+    }
+  },
+  "INDEPENDENCIA": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+13%"
+    },
+    "graficaData": {
+      "renta": 17000,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio-Alto"
+    }
+  },
+  "INSURGENTES MIXCOAC": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+11%"
+    },
+    "graficaData": {
+      "renta": 22000,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
+  },
+  "NAPOLES": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+10%"
+    },
+    "graficaData": {
+      "renta": 26500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Muy Alto"
+    }
+  },
+  "NARVARTE I": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+14%"
+    },
+    "graficaData": {
+      "renta": 21500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
+  },
+  "PORTALES IV": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+16%"
+    },
+    "graficaData": {
+      "renta": 16800,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Medio-Alto"
+    }
+  },
+  "TLACOQUEMECATL DEL VALLE": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+9%"
+    },
+    "graficaData": {
+      "renta": 24000,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
+  },
+  "ACACIAS": {
+    "mapaData": {
+      "titulo": "Aumento de Plusvalía",
+      "valor": "+10%"
+    },
+    "graficaData": {
+      "renta": 24500,
+      "artista": 15000,
+      "ingeniero": 30000
+    },
+    "censoData": {
+      "titulo": "Nivel de Gentrificación",
+      "valor": "Alto"
+    }
   }
 }

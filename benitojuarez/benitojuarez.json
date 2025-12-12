@@ -1,0 +1,207 @@
+{
+    "appConfig": {
+        "metadata": {
+            "title": "Benito Juárez — Diagnóstico de Desplazamiento",
+            "version": "1.0.0",
+            "description": "Explora las colonias de Benito Juárez para entender el desplazamiento urbano sistemático."
+        },
+        "narrative": {
+            "contextMessage": "Tras intentar rentar en Narvarte, Pablo debe explorar toda la delegación Benito Juárez. Cada visita tiene costos reales: transporte, comidas, trámites...",
+            "previousRent": 5000,
+            "currentSituation": "Desalojado de Narvarte — Renta subió a $20,000",
+            "objective": "Explorar 6+ colonias para obtener un diagnóstico completo del desplazamiento"
+        },
+        "gameplay": {
+            "coloniasToVisitGoal": 6,
+            "maxColoniasToVisit": 24,
+            "allowRevisit": false,
+            "showCostPreview": true,
+            "showVisitedColonies": true
+        },
+        "economy": {
+            "baseCosts": {
+                "transport": {
+                    "min": 80,
+                    "max": 150,
+                    "description": "Uber/Metro para ir a ver el área"
+                },
+                "food": {
+                    "min": 50,
+                    "max": 120,
+                    "description": "Comida durante la exploración"
+                },
+                "paperwork": {
+                    "min": 100,
+                    "max": 300,
+                    "description": "Copias, impresiones, trámites"
+                },
+                "applicationFee": {
+                    "min": 200,
+                    "max": 500,
+                    "description": "Costo de solicitud (colonias caras)"
+                }
+            },
+            "costByRentRange": {
+                "15000-17999": {
+                    "totalCost": 350,
+                    "breakdown": "Transporte + comida + copias básicas"
+                },
+                "18000-20999": {
+                    "totalCost": 450,
+                    "breakdown": "Transporte + comida + trámites adicionales"
+                },
+                "21000-23999": {
+                    "totalCost": 600,
+                    "breakdown": "Transporte + comida + trámites + solicitud"
+                },
+                "24000+": {
+                    "totalCost": 750,
+                    "breakdown": "Pérdida total: viaje inútil + tiempo perdido"
+                }
+            }
+        },
+        "events": {
+            "byRentRange": [
+                {
+                    "rentMin": 15000,
+                    "rentMax": 17999,
+                    "xpCost": 350,
+                    "category": "Accesible (con esfuerzo)",
+                    "messages": [
+                        "Lista de espera de 3 meses. Gastos: transporte, comida, copias.",
+                        "Requieren aval con propiedad. Gastos de exploración perdidos.",
+                        "Ya rentado esta mañana. Tiempo y dinero perdidos.",
+                        "Solo con referencias laborales. Trámites inútiles."
+                    ]
+                },
+                {
+                    "rentMin": 18000,
+                    "rentMax": 20999,
+                    "xpCost": 450,
+                    "category": "Difícil",
+                    "messages": [
+                        "Depósito de 4 meses + aval. Gastos en transporte y trámites.",
+                        "Solo profesionistas corporativos. Gastos de solicitud perdidos.",
+                        "Requieren historial crediticio impecable. Trámites inútiles.",
+                        "Edificio en remodelación para Airbnb. Gastos perdidos."
+                    ]
+                },
+                {
+                    "rentMin": 21000,
+                    "rentMax": 23999,
+                    "xpCost": 600,
+                    "category": "Imposible",
+                    "messages": [
+                        "Depósito de 6 meses. Gastos en transporte, comida, solicitud.",
+                        "Solo extranjeros con nómina. Discriminación velada. Gastos perdidos.",
+                        "Edificio solo para Airbnb. Tiempo y dinero desperdiciados.",
+                        "'Buscamos perfil profesionista.' Rechazo directo. Gastos inútiles."
+                    ]
+                },
+                {
+                    "rentMin": 24000,
+                    "rentMax": 30000,
+                    "xpCost": 750,
+                    "category": "Absurdo",
+                    "messages": [
+                        "El casero ni siquiera te recibe. Gastos de viaje totalmente perdidos.",
+                        "Edificio corporativo. Acceso denegado. Pérdida total de recursos.",
+                        "Renta absurda. Ni siquiera vale la pena intentar. Gastos inútiles.",
+                        "'Solo para ejecutivos nivel C.' Discriminación total. Tiempo perdido."
+                    ]
+                }
+            ],
+            "unique": [
+                {
+                    "id": "first_visit_narvarte",
+                    "trigger": "colonia === 'NARVARTE PONIENTE' || colonia === 'NARVARTE ORIENTE'",
+                    "xpCost": 200,
+                    "message": "Regresas a Narvarte. Los recuerdos pesan. Gastos en transporte y comida mientras recorres tu antigua colonia.",
+                    "recompensaId": null,
+                    "flags": [
+                        "visited_old_home"
+                    ]
+                },
+                {
+                    "id": "encounter_displaced",
+                    "trigger": "visitCount === 4",
+                    "xpCost": 80,
+                    "message": "Encuentras a un vecino de Narvarte también buscando. 'Todos nos están sacando', dice. Invitas un café.",
+                    "recompensaId": 17,
+                    "flags": [
+                        "solidarity_moment"
+                    ]
+                },
+                {
+                    "id": "historical_reference",
+                    "trigger": "visitCount >= 3 && random < 0.08",
+                    "xpCost": 50,
+                    "message": "Encuentras un periódico viejo: 'Rentas en BJ 1995: $800'. Un recordatorio del cambio brutal.",
+                    "recompensaId": 18,
+                    "flags": [
+                        "historical_awareness"
+                    ]
+                },
+                {
+                    "id": "mounting_frustration",
+                    "trigger": "visitCount === 5 && rejectionCount >= 4",
+                    "xpCost": 100,
+                    "message": "Cinco colonias visitadas, cuatro rechazos. La frustración crece. Gastas en café para pensar qué hacer.",
+                    "recompensaId": null,
+                    "flags": [
+                        "mounting_frustration"
+                    ]
+                }
+            ]
+        },
+        "completion": {
+            "normal": {
+                "condition": "visitedColonies >= 6 && visitedColonies < 10",
+                "message": "Tras explorar Benito Juárez, la conclusión es clara: Pablo ya no puede vivir aquí. Los costos de búsqueda y las rentas imposibles lo confirman.",
+                "summary": {
+                    "colonias_visitadas": "visitedColonies.length",
+                    "xp_gastado": "totalXPSpent",
+                    "rechazos": "rejectionCount",
+                    "conclusion": "Benito Juárez ya no es viable para Pablo"
+                }
+            },
+            "exhaustive": {
+                "condition": "visitedColonies >= 10",
+                "message": "Has documentado el desplazamiento completo de Benito Juárez. Cada colonia visitada confirma lo mismo: expulsión económica sistemática.",
+                "summary": {
+                    "colonias_visitadas": "visitedColonies.length",
+                    "xp_gastado": "totalXPSpent",
+                    "rechazos": "rejectionCount",
+                    "conclusion": "Desplazamiento urbano documentado completamente"
+                }
+            },
+            "abandoned": {
+                "condition": "visitedColonies < 6",
+                "message": "Abandonaste la exploración. La búsqueda de vivienda en BJ es demasiado costosa.",
+                "penalty": -100
+            }
+        }
+    },
+    "flowConfig": {
+        "opciones_siguientes_json": [
+            {
+                "texto": "success",
+                "siguiente_paso_id": 39,
+                "recompensaId": 14,
+                "comment": "Exploración normal (6-9 colonias) - Obtiene 'Memoria del Desplazamiento' + flag 'BJDeny'"
+            },
+            {
+                "texto": "success",
+                "siguiente_paso_id": 39,
+                "recompensaId": 15,
+                "comment": "Exploración exhaustiva (10+ colonias) - Obtiene 'Mapa de Gentrificación BJ 2024' + flag 'BJ_complete_survey'"
+            },
+            {
+                "texto": "failure",
+                "siguiente_paso_id": 58,
+                "recompensaId": 16,
+                "comment": "Exploración abandonada (<6 colonias) - Pierde -100 XP adicional"
+            }
+        ]
+    }
+}

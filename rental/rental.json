@@ -25,7 +25,7 @@
         "successRecompensaId": 10,
         "failureRecompensaId": 7,
         "rentalAppConfig": {
-            "difficulty": "Medio",
+            "difficulty": 5,
             "price": 18000,
             "requiredItem": "Referencia Laboral"
         }
@@ -39,7 +39,7 @@
         "successRecompensaId": 10,
         "failureRecompensaId": 7,
         "rentalAppConfig": {
-            "difficulty": "Facil",
+            "difficulty": 1,
             "price": 12000,
             "requiredItem": "Documento de Identidad"
         }
@@ -53,7 +53,7 @@
         "successRecompensaId": 10,
         "failureRecompensaId": 7,
         "rentalAppConfig": {
-            "difficulty": "Facil",
+            "difficulty": 0,
             "price": 11000,
             "requiredItem": "Documento de Identidad"
         }
@@ -67,7 +67,7 @@
         "successRecompensaId": 10,
         "failureRecompensaId": 7,
         "rentalAppConfig": {
-            "difficulty": "Medio",
+            "difficulty": 6,
             "price": 20000,
             "requiredItem": "Referencia Laboral"
         }
@@ -81,7 +81,7 @@
         "successRecompensaId": 10,
         "failureRecompensaId": 7,
         "rentalAppConfig": {
-            "difficulty": "Medio",
+            "difficulty": 7,
             "price": 22000,
             "requiredItem": "Garante de Alquiler"
         }
@@ -95,7 +95,7 @@
         "successRecompensaId": 10,
         "failureRecompensaId": 7,
         "rentalAppConfig": {
-            "difficulty": "Dificil",
+            "difficulty": 9,
             "price": 28000,
             "requiredItem": "Pase de Seguridad Nivel 3"
         }
@@ -109,7 +109,7 @@
         "successRecompensaId": 10,
         "failureRecompensaId": 7,
         "rentalAppConfig": {
-            "difficulty": "Dificil",
+            "difficulty": 11,
             "price": 35000,
             "requiredItem": "Pase de Seguridad Nivel 3"
         }
@@ -123,7 +123,7 @@
         "successRecompensaId": 10,
         "failureRecompensaId": 7,
         "rentalAppConfig": {
-            "difficulty": "Medio",
+            "difficulty": 4,
             "price": 17000,
             "requiredItem": "Referencia Laboral"
         }
@@ -137,7 +137,7 @@
         "successRecompensaId": 10,
         "failureRecompensaId": 7,
         "rentalAppConfig": {
-            "difficulty": "Dificil",
+            "difficulty": 8,
             "price": 26000,
             "requiredItem": "Pase de Seguridad Nivel 3"
         }
@@ -151,7 +151,7 @@
         "successRecompensaId": 10,
         "failureRecompensaId": 7,
         "rentalAppConfig": {
-            "difficulty": "Facil",
+            "difficulty": 3,
             "price": 13000,
             "requiredItem": "Documento de Identidad"
         }

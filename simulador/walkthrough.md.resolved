@@ -1,0 +1,131 @@
+# XP Sync Implementation Walkthrough
+
+## Overview
+
+Implemented XP synchronization for the [simulador.html](file:///c:/Users/pault/Desktop/LA%20RESISTENCIA%20RESERVORIO/Resistencia%20Spartane%202/agent_workspace/resistencia-app%20101025/resistencia-app/simulador/simulador.html) grant simulator, ensuring that XP gains and losses during the simulation are persisted to the database.
+
+## Problem Identified
+
+The grant simulator was using the player's real XP as starting capital but wasn't saving changes back to the database. The root cause was that [simulador.html](file:///c:/Users/pault/Desktop/LA%20RESISTENCIA%20RESERVORIO/Resistencia%20Spartane%202/agent_workspace/resistencia-app%20101025/resistencia-app/simulador/simulador.html) was sending the **final XP balance** instead of the **XP delta (change)** to the parent component.
+
+### Example of the Bug:
+- Player starts with **5,000 XP**
+- After simulation, ends with **18,000 XP** (gained **13,000**)
+- Old code sent: `costoXP: 18000` (final balance)
+- Database calculated: `5000 + 18000 = 23000` ❌ **WRONG!**
+- Expected: `5000 + 13000 = 18000` ✅
+
+## Changes Made
+
+### Modified File: [simulador.html](file:///c:/Users/pault/Desktop/LA%20RESISTENCIA%20RESERVORIO/Resistencia%20Spartane%202/agent_workspace/resistencia-app%20101025/resistencia-app/simulador/simulador.html)
+
+#### 1. Initial XP Tracking (Already Existed)
+The `initialXP` variable was already being tracked:
+- **Line 580**: Variable declaration
+- **Line 614**: Set when receiving player stats from parent
+
+#### 2. Fixed [sendResult](file:///c:/Users/pault/Desktop/LA%20RESISTENCIA%20RESERVORIO/Resistencia%20Spartane%202/agent_workspace/resistencia-app%20101025/resistencia-app/rental/rental.html#677-698) Function (Lines 879-895)
+
+**Before:**
+```javascript
+function sendResult(success) {
+    window.parent.postMessage({
+        source: 'RentalApp',  // ❌ Wrong source
+        type: 'app-result',
+        status: success ? 'success' : 'failure',
+        recompensaId: success ? successRecompensaId : failureRecompensaId,
+        costoXP: 0,  // ❌ Hardcoded to 0
+        message: success ? "Renta Pagada." : "Desalojo ejecutado."
+    }, '*');
+}
+```
+
+**After:**
+```javascript
+function sendResult(success) {
+    // Calculate XP delta (change from initial)
+    const xpDelta = balance - initialXP;
+    
+    console.log(`[Simulador] Sending result - Initial XP: ${initialXP}, Final Balance: ${balance}, Delta: ${xpDelta}`);
+    
+    // Send back to parent
+    window.parent.postMessage({
+        source: 'Simulador',  // ✅ Correct source to match message handler
+        type: 'app-result',
+        status: success ? 'success' : 'failure',
+        recompensaId: success ? successRecompensaId : failureRecompensaId,
+        costoXP: xpDelta,  // ✅ Send the DELTA (change), not the final balance
+        message: success ? "Meta alcanzada." : "Desalojo ejecutado."
+    }, '*');
+}
+```
+
+## How It Works
+
+### Data Flow
+
+1. **Parent → Simulator**:
+   - [FlujoNarrativoUsuario.tsx](file:///c:/Users/pault/Desktop/LA%20RESISTENCIA%20RESERVORIO/Resistencia%20Spartane%202/agent_workspace/resistencia-app%20101025/resistencia-app/src/components/FlujoNarrativoUsuario.tsx#L770-L800) sends `playerStats.xp_total` to iframe
+   - [simulador.html](file:///c:/Users/pault/Desktop/LA%20RESISTENCIA%20RESERVORIO/Resistencia%20Spartane%202/agent_workspace/resistencia-app%20101025/resistencia-app/simulador/simulador.html) stores this as `initialXP` and `balance`
+
+2. **During Simulation**:
+   - Player applies for grants, spends XP, wins/loses grants
+   - `balance` variable changes locally
+
+3. **On Game End**:
+   - [sendResult](file:///c:/Users/pault/Desktop/LA%20RESISTENCIA%20RESERVORIO/Resistencia%20Spartane%202/agent_workspace/resistencia-app%20101025/resistencia-app/rental/rental.html#677-698) calculates: `xpDelta = balance - initialXP`
+   - Sends message with `source: 'Simulador'` and `costoXP: xpDelta`
+
+4. **Parent Receives Message**:
+   - [handleIframeMessage](file:///c:/Users/pault/Desktop/LA%20RESISTENCIA%20RESERVORIO/Resistencia%20Spartane%202/agent_workspace/resistencia-app%20101025/resistencia-app/src/components/FlujoNarrativoUsuario.tsx#L715-L766) intercepts message
+   - Calls [handleRecompensa](file:///c:/Users/pault/Desktop/LA%20RESISTENCIA%20RESERVORIO/Resistencia%20Spartane%202/agent_workspace/resistencia-app%20101025/resistencia-app/src/components/FlujoNarrativoUsuario.tsx#L300-L316)
+   - Calls [aplicarXPDirecto(userId, xpDelta, "Interacción App")](file:///c:/Users/pault/Desktop/LA%20RESISTENCIA%20RESERVORIO/Resistencia%20Spartane%202/agent_workspace/resistencia-app%20101025/resistencia-app/src/services/GameServiceUser.ts#L175-L219)
+
+5. **Database Update**:
+   - [aplicarXPDirecto](file:///c:/Users/pault/Desktop/LA%20RESISTENCIA%20RESERVORIO/Resistencia%20Spartane%202/agent_workspace/resistencia-app%20101025/resistencia-app/src/services/GameServiceUser.ts#175-220) reads current XP from database
+   - Calculates: `newXP = currentXP + xpDelta` (algebraic addition)
+   - Updates `perfiles_jugador.xp_total` in database
+   - Returns updated stats to UI
+
+## Testing Scenarios
+
+### Scenario 1: Successful Grant (XP Gain)
+- **Initial**: 5,000 XP
+- **Actions**: Win grant worth 10,000 XP
+- **Final**: 15,000 XP
+- **Delta**: +10,000
+- **Expected DB**: 15,000 XP ✅
+
+### Scenario 2: Failed Grant (XP Loss)
+- **Initial**: 5,000 XP
+- **Actions**: Spend 2,000 XP on failed applications
+- **Final**: 3,000 XP
+- **Delta**: -2,000
+- **Expected DB**: 3,000 XP ✅
+
+### Scenario 3: Multiple Sessions
+- **Session 1**: Start 5,000 → End 8,000 (Delta: +3,000)
+- **Session 2**: Start 8,000 → End 6,000 (Delta: -2,000)
+- **Expected DB**: 6,000 XP ✅
+
+## Console Logging
+
+Added debug logging to track XP changes:
+```
+[Simulador] Sending result - Initial XP: 5000, Final Balance: 18000, Delta: 13000
+```
+
+This helps verify that the delta calculation is correct during testing.
+
+## Related Files
+
+- [simulador.html](file:///c:/Users/pault/Desktop/LA%20RESISTENCIA%20RESERVORIO/Resistencia%20Spartane%202/agent_workspace/resistencia-app%20101025/resistencia-app/simulador/simulador.html) - Modified [sendResult](file:///c:/Users/pault/Desktop/LA%20RESISTENCIA%20RESERVORIO/Resistencia%20Spartane%202/agent_workspace/resistencia-app%20101025/resistencia-app/rental/rental.html#677-698) function
+- [FlujoNarrativoUsuario.tsx](file:///c:/Users/pault/Desktop/LA%20RESISTENCIA%20RESERVORIO/Resistencia%20Spartane%202/agent_workspace/resistencia-app%20101025/resistencia-app/src/components/FlujoNarrativoUsuario.tsx) - Message handler (no changes needed)
+- [GameServiceUser.ts](file:///c:/Users/pault/Desktop/LA%20RESISTENCIA%20RESERVORIO/Resistencia%20Spartane%202/agent_workspace/resistencia-app%20101025/resistencia-app/src/services/GameServiceUser.ts) - [aplicarXPDirecto](file:///c:/Users/pault/Desktop/LA%20RESISTENCIA%20RESERVORIO/Resistencia%20Spartane%202/agent_workspace/resistencia-app%20101025/resistencia-app/src/services/GameServiceUser.ts#175-220) function (no changes needed)
+
+## Next Steps
+
+User should test the simulator to verify:
+1. XP changes are correctly reflected in the database
+2. Multiple simulation runs accumulate XP correctly
+3. Both success and failure scenarios update XP properly

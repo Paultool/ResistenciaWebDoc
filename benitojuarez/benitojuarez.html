@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BENITO JUÁREZ — DIAGNÓSTICO DE DESPLAZAMIENTO</title>
+    <style>
+        /* =========================================
+           GLITCH NOIR THEME
+           ========================================= */
+        :root {
+            --bg-primary: #050505;
+            --text-primary: #00ff00;
+            --text-secondary: #ff00ff;
+            --text-error: #ff0033;
+            --text-warning: #ffaa00;
+            --border-primary: #00ff00;
+            --border-secondary: #ff00ff;
+            --font-mono: 'Courier New', monospace;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-transform: uppercase;
+        }
+
+        /* Scanlines */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: linear-gradient(to bottom,
+                    rgba(255, 255, 255, 0),
+                    rgba(255, 255, 255, 0) 50%,
+                    rgba(0, 0, 0, 0.2) 50%,
+                    rgba(0, 0, 0, 0.2));
+            background-size: 100% 4px;
+            z-index: 10;
+        }
+
+        /* Container */
+        .terminal-container {
+            width: 95%;
+            max-width: 900px;
+            max-height: 95vh;
+            overflow-y: auto;
+            padding: 16px;
+            background-color: rgba(10, 10, 10, 0.95);
+            border: 2px solid var(--border-primary);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.2);
+            position: relative;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            animation: border-flicker 4s infinite;
+        }
+
+        @keyframes border-flicker {
+
+            0%,
+            100% {
+                border-color: var(--border-primary);
+            }
+
+            50% {
+                border-color: #004400;
+            }
+        }
+
+        /* Header */
+        h1 {
+            font-size: 1.2rem;
+            border-bottom: 2px solid var(--border-primary);
+            padding-bottom: 8px;
+            margin: 0 0 16px 0;
+            text-shadow: 0 0 8px var(--text-primary);
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+            font-size: 0.85rem;
+        }
+
+        .stat-box {
+            border: 1px solid var(--border-secondary);
+            padding: 8px;
+            text-align: center;
+            background: rgba(255, 0, 255, 0.05);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        /* Map Grid */
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .colonia-card {
+            border: 1px solid #333;
+            padding: 12px;
+            background: rgba(0, 20, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .colonia-card:hover:not(.visited):not(.disabled) {
+            border-color: var(--border-primary);
+            background: rgba(0, 50, 0, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
+        }
+
+        .colonia-card.visited {
+            border-color: var(--text-secondary);
+            background: rgba(50, 0, 50, 0.3);
+            opacity: 0.7;
+        }
+
+        .colonia-card.disabled {
+            opacity: 0.3;
+            pointer-events: none;
+            filter: grayscale(1);
+        }
+
+        .colonia-name {
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        .colonia-rent {
+            font-size: 0.85rem;
+            color: var(--text-warning);
+            margin-bottom: 4px;
+        }
+
+        .colonia-cost {
+            font-size: 0.7rem;
+            color: var(--text-error);
+        }
+
+        .colonia-gentrification {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            margin-top: 4px;
+            display: inline-block;
+            border-radius: 2px;
+        }
+
+        .gentrification-alto {
+            background: var(--text-error);
+            color: #000;
+        }
+
+        .gentrification-medio {
+            background: var(--text-warning);
+            color: #000;
+        }
+
+        .gentrification-bajo {
+            background: var(--text-primary);
+            color: #000;
+        }
+
+        /* Event Panel */
+        .event-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 500px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid var(--border-secondary);
+            padding: 20px;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 0 40px rgba(255, 0, 255, 0.4);
+        }
+
+        .event-panel.active {
+            display: block;
+            animation: glitch 0.5s;
+        }
+
+        @keyframes glitch {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%);
+            }
+
+            25% {
+                transform: translate(-48%, -50%);
+            }
+
+            50% {
+                transform: translate(-52%, -50%);
+            }
+
+            75% {
+                transform: translate(-50%, -52%);
+            }
+        }
+
+        .event-title {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-secondary);
+            padding-bottom: 8px;
+        }
+
+        .event-message {
+            font-size: 0.85rem;
+            line-height: 1.4;
+            margin-bottom: 16px;
+            text-transform: none;
+            color: #ccc;
+        }
+
+        .event-cost {
+            font-size: 0.9rem;
+            color: var(--text-error);
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        /* Buttons */
+        button {
+            background: transparent;
+            border: 1px solid var(--border-primary);
+            color: var(--text-primary);
+            padding: 10px 16px;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--text-primary);
+            color: #000;
+            box-shadow: 0 0 15px var(--text-primary);
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .btn-danger {
+            border-color: var(--text-error);
+            color: var(--text-error);
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: var(--text-error);
+            color: #000;
+        }
+
+        /* Console Log */
+        .console-log {
+            height: 100px;
+            border-top: 1px solid var(--border-secondary);
+            margin-top: 16px;
+            padding-top: 8px;
+            overflow-y: auto;
+            font-size: 0.7rem;
+            color: #888;
+            background: #000;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+            border-left: 2px solid #333;
+            padding-left: 6px;
+        }
+
+        .log-error {
+            border-left-color: var(--text-error);
+            color: var(--text-error);
+        }
+
+        .log-success {
+            border-left-color: var(--text-primary);
+            color: var(--text-primary);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #111;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-primary);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="scanlines"></div>
+
+    <div class="terminal-container">
+        <h1 id="title">BENITO JUAREZ — DIAGNOSTICO</h1>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-box">
+                <span class="stat-label">XP ACTUAL</span>
+                <span class="stat-value" id="xp-val">---</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">COLONIAS VISITADAS</span>
+                <span class="stat-value" id="visited-val">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">XP GASTADO</span>
+                <span class="stat-value" id="spent-val">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">OBJETIVO</span>
+                <span class="stat-value" id="goal-val">6</span>
+            </div>
+        </div>
+
+        <!-- Map Grid -->
+        <div style="margin-bottom:10px; border-bottom:1px dashed #333; padding-bottom:5px; font-size:0.85rem;">
+            MAPA DE COLONIAS DISPONIBLES:
+        </div>
+        <div class="map-grid" id="map-grid"></div>
+
+        <!-- Actions -->
+        <div style="display:flex; gap:10px; margin-top:16px;">
+            <button id="btn-complete" style="display:none;">COMPLETAR EXPLORACION</button>
+            <button id="btn-abandon" class="btn-danger">ABANDONAR BUSQUEDA</button>
+        </div>
+
+        <!-- Console Log -->
+        <div class="console-log" id="log-list">
+            <div class="log-entry">> Sistema inicializado...</div>
+            <div class="log-entry">> Esperando configuración...</div>
+        </div>
+    </div>
+
+    <!-- Event Panel -->
+    <div class="event-panel" id="event-panel">
+        <div class="event-title" id="event-title">EVENTO</div>
+        <div class="event-message" id="event-message"></div>
+        <div class="event-cost" id="event-cost"></div>
+        <button id="btn-continue-event">CONTINUAR</button>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════
+        // LOAD COLONIAS DATA
+        // ═══════════════════════════════════════
+        let COLONIAS_DATA = null;
+
+        async function loadColoniasData() {
+            try {
+                const response = await fetch('./colonias_data.json');
+                COLONIAS_DATA = await response.json();
+                log('> Datos de colonias cargados.', 'success');
+            } catch (error) {
+                console.error('[BJ] Error loading colonias_data.json:', error);
+                log('> ERROR: No se pudieron cargar los datos de colonias.', 'error');
+            }
+        }
+
+        // ═══════════════════════════════════════
+        // STATE
+        // ═══════════════════════════════════════
+        let appConfig = {};
+        let playerXP = 0;
+        let playerInventory = [];
+        let initialXP = 0;
+        let totalXPSpent = 0;
+        let visitedColonies = [];
+        let rejectionCount = 0;
+        let isGameActive = false;
+
+        let successRecompensaId = null;
+        let failureRecompensaId = null;
+
+        // ═══════════════════════════════════════
+        // DOM ELEMENTS
+        // ═══════════════════════════════════════
+        const xpVal = document.getElementById('xp-val');
+        const visitedVal = document.getElementById('visited-val');
+        const spentVal = document.getElementById('spent-val');
+        const goalVal = document.getElementById('goal-val');
+        const mapGrid = document.getElementById('map-grid');
+        const logList = document.getElementById('log-list');
+        const btnComplete = document.getElementById('btn-complete');
+        const btnAbandon = document.getElementById('btn-abandon');
+        const eventPanel = document.getElementById('event-panel');
+        const eventTitle = document.getElementById('event-title');
+        const eventMessage = document.getElementById('event-message');
+        const eventCost = document.getElementById('event-cost');
+        const btnContinueEvent = document.getElementById('btn-continue-event');
+
+        // ═══════════════════════════════════════
+        // INIT
+        // ═══════════════════════════════════════
+        window.addEventListener('message', async (event) => {
+            if (event.data?.source === 'FlujoNarrativoUsuario' && event.data.appData) {
+                appConfig = JSON.parse(event.data.appData);
+
+                // Player stats
+                if (event.data.playerStats) {
+                    playerXP = event.data.playerStats.puntuacion || 0;
+                    initialXP = playerXP;
+                    playerInventory = event.data.playerStats.inventario || [];
+                }
+
+                // Reward IDs
+                successRecompensaId = event.data.successRecompensaId;
+                failureRecompensaId = event.data.failureRecompensaId;
+
+                // Load colonias data
+                await loadColoniasData();
+
+                // Init game
+                initGame();
+            }
+        });
+
+        function initGame() {
+            isGameActive = true;
+
+            // Update UI
+            goalVal.textContent = appConfig.gameplay?.coloniasToVisitGoal || 6;
+            updateUI();
+
+            // Render colonias
+            renderColonias();
+
+            log('> Exploración iniciada. Haz clic en una colonia para visitarla.');
+        }
+
+        // ═══════════════════════════════════════
+        // RENDER COLONIAS
+        // ═══════════════════════════════════════
+        function renderColonias() {
+            if (!COLONIAS_DATA) return;
+
+            mapGrid.innerHTML = '';
+
+            Object.keys(COLONIAS_DATA).forEach(coloniaName => {
+                const data = COLONIAS_DATA[coloniaName];
+                const renta = data.graficaData.renta;
+                const gentrificacion = data.censoData.valor;
+
+                // Calculate cost
+                const cost = calculateCost(renta);
+
+                // Create card
+                const card = document.createElement('div');
+                card.className = 'colonia-card';
+
+                card.innerHTML = `
+                    <div class="colonia-name">${coloniaName}</div>
+                    <div class="colonia-rent">RENTA: $${renta.toLocaleString()}</div>
+                    <div class="colonia-cost">COSTO: -${cost} XP</div>
+                    <div class="colonia-gentrification gentrification-${gentrificacion.toLowerCase()}">${gentrificacion}</div>
+                `;
+
+                card.onclick = () => visitColonia(coloniaName, data, cost);
+
+                mapGrid.appendChild(card);
+            });
+        }
+
+        // ═══════════════════════════════════════
+        // CALCULATE COST
+        // ═══════════════════════════════════════
+        function calculateCost(renta) {
+            if (renta >= 24000) return 750;
+            if (renta >= 21000) return 600;
+            if (renta >= 18000) return 450;
+            return 350;
+        }
+
+        // ═══════════════════════════════════════
+        // VISIT COLONIA
+        // ═══════════════════════════════════════
+        function visitColonia(name, data, cost) {
+            if (!isGameActive) return;
+
+            // Check if already visited
+            if (visitedColonies.some(v => v.name === name)) {
+                log(`> Ya visitaste ${name}.`, 'error');
+                return;
+            }
+
+            // Check if has enough XP
+            if (playerXP < cost) {
+                log(`> XP insuficiente para visitar ${name}.`, 'error');
+                return;
+            }
+
+            // Process visit
+            const renta = data.graficaData.renta;
+            const event = determineEvent(name, renta, visitedColonies.length + 1);
+
+            // Deduct XP
+            playerXP -= cost;
+            totalXPSpent += cost;
+
+            // Record visit
+            visitedColonies.push({
+                name: name,
+                renta: renta,
+                cost: cost,
+                event: event.id
+            });
+
+            // Update UI
+            updateUI();
+            markColoniaVisited(name);
+
+            // Show event
+            showEvent(name, event, cost);
+
+            // Check completion
+            checkCompletion();
+        }
+
+        // ═══════════════════════════════════════
+        // DETERMINE EVENT
+        // ═══════════════════════════════════════
+        function determineEvent(coloniaName, renta, visitCount) {
+            // Unique events
+            if ((coloniaName === 'NARVARTE PONIENTE' || coloniaName === 'NARVARTE ORIENTE') && visitCount === 1) {
+                return {
+                    id: 'first_visit_narvarte',
+                    message: 'Regresas a Narvarte. Los recuerdos pesan. Gastos en transporte y comida mientras recorres tu antigua colonia.',
+                    category: 'NARRATIVO'
+                };
+            }
+
+            if (visitCount === 4) {
+                return {
+                    id: 'encounter_displaced',
+                    message: 'Encuentras a un vecino de Narvarte también buscando. "Todos nos están sacando", dice. Invitas un café.',
+                    category: 'NARRATIVO',
+                    recompensaId: 17
+                };
+            }
+
+            if (visitCount >= 3 && Math.random() < 0.08) {
+                return {
+                    id: 'historical_reference',
+                    message: 'Encuentras un periódico viejo: "Rentas en BJ 1995: $800". Un recordatorio del cambio brutal.',
+                    category: 'NARRATIVO',
+                    recompensaId: 18
+                };
+            }
+
+            // Events by rent range
+            const events = appConfig.events?.byRentRange || [];
+            for (const eventRange of events) {
+                if (renta >= eventRange.rentMin && renta <= eventRange.rentMax) {
+                    const messages = eventRange.messages || [];
+                    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                    rejectionCount++;
+                    return {
+                        id: `rent_${eventRange.category}`,
+                        message: randomMessage,
+                        category: eventRange.category
+                    };
+                }
+            }
+
+            // Default
+            return {
+                id: 'default',
+                message: 'Exploración completada. Gastos de transporte y trámites.',
+                category: 'NEUTRAL'
+            };
+        }
+
+        // ═══════════════════════════════════════
+        // SHOW EVENT
+        // ═══════════════════════════════════════
+        function showEvent(coloniaName, event, cost) {
+            eventTitle.textContent = coloniaName;
+            eventMessage.textContent = event.message;
+            eventCost.textContent = `COSTO: -${cost} XP`;
+
+            eventPanel.classList.add('active');
+
+            log(`> ${coloniaName}: ${event.message}`, event.category === 'NARRATIVO' ? 'success' : 'normal');
+        }
+
+        btnContinueEvent.onclick = () => {
+            eventPanel.classList.remove('active');
+        };
+
+        // ═══════════════════════════════════════
+        // MARK COLONIA VISITED
+        // ═══════════════════════════════════════
+        function markColoniaVisited(name) {
+            const cards = mapGrid.querySelectorAll('.colonia-card');
+            cards.forEach(card => {
+                if (card.querySelector('.colonia-name').textContent === name) {
+                    card.classList.add('visited');
+                }
+            });
+        }
+
+        // ═══════════════════════════════════════
+        // UPDATE UI
+        // ═══════════════════════════════════════
+        function updateUI() {
+            xpVal.textContent = playerXP.toLocaleString();
+            visitedVal.textContent = visitedColonies.length;
+            spentVal.textContent = totalXPSpent.toLocaleString();
+        }
+
+        // ═══════════════════════════════════════
+        // CHECK COMPLETION
+        // ═══════════════════════════════════════
+        function checkCompletion() {
+            const goal = appConfig.gameplay?.coloniasToVisitGoal || 6;
+
+            if (visitedColonies.length >= goal) {
+                btnComplete.style.display = 'block';
+                log('> Objetivo alcanzado. Puedes completar la exploración.', 'success');
+            }
+        }
+
+        // ═══════════════════════════════════════
+        // COMPLETE / ABANDON
+        // ═══════════════════════════════════════
+        btnComplete.onclick = () => {
+            isGameActive = false;
+            const isExhaustive = visitedColonies.length >= 10;
+            sendResult(isExhaustive ? 'exhaustive' : 'success');
+        };
+
+        btnAbandon.onclick = () => {
+            if (confirm('¿Seguro que quieres abandonar la exploración?')) {
+                isGameActive = false;
+                sendResult('failure');
+            }
+        };
+
+        // ═══════════════════════════════════════
+        // SEND RESULT
+        // ═══════════════════════════════════════
+        function sendResult(status) {
+            let recompensaId;
+
+            if (status === 'exhaustive') {
+                recompensaId = 15;
+            } else if (status === 'success') {
+                recompensaId = 14;
+            } else {
+                recompensaId = 16;
+            }
+
+            const result = {
+                source: 'BenitoJuarez',
+                type: 'app-result',
+                status: status,
+                recompensaId: recompensaId,
+                costoXP: -totalXPSpent,
+                metadata: {
+                    visited_colonies: visitedColonies.map(v => v.name),
+                    total_rejections: rejectionCount,
+                    avg_rent: Math.floor(visitedColonies.reduce((sum, v) => sum + v.renta, 0) / visitedColonies.length)
+                },
+                message: getCompletionMessage(status)
+            };
+
+            console.log('[BJ] Sending result:', result);
+            window.parent.postMessage(result, '*');
+
+            log(`> Exploración ${status}. Total gastado: ${totalXPSpent} XP`, 'success');
+        }
+
+        function getCompletionMessage(status) {
+            if (status === 'exhaustive') {
+                return 'Documentaste el desplazamiento completo de Benito Juárez.';
+            } else if (status === 'success') {
+                return 'Benito Juárez ya no es viable para Pablo.';
+            } else {
+                return 'Abandonaste la exploración.';
+            }
+        }
+
+        // ═══════════════════════════════════════
+        // LOG
+        // ═══════════════════════════════════════
+        function log(msg, type = 'normal') {
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            if (type === 'error') div.classList.add('log-error');
+            if (type === 'success') div.classList.add('log-success');
+            div.textContent = msg;
+            logList.appendChild(div);
+            logList.scrollTop = logList.scrollHeight;
+        }
+
+        // ═══════════════════════════════════════
+        // TEST MODE
+        // ═══════════════════════════════════════
+        if (window.parent === window) {
+            console.log('[BJ] Test mode activated');
+            const mockConfig = {
+                source: 'FlujoNarrativoUsuario',
+                appData: JSON.stringify({
+                    metadata: {
+                        title: 'Benito Juárez Test'
+                    },
+                    gameplay: {
+                        coloniasToVisitGoal: 6
+                    },
+                    events: {
+                        byRentRange: [
+                            {
+                                rentMin: 15000,
+                                rentMax: 17999,
+                                xpCost: 350,
+                                category: 'Accesible',
+                                messages: ['Lista de espera de 3 meses.']
+                            },
+                            {
+                                rentMin: 18000,
+                                rentMax: 20999,
+                                xpCost: 450,
+                                category: 'Difícil',
+                                messages: ['Depósito de 4 meses.']
+                            },
+                            {
+                                rentMin: 21000,
+                                rentMax: 23999,
+                                xpCost: 600,
+                                category: 'Imposible',
+                                messages: ['Depósito de 6 meses.']
+                            },
+                            {
+                                rentMin: 24000,
+                                rentMax: 30000,
+                                xpCost: 750,
+                                category: 'Absurdo',
+                                messages: ['El casero ni siquiera te recibe.']
+                            }
+                        ]
+                    }
+                }),
+                playerStats: {
+                    puntuacion: 15000,
+                    inventario: []
+                },
+                successRecompensaId: 14,
+                failureRecompensaId: 16
+            };
+            window.postMessage(mockConfig, '*');
+        }
+    </script>
+</body>
+
+</html>

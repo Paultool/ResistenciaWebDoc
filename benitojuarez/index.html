@@ -172,7 +172,8 @@
         }
 
         .visited-item-cost {
-            color: var(--text-error);
+            color: #ffd700;
+            /* Gold/Yellow for better contrast */
             font-size: 0.65rem;
         }
 
@@ -284,6 +285,280 @@
             background: var(--text-primary);
         }
 
+        /* Custom Notification Overlay */
+        .notification-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            animation: fadeIn 0.2s ease-in;
+        }
+
+        .notification-box {
+            background: rgba(10, 10, 10, 0.95);
+            border: 2px solid var(--border-primary);
+            padding: 24px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+            animation: glitchIn 0.3s ease-out;
+        }
+
+        .notification-box.error {
+            border-color: var(--text-error);
+            box-shadow: 0 0 30px rgba(255, 0, 51, 0.3);
+        }
+
+        .notification-box.warning {
+            border-color: var(--text-warning);
+            box-shadow: 0 0 30px rgba(255, 170, 0, 0.3);
+        }
+
+        .notification-title {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-primary);
+        }
+
+        .notification-box.error .notification-title {
+            color: var(--text-error);
+        }
+
+        .notification-box.warning .notification-title {
+            color: var(--text-warning);
+        }
+
+        .notification-message {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .notification-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .notification-btn {
+            background: transparent;
+            border: 1px solid var(--border-primary);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .notification-btn:hover {
+            background: var(--text-primary);
+            color: #000;
+            box-shadow: 0 0 15px var(--text-primary);
+        }
+
+        .notification-btn.danger {
+            border-color: var(--text-error);
+            color: var(--text-error);
+        }
+
+        .notification-btn.danger:hover {
+            background: var(--text-error);
+            color: #000;
+            box-shadow: 0 0 15px var(--text-error);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes glitchIn {
+            0% {
+                transform: translate(-2px, 2px);
+                opacity: 0;
+            }
+
+            25% {
+                transform: translate(2px, -2px);
+            }
+
+            50% {
+                transform: translate(-1px, 1px);
+            }
+
+            75% {
+                transform: translate(1px, -1px);
+            }
+
+            100% {
+                transform: translate(0, 0);
+                opacity: 1;
+            }
+        }
+
+        /* =========================================
+           MOBILE RESPONSIVE STYLES
+           ========================================= */
+        @media (max-width: 768px) {
+
+            /* Change to vertical layout on mobile */
+            #app-container {
+                flex-direction: column;
+            }
+
+            /* Map section - reduced to 45% to give more room to controls if needed, or keep 50/50 */
+            #map-section {
+                width: 100%;
+                height: 45vh;
+                border-right: none;
+                border-bottom: 2px solid var(--border-primary);
+            }
+
+            /* Control panel - 55% */
+            #control-panel {
+                width: 100%;
+                height: 55vh;
+                border-left: none;
+                border-top: 2px solid var(--border-primary);
+                padding: 8px;
+                /* Reduced padding */
+                display: flex;
+                flex-direction: column;
+            }
+
+            /* Ultra compact header */
+            h1 {
+                font-size: 0.55rem;
+                /* Extremely small for mobile */
+                padding-bottom: 2px;
+                margin: 0 0 4px 0;
+                /* Reduced margin */
+                letter-spacing: 0.5px;
+            }
+
+            /* Stats grid - 4 columns to save vertical space */
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 4px;
+                margin-bottom: 8px;
+                font-size: 0.65rem;
+            }
+
+            .stat-box {
+                padding: 4px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .stat-label {
+                font-size: 0.5rem;
+                margin-bottom: 0;
+                line-height: 1;
+            }
+
+            .stat-value {
+                font-size: 0.75rem;
+                line-height: 1.2;
+            }
+
+            /* Section headers */
+            .section-header {
+                font-size: 0.65rem;
+                padding-bottom: 2px;
+                margin-bottom: 4px;
+                margin-top: 4px;
+                /* Reduced margin top */
+            }
+
+            /* Visited list - Flexible height but constrained */
+            .visited-list {
+                flex: 1;
+                /* Take available space */
+                min-height: 0;
+                /* Allow shrinking */
+                max-height: none;
+                /* Remove fixed height */
+                margin-bottom: 8px;
+                background: rgba(0, 0, 0, 0.2);
+            }
+
+            .visited-item {
+                font-size: 0.6rem;
+                padding: 2px 4px;
+                margin-bottom: 2px;
+                border-left-width: 2px;
+            }
+
+            /* Console log - Small and compact at bottom */
+            .console-log {
+                margin-top: 0;
+                height: 50px;
+                /* Fixed small height */
+                min-height: 50px;
+                flex: 0 0 50px;
+                font-size: 0.55rem;
+                margin-bottom: 8px;
+            }
+
+            /* Buttons */
+            button {
+                padding: 8px;
+                font-size: 0.75rem;
+                margin-bottom: 0;
+                /* Last item usually */
+                min-height: 36px;
+                /* Slightly smaller than 44px if needed for space, but kept usable */
+                flex: 0 0 auto;
+            }
+
+            /* Notification adjustments */
+            .notification-box {
+                padding: 16px;
+                margin: 0 10px;
+            }
+        }
+
+        /* Landscape mode on mobile */
+        @media (max-width: 768px) and (orientation: landscape) {
+            #app-container {
+                flex-direction: row;
+            }
+
+            #map-section {
+                width: 55%;
+                height: 100vh;
+                border-right: 2px solid var(--border-primary);
+                border-bottom: none;
+            }
+
+            #control-panel {
+                width: 45%;
+                height: 100vh;
+                border-top: none;
+                border-left: 2px solid var(--border-primary);
+            }
+        }
+
         /* Loading Overlay */
         #loading {
             position: absolute;
@@ -359,14 +634,6 @@
                 </div>
             </div>
 
-            <!-- Visited Colonies -->
-            <div class="section-header">COLONIAS VISITADAS:</div>
-            <div class="visited-list" id="visited-list">
-                <div style="font-size:0.7rem; color:#666; text-align:center; padding:20px;">
-                    Haz clic en una colonia del mapa para visitarla...
-                </div>
-            </div>
-
             <!-- Actions -->
             <button id="btn-action" class="btn-danger">ABANDONAR BÚSQUEDA</button>
 
@@ -375,6 +642,14 @@
             <div class="console-log" id="log-list">
                 <div class="log-entry">> Sistema inicializado...</div>
                 <div class="log-entry">> Esperando configuración...</div>
+            </div>
+
+            <!-- Visited Colonias -->
+            <div class="section-header" style="margin-top:16px;">COLONIAS VISITADAS:</div>
+            <div class="visited-list" id="visited-list">
+                <div style="font-size:0.7rem; color:#666; text-align:center; padding:20px;">
+                    Haz clic en una colonia del mapa para visitarla...
+                </div>
             </div>
         </div>
     </div>
@@ -473,6 +748,53 @@
         }
 
         // ═══════════════════════════════════════
+        // CUSTOM NOTIFICATION SYSTEM
+        // ═══════════════════════════════════════
+        function showNotification(title, message, type = 'info', buttons = [{ text: 'OK', callback: null }]) {
+            return new Promise((resolve) => {
+                // Create overlay
+                const overlay = document.createElement('div');
+                overlay.className = 'notification-overlay';
+
+                // Create notification box
+                const box = document.createElement('div');
+                box.className = `notification-box ${type}`;
+
+                // Title
+                const titleEl = document.createElement('div');
+                titleEl.className = 'notification-title';
+                titleEl.textContent = title;
+                box.appendChild(titleEl);
+
+                // Message
+                const messageEl = document.createElement('div');
+                messageEl.className = 'notification-message';
+                messageEl.textContent = message;
+                box.appendChild(messageEl);
+
+                // Buttons container
+                const buttonsContainer = document.createElement('div');
+                buttonsContainer.className = 'notification-buttons';
+
+                buttons.forEach((btn) => {
+                    const button = document.createElement('button');
+                    button.className = `notification-btn ${btn.danger ? 'danger' : ''}`;
+                    button.textContent = btn.text;
+                    button.onclick = () => {
+                        document.body.removeChild(overlay);
+                        if (btn.callback) btn.callback();
+                        resolve(btn.value !== undefined ? btn.value : true);
+                    };
+                    buttonsContainer.appendChild(button);
+                });
+
+                box.appendChild(buttonsContainer);
+                overlay.appendChild(box);
+                document.body.appendChild(overlay);
+            });
+        }
+
+        // ═══════════════════════════════════════
         // UPDATE UI
         // ═══════════════════════════════════════
         function updateUI() {
@@ -495,7 +817,8 @@
                 <div class="visited-item-name">${name}</div>
                 <div class="visited-item-cost">Renta: $${renta.toLocaleString()} | Costo: -${cost} XP</div>
             `;
-            visitedList.appendChild(item);
+            // Insert at the beginning (prepend) so the latest is at the top
+            visitedList.prepend(item);
         }
 
         // ═══════════════════════════════════════
@@ -733,7 +1056,11 @@
             // Check if already visited
             if (visitedColonies.some(v => v.name === name)) {
                 log(`> Ya visitaste ${name}.`, 'error');
-                alert(`Ya visitaste ${name}. No puedes visitar la misma colonia dos veces.`);
+                showNotification(
+                    'COLONIA YA VISITADA',
+                    `Ya visitaste ${name}. No puedes visitar la misma colonia dos veces.`,
+                    'error'
+                );
                 return;
             }
 
@@ -751,7 +1078,11 @@
             // Check if has enough XP
             if (playerXP < cost) {
                 log(`> XP insuficiente para visitar ${name}. Necesitas ${cost} XP.`, 'error');
-                alert(`No tienes suficiente XP para visitar ${name}.\nCosto: ${cost} XP\nTu XP: ${playerXP} XP`);
+                showNotification(
+                    'XP INSUFICIENTE',
+                    `No tienes suficiente XP para visitar ${name}.\nCosto: ${cost} XP\nTu XP actual: ${playerXP} XP`,
+                    'error'
+                );
                 return;
             }
 
@@ -824,7 +1155,7 @@
         }
 
         // Button handler
-        btnAction.onclick = () => {
+        btnAction.onclick = async () => {
             const goal = appConfig?.gameplay?.coloniasToVisitGoal || 6;
 
             if (visitedColonies.length >= goal) {
@@ -833,7 +1164,16 @@
                 sendResult('success', isExhaustive);
             } else {
                 // Failure path (<6 colonies)
-                if (confirm('¿Seguro que quieres abandonar la exploración? Esto tendrá penalizaciones.')) {
+                const confirmed = await showNotification(
+                    'ABANDONAR BÚSQUEDA',
+                    '¿Seguro que quieres abandonar la exploración? Esto tendrá penalizaciones.',
+                    'warning',
+                    [
+                        { text: 'CANCELAR', value: false },
+                        { text: 'ABANDONAR', value: true, danger: true }
+                    ]
+                );
+                if (confirmed) {
                     sendResult('failure');
                 }
             }
@@ -950,6 +1290,17 @@
             };
             window.postMessage(mockConfig, '*');
         }
+        // ═══════════════════════════════════════
+        // WINDOW RESIZE HANDLER
+        // ═══════════════════════════════════════
+        window.addEventListener('resize', () => {
+            if (map) {
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 200);
+            }
+        });
+
     </script>
 </body>
 
