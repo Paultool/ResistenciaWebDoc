@@ -2907,17 +2907,18 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         src={mediaSrc}
                         autoPlay
                         onEnded={() => {
-                            // Solo avanza si la historia NO está completada
-                            if (!isStoryCompleted) {
-                                handleNextStep(currentStep.id_siguiente_paso);
-                            }
+                            // SIEMPRE llamar handleNextStep - la función ya maneja casos de final con siguiente historia
+                            handleNextStep(currentStep.id_siguiente_paso);
                         }}
                     />
                 )}
 
                 {/* CAMBIO CLAVE para avance automático */}
                 {recursoActual?.tipo === 'video' && (
-                    <video ref={videoRef} key={mediaSrc} src={mediaSrc} autoPlay onEnded={() => { if (!isStoryCompleted) { handleNextStep(currentStep.id_siguiente_paso); } }}>{subtitleUrl && subtitlesEnabled && (<track kind="subtitles" src={subtitleUrl} srcLang="en" label="English" default />)}</video>
+                    <video ref={videoRef} key={mediaSrc} src={mediaSrc} autoPlay onEnded={() => {
+                        // SIEMPRE llamar handleNextStep - la función ya maneja casos de final con siguiente historia
+                        handleNextStep(currentStep.id_siguiente_paso);
+                    }}>{subtitleUrl && subtitlesEnabled && (<track kind="subtitles" src={subtitleUrl} srcLang="en" label="English" default />)}</video>
                 )}
                 {recursoActual?.tipo === 'interactive' && (
                     <canvas id="interactiveCanvas"></canvas>
