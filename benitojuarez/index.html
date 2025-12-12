@@ -409,6 +409,7 @@
         let visitedColonies = [];
         let rejectionCount = 0;
         let isGameActive = false;
+        let lastColoniaData = null; // Track last clicked colonia data for popup
 
         let successRecompensaId = null;
         let failureRecompensaId = null;
@@ -701,7 +702,7 @@
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
                 lastColoniaData = { name, data };
-                showColoniaPopup(data, center);
+                showColoniaPopup(name, data, center);
             } catch (error) {
                 console.error(`[Mapa] Error para ${name}:`, error);
                 const mockData = {
@@ -714,7 +715,7 @@
                     }
                 };
                 lastColoniaData = { name, data: mockData };
-                showColoniaPopup(mockData, center);
+                showColoniaPopup(name, mockData, center);
             } finally {
                 document.getElementById('loading').classList.add('hidden');
             }
@@ -794,7 +795,7 @@
             log(`> Costo: -${cost} XP | XP restante: ${playerXP}`, 'normal');
 
             // Show popup with data
-            showColoniaPopup(coloniaData, center, cost, eventMessage);
+            showColoniaPopup(name, coloniaData, center);
 
             // Check completion
             checkCompletion();
@@ -803,14 +804,19 @@
         function checkCompletion() {
             const goal = appConfig?.gameplay?.coloniasToVisitGoal || 6;
 
+            console.log('[DEBUG checkCompletion] Visited colonies:', visitedColonies.length, 'Goal:', goal);
+            console.log('[DEBUG checkCompletion] btnAction element:', btnAction);
+
             if (visitedColonies.length >= goal) {
                 // Change button to "Complete" mode
+                console.log('[DEBUG] Changing button to CONCLUIR mode');
                 btnAction.textContent = 'CONCLUIR BÚSQUEDA';
                 btnAction.classList.remove('btn-danger');
                 btnAction.classList.add('btn-success');
                 log('> Objetivo alcanzado. Puedes concluir la exploración exitosamente.', 'success');
             } else {
                 // Keep button in "Abandon" mode
+                console.log('[DEBUG] Keeping button in ABANDONAR mode');
                 btnAction.textContent = 'ABANDONAR BÚSQUEDA';
                 btnAction.classList.remove('btn-success');
                 btnAction.classList.add('btn-danger');
@@ -834,7 +840,7 @@
         };
 
         // Función showColoniaPopup (Sin cambios en layout)
-        function showColoniaPopup(data, center) {
+        function showColoniaPopup(coloniaName, data, center) {
             const graficaData = data.graficaData || { renta: 15000, artista: playerXP, ingeniero: 30000 };
             const mapaData = data.mapaData || { valor: '+10%' };
             const censoData = data.censoData || { valor: 'Medio' };
@@ -846,7 +852,7 @@
 
             const popupContent = `
                 <div class="p-2 max-w-xs">
-                    <h4 class="font-bold text-lg mb-2 text-center text-purple-300">${lastColoniaData.name}</h4>
+                    <h4 class="font-bold text-lg mb-2 text-center text-purple-300">${coloniaName}</h4>
                     <div class="flex justify-between text-sm mb-2">
                         <div>
                             <span class="text-gray-400">Plusvalía:</span>
