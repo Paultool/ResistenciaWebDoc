@@ -1,16 +1,67 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import { obtenerHistorias, obtenerPersonajes, obtenerUbicaciones } from '../supabaseClient'
 import { gameServiceUser as gameService } from '../services/GameServiceUser'
 import GameStats from './GameStats'
 import './UserDashboard.css'
+
 interface DashboardData {
   totalHistorias: number
   totalPersonajes: number
   totalUbicaciones: number
 }
+
+const dashboardTranslations = {
+  es: {
+    connection: 'CONEXIÓN ESTABLECIDA',
+    exit: '[ SALIR ]',
+    loading: 'CARGANDO INTERFAZ DE COMANDO...',
+    error: 'FALLO DE SISTEMA: ',
+    retry: 'REINTENTAR',
+    progress: 'PROGRESO INDIVIDUAL',
+    global: 'DB GLOBAL',
+    missions: 'MISIONES',
+    subjects: 'SUJETOS',
+    locations: 'PUNTOS',
+    sync: 'SYNC',
+    root: '[ PRIVILEGIOS ROOT ]',
+    nodata: '[ ! ] NO HAY DATOS DISPONIBLES',
+    loadingData: '> CARGANDO DATOS...',
+    titleMissions: '📂 MISIONES COMPLETADAS',
+    titleContacts: '👥 CONTACTOS CONOCIDOS',
+    titleLocations: '📍 LUGARES VISITADOS',
+    titleMerits: '🎖️ MÉRITOS DESBLOQUEADOS',
+    titleResources: '🎒 RECURSOS EN INVENTARIO'
+  },
+  en: {
+    connection: 'CONNECTION ESTABLISHED',
+    exit: '[ EXIT ]',
+    loading: 'LOADING COMMAND INTERFACE...',
+    error: 'SYSTEM FAILURE: ',
+    retry: 'RETRY',
+    progress: 'INDIVIDUAL PROGRESS',
+    global: 'GLOBAL DB',
+    missions: 'MISSIONS',
+    subjects: 'SUBJECTS',
+    locations: 'LOCATIONS',
+    sync: 'SYNC',
+    root: '[ ROOT PRIVILEGES ]',
+    nodata: '[ ! ] NO DATA AVAILABLE',
+    loadingData: '> LOADING DATA...',
+    titleMissions: '📂 COMPLETED MISSIONS',
+    titleContacts: '👥 KNOWN CONTACTS',
+    titleLocations: '📍 VISITED LOCATIONS',
+    titleMerits: '🎖️ UNLOCKED MERITS',
+    titleResources: '🎒 INVENTORY RESOURCES'
+  }
+}
+
 const UserDashboard: React.FC<{ onNavigate?: (view: string) => void; onStartNarrative?: (id: number) => void }> = ({ onNavigate, onStartNarrative }) => {
   const { user, signOut } = useAuth()
+  const { language } = useLanguage()
+  const t = dashboardTranslations[language]
+
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     totalHistorias: 0,
     totalPersonajes: 0,
@@ -22,12 +73,14 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void; onStartNarr
   const [activeModal, setActiveModal] = useState<'missions' | 'contacts' | 'locations' | 'merits' | 'resources' | null>(null);
   const [modalData, setModalData] = useState<any>(null);
   const [loadingModal, setLoadingModal] = useState(false);
+
   useEffect(() => {
     cargarDatosBasicos()
     if (user?.id) {
       initializarPerfilJugador()
     }
   }, [user])
+
   const cargarDatosBasicos = async () => {
     try {
       setLoading(true)
@@ -44,11 +97,12 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void; onStartNarr
       })
     } catch (error: any) {
       console.error('Error:', error)
-      setError('FALLO DE SISTEMA: ' + error.message)
+      setError(t.error + error.message)
     } finally {
       setLoading(false)
     }
   }
+
   const initializarPerfilJugador = async () => {
     try {
       if (!user?.id) return
@@ -58,12 +112,14 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void; onStartNarr
       console.error('Error init profile:', error)
     }
   }
+
   const handleSignOut = async () => {
     try {
       if (gameService.clearCache) gameService.clearCache()
     } catch (e) { console.warn(e) }
     finally { await signOut() }
   }
+
   const handleStatClick = async (type: 'missions' | 'contacts' | 'locations' | 'merits' | 'resources') => {
     if (!user?.id) return;
 
@@ -97,19 +153,21 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void; onStartNarr
       setLoadingModal(false);
     }
   }
+
   const closeModal = () => {
     setActiveModal(null);
     setModalData(null);
   }
+
   const renderModalContent = () => {
     if (!activeModal) return null;
     const getModalTitle = () => {
       switch (activeModal) {
-        case 'missions': return '📂 MISIONES COMPLETADAS';
-        case 'contacts': return '👥 CONTACTOS CONOCIDOS';
-        case 'locations': return '📍 LUGARES VISITADOS';
-        case 'merits': return '🎖️ MÉRITOS DESBLOQUEADOS';
-        case 'resources': return '🎒 RECURSOS EN INVENTARIO';
+        case 'missions': return t.titleMissions;
+        case 'contacts': return t.titleContacts;
+        case 'locations': return t.titleLocations;
+        case 'merits': return t.titleMerits;
+        case 'resources': return t.titleResources;
       }
     };
     return (
@@ -122,7 +180,7 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void; onStartNarr
           <div className="stat-modal-body">
             {loadingModal ? (
               <div className="text-center py-8 text-[#33ff00]">
-                <p>{'>'} CARGANDO DATOS...</p>
+                <p>{t.loadingData}</p>
               </div>
             ) : modalData && modalData.length > 0 ? (
               <div className="stat-modal-list">
@@ -148,7 +206,7 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void; onStartNarr
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
-                <p>[ ! ] NO HAY DATOS DISPONIBLES</p>
+                <p>{t.nodata}</p>
               </div>
             )}
           </div>
@@ -156,27 +214,28 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void; onStartNarr
       </div>
     );
   };
+
   return (
     <div className="dashboard-container">
       {/* 1. HEADER DE ESTADO */}
       <div className="dashboard-status-bar">
         <div className="status-label">
           <span className="animate-pulse text-green-500">●</span>
-          <span className="hidden sm:inline ml-2">CONEXIÓN ESTABLECIDA |</span>
+          <span className="hidden sm:inline ml-2">{t.connection} |</span>
           <span className="user-id-display ml-2">OP: {user?.email?.split('@')[0]}</span>
         </div>
         <button onClick={handleSignOut} className="btn-status-logout">
-          [ EXIT ]
+          {t.exit}
         </button>
       </div>
       {error && (
         <div className="border border-red-500 text-red-500 p-2 text-center text-xs mb-4 bg-red-500/10">
-          <p>⚠️ {error} <button onClick={cargarDatosBasicos} className="underline ml-2">REINTENTAR</button></p>
+          <p>⚠️ {t.error + error} <button onClick={cargarDatosBasicos} className="underline ml-2">{t.retry}</button></p>
         </div>
       )}
       {loading ? (
         <div className="text-center p-10 text-[#33ff00] text-sm animate-pulse">
-          <p>{'>'} CARGANDO INTERFAZ DE COMANDO...</p>
+          <p>{'>'} {t.loading}</p>
         </div>
       ) : (
         <>
@@ -184,18 +243,18 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void; onStartNarr
           <div className="main-dashboard-grid">
             {/* PANEL IZQ: ESTADÍSTICAS */}
             <div className="game-stats-panel">
-              <h3 className="section-title main-title">{'>'} PROGRESO INDIVIDUAL</h3>
+              <h3 className="section-title main-title">{'>'} {t.progress}</h3>
               <GameStats showDetailed={true} onNavigateToStory={onStartNarrative} onStatClick={handleStatClick} />
             </div>
             {/* PANEL DER: MÉTRICAS GLOBALES */}
             <div className="data-metrics-panel">
-              <h3 className="section-title">DB GLOBAL</h3>
+              <h3 className="section-title">{t.global}</h3>
               <div className="info-grid">
                 <div className="info-card">
                   <div className="info-icon">📂</div>
                   <div className="info-content">
                     <div className="info-number">{dashboardData.totalHistorias}</div>
-                    <div className="info-label">MISIONES</div>
+                    <div className="info-label">{t.missions}</div>
                   </div>
                 </div>
                 {/*sujetos*/}
@@ -203,20 +262,20 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void; onStartNarr
                   <div className="info-icon">👥</div>
                   <div className="info-content">
                     <div className="info-number">{dashboardData.totalPersonajes}</div>
-                    <div className="info-label">SUJETOS</div>
+                    <div className="info-label">{t.subjects}</div>
                   </div>
                 </div>
                 <div className="info-card">
                   <div className="info-icon">📍</div>
                   <div className="info-content">
                     <div className="info-number">{dashboardData.totalUbicaciones}</div>
-                    <div className="info-label">PUNTOS</div>
+                    <div className="info-label">{t.locations}</div>
                   </div>
                 </div>
               </div>
               <div className="side-panel-footer">
-                <p>SYNC: {new Date().toLocaleTimeString()}</p>
-                {isAdmin && <p className="admin-status">[ ROOT PRIVILEGES ]</p>}
+                <p>{t.sync}: {new Date().toLocaleTimeString()}</p>
+                {isAdmin && <p className="admin-status">{t.root}</p>}
               </div>
             </div>
           </div>
@@ -227,4 +286,5 @@ const UserDashboard: React.FC<{ onNavigate?: (view: string) => void; onStartNarr
     </div>
   )
 }
+
 export default UserDashboard

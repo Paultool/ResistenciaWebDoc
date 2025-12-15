@@ -1,0 +1,38 @@
+# Glitch Bleach Interpolation Pipeline Walkthrough
+
+## Overview
+I have successfully implemented the automated pipeline to generate smooth transitions with glitch/bleach-bypass effects between two videos.
+
+## Features
+- **Automated setup**: Automatically detects missing RIFE models and downloads them from Google Drive.
+- **Robustness**: Handles absolute pathing and directory context for RIFE.
+- **Correctness**: Interpolates frames using RIFE (v3.6 model) and applies a custom "Bleach + Noise" filter chain.
+- **Compatibility**: Replaced `frei0r` plugins with standard FFmpeg filters (`eq`, `noise`, `unsharp`) to ensure cross-platform compatibility without external plugin DLLs.
+
+## Usage
+1. Place your input videos in `glitch_pipeline/input/`:
+   - `videoA.mp4`
+   - `videoB.mp4`
+2. Run the pipeline:
+   ```bash
+   python glitch_pipeline/pipeline_runner.py
+   ```
+3. Find the result in `glitch_pipeline/output/transition_final.mp4`.
+
+## Validation
+- **Environment**: Verified FFmpeg v8.0.1 and Python 3.13.
+- **Dependencies**: Installed RIFE requirements (numpy, torch, opencv) and `gdown`.
+- **Model Download**: Implemented auto-download for `RIFE_trained_model_v3.6.zip`.
+- **Execution**: Successfully ran the pipeline on test vectors. RIFE generated 32 interpolated frames, and FFmpeg successfully stitched and filtered them.
+- **Artifacts**: 
+    - `glitch_pipeline/output/transition_final.mp4` (Final Result)
+    - `glitch_pipeline/output/transition_raw.mp4` (Raw Interpolation)
+
+## Filter Details
+The final effect chain uses:
+```
+eq=contrast=1.5:saturation=0.2,
+noise=alls=20:allf=t+u,
+unsharp=5:5:1.0:5:5:0.0
+```
+This simulates the "Bleach Bypass" (high contrast, low sat) + "Digital Glitch" (noise, sharpening) look requested.

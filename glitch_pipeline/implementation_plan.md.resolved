@@ -1,0 +1,40 @@
+# Glitch Bleach Interpolation Pipeline Plan
+
+## Goal
+Create an automated pipeline to generate a smooth transition between two videos using RIFE interpolation and FFmpeg glitch effects.
+
+## User Review Required
+> [!IMPORTANT]
+> **FFmpeg Filters**: The pipeline relies on `frei0r` plugins (`glitch0r`, `bw0r`, `distort0r`). Ensure your FFmpeg installation supports `frei0r` and has these plugins available. If not, the "Glitch" stage will fail or need alternative standard FFmpeg filters.
+
+## Proposed Changes
+
+### Directory Structure
+Create a new directory `glitch_pipeline` with subdirectories:
+- `input/`
+- `output/`
+- `RIFE/` (Cloned repo)
+
+### Scripts
+
+#### [NEW] [pipeline_runner.py](file:///c:/Users/pault/Desktop/LA%20RESISTENCIA%20RESERVORIO/Resistencia%20Spartane%202/agent_workspace/resistencia-app%20101025/resistencia-app/glitch_pipeline/pipeline_runner.py)
+A Python script to orchestrate the steps:
+1.  **Extract Frames**: Uses `ffmpeg` to get the last frame of Video A and first frame of Video B.
+2.  **Interpolate**: Calls RIFE's `inference_img.py` to generate intermediate frames.
+3.  **Stitch**: Combines interpolated frames into `transition_raw.mp4`.
+4.  **Apply Effects**: Runs `ffmpeg` with complex filter chains for the "Glitch Bleach" look.
+
+### Dependencies
+- **RIFE**: Clone from `https://github.com/hzwer/ECCV2022-RIFE`.
+- **Python**: Install `requirements.txt` from RIFE.
+
+## Verification Plan
+
+### Automated Tests
+- The script itself will have checks for file existence and command return codes.
+- `python pipeline_runner.py --test` (optional flag to run a dry run or check dependencies).
+
+### Manual Verification
+1.  Place `videoA.mp4` and `videoB.mp4` in `glitch_pipeline/input/`.
+2.  Run `python glitch_pipeline/pipeline_runner.py`.
+3.  Check `glitch_pipeline/output/transition_final.mp4` for the expected visual effects.

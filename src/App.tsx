@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { fetchAndConvertSubtitle } from './utils/subtitleUtils';
 import AuthForm from './components/AuthForm';
 import UserDashboard from './components/UserDashboard';
@@ -72,23 +73,46 @@ const LoginModal: React.FC<{ onClose: () => void; onRequestFullscreen: () => voi
   return <AuthForm onRequestFullscreen={onRequestFullscreen} onClose={onClose} />;
 };
 
-const modalInfoContent = {
+const modalTranslations = {
   acerca: {
-    title: 'Acerca del Proyecto',
-    body: 'SERIE WEB INMERSIVA // DOCU-JUEGO  </br> <br/>"Expulsado por la gentrificación de la Ciudad de México, un ingeniero se retira a la periferia industrial para convertir el garaje familiar en una trinchera digital. En este docu-juego inmersivo, el usuario hereda su lucha: gestionar la escasez, reparar electrónica rota y tejer una comunidad para sobrevivir en un sistema diseñado para borrarte."'
+    es: {
+      title: 'Acerca del Proyecto',
+      body: 'SERIE WEB INMERSIVA // DOCU-JUEGO\n\n"Expulsado por la gentrificación de la Ciudad de México, un ingeniero se retira a la periferia industrial para convertir el garaje familiar en una trinchera digital. En este docu-juego inmersivo, el usuario hereda su lucha: gestionar la escasez, reparar electrónica rota y tejer una comunidad para sobrevivir en un sistema diseñado para borrarte."'
+    },
+    en: {
+      title: 'About the Project',
+      body: 'IMMERSIVE WEB SERIES // DOCU-GAME\n\n"Expelled by the gentrification of Mexico City, an engineer retreats to the industrial periphery to turn the family garage into a digital trench. In this immersive docu-game, the user inherits his struggle: managing scarcity, repairing broken electronics, and weaving a community to survive in a system designed to erase you."'
+    }
   },
   'making-off': {
-    title: 'Making Off y Recursos',
-    body: `
-    <div class="modal-links-grid">
-        <a href="https://melvinrecords.gt.tc/resistencia/dossier/" target="_blank" rel="noopener noreferrer" class="modal-link-btn">
-            <i class="fas fa-folder-open"></i> DOSSIER
-        </a>
-    </div>`
+    es: {
+      title: 'Making Off y Recursos',
+      body: `
+      <div class="modal-links-grid">
+          <a href="https://melvinrecords.gt.tc/resistencia/dossier/" target="_blank" rel="noopener noreferrer" class="modal-link-btn" title="DOSSIER">
+              <i class="fas fa-folder-open text-2xl"></i>
+          </a>
+      </div>`
+    },
+    en: {
+      title: 'Making Of & Resources',
+      body: `
+      <div class="modal-links-grid">
+          <a href="https://melvinrecords.gt.tc/resistencia/dossier/" target="_blank" rel="noopener noreferrer" class="modal-link-btn" title="DOSSIER">
+              <i class="fas fa-folder-open text-2xl"></i>
+          </a>
+      </div>`
+    }
   },
   equipo: {
-    title: 'Equipo',
-    body: 'Miembros clave del equipo:\n\n- Director: Juan Rodrigo Jardon Galeana \n- Productor: Pablo Benjamin Nieto Mercado\n- Desarrollador Principal UX/UI: Paultool\n- Editor: Marcelo Castillo Sabando'
+    es: {
+      title: 'Equipo',
+      body: 'Miembros clave del equipo:\n\n- Director: Juan Rodrigo Jardon Galeana\n- Productor: Pablo Benjamin Nieto Mercado\n- Desarrollador Principal UX/UI: Paultool\n- Editor: Marcelo Castillo Sabando'
+    },
+    en: {
+      title: 'Crew',
+      body: 'Key team members:\n\n- Director: Juan Rodrigo Jardon Galeana\n- Producer: Pablo Benjamin Nieto Mercado\n- Lead UX/UI Developer: Paultool\n- Editor: Marcelo Castillo Sabando'
+    }
   }
 };
 
@@ -96,10 +120,11 @@ interface InfoModalProps {
   contentKey: 'acerca' | 'making-off' | 'equipo';
   onClose: () => void;
   onOpenVideoModal?: (videoId: string, title: string) => void;
+  lang?: 'es' | 'en';
 }
 
-const InfoModal: React.FC<InfoModalProps> = ({ contentKey, onClose, onOpenVideoModal }) => {
-  const { title, body } = modalInfoContent[contentKey];
+const InfoModal: React.FC<InfoModalProps> = ({ contentKey, onClose, onOpenVideoModal, lang = 'es' }) => {
+  const { title, body } = modalTranslations[contentKey][lang];
   const modalContentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -180,8 +205,8 @@ const WorkInProgressView: React.FC<WorkInProgressViewProps> = ({ onOpenVideoModa
           // Renderizado condicional de Button o Anchor
           const CardContent = () => (
             <>
-              <i className={`${link.icon} wip-icon`}></i>
-              <span className="wip-link-name">{link.name}</span>
+              <i className={`${link.icon} wip-icon text-4xl mb-2`}></i>
+              {/* <span className="wip-link-name">{link.name}</span> Texto eliminado por solicitud */}
               <div className="wip-meta">
                 <span>ID: 0{index + 1}_DAT</span>
                 <span>{link.meta}</span>
@@ -244,13 +269,13 @@ const BottomBar: React.FC<BottomBarProps> = ({ onOpenModal, onOpenLogin, onToggl
       {/* Contenedor Ultra-Compacto */}
       <div className="bg-black/95 backdrop-blur-md flex items-center justify-between md:justify-center h-12 px-4 md:gap-12 border-t border-[#33ff00]/10 shadow-[0_-10px_30px_rgba(0,0,0,0.8)]">
 
-        {/* Botón LOGIN (El más importante) */}
+        {/* Botón LOGIN (Icono) */}
         <button
           onClick={onOpenLogin}
-          className="group flex items-center gap-2 text-[#33ff00] hover:text-white transition-colors text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase"
+          className="group flex items-center justify-center w-10 h-10 text-[#33ff00] hover:text-white hover:bg-[#33ff00]/10 rounded-full transition-all"
+          title="LOGIN"
         >
-          <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[#33ff00]">{'>'}</span>
-          LOGIN
+          <i className="fas fa-sign-in-alt text-lg"></i>
         </button>
 
         {/* Separador Visual (Solo Desktop) */}
@@ -259,31 +284,28 @@ const BottomBar: React.FC<BottomBarProps> = ({ onOpenModal, onOpenLogin, onToggl
         {/* Botón ACERCA */}
         <button
           onClick={() => onOpenModal('acerca')}
-          className="group text-gray-500 hover:text-[#33ff00] transition-colors text-[10px] md:text-xs font-bold tracking-widest uppercase"
+          className="group flex items-center justify-center w-10 h-10 text-gray-500 hover:text-[#33ff00] hover:bg-[#33ff00]/10 rounded-full transition-all"
+          title="ACERCA / ABOUT"
         >
-          <span className="hidden group-hover:inline mr-1">[</span>
-          ACERCA
-          <span className="hidden group-hover:inline ml-1">]</span>
+          <i className="fas fa-info-circle text-lg"></i>
         </button>
 
         {/* Botón WIP */}
         <button
           onClick={() => onOpenModal('making-off')}
-          className="group text-gray-500 hover:text-[#33ff00] transition-colors text-[10px] md:text-xs font-bold tracking-widest uppercase"
+          className="group flex items-center justify-center w-10 h-10 text-gray-500 hover:text-[#33ff00] hover:bg-[#33ff00]/10 rounded-full transition-all"
+          title="WIP LAB / MAKING OF"
         >
-          <span className="hidden group-hover:inline mr-1">[</span>
-          WIP
-          <span className="hidden group-hover:inline ml-1">]</span>
+          <i className="fas fa-flask text-lg"></i>
         </button>
 
         {/* Botón CREW */}
         <button
           onClick={() => onOpenModal('equipo')}
-          className="group text-gray-500 hover:text-[#33ff00] transition-colors text-[10px] md:text-xs font-bold tracking-widest uppercase"
+          className="group flex items-center justify-center w-10 h-10 text-gray-500 hover:text-[#33ff00] hover:bg-[#33ff00]/10 rounded-full transition-all"
+          title="CREW / EQUIPO"
         >
-          <span className="hidden group-hover:inline mr-1">[</span>
-          CREW
-          <span className="hidden group-hover:inline ml-1">]</span>
+          <i className="fas fa-users text-lg"></i>
         </button>
 
         {/* Separador Visual (Solo Desktop) */}
@@ -292,12 +314,10 @@ const BottomBar: React.FC<BottomBarProps> = ({ onOpenModal, onOpenLogin, onToggl
         {/* Botón SUBS */}
         <button
           onClick={onToggleSubtitles}
-          className={`group transition-colors text-[10px] md:text-xs font-bold tracking-widest uppercase ${subtitlesEnabled ? 'text-[#33ff00]' : 'text-gray-500 hover:text-[#33ff00]'}`}
-          title={subtitlesEnabled ? 'Desactivar Subtítulos' : 'Activar Subtítulos'}
+          className={`group flex items-center justify-center w-10 h-10 transition-all rounded-full hover:bg-[#33ff00]/10 ${subtitlesEnabled ? 'text-[#33ff00]' : 'text-gray-500 hover:text-[#33ff00]'}`}
+          title={subtitlesEnabled ? 'Subtítulos: ON' : 'Subtítulos: OFF'}
         >
-          <span className="hidden group-hover:inline mr-1">[</span>
-          {subtitlesEnabled ? 'CC ✓' : 'CC'}
-          <span className="hidden group-hover:inline ml-1">]</span>
+          <i className="fas fa-closed-captioning text-lg"></i>
         </button>
 
         {/* Botón SALIR (Icono minimalista) */}
@@ -334,7 +354,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [videoModalData, setVideoModalData] = useState<{ videoId: string; title: string } | null>(null);
   const [subtitleUrl, setSubtitleUrl] = useState<string | null>(null);
-  const [subtitlesEnabled, setSubtitlesEnabled] = useState(true);
+
+  // Consumir contexto de idioma
+  const { language, toggleLanguage } = useLanguage();
+  const subtitlesEnabled = language === 'en'; // Mapeo lógico: Inglés = Subtítulos ON
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoSrc = "https://ia800103.us.archive.org/12/items/intro_resistencia/intro%20resistencia%20.mp4";
@@ -427,14 +450,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
           <button
             onClick={handleUnmuteClick}
             className="group relative flex flex-col items-center gap-4 cursor-pointer transition-transform duration-700 hover:scale-105"
+            title="INICIALIZAR / INITIALIZE"
           >
-            <div className="relative w-20 h-20 border border-[#33ff00] rounded-full flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full border border-[#33ff00] animate-[ping_2s_infinite] opacity-50"></div>
-              <span className="text-3xl text-[#33ff00] ml-1">▶</span>
-            </div>
-            <div className="bg-black/80 border border-[#33ff00]/30 px-4 py-2 backdrop-blur-sm">
-              <span className="text-[#33ff00] text-xs md:text-sm tracking-[0.3em] uppercase">
-                {'>'} INICIALIZAR_SISTEMA<span className="animate-[blink-cursor_1s_infinite]">_</span>
+            <div className="relative flex items-center justify-center">
+              {/* Efecto de onda tras la calavera */}
+              <div className="absolute inset-0 rounded-full border border-[#33ff00] animate-[ping_2s_infinite] opacity-30 scale-150"></div>
+              {/* Calavera Gigante */}
+              <span className="text-6xl md:text-8xl text-[#33ff00] drop-shadow-[0_0_15px_rgba(51,255,0,0.8)] filter transition-all hover:drop-shadow-[0_0_30px_rgba(51,255,0,1)]">
+                ☠
               </span>
             </div>
           </button>
@@ -461,16 +484,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
 
           <button
             onClick={handleResisteClick}
-            className="group relative flex items-center gap-3 px-6 py-2 bg-black border border-[#33ff00] text-[#33ff00] font-mono text-xs font-bold uppercase tracking-widest overflow-hidden transition-all hover:shadow-[0_0_20px_rgba(51,255,0,0.5)] hover:border-[#33ff00]"
+            className="group relative flex flex-col items-center gap-4 cursor-pointer transition-transform duration-700 hover:scale-110 mt-8"
+            title="INGRESAR / ENTER"
           >
-            {/* Fondo animado de barrido */}
-            <div className="absolute inset-0 bg-[#33ff00] transform translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300 origin-left z-0"></div>
+            <div className="relative flex items-center justify-center">
+              {/* Efecto de onda: Verde -> Rojo al hover */}
+              <div className="absolute inset-0 rounded-full border border-[#33ff00] group-hover:border-red-600 animate-[ping_2s_infinite] opacity-30 scale-150 transition-colors duration-500"></div>
 
-            {/* Contenido (Calavera + Texto) */}
-            <span className="relative z-10 flex items-center gap-2 group-hover:text-black transition-colors duration-300">
-              <span className="text-lg leading-none">☠</span>
-              RESISTE
-            </span>
+              {/* Calavera: Verde -> Rojo al hover */}
+              <span className="text-6xl md:text-8xl text-[#33ff00] group-hover:text-red-600 drop-shadow-[0_0_15px_rgba(51,255,0,0.8)] group-hover:drop-shadow-[0_0_30px_rgba(255,0,0,0.8)] filter transition-all duration-300">
+                ☠
+              </span>
+            </div>
           </button>
 
         </main>
@@ -483,7 +508,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
           onOpenLogin={() => { onRequestFullscreen(); setIsLoginModalOpen(true); }}
           onToggleVisibility={() => setIsBarVisible(false)}
           subtitlesEnabled={subtitlesEnabled}
-          onToggleSubtitles={() => setSubtitlesEnabled(!subtitlesEnabled)}
+          onToggleSubtitles={toggleLanguage}
         />
       )}
 
@@ -498,7 +523,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
       )}
 
       {/* MODALES */}
-      {infoModalContentKey && <InfoModal contentKey={infoModalContentKey} onClose={() => setInfoModalContentKey(null)} onOpenVideoModal={handleOpenVideoModal} />}
+      {infoModalContentKey && <InfoModal contentKey={infoModalContentKey} onClose={() => setInfoModalContentKey(null)} onOpenVideoModal={handleOpenVideoModal} lang={language} />}
       {isLoginModalOpen && <LoginModal onClose={() => setIsLoginModalOpen(false)} onRequestFullscreen={onRequestFullscreen} />}
     </div>
   );
@@ -509,6 +534,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
 // ==========================================================
 const MainContent: React.FC = () => {
   const { user } = useAuth();
+  const { language, toggleLanguage } = useLanguage();
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentView, setCurrentView] = useState<'dashboard' | 'historias' | 'personajes' | 'mapa' | 'inventario' | 'admin' | 'wip'>('dashboard');
   const [historias, setHistorias] = useState<Historia[]>([]);
@@ -593,53 +619,77 @@ const MainContent: React.FC = () => {
           {/* 3. CONTENEDOR DE MENÚ (Links + User) */}
           <div className={`term-menu-container ${isMobileMenuOpen ? 'is-open' : ''}`}>
 
-            <div className="term-links">
-              {/* Botón Minimizar */}
+            <div className="term-links flex items-center gap-2 h-full">
+              {/* Botón Minimizar (Compacto) */}
               <button
-                className="term-hide-btn"
+                className="term-hide-btn flex items-center justify-center w-6 h-6 p-0 border border-[#33ff00]/30 hover:border-[#33ff00] text-[#33ff00] transition-colors bg-black/50"
                 onClick={() => setShowNavBar(false)}
-                title="Ocultar Interfaz"
+                title={language === 'es' ? 'OCULTAR INTERFAZ' : 'HIDE INTERFACE'}
               >
-                ☠
+                <span className="text-xs">☠</span>
               </button>
 
               {/* Enlaces Mapeados */}
-              {[
-                { id: 'dashboard', label: 'DASHBOARD' },
-                { id: 'historias', label: 'MISIONES' },
-                { id: 'mapa', label: 'GEOLOCALIZACIÓN' },
-                { id: 'inventario', label: 'ALMACÉN' },
-                { id: 'personajes', label: 'SUJETOS' },
-                { id: 'wip', label: 'WIP_LAB' }
-              ].map(item => (
-                <button
-                  key={item.id}
-                  className={`term-link-btn ${currentView === item.id ? 'active' : ''}`}
-                  onClick={() => {
-                    if (item.id === 'historias') setFlujoNarrativoHistoriaId(null);
-                    setCurrentView(item.id as any);
-                    setIsMobileMenuOpen(false);
-                  }}
-                >
-                  {currentView === item.id ? `> ${item.label}` : item.label}
-                </button>
-              ))}
+              <div className="flex flex-wrap gap-1 justify-center items-center max-w-5xl h-full">
+                {[
+                  { id: 'dashboard', icon: 'fas fa-chart-network' }, // SYSTEM
+                  { id: 'historias', icon: 'fas fa-stream' },        // LOGS
+                  { id: 'mapa', icon: 'fas fa-map-marker-alt' },   // MAP
+                  { id: 'inventario', icon: 'fas fa-box-open' },     // ITEMS
+                  { id: 'personajes', icon: 'fas fa-users-cog' },    // CREW
+                  { id: 'wip', icon: 'fas fa-flask' }                // LAB
+                ].map(item => {
+                  // Diccionario de navegación
+                  const navLabels: Record<string, { es: string; en: string }> = {
+                    dashboard: { es: 'SISTEMA', en: 'SYSTEM' },
+                    historias: { es: 'LOGS', en: 'LOGS' },
+                    mapa: { es: 'MAPA', en: 'MAP' },
+                    inventario: { es: 'ITEMS', en: 'ITEMS' },
+                    personajes: { es: 'CREW', en: 'CREW' },
+                    wip: { es: 'LAB', en: 'LAB' }
+                  };
+                  const label = navLabels[item.id][language];
 
-              {/* Admin */}
-              {isAdmin && (
-                <button
-                  className={`term-link-btn ${currentView === 'admin' ? 'active' : ''}`}
-                  style={{ color: '#ff0000', borderColor: currentView === 'admin' ? '#ff0000' : '#333' }}
-                  onClick={() => { setCurrentView('admin'); setIsMobileMenuOpen(false); }}
-                >
-                  ADMIN
-                </button>
-              )}
-            </div>
+                  return (
+                    <button
+                      key={item.id}
+                      className={`term-link-btn ${currentView === item.id ? 'active' : ''} group relative flex items-center gap-1.5 px-2 py-0.5 border border-[#33ff00]/30 hover:border-[#33ff00] transition-all bg-black/50 hover:bg-[#33ff00]/10`}
+                      onClick={() => {
+                        if (item.id === 'historias') setFlujoNarrativoHistoriaId(null);
+                        setCurrentView(item.id as any);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      title={label}
+                    >
+                      <i className={`${item.icon} text-xs group-hover:text-[#33ff00] transition-colors`}></i>
+                      {/* Texto visible solo en desktop, compacto y estilo OS */}
+                      <span className="hidden md:block text-[9px] tracking-widest font-bold uppercase">{label}</span>
+                    </button>
+                  );
+                })}
+                {isAdmin && (
+                  <button
+                    className={`term-link-btn flex items-center justify-center px-2 py-0.5 ${currentView === 'admin' ? 'active' : ''}`}
+                    style={{ color: '#ff0000', borderColor: currentView === 'admin' ? '#ff0000' : 'transparent' }}
+                    onClick={() => { setCurrentView('admin'); setIsMobileMenuOpen(false); }}
+                    title="ADMIN PANEL"
+                  >
+                    <i className="fas fa-user-shield text-xs"></i>
+                  </button>
+                )}
+              </div>
 
-            {/* Info Usuario */}
-            <div className="term-user-info">
-              USR_ID: {user?.email?.split('@')[0] || 'GUEST'}
+              {/* Botón Idioma (Cloud Cachups / CC) */}
+              <button
+                className="term-link-btn group relative flex items-center justify-center px-2 py-0.5 border border-[#33ff00]/30 hover:border-[#33ff00] transition-all bg-black/50 hover:bg-[#33ff00]/10"
+                onClick={toggleLanguage}
+                title={language === 'es' ? 'CAMBIAR A INGLÉS (CC)' : 'SWITCH TO SPANISH (CC)'}
+              >
+                <i className="fas fa-closed-captioning text-xs group-hover:text-[#33ff00] transition-colors mr-1"></i>
+                <span className="text-[9px] font-bold">
+                  {language === 'es' ? 'EN' : 'ES'}
+                </span>
+              </button>
             </div>
           </div>
         </nav>
@@ -648,10 +698,10 @@ const MainContent: React.FC = () => {
         <button
           className="term-restore-btn"
           onClick={() => setShowNavBar(true)}
-          title="Restaurar Interfaz"
+          title={language === 'es' ? 'RESTAURAR INTERFAZ' : 'RESTORE INTERFACE'}
         >
           <span className="term-restore-icon">▼</span>
-          DESPLEGAR_MENU
+          {language === 'es' ? 'DESPLEGAR_MENU' : 'EXPAND_MENU'}
         </button>
       )}
       <main className={`app-main ${!showNavBar ? 'navbar-hidden' : ''}`}>
@@ -695,7 +745,9 @@ const AppContent: React.FC = () => {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
     </AuthProvider>
   );
 }

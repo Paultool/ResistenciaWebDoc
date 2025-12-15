@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import { gameServiceUser as gameService } from '../services/GameServiceUser'
 import './GameStats.css'
 
@@ -22,8 +23,60 @@ interface DashboardStats {
   inventarioItems: number
 }
 
+const statsTranslations = {
+  es: {
+    loading: '> DESCIFRANDO PERFIL...',
+    error: 'DATOS NO DISPONIBLES',
+    connectionError: 'FALLO DE CONEXIÓN',
+    retry: 'REINTENTAR',
+    progress: 'PROGRESO',
+    missions: 'MISIONES',
+    contacts: 'CONTACTOS',
+    locations: 'LUGARES',
+    merits: 'MÉRITOS',
+    resources: 'RECURSOS',
+    streak: 'RACHA',
+    priorityFiles: 'ARCHIVOS PRIORITARIOS',
+    loadingIndex: 'CARGANDO ÍNDICE...',
+    noFiles: '[ ! ] SIN ARCHIVOS MARCADOS',
+    ranks: {
+      leader: 'LÍDER DE RESISTENCIA',
+      tactical: 'OFICIAL TÁCTICO',
+      veteran: 'AGENTE VETERANO',
+      operator: 'OPERADOR DE CAMPO',
+      recruit: 'RECLUTA'
+    }
+  },
+  en: {
+    loading: '> DECRYPTING PROFILE...',
+    error: 'DATA UNAVAILABLE',
+    connectionError: 'CONNECTION FAILURE',
+    retry: 'RETRY',
+    progress: 'PROGRESS',
+    missions: 'MISSIONS',
+    contacts: 'CONTACTS',
+    locations: 'LOCATIONS',
+    merits: 'MERITS',
+    resources: 'RESOURCES',
+    streak: 'STREAK',
+    priorityFiles: 'PRIORITY FILES',
+    loadingIndex: 'LOADING INDEX...',
+    noFiles: '[ ! ] NO MARKED FILES',
+    ranks: {
+      leader: 'RESISTANCE LEADER',
+      tactical: 'TACTICAL OFFICER',
+      veteran: 'VETERAN AGENT',
+      operator: 'FIELD OPERATOR',
+      recruit: 'RECRUIT'
+    }
+  }
+}
+
 const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = true, onNavigateToStory, onStatClick }) => {
   const { user } = useAuth()
+  const { language } = useLanguage()
+  const t = statsTranslations[language]
+
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -60,11 +113,11 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
       if (dashboardStats) {
         setStats(dashboardStats)
       } else {
-        setError('DATOS NO DISPONIBLES')
+        setError(t.error)
       }
     } catch (err: any) {
       console.error('Error:', err)
-      setError('FALLO DE CONEXIÓN')
+      setError(t.connectionError)
     } finally {
       setLoading(false)
     }
@@ -97,17 +150,17 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
   }
 
   const getRankTitle = (nivel: number): string => {
-    if (nivel >= 20) return 'LÍDER DE RESISTENCIA'
-    if (nivel >= 15) return 'OFICIAL TÁCTICO'
-    if (nivel >= 10) return 'AGENTE VETERANO'
-    if (nivel >= 5) return 'OPERADOR DE CAMPO'
-    return 'RECLUTA'
+    if (nivel >= 20) return t.ranks.leader
+    if (nivel >= 15) return t.ranks.tactical
+    if (nivel >= 10) return t.ranks.veteran
+    if (nivel >= 5) return t.ranks.operator
+    return t.ranks.recruit
   }
 
   if (loading) {
     return (
       <div className={`resistance-dashboard loading ${className}`}>
-        <div className="loading-text">{'>'} DESCIFRANDO PERFIL...</div>
+        <div className="loading-text">{t.loading}</div>
       </div>
     )
   }
@@ -117,7 +170,7 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
       <div className={`resistance-dashboard error ${className}`}>
         <div>
           <p className="error-text">[ ! ] {error}</p>
-          <button onClick={cargarEstadisticas} className="terminal-btn">REINTENTAR</button>
+          <button onClick={cargarEstadisticas} className="terminal-btn">{t.retry}</button>
         </div>
       </div>
     )
@@ -143,7 +196,7 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
               <div className="xp-fill" style={{ width: `${progressPercentage}%` }} />
             </div>
             <div className="xp-text">
-              PROGRESO: {stats.xpTotal.toLocaleString()} / {(stats.xpTotal + stats.xpParaSiguienteNivel).toLocaleString()} XP
+              {t.progress}: {stats.xpTotal.toLocaleString()} / {(stats.xpTotal + stats.xpParaSiguienteNivel).toLocaleString()} XP
             </div>
           </div>
         </div>
@@ -159,37 +212,37 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
             <div className="stat-item fade-in clickable" onClick={() => onStatClick?.('missions')}>
               <div className="stat-icon">📂</div>
               <div className="stat-number">{stats.historiasCompletadas}</div>
-              <div className="stat-label">MISIONES</div>
+              <div className="stat-label">{t.missions}</div>
             </div>
 
             <div className="stat-item fade-in clickable" style={{ animationDelay: '0.1s' }} onClick={() => onStatClick?.('contacts')}>
               <div className="stat-icon">👥</div>
               <div className="stat-number">{stats.personajesConocidos}</div>
-              <div className="stat-label">CONTACTOS</div>
+              <div className="stat-label">{t.contacts}</div>
             </div>
 
             <div className="stat-item fade-in clickable" style={{ animationDelay: '0.2s' }} onClick={() => onStatClick?.('locations')}>
               <div className="stat-icon">📍</div>
               <div className="stat-number">{stats.ubicacionesVisitadas}</div>
-              <div className="stat-label">LUGARES</div>
+              <div className="stat-label">{t.locations}</div>
             </div>
 
             <div className="stat-item fade-in clickable" style={{ animationDelay: '0.3s' }} onClick={() => onStatClick?.('merits')}>
               <div className="stat-icon">🎖️</div>
               <div className="stat-number">{stats.logrosDesbloqueados}</div>
-              <div className="stat-label">MÉRITOS</div>
+              <div className="stat-label">{t.merits}</div>
             </div>
 
             <div className="stat-item fade-in clickable" style={{ animationDelay: '0.4s' }} onClick={() => onStatClick?.('resources')}>
               <div className="stat-icon">🎒</div>
               <div className="stat-number">{stats.inventarioItems}</div>
-              <div className="stat-label">RECURSOS</div>
+              <div className="stat-label">{t.resources}</div>
             </div>
 
             <div className="stat-item fade-in" style={{ animationDelay: '0.5s' }}>
               <div className="stat-icon">🔥</div>
               <div className="stat-number">{stats.rachaDias}</div>
-              <div className="stat-label">RACHA</div>
+              <div className="stat-label">{t.streak}</div>
             </div>
           </div>
 
@@ -198,14 +251,14 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
           {/* SECCIÓN 3: ARCHIVOS PRIORITARIOS */}
           <div className="favorites-section">
             <div className="favorites-header">
-              {'>'} ARCHIVOS PRIORITARIOS [{favoriteStories.length}]
+              {'>'} {t.priorityFiles} [{favoriteStories.length}]
             </div>
 
             {loadingFavorites ? (
-              <div className="favorites-empty">CARGANDO ÍNDICE...</div>
+              <div className="favorites-empty">{t.loadingIndex}</div>
             ) : favoriteStories.length === 0 ? (
               <div className="favorites-empty">
-                [ ! ] SIN ARCHIVOS MARCADOS
+                {t.noFiles}
               </div>
             ) : (
               <div className="favorites-row">
