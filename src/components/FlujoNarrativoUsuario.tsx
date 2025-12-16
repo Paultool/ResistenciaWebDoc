@@ -1,6 +1,7 @@
 ﻿import 'aframe';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { gameServiceUser, PlayerStats } from '../services/GameServiceUser';
 import MapaView from './MapaView';
 //FICHA PERSONAJES
@@ -107,6 +108,7 @@ interface HotspotConfig {
     meshName: string; // El nombre de la malla dentro del GLB (ej: 'bidek')
     contentType: 'imagen' | 'video' | 'audio' | 'interactive' | 'backgroundMusic'; // Tipo de contenido
     title: string;
+    title_en?: string; // Título en inglés para localización
     url: string; // URL del contenido (imagen, video, audio)
     subtitlesUrl?: string; // Opcional: URL del archivo SRT
     recompensaId?: number; // Opcional: Recompensa asociada
@@ -132,6 +134,312 @@ interface MapaViewProps {
     recursos: RecursoMultimediaData[];
 }
 
+// --- DICCIONARIO DE TRADUCCIÓN ---
+// Definir tipos para el diccionario
+type TranslationKeys = {
+    loading_stories: string;
+    connect_db: string;
+    access_mem: string;
+    decrypting: string;
+    buffer_status: string;
+    sync_status: string;
+    no_signal: string;
+    no_stories_msg: string;
+    await_trans: string;
+    sys_failure: string;
+    err_void: string;
+    err_load: string;
+    abort_retry: string;
+    mission_complete: string;
+    data_saved_msg: string;
+    return_hub: string;
+    hub_loading: string;
+
+    // Hub Cards
+    sec_prefix: string;
+    completed: string;
+    locked: string;
+    req: string;
+    execute: string;
+    add_fav: string;
+    remove_fav: string;
+
+    // Step Content
+    narrative_incoming: string;
+    next: string;
+    continue_adv: string;
+    decision_crit: string;
+    waiting_input: string;
+    seq_completed: string;
+    conn_terminated: string;
+    data_saved: string;
+    next_phase: string;
+    end_sim: string;
+
+    // 3D Instructions
+    nav_proto: string;
+    touch_iface: string;
+    peripherals: string;
+    online: string;
+    instruct_text: string;
+    nodes_interest: string;
+    virt_joy: string;
+    move: string;
+    screen: string;
+    swipe_tap: string;
+    keyboard: string;
+    movement: string;
+    mouse: string;
+    click_drag: string;
+    start: string;
+
+    // Modals & Bottom Bar
+    map: string;
+    inv: string;
+    crew: string;
+    logs: string;
+    xp: string;
+    nodes: string;
+    vol: string;
+    cam: string;
+
+    res_storage: string;
+    capacity: string;
+    items_label: string;
+    empty_storage: string;
+    db_crew: string;
+    select_subj: string;
+    view_file: string;
+    no_records: string;
+    mission_logs: string;
+    return_hub_btn: string;
+    no_data_logs: string;
+
+    file_title: string;
+    access_lvl: string;
+    psych_profile: string;
+    tech_attr: string;
+
+    hotspot_unknown: string;
+
+    // Modals Extra
+    locked_title: string;
+    unlock_msg: string;
+    must_complete_msg: string;
+    go_req_story: string;
+    cancel: string;
+    prev_step: string;
+    next_step: string;
+    close_btn: string;
+    total: string;
+};
+
+const flujoTranslations: Record<'es' | 'en', TranslationKeys> = {
+    es: {
+        loading_stories: "RECUPERANDO_HISTORIAS",
+        connect_db: "CONECTANDO BASE DE DATOS",
+        access_mem: "ACCEDIENDO_MEMORIA",
+        decrypting: "Desencriptando fragmentos narrativos...",
+        buffer_status: "BUFFER: 64KB",
+        sync_status: "ESTADO: SYNC",
+        no_signal: "NO_SIGNAL_DETECTED",
+        no_stories_msg: "No se han encontrado historias disponibles en este sector de la memoria.",
+        await_trans: "ESPERANDO TRANSMISIÓN...",
+        sys_failure: "SYSTEM FAILURE",
+        err_void: "ERR_CODE: NARRATIVE_VOID",
+        err_load: "No se pudo cargar el flujo narrativo.",
+        abort_retry: "ABORTAR Y REINICIAR",
+        mission_complete: "MISIÓN COMPLETADA",
+        data_saved_msg: "Los datos han sido recuperados exitosamente.\nTu contribución a la memoria colectiva ha sido registrada.",
+        return_hub: "FINALIZAR Y VOLVER AL HUB",
+        hub_loading: "CARGANDO...",
+
+        // Hub Cards
+        sec_prefix: "SEC_",
+        completed: "COMPLETED", // Using English style for 'hacker' feel in ES too? No, keep localized.
+        locked: "BLOQUEADO",
+        req: "REQ:",
+        execute: "EJECUTAR",
+        add_fav: "Agregar a favoritos",
+        remove_fav: "Remover de favoritos",
+
+        // Step Content
+        narrative_incoming: "NARRATIVA_ENTRANTE",
+        next: "Siguiente",
+        continue_adv: "Continuar Aventura",
+        decision_crit: "DECISIÓN_CRÍTICA",
+        waiting_input: "WAITING_INPUT...",
+        seq_completed: "SECUENCIA_COMPLETADA",
+        conn_terminated: "CONEXIÓN_FINALIZADA",
+        data_saved: "DATOS GUARDADOS CORRECTAMENTE",
+        next_phase: "SIGUIENTE FASE",
+        end_sim: "TERMINAR SIMULACIÓN",
+
+        // 3D Instructions
+        nav_proto: "PROTOCOLO DE NAVEGACIÓN",
+        touch_iface: "INTERFAZ TÁCTIL DETECTADA",
+        peripherals: "PERIFÉRICOS DETECTADOS",
+        online: "ONLINE",
+        instruct_text: "Para avanzar en la simulación, localiza y descifra los Nodos de Interés ocultos.",
+        nodes_interest: "NODOS DE INTERÉS",
+        virt_joy: "JOYSTICK VIRTUAL",
+        move: "Moverse",
+        screen: "PANTALLA",
+        swipe_tap: "Deslizar: Mirar / Tap: Interactuar",
+        keyboard: "TECLADO",
+        movement: "Desplazamiento",
+        mouse: "MOUSE",
+        click_drag: "Clic + Arrastrar: Mirar",
+        start: "INICIAR",
+
+        // Modals & Bottom Bar
+        map: "MAPA",
+        inv: "INV",
+        crew: "CREW",
+        logs: "LOGS",
+        xp: "XP",
+        nodes: "NODOS",
+        vol: "VOL",
+        cam: "CAM",
+
+        res_storage: "ALMACÉN DE RECURSOS",
+        capacity: "CAPACIDAD: ILIMITADA",
+        items_label: "ITEMS",
+        empty_storage: "ALMACÉN VACÍO. RECOLECTA OBJETOS.",
+        db_crew: "BASE DE DATOS: CREW",
+        select_subj: "SELECCIONE SUJETO PARA ANÁLISIS DETALLADO",
+        view_file: "VER EXPEDIENTE",
+        no_records: "SIN REGISTROS. INTERACTÚA CON EL ENTORNO.",
+        mission_logs: "LOGS DE MISIÓN",
+        return_hub_btn: "RETORNAR AL HUB",
+        no_data_logs: "SIN DATOS. EXPLORACIÓN REQUERIDA.",
+
+        file_title: "EXPEDIENTE:",
+        access_lvl: "NIVEL DE ACCESO: CONFIDENCIAL",
+        psych_profile: "PERFIL PSICOLÓGICO / BIO",
+        tech_attr: "ATRIBUTOS TÉCNICOS",
+
+        hotspot_unknown: "ARCHIVO_DESCONOCIDO",
+
+        locked_title: "Historia Bloqueada",
+        unlock_msg: "Para desbloquear",
+        must_complete_msg: "primero debes completar la historia:",
+        go_req_story: "Ir a Historia Requerida →",
+        cancel: "Cancelar",
+        prev_step: "Paso Anterior",
+        next_step: "Siguiente Paso",
+        close_btn: "[ CERRAR ]",
+        total: "TOTAL"
+    },
+    en: {
+        loading_stories: "RETRIEVING_STORIES",
+        connect_db: "CONNECTING DATABASE",
+        access_mem: "ACCESSING_MEMORY",
+        decrypting: "Decrypting narrative fragments...",
+        buffer_status: "BUFFER: 64KB",
+        sync_status: "STATUS: SYNC",
+        no_signal: "NO_SIGNAL_DETECTED",
+        no_stories_msg: "No stories found in this memory sector.",
+        await_trans: "AWAITING TRANSMISSION...",
+        sys_failure: "SYSTEM FAILURE",
+        err_void: "ERR_CODE: NARRATIVE_VOID",
+        err_load: "Could not load narrative flow.",
+        abort_retry: "ABORT AND RETRY",
+        mission_complete: "MISSION COMPLETE",
+        data_saved_msg: "Data successfully retrieved.\nYour contribution to the collective memory has been registered.",
+        return_hub: "FINISH AND RETURN TO HUB",
+        hub_loading: "LOADING...",
+
+        // Hub Cards
+        sec_prefix: "SEC_",
+        completed: "COMPLETED",
+        locked: "LOCKED",
+        req: "REQ:",
+        execute: "EXECUTE",
+        add_fav: "Add to favorites",
+        remove_fav: "Remove from favorites",
+
+        // Step Content
+        narrative_incoming: "INCOMING_NARRATIVE",
+        next: "Next",
+        continue_adv: "Continue Adventure",
+        decision_crit: "CRITICAL_DECISION",
+        waiting_input: "WAITING_INPUT...",
+        seq_completed: "SEQUENCE_COMPLETED",
+        conn_terminated: "CONNECTION_TERMINATED",
+        data_saved: "DATA SAVED SUCCESSFULLY",
+        next_phase: "NEXT PHASE",
+        end_sim: "END SIMULATION",
+
+        // 3D Instructions
+        nav_proto: "NAVIGATION_PROTOCOL",
+        touch_iface: "TOUCH INTERFACE DETECTED",
+        peripherals: "PERIPHERALS DETECTED",
+        online: "ONLINE",
+        instruct_text: "To proceed, locate and decipher the hidden Interest Nodes.",
+        nodes_interest: "INTEREST NODES",
+        virt_joy: "VIRTUAL JOYSTICK",
+        move: "Move",
+        screen: "SCREEN",
+        swipe_tap: "Swipe: Look / Tap: Interact",
+        keyboard: "KEYBOARD",
+        movement: "Movement",
+        mouse: "MOUSE",
+        click_drag: "Click + Drag: Look",
+        start: "START",
+
+        // Modals & Bottom Bar
+        map: "MAP",
+        inv: "INV",
+        crew: "CREW",
+        logs: "LOGS",
+        xp: "XP",
+        nodes: "NODES",
+        vol: "VOL",
+        cam: "CAM",
+
+        res_storage: "RESOURCE STORAGE",
+        capacity: "CAPACITY: UNLIMITED",
+        items_label: "ITEMS",
+        empty_storage: "STORAGE EMPTY. COLLECT OBJECTS.",
+        db_crew: "DATABASE: CREW",
+        select_subj: "SELECT SUBJECT FOR DETAILED ANALYSIS",
+        view_file: "VIEW FILE",
+        no_records: "NO RECORDS. INTERACT WITH ENVIRONMENT.",
+        mission_logs: "MISSION LOGS",
+        return_hub_btn: "RETURN TO HUB",
+        no_data_logs: "NO DATA. EXPLORATION REQUIRED.",
+
+        file_title: "FILE:",
+        access_lvl: "ACCESS LEVEL: CONFIDENTIAL",
+        psych_profile: "PSYCH PROFILE / BIO",
+        tech_attr: "TECH ATTRIBUTES",
+
+        hotspot_unknown: "UNKNOWN_FILE",
+
+        locked_title: "Story Locked",
+        unlock_msg: "To unlock",
+        must_complete_msg: "you must first complete:",
+        go_req_story: "Go to Required Story →",
+        cancel: "Cancel",
+        prev_step: "Previous Step",
+        next_step: "Next Step",
+        close_btn: "[ CLOSE ]",
+        total: "TOTAL"
+    }
+};
+
+// Helper para contenido localizado desde DB
+const getLocalizedContent = (obj: any, field: string, lang: 'es' | 'en') => {
+    if (!obj) return '';
+    // Intentar buscar campo con sufijo _en si el idioma es inglés
+    if (lang === 'en') {
+        return obj[`${field}_en`] || obj[field] || '';
+    }
+    // Por defecto devolver el campo original (asumido español)
+    return obj[field] || '';
+};
+
 const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNarrativoUsuarioProps) => {
     const [historias, setHistorias] = useState<HistoriaData[]>([]);
     const [selectedHistoriaId, setSelectedHistoriaId] = useState<number | null>(null);
@@ -147,6 +455,20 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     const [notification, setNotification] = useState<string | null>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    // --- LOCALIZATION HOOKS & SUBS PERSISTENCE ---
+    const { language } = useLanguage();
+    const t = flujoTranslations[language];
+
+    useEffect(() => {
+        // Automatically enable subtitles if language is English, disable for Spanish
+        if (language === 'en') {
+            setSubtitlesEnabled(true);
+        } else {
+            setSubtitlesEnabled(false);
+        }
+    }, [language]);
+
     const [historiasVisitadas, setHistoriasVisitadas] = useState<number[]>([]);
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
     const [showAudioOverlay, setShowAudioOverlay] = useState(false);
@@ -335,7 +657,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 await fetchPlayerStats();
             }
         }
-    }, [userId, historiaId, fetchPlayerStats]);
+    }, [userId, selectedHistoriaId, fetchPlayerStats]);
 
 
     // ==================================================================
@@ -359,7 +681,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         // --- INICIO DE LA MODIFICACIÓN ---
 
         let options: { texto: string, siguiente_paso_id: number, recompensaId?: number }[] | undefined | null = null;
-        let recompensaAppId: number | undefined | null = null;
+        const recompensaAppId: number | undefined | null = null;
 
         // 1. Determinar de dónde sacar las opciones
         if (currentStep.tipo_paso === 'app') {
@@ -432,7 +754,6 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         closeHotspotModal,
         getRecurso,
         fetchPlayerStats,
-        historiaId,
         selectedHistoriaId
     ]);
 
@@ -572,7 +893,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
 
     // Función para manejar la selección de historia desde el mapa o menú
-    const handleHistoriaSelect = (historiaId: number) => {
+    const handleHistoriaSelect = useCallback((historiaId: number) => {
 
         // 1. Resetear el estado de finalización del juego ✅ AÑADIR/ASEGURAR ESTA LÍNEA
         setShowEndMessage(false);
@@ -592,11 +913,10 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         totalHotspotsRef.current = 0;
         discoveredHotspotIds.current.clear(); // Limpia el Set de IDs
 
-
-    };
+    }, []);
 
     // Función que maneja la apertura del modal de hotspot
-    const handleHotspotClick = async (hotspot: HotspotConfig) => {
+    const handleHotspotClick = useCallback(async (hotspot: HotspotConfig) => {
         // Log para depuración
         console.log('Hotspot clickeado:', hotspot);
         console.log('ContentType del hotspot:', hotspot.contentType);
@@ -658,7 +978,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
         // Reproducir un sonido de click simulado
         new Audio('https://cdn.aframe.io/360-image-gallery-boilerplate/audio/click.ogg').play().catch(e => console.error("Error al reproducir audio:", e));
-    };
+    }, [user, selectedHistoriaId, recompensasData, personajesData, fetchPlayerStats]);
 
 
     // Función de manejo de audio para el video/audio del modal (para evitar problemas de autoplay)
@@ -682,7 +1002,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             // Usamos la función que ya tienes para resetear contadores y pasos
             handleHistoriaSelect(historiaId);
         }
-    }, [historiaId]); // Se ejecuta cuando cambia historiaId
+    }, [historiaId, handleHistoriaSelect]); // Se ejecuta cuando cambia historiaId
 
 
     // ====================================================================
@@ -1474,7 +1794,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 URL.revokeObjectURL(currentSubtitleUrl);
             }
         };
-    }, [currentStepIndex, flujoData, recursosData]); // Dependencias similares al efecto de media
+    }, [currentStepIndex, flujoData, recursosData, getRecurso]); // Dependencias similares al efecto de media
 
     // useEffect para convertir subtítulos del hotspot
     useEffect(() => {
@@ -1490,7 +1810,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 URL.revokeObjectURL(hotspotSubtitleUrl);
             }
         };
-    }, [hotspotModal]);
+    }, [hotspotModal, getRecurso, hotspotSubtitleUrl]);
 
     // useEffect para manejar la carga y reproducción de recursos multimedia al cambiar de paso
     useEffect(() => {
@@ -1583,7 +1903,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             setShowStepContent(true);
         }
 
-    }, [currentStepIndex, flujoData, recursosData, selectedHistoriaId]); // <-- AÑADIR selectedHistoriaId
+    }, [currentStepIndex, flujoData, recursosData, selectedHistoriaId, getRecurso]); // <-- AÑADIR selectedHistoriaId
 
     // --- Efecto 1: Maneja la lógica de Play/Pause ---
     useEffect(() => {
@@ -1711,7 +2031,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     useEffect(() => {
         if (!isMobile || !selectedHistoriaId) return;
 
-        let currentKeys: Set<string> = new Set();
+        const currentKeys: Set<string> = new Set();
 
         // Referencias a los event listeners para poder removerlos
         const listeners: Map<HTMLElement, Array<{ event: string, handler: EventListener }>> = new Map();
@@ -1993,8 +2313,9 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             );
         }
 
-        const contentText = step.contenido || "";
-        const isDecisionStep = step.tipo_paso === 'pregunta' || (step.opciones_decision?.opciones_siguientes_json && step.opciones_decision.opciones_siguientes_json.length > 0);
+        const contentText = getLocalizedContent(step, 'contenido', language);
+        const rawOptions = getLocalizedContent(step, 'opciones_decision', language) || step.opciones_decision;
+        const isDecisionStep = step.tipo_paso === 'pregunta' || (rawOptions?.opciones_siguientes_json && rawOptions.opciones_siguientes_json.length > 0);
 
         console.log(`[DEBUG] Rendering Step ID: ${step.id_flujo}, Tipo: ${step.tipo_paso}, Decision Step: ${isDecisionStep}`);
         console.log(`[DEBUG] Step Content: ${contentText}`);
@@ -2008,7 +2329,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         if (isDecisionStep) {
             // Normalización de datos (Misma lógica de seguridad)
             let opciones = [];
-            const rawOptions = step.opciones_decision;
+            // rawOptions ya fue obtenido arriba (localizado o fallback)
 
             if (Array.isArray(rawOptions)) {
                 opciones = rawOptions;
@@ -2047,10 +2368,10 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         <div className="flex items-center justify-between border-b border-[#33ff00]/30 pb-3 mb-6">
                             <div className="flex items-center gap-2 text-red-500 animate-pulse">
                                 <span className="text-xl">⚠️</span>
-                                <span className="font-bold tracking-widest text-sm md:text-base">DECISIÓN_CRÍTICA</span>
+                                <span className="font-bold tracking-widest text-sm md:text-base">{t.decision_crit}</span>
                             </div>
                             <div className="text-[10px] text-[#33ff00]/60">
-                                WAITING_INPUT...
+                                {t.waiting_input}
                             </div>
                         </div>
 
@@ -2137,20 +2458,20 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         <div className="border-b border-[#33ff00]/30 pb-4 mb-6 flex justify-between items-center">
                             <div>
                                 <h2 className="text-[#33ff00] text-lg md:text-xl tracking-widest uppercase font-bold">
-                                    {'>'} PROTOCOLO DE NAVEGACIÓN
+                                    {'>'} {t.nav_proto}
                                 </h2>
                                 <p className="text-[10px] text-[#33ff00]/60 uppercase mt-1">
-                                    SISTEMA: {isMobile ? 'INTERFAZ TÁCTIL DETECTADA' : 'PERIFÉRICOS DETECTADOS'}
+                                    SISTEMA: {isMobile ? t.touch_iface : t.peripherals}
                                 </p>
                             </div>
                             <span className="text-[10px] animate-pulse text-[#33ff00] border border-[#33ff00] px-2 py-1 hidden sm:block">
-                                [ ONLINE ]
+                                [ {t.online} ]
                             </span>
                         </div>
 
                         {/* Cuerpo de Texto */}
                         <p className="text-sm md:text-base leading-relaxed mb-8 text-center md:text-left">
-                            Para avanzar en la simulación, localiza y descifra los <strong className="text-white bg-[#33ff00]/20 px-1">NODOS DE INTERÉS</strong> ocultos.
+                            {t.instruct_text} <strong className="text-white bg-[#33ff00]/20 px-1">{t.nodes_interest}</strong>
                         </p>
 
                         {/* --- DIAGRAMA DE CONTROLES (ADAPTATIVO) --- */}
@@ -2169,8 +2490,8 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                             <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-1 bg-[#33ff00]"></div>
                                             <div className="absolute right-1 top-1/2 -translate-y-1/2 w-1 h-1 bg-[#33ff00]"></div>
                                         </div>
-                                        <span className="text-[10px] text-[#33ff00] font-bold uppercase tracking-wider">JOYSTICK VIRTUAL</span>
-                                        <span className="text-[9px] text-gray-500">Moverse</span>
+                                        <span className="text-[10px] text-[#33ff00] font-bold uppercase tracking-wider">{t.virt_joy}</span>
+                                        <span className="text-[9px] text-gray-500">{t.move}</span>
                                     </div>
 
                                     <div className="h-[1px] w-full md:h-10 md:w-[1px] bg-[#33ff00]/30"></div>
@@ -2181,8 +2502,8 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                             <div className="w-4 h-4 bg-white/80 rounded-full animate-ping absolute"></div>
                                             <div className="text-2xl">👆</div>
                                         </div>
-                                        <span className="text-[10px] text-[#33ff00] font-bold uppercase tracking-wider">PANTALLA</span>
-                                        <span className="text-[9px] text-gray-500">Deslizar: Mirar / Tap: Interactuar</span>
+                                        <span className="text-[10px] text-[#33ff00] font-bold uppercase tracking-wider">{t.screen}</span>
+                                        <span className="text-[9px] text-gray-500">{t.swipe_tap}</span>
                                     </div>
                                 </>
                             ) : (
@@ -2195,8 +2516,8 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                             <div className="w-8 h-8 border border-[#33ff00] flex items-center justify-center text-[#33ff00] font-bold rounded-sm text-xs">S</div>
                                             <div className="w-8 h-8 border border-[#33ff00] flex items-center justify-center text-[#33ff00] font-bold rounded-sm text-xs">D</div>
                                         </div>
-                                        <span className="text-[10px] mt-2 uppercase tracking-wider text-[#33ff00]">TECLADO</span>
-                                        <span className="text-[9px] text-gray-500">Desplazamiento</span>
+                                        <span className="text-[10px] mt-2 uppercase tracking-wider text-[#33ff00]">{t.keyboard}</span>
+                                        <span className="text-[9px] text-gray-500">{t.movement}</span>
                                     </div>
 
                                     <div className="h-[1px] w-full md:h-10 md:w-[1px] bg-[#33ff00]/30"></div>
@@ -2206,8 +2527,8 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                             <div className="w-1 h-3 bg-[#33ff00] rounded-full animate-bounce"></div>
                                             <div className="absolute top-0 w-full h-1/2 border-b border-[#33ff00]/30"></div>
                                         </div>
-                                        <span className="text-[10px] mt-2 uppercase tracking-wider text-[#33ff00]">MOUSE</span>
-                                        <span className="text-[9px] text-gray-500">Clic + Arrastrar: Mirar</span>
+                                        <span className="text-[10px] mt-2 uppercase tracking-wider text-[#33ff00]">{t.mouse}</span>
+                                        <span className="text-[9px] text-gray-500">{t.click_drag}</span>
                                     </div>
                                 </>
                             )}
@@ -2221,7 +2542,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         >
                             <span className="absolute inset-0 w-full h-full bg-[#33ff00]/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></span>
                             <span className="relative flex items-center justify-center gap-2">
-                                [ INICIAR ]
+                                [ {t.start} ]
                             </span>
                         </button>
                     </div>
@@ -2235,10 +2556,10 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             }
 
             // Define el texto y si el botón debe estar habilitado (solo relevante para 3D no completado, pero esto ya está filtrado por showFinalAdvancePopup)
-            let buttonText = "Siguiente →";
+            let buttonText = t.next + " →";
 
             if (is3DModel) {
-                buttonText = "Continuar Aventura →";
+                buttonText = t.continue_adv + " →";
             }
             // Render del pop-up final
             return (
@@ -2270,7 +2591,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                             <div className="flex items-center gap-2">
                                 <span className="w-2 h-2 bg-[#33ff00] animate-pulse"></span>
                                 <span className="text-[#33ff00] text-xs md:text-sm tracking-[0.2em] uppercase font-bold">
-                                    NARRATIVA_ENTRANTE
+                                    {t.narrative_incoming}
                                 </span>
                             </div>
 
@@ -2343,11 +2664,11 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
                         {/* Título Responsivo: Letra más pequeña y menos espacio en móvil */}
                         <h2 className="text-[#33ff00] text-lg md:text-2xl font-bold tracking-wide md:tracking-widest uppercase animate-pulse break-words leading-tight">
-                            {isChapterEnd ? "> SECUENCIA_COMPLETADA" : "> CONEXIÓN_FINALIZADA"}
+                            {isChapterEnd ? "> " + t.seq_completed : "> " + t.conn_terminated}
                         </h2>
 
                         <p className="text-[8px] md:text-[10px] text-[#33ff00]/50 mt-2 tracking-[0.1em] md:tracking-[0.2em]">
-                            DATOS GUARDADOS CORRECTAMENTE
+                            {t.data_saved}
                         </p>
                     </div>
 
@@ -2365,7 +2686,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         >
                             <span className="flex items-center justify-center gap-2 relative z-10">
                                 {/* Texto ligeramente acortado o ajustado */}
-                                {isChapterEnd ? "[ SIGUIENTE FASE ]" : "[ TERMINAR SIMULACIÓN ]"}
+                                {isChapterEnd ? `[ ${t.next_phase} ]` : `[ ${t.end_sim} ]`}
                                 <span className="group-hover:translate-x-2 transition-transform">{'>>'}</span>
                             </span>
                         </button>
@@ -2451,11 +2772,11 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     <div className="text-center space-y-2 relative z-10 w-full max-w-md">
                         {/* Ajuste: Texto más pequeño y menos espaciado en móvil para evitar desborde */}
                         <h2 className="text-lg md:text-xl font-bold tracking-[0.15em] md:tracking-[0.3em] uppercase break-words leading-tight">
-                            RECUPERANDO_HISTORIAS
+                            {t.loading_stories}
                         </h2>
 
                         <div className="flex justify-center gap-1 text-[10px] md:text-xs opacity-70">
-                            <span>CONECTANDO BASE DE DATOS</span>
+                            <span>{t.connect_db}</span>
                             <span className="animate-[ping_1.5s_infinite]">.</span>
                             <span className="animate-[ping_1.5s_infinite_0.2s]">.</span>
                             <span className="animate-[ping_1.5s_infinite_0.4s]">.</span>
@@ -2499,12 +2820,12 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
                         {/* Título Técnico */}
                         <h2 className="text-[#33ff00] text-2xl font-bold tracking-[0.2em] uppercase mb-4">
-                            NO_SIGNAL_DETECTED
+                            {t.no_signal}
                         </h2>
 
                         {/* Mensaje Humano (Estilizado) */}
                         <p className="text-[#a8a8a8] text-sm leading-relaxed mb-8">
-                            No se han encontrado historias disponibles en este sector de la memoria.
+                            {t.no_stories_msg}
                         </p>
 
                         {/* Decoración de Estado */}
@@ -2513,7 +2834,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                 <div className="h-full w-1/2 bg-[#33ff00] animate-[ping_2s_linear_infinite]"></div>
                             </div>
                             <span className="text-[10px] text-[#33ff00]/40 uppercase tracking-widest">
-                                ESPERANDO TRANSMISIÓN...
+                                {t.await_trans}
                             </span>
                         </div>
 
@@ -2637,16 +2958,16 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                     {/* 2. BADGES SUPERIORES */}
                                     <div className="absolute top-4 left-4 right-4 flex justify-between z-20 pointer-events-none">
                                         <span className="bg-black/80 border border-[#33ff00]/50 text-[#33ff00] text-[10px] px-2 py-1 uppercase font-bold backdrop-blur-md">
-                                            SEC_0{index + 1}
+                                            {t.sec_prefix}0{index + 1}
                                         </span>
                                         {isCompleted && (
                                             <span className="bg-[#33ff00] text-black text-[10px] px-2 py-1 font-bold uppercase animate-pulse shadow-[0_0_10px_#33ff00]">
-                                                COMPLETADO
+                                                {t.completed}
                                             </span>
                                         )}
                                         {historia.isLocked && (
                                             <span className="bg-red-600 text-white text-[10px] px-2 py-1 font-bold uppercase flex items-center gap-2">
-                                                🔒 BLOQUEADO
+                                                🔒 {t.locked}
                                             </span>
                                         )}
                                     </div>
@@ -2656,7 +2977,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
                                         {/* Título */}
                                         <h2 className={`text-2xl md:text-3xl font-bold mb-2 uppercase tracking-tighter leading-none drop-shadow-xl ${historia.isLocked ? 'text-red-500' : 'text-white'}`}>
-                                            {historia.titulo}
+                                            {getLocalizedContent(historia, 'titulo', language)}
                                         </h2>
 
                                         {/* Línea Separadora */}
@@ -2664,13 +2985,13 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
                                         {/* Descripción */}
                                         <p className="text-sm text-gray-300 font-sans leading-relaxed line-clamp-3 mb-4 drop-shadow-md">
-                                            {historia.narrativa}
+                                            {getLocalizedContent(historia, 'narrativa', language)}
                                         </p>
 
                                         {/* Mensaje de Bloqueo */}
                                         {historia.isLocked && historia.id_historia_dependencia && (
                                             <div className="mb-3 text-[10px] text-red-400 font-mono border border-red-900/50 p-2 bg-red-900/20">
-                                                ⚠️ REQ: {historias.find(h => h.id_historia === historia.id_historia_dependencia)?.titulo}
+                                                ⚠️ {t.req} {getLocalizedContent(historias.find(h => h.id_historia === historia.id_historia_dependencia), 'titulo', language)}
                                             </div>
                                         )}
 
@@ -2678,7 +2999,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                         {!historia.isLocked && (
                                             <div className="flex gap-3 pt-2">
                                                 <button className="flex-1 bg-[#33ff00]/10 border border-[#33ff00] text-[#33ff00] py-3 px-4 text-xs font-bold uppercase tracking-widest hover:bg-[#33ff00] hover:text-black transition-all flex justify-between items-center group/btn">
-                                                    <span>EJECUTAR</span>
+                                                    <span>{t.execute}</span>
                                                     <span className="group-hover/btn:translate-x-1 transition-transform">{'>>'}</span>
                                                 </button>
 
@@ -2686,7 +3007,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                                     className="w-12 flex items-center justify-center border border-[#33ff00]/50 text-[#33ff00] hover:bg-[#33ff00] hover:text-black transition-all disabled:opacity-50"
                                                     onClick={(e) => handleToggleFavorite(historia.id_historia, e)}
                                                     disabled={favoritingHistoriaId === historia.id_historia}
-                                                    title={playerStats?.historias_favoritas?.includes(String(historia.id_historia)) ? "Remover de favoritos" : "Agregar a favoritos"}
+                                                    title={playerStats?.historias_favoritas?.includes(String(historia.id_historia)) ? t.remove_fav : t.add_fav}
                                                 >
                                                     {favoritingHistoriaId === historia.id_historia ? '...' : (playerStats?.historias_favoritas?.includes(String(historia.id_historia)) ? '♥' : '♡')}
                                                 </button>
@@ -2847,16 +3168,16 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         <div className="text-4xl animate-pulse">⚠️</div>
                         <div>
                             <h2 className="text-2xl font-bold tracking-widest uppercase text-white">
-                                SYSTEM FAILURE
+                                {t.sys_failure}
                             </h2>
-                            <p className="text-xs text-red-500 opacity-70">ERR_CODE: NARRATIVE_VOID</p>
+                            <p className="text-xs text-red-500 opacity-70">{t.err_void}</p>
                         </div>
                     </div>
 
                     {/* Cuerpo del mensaje (Estilo Consola) */}
                     <div className="bg-red-900/10 p-4 mb-8 border-l-2 border-red-600 font-mono text-sm leading-relaxed">
                         <p className="mb-2">{'>'} INITIATING DIAGNOSTIC...</p>
-                        <p className="mb-2 text-white">ERROR: No se pudo cargar el flujo narrativo.</p>
+                        <p className="mb-2 text-white">ERROR: {t.err_load}</p>
                         <p className="opacity-70">{'>'} DETALLE: currentStep is null.</p>
                         <span className="inline-block w-2 h-4 bg-red-600 animate-pulse mt-2"></span>
                     </div>
@@ -2869,7 +3190,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     >
                         <span className="absolute inset-0 w-full h-full bg-red-600/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></span>
                         <span className="relative flex items-center justify-center gap-2">
-                            <span>{'<<'}</span> ABORTAR Y REINICIAR
+                            <span>{'<<'}</span> {t.abort_retry}
                         </span>
                     </button>
                 </div>
@@ -3043,7 +3364,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                             {/* Nodos (Solo 3D) */}
                             {is3DModel && (
                                 <div className="flex flex-col justify-center px-3 border-l border-[#33ff00]/20 min-w-[60px] text-center animate-in fade-in">
-                                    <span className="text-[8px] text-[#33ff00] tracking-wider leading-none mb-0.5">NODOS</span>
+                                    <span className="text-[8px] text-[#33ff00] tracking-wider leading-none mb-0.5">{t.nodes}</span>
                                     <span className="text-white font-mono text-xs font-bold leading-none">
                                         {discoveredHotspots}/{totalHotspotsRef.current}
                                     </span>
@@ -3056,10 +3377,10 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
                             {/* Item Generador (Mapa, Inv, Crew, Logs) */}
                             {[
-                                { icon: '🗺️', label: 'MAPA', action: handleOpenMap },
-                                { icon: '📦', label: 'INV', action: () => setShowInventory(true), badge: playerStats.inventario?.length },
-                                { icon: '👥', label: 'CREW', action: () => setShowCharacters(true), badge: playerStats.personajes_conocidos?.length },
-                                { icon: '📚', label: 'LOGS', action: () => setShowStories(true), badge: playerStats.historias_visitadas?.length }
+                                { icon: '🗺️', label: t.map, action: handleOpenMap },
+                                { icon: '📦', label: t.inv, action: () => setShowInventory(true), badge: playerStats.inventario?.length },
+                                { icon: '👥', label: t.crew, action: () => setShowCharacters(true), badge: playerStats.personajes_conocidos?.length },
+                                { icon: '📚', label: t.logs, action: () => setShowStories(true), badge: playerStats.historias_visitadas?.length }
                             ].map((btn, idx) => (
                                 <div
                                     key={idx}
@@ -3092,7 +3413,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                         className="flex flex-col items-center w-full h-full justify-center outline-none"
                                     >
                                         <span className={`text-base mb-0.5 transition-colors ${showVolumeControl ? 'text-[#33ff00]' : 'text-gray-400 group-hover:text-white'}`}>🔊</span>
-                                        <span className="text-[8px] text-[#33ff00] font-mono tracking-wider">VOL</span>
+                                        <span className="text-[8px] text-[#33ff00] font-mono tracking-wider">{t.vol}</span>
                                     </button>
 
                                     {/* Slider Popup */}
@@ -3134,7 +3455,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                         className="flex flex-col items-center w-full h-full justify-center outline-none"
                                     >
                                         <span className={`text-base mb-0.5 transition-colors ${showHeightControl ? 'text-[#33ff00]' : 'text-gray-400 group-hover:text-white'}`}>📷</span>
-                                        <span className="text-[8px] text-[#33ff00] font-mono tracking-wider">CAM</span>
+                                        <span className="text-[8px] text-[#33ff00] font-mono tracking-wider">{t.cam}</span>
                                     </button>
 
                                     {/* Slider Popup */}
@@ -3329,7 +3650,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         <span className="w-2 h-2 bg-[#33ff00] animate-pulse shrink-0"></span>
                         <div className="flex flex-col">
                             <h3 className="text-[#33ff00] text-xs md:text-base font-bold tracking-widest uppercase truncate max-w-[200px] md:max-w-md leading-none">
-                                {hotspotModal?.title || 'ARCHIVO_DESCONOCIDO'}
+                                {getLocalizedContent(hotspotModal, 'title', language) || t.hotspot_unknown}
                             </h3>
                         </div>
                     </div>
@@ -3487,7 +3808,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     {/* Encabezado */}
                     <div className="flex justify-between items-center p-4 border-b border-[#33ff00]/30 bg-[#33ff00]/5">
                         <h3 className="text-[#33ff00] text-lg font-bold tracking-widest uppercase flex items-center gap-2">
-                            <span className="animate-pulse">_</span> ALMACÉN DE RECURSOS
+                            <span className="animate-pulse">_</span> {t.res_storage}
                         </h3>
                         <button
                             className="text-[#33ff00] hover:text-white hover:bg-[#33ff00]/20 px-2 py-1 transition-colors text-xl leading-none"
@@ -3501,8 +3822,8 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
                         {/* Estadísticas rápidas (Header interno) */}
                         <div className="flex justify-between text-xs text-[#33ff00]/60 mb-4 border-b border-[#33ff00]/20 pb-2">
-                            <span>CAPACIDAD: ILIMITADA</span>
-                            <span>ITEMS: {playerStats?.inventario?.length || 0}</span>
+                            <span>{t.capacity}</span>
+                            <span>{t.items_label}: {playerStats?.inventario?.length || 0}</span>
                         </div>
 
                         {/* Lista de Items */}
@@ -3543,7 +3864,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                             ) : (
                                 <div className="text-center py-10 border border-dashed border-[#33ff00]/30 text-gray-500 text-sm">
                                     <p className="mb-2 text-2xl opacity-50">🚫</p>
-                                    [ ! ] ALMACÉN VACÍO. RECOLECTA OBJETOS.
+                                    [ ! ] {t.empty_storage}
                                 </div>
                             )}
                         </div>
@@ -3560,7 +3881,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         {/* Encabezado */}
                         <div className="flex justify-between items-center p-4 border-b border-[#33ff00]/30 bg-[#33ff00]/5">
                             <h3 className="text-[#33ff00] text-lg font-bold tracking-widest uppercase flex items-center gap-2">
-                                <span className="animate-pulse">_</span> BASE DE DATOS: CREW
+                                <span className="animate-pulse">_</span> {t.db_crew}
                             </h3>
                             <button
                                 className="text-[#33ff00] hover:text-white hover:bg-[#33ff00]/20 px-2 py-1 transition-colors text-xl leading-none"
@@ -3575,10 +3896,10 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                             {/* Instrucciones / Subtítulo técnico */}
                             <div className="flex justify-between items-end mb-4 border-b border-[#33ff00]/20 pb-2">
                                 <p className="text-xs text-[#33ff00]/70">
-                                    {'>'} SELECCIONE SUJETO PARA ANÁLISIS DETALLADO
+                                    {'>'} {t.select_subj}
                                 </p>
                                 <span className="text-[9px] bg-[#33ff00]/10 text-[#33ff00] px-1 rounded">
-                                    TOTAL: {playerStats?.personajes_conocidos?.length || 0}
+                                    {t.total}: {playerStats?.personajes_conocidos?.length || 0}
                                 </span>
                             </div>
 
@@ -3611,7 +3932,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                                         {name}
                                                     </p>
                                                     <span className="text-[8px] border border-[#33ff00]/30 text-[#33ff00]/70 px-1 group-hover:bg-[#33ff00] group-hover:text-black transition-colors">
-                                                        VER EXPEDIENTE ↗
+                                                        {t.view_file} ↗
                                                     </span>
                                                 </div>
                                                 <p className="text-[10px] text-gray-500 font-mono mt-1">
@@ -3624,7 +3945,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                     // Estado Vacío
                                     <div className="text-center py-8 border border-dashed border-[#33ff00]/30 text-gray-500 text-sm">
                                         <p className="mb-2 text-2xl opacity-50">🚫</p>
-                                        [ ! ] SIN REGISTROS. INTERACTÚA CON EL ENTORNO.
+                                        [ ! ] {t.no_records}
                                     </div>
                                 )}
                             </div>
@@ -3647,7 +3968,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     {/* Encabezado */}
                     <div className="flex justify-between items-center p-4 border-b border-[#33ff00]/30 bg-[#33ff00]/5">
                         <h3 className="text-[#33ff00] text-lg font-bold tracking-widest uppercase flex items-center gap-2">
-                            <span className="animate-pulse">_</span> LOGS DE MISIÓN
+                            <span className="animate-pulse">_</span> {t.mission_logs}
                         </h3>
                         <button
                             className="text-[#33ff00] hover:text-white hover:bg-[#33ff00]/20 px-2 py-1 transition-colors text-xl leading-none"
@@ -3668,7 +3989,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                 handleReturnToMenu();
                             }}
                         >
-                            <span>{'<<'} RETORNAR AL HUB</span>
+                            <span>{'<<'} {t.return_hub_btn}</span>
                         </button>
 
                         {/* Lista de Items */}
@@ -3688,20 +4009,20 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                         <div key={index} className="border border-[#33ff00]/20 p-3 bg-white/5 hover:bg-[#33ff00]/10 transition-colors cursor-default group">
                                             <div className="flex justify-between items-start mb-1">
                                                 <p className="text-[#33ff00] font-bold text-sm uppercase group-hover:text-white transition-colors">
-                                                    {story.titulo}
+                                                    {getLocalizedContent(story, 'titulo', language)}
                                                 </p>
                                                 <span className="text-[9px] bg-[#33ff00]/20 text-[#33ff00] px-1.5 py-0.5 rounded-sm">
                                                     FILE_{storyId}
                                                 </span>
                                             </div>
-                                            <p className="text-xs text-gray-400 group-hover:text-gray-300">{story.descripcion}</p>
+                                            <p className="text-xs text-gray-400 group-hover:text-gray-300">{getLocalizedContent(story, 'descripcion', language)}</p>
                                         </div>
                                     ) : null;
                                 })
                             ) : (
                                 <div className="text-center py-10 border border-dashed border-[#33ff00]/30 text-gray-500 text-sm">
                                     <p className="mb-2 text-2xl opacity-50">📂</p>
-                                    [ ! ] SIN DATOS. EXPLORACIÓN REQUERIDA.
+                                    [ ! ] {t.no_data_logs}
                                 </div>
                             )}
                         </div>
@@ -3731,9 +4052,9 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         <div className="flex justify-between items-center p-5 border-b border-[#33ff00]/30 bg-[#33ff00]/5">
                             <div>
                                 <h2 className="text-[#33ff00] text-xl font-bold tracking-widest uppercase flex items-center gap-2">
-                                    EXPEDIENTE: {selectedCharacterForModal.nombre}
+                                    {t.file_title} {getLocalizedContent(selectedCharacterForModal, 'nombre', language)}
                                 </h2>
-                                <p className="text-[9px] text-[#33ff00]/60 mt-1">NIVEL DE ACCESO: CONFIDENCIAL</p>
+                                <p className="text-[9px] text-[#33ff00]/60 mt-1">{t.access_lvl}</p>
                             </div>
                             <button
                                 className="text-[#33ff00] hover:bg-[#33ff00] hover:text-black border border-[#33ff00] w-8 h-8 flex items-center justify-center transition-colors font-bold"
@@ -3780,10 +4101,10 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                             {/* SECCIÓN 2: DESCRIPCIÓN */}
                             <div className="border-l-2 border-[#33ff00] pl-4 bg-[#33ff00]/5 py-2">
                                 <h4 className="text-[#33ff00] text-xs font-bold uppercase tracking-wider mb-2">
-                                    {'>'} PERFIL PSICOLÓGICO / BIO
+                                    {'>'} {t.psych_profile}
                                 </h4>
                                 <p className="text-sm text-gray-300 leading-relaxed font-sans">
-                                    {selectedCharacterForModal.descripcion}
+                                    {getLocalizedContent(selectedCharacterForModal, 'descripcion', language)}
                                 </p>
                             </div>
 
@@ -3791,7 +4112,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                             {selectedCharacterForModal.metadata && (
                                 <div>
                                     <h4 className="text-[#33ff00] text-xs font-bold uppercase tracking-wider mb-3 border-b border-[#33ff00]/20 pb-1">
-                                        {'>'} ATRIBUTOS TÉCNICOS
+                                        {'>'} {t.tech_attr}
                                     </h4>
                                     <div className="grid grid-cols-2 gap-3">
                                         {Object.entries(selectedCharacterForModal.metadata).map(([key, value]) => (
@@ -3814,7 +4135,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                 className="w-full group relative py-3 border border-[#33ff00] text-[#33ff00] font-bold text-sm tracking-[0.2em] uppercase
                                 transition-all duration-300 hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_15px_rgba(51,255,0,0.4)]"
                             >
-                                <span>[ CERRAR ]</span>
+                                <span>{t.close_btn}</span>
                             </button>
                         </div>
                     </div>
@@ -3827,14 +4148,14 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     <div className="bg-gray-900 rounded-xl p-8 max-w-md w-full shadow-2xl border-2 border-red-600">
                         <div className="text-center">
                             <div className="text-6xl mb-4">🔒</div>
-                            <h3 className="text-2xl font-bold mb-4 text-white">Historia Bloqueada</h3>
+                            <h3 className="text-2xl font-bold mb-4 text-white">{t.locked_title}</h3>
                             <p className="text-gray-300 mb-6">
-                                Para desbloquear <span className="font-bold text-purple-400">"{lockedHistoryModal.historia.titulo}"</span>,
-                                primero debes completar la historia:
+                                {t.unlock_msg} <span className="font-bold text-purple-400">"{getLocalizedContent(lockedHistoryModal.historia, 'titulo', language)}"</span>,
+                                {t.must_complete_msg}
                             </p>
                             <div className="bg-purple-900 bg-opacity-50 p-4 rounded-lg mb-6">
                                 <p className="font-bold text-xl text-purple-300">
-                                    {lockedHistoryModal.historiaMadre.titulo}
+                                    {getLocalizedContent(lockedHistoryModal.historiaMadre, 'titulo', language)}
                                 </p>
                             </div>
                             <div className="flex gap-3">
@@ -3845,13 +4166,13 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                         handleHistoriaSelect(lockedHistoryModal.historiaMadre.id_historia);
                                     }}
                                 >
-                                    Ir a Historia Requerida →
+                                    {t.go_req_story}
                                 </button>
                                 <button
                                     className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-300"
                                     onClick={() => setLockedHistoryModal(null)}
                                 >
-                                    Cancelar
+                                    {t.cancel}
                                 </button>
                             </div>
                         </div>
@@ -3865,7 +4186,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         onClick={goBack}
                         disabled={currentStepIndex === 0}
                         className="fixed left-4 top-1/2 transform -translate-y-1/2 z-50 bg-black/70 hover:bg-black/90 text-[#33ff00] border border-[#33ff00] p-3 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                        title="Paso Anterior"
+                        title={t.prev_step}
                     >
                         ◀
                     </button>
@@ -3873,7 +4194,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         onClick={goNext}
                         disabled={currentStepIndex === flujoData.length - 1}
                         className="fixed right-4 top-1/2 transform -translate-y-1/2 z-50 bg-black/70 hover:bg-black/90 text-[#33ff00] border border-[#33ff00] p-3 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                        title="Siguiente Paso"
+                        title={t.next_step}
                     >
                         ▶
                     </button>

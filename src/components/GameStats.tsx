@@ -83,6 +83,38 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
   const [favoriteStories, setFavoriteStories] = useState<any[]>([])
   const [loadingFavorites, setLoadingFavorites] = useState(false)
 
+  const cargarEstadisticas = React.useCallback(async () => {
+    if (!user?.id) return
+    try {
+      setLoading(true)
+      setError(null)
+      const dashboardStats = await gameService.getDashboardStats(user.id)
+      if (dashboardStats) {
+        setStats(dashboardStats)
+      } else {
+        setError(t.error)
+      }
+    } catch (err: any) {
+      console.error('Error:', err)
+      setError(t.connectionError)
+    } finally {
+      setLoading(false)
+    }
+  }, [user?.id, t])
+
+  const cargarHistoriasFavoritas = React.useCallback(async () => {
+    if (!user?.id) return
+    try {
+      setLoadingFavorites(true)
+      const favorites = await gameService.getFavoriteStoriesDetails(user.id)
+      setFavoriteStories(favorites || [])
+    } catch (err: any) {
+      console.error('Error favorites:', err)
+    } finally {
+      setLoadingFavorites(false)
+    }
+  }, [user?.id])
+
   useEffect(() => {
     if (user?.id) {
       cargarEstadisticas()
@@ -102,39 +134,7 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
     return () => {
       window.removeEventListener('statsUpdated', handleStatsUpdate)
     }
-  }, [user])
-
-  const cargarEstadisticas = async () => {
-    if (!user?.id) return
-    try {
-      setLoading(true)
-      setError(null)
-      const dashboardStats = await gameService.getDashboardStats(user.id)
-      if (dashboardStats) {
-        setStats(dashboardStats)
-      } else {
-        setError(t.error)
-      }
-    } catch (err: any) {
-      console.error('Error:', err)
-      setError(t.connectionError)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const cargarHistoriasFavoritas = async () => {
-    if (!user?.id) return
-    try {
-      setLoadingFavorites(true)
-      const favorites = await gameService.getFavoriteStoriesDetails(user.id)
-      setFavoriteStories(favorites || [])
-    } catch (err: any) {
-      console.error('Error favorites:', err)
-    } finally {
-      setLoadingFavorites(false)
-    }
-  }
+  }, [user?.id, cargarEstadisticas, cargarHistoriasFavoritas])
 
   const handleFavoriteClick = (historiaId: number) => {
     if (onNavigateToStory) onNavigateToStory(historiaId)
