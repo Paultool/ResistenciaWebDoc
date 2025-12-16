@@ -579,6 +579,28 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         }
 
         // =========================================================
+        // ✅ CRITICAL FIX: Reset isClicked state for all hotspots
+        // =========================================================
+        const modelEl = document.querySelector('[gltf-hotspot-interaction]');
+        if (modelEl) {
+            const obj = (modelEl as any).getObject3D('mesh');
+            if (obj) {
+                obj.traverse((child: any) => {
+                    if (child.isMesh && child.userData && child.userData.isHotspot && child.userData.isClicked) {
+                        // Reset the clicked state
+                        child.userData.isClicked = false;
+                        // Restore original material
+                        if (child.userData.originalMaterial) {
+                            child.material = child.userData.originalMaterial;
+                            child.material.needsUpdate = true;
+                        }
+                    }
+                });
+                console.log('✅ Hotspot clicked states reset');
+            }
+        }
+
+        // =========================================================
         // ✅ SOLUCIÓN: Re-activar wasd-controls de A-Frame
         // =========================================================
         const cameraEl = document.querySelector('a-camera');
@@ -1987,6 +2009,12 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         if (!selectedHistoriaId) return;
 
         const handleCursorClick = (e: Event) => {
+            // ✅ CRITICAL FIX: Don't process hotspot clicks if a modal is already open
+            if (hotspotModal || isHotspotModalOpen) {
+                console.log('🚫 Hotspot click blocked - modal already open');
+                return;
+            }
+
             const cursor = document.querySelector('a-cursor');
 
             if (!cursor) return;
@@ -2025,7 +2053,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             document.removeEventListener('click', handleCursorClick);
             console.log('❌ Listener de click removido');
         };
-    }, [selectedHistoriaId, handleHotspotClick]); // 'handleHotspotClick' es ahora una dependencia
+    }, [selectedHistoriaId, handleHotspotClick, hotspotModal, isHotspotModalOpen]); // 'handleHotspotClick' es ahora una dependencia
 
     // Controles de movimiento para móvil con joystick virtual mejorado
     useEffect(() => {
