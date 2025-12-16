@@ -463,42 +463,44 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
           </button>
         )}
 
-        <main className={`flex flex-col items-center text-center transition-all duration-1000 ease-out 
+        {(!isMuted || showContent) && (
+          <main className={`flex flex-col items-center text-center transition-all duration-1000 ease-out 
           ${showContent ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-10 blur-sm pointer-events-none'}`}>
 
-          <div className="mb-4 flex items-center gap-3 text-[#33ff00]/70 text-[10px] md:text-xs tracking-[0.4em] uppercase font-bold">
-            <span className="w-1 h-1 bg-[#33ff00]"></span>
-            PROTOCOL_V2.4 :: READY
-            <span className="w-1 h-1 bg-[#33ff00]"></span>
-          </div>
-          {/* TÍTULO CON CLASE GLITCH-YELLOW */}
-          <h1
-            className="glitch-yellow text-5xl md:text-7xl lg:text-8xl font-black mb-10 tracking-tighter select-none z-10"
-            data-text="LA RESISTENCIA"
-            style={{
-              animation: showContent ? 'text-reveal 1.5s cubic-bezier(0.19, 1, 0.22, 1) forwards' : 'none'
-            }}
-          >
-            LA RESISTENCIA
-          </h1>
-
-          <button
-            onClick={handleResisteClick}
-            className="group relative flex flex-col items-center gap-4 cursor-pointer transition-transform duration-700 hover:scale-110 mt-8"
-            title="INGRESAR / ENTER"
-          >
-            <div className="relative flex items-center justify-center">
-              {/* Efecto de onda: Verde -> Rojo al hover */}
-              <div className="absolute inset-0 rounded-full border border-[#33ff00] group-hover:border-red-600 animate-[ping_2s_infinite] opacity-30 scale-150 transition-colors duration-500"></div>
-
-              {/* Calavera: Verde -> Rojo al hover */}
-              <span className="text-6xl md:text-8xl text-[#33ff00] group-hover:text-red-600 drop-shadow-[0_0_15px_rgba(51,255,0,0.8)] group-hover:drop-shadow-[0_0_30px_rgba(255,0,0,0.8)] filter transition-all duration-300">
-                ☠
-              </span>
+            <div className="mb-4 flex items-center gap-3 text-[#33ff00]/70 text-[10px] md:text-xs tracking-[0.4em] uppercase font-bold">
+              <span className="w-1 h-1 bg-[#33ff00]"></span>
+              PROTOCOL_V2.4 :: READY
+              <span className="w-1 h-1 bg-[#33ff00]"></span>
             </div>
-          </button>
+            {/* TÍTULO CON CLASE GLITCH-YELLOW */}
+            <h1
+              className="glitch-yellow text-5xl md:text-7xl lg:text-8xl font-black mb-10 tracking-tighter select-none z-10"
+              data-text="LA RESISTENCIA"
+              style={{
+                animation: showContent ? 'text-reveal 1.5s cubic-bezier(0.19, 1, 0.22, 1) forwards' : 'none'
+              }}
+            >
+              LA RESISTENCIA
+            </h1>
 
-        </main>
+            <button
+              onClick={handleResisteClick}
+              className="group relative flex flex-col items-center gap-4 cursor-pointer transition-transform duration-700 hover:scale-110 mt-8"
+              title="INGRESAR / ENTER"
+            >
+              <div className="relative flex items-center justify-center">
+                {/* Efecto de onda: Verde -> Rojo al hover */}
+                <div className="absolute inset-0 rounded-full border border-[#33ff00] group-hover:border-red-600 animate-[ping_2s_infinite] opacity-30 scale-150 transition-colors duration-500"></div>
+
+                {/* Calavera: Verde -> Rojo al hover */}
+                <span className="text-6xl md:text-8xl text-[#33ff00] group-hover:text-red-600 drop-shadow-[0_0_15px_rgba(51,255,0,0.8)] group-hover:drop-shadow-[0_0_30px_rgba(255,0,0,0.8)] filter transition-all duration-300">
+                  ☠
+                </span>
+              </div>
+            </button>
+
+          </main>
+        )}
       </div>
 
       {/* BARRA INFERIOR */}
@@ -667,29 +669,30 @@ const MainContent: React.FC = () => {
                     </button>
                   );
                 })}
-                {isAdmin && (
-                  <button
-                    className={`term-link-btn flex items-center justify-center px-2 py-0.5 ${currentView === 'admin' ? 'active' : ''}`}
-                    style={{ color: '#ff0000', borderColor: currentView === 'admin' ? '#ff0000' : 'transparent' }}
-                    onClick={() => { setCurrentView('admin'); setIsMobileMenuOpen(false); }}
-                    title="ADMIN PANEL"
-                  >
-                    <i className="fas fa-user-shield text-xs"></i>
-                  </button>
-                )}
-              </div>
+                {/* Botón Idioma (Cloud Cachups / CC) */}
+                <button
+                  className="term-link-btn group relative flex items-center justify-center px-2 py-0.5 border border-[#33ff00]/30 hover:border-[#33ff00] transition-all bg-black/50 hover:bg-[#33ff00]/10"
+                  onClick={toggleLanguage}
+                  title={language === 'es' ? 'CAMBIAR A INGLÉS (CC)' : 'SWITCH TO SPANISH (CC)'}
+                >
+                  <i className="fas fa-closed-captioning text-xs group-hover:text-[#33ff00] transition-colors mr-1"></i>
+                  <span className="text-[9px] font-bold">
+                    {language === 'es' ? 'EN' : 'ES'}
+                  </span>
+                </button>
 
-              {/* Botón Idioma (Cloud Cachups / CC) */}
-              <button
-                className="term-link-btn group relative flex items-center justify-center px-2 py-0.5 border border-[#33ff00]/30 hover:border-[#33ff00] transition-all bg-black/50 hover:bg-[#33ff00]/10"
-                onClick={toggleLanguage}
-                title={language === 'es' ? 'CAMBIAR A INGLÉS (CC)' : 'SWITCH TO SPANISH (CC)'}
-              >
-                <i className="fas fa-closed-captioning text-xs group-hover:text-[#33ff00] transition-colors mr-1"></i>
-                <span className="text-[9px] font-bold">
-                  {language === 'es' ? 'EN' : 'ES'}
-                </span>
-              </button>
+              </div>
+              {isAdmin && (
+                <button
+                  className={`term-link-btn flex items-center justify-center px-2 py-0.5 ${currentView === 'admin' ? 'active' : ''}`}
+                  style={{ color: '#ff0000', borderColor: currentView === 'admin' ? '#ff0000' : 'transparent' }}
+                  onClick={() => { setCurrentView('admin'); setIsMobileMenuOpen(false); }}
+                  title="ADMIN PANEL"
+                >
+                  <i className="fas fa-user-shield text-xs"></i>
+                </button>
+              )}
+
             </div>
           </div>
         </nav>
@@ -727,7 +730,39 @@ const AppContent: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="app-loading"><div className="loading-container"><h1>🏛️ WebDoc La Resistencia</h1><p>⏳ Cargando...</p></div></div>;
+  if (loading) return (
+    <div className="app-loading">
+      <div className="loading-container">
+
+        {/* Título Glitch */}
+        <h1 className="loading-glitch-text" data-text="LA_RESISTENCIA">
+          LA_RESISTENCIA
+        </h1>
+
+        {/* Barra de Progreso Estilo Terminal */}
+        <div className="loading-bar-container">
+          <span className="loading-bar-text">ESTABLECIENDO CONEXIÓN SEGURA...</span>
+          <div className="flex items-center gap-1">
+            <span className="loading-bar-bracket">[</span>
+            <div className="w-full h-5 bg-[#33ff00]/20 relative overflow-hidden">
+              <div className="h-full bg-[#33ff00] animate-[shimmer_2s_infinite]"></div>
+            </div>
+            <span className="loading-bar-bracket">]</span>
+          </div>
+        </div>
+
+        {/* Logs Simulados */}
+        <div className="loading-logs">
+          <div className="typewriter text-xs">
+            <p>{'>'} SYSTEM_CHECK... OK</p>
+            <p>{'>'} DECRYPTING ARCHIVES... OK</p>
+            <p className="animate-pulse">{'>'} ACCESS GRANTED_</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
 
   return (
     <div className="App" ref={appRef}>

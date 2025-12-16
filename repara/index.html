@@ -1,155 +1,380 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taller de Reparación</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
-        body, html {
-            font-family: 'Roboto Mono', monospace;
-            background-color: #1a202c;
-            color: #e2e8f0;
+        /* =========================================
+           TERMINAL TECHNO NOIR THEME (REPARA APP)
+           ========================================= */
+        :root {
+            --bg-primary: #050505;
+            --bg-secondary: #0a0a0a;
+            --text-primary: #00ff00;
+            /* Terminal Green */
+            --text-secondary: #ff00ff;
+            /* Magenta */
+            --text-error: #ff3333;
+            --text-warning: #ffaa00;
+            --border-primary: #00ff00;
+            --border-secondary: #ff00ff;
+            --font-mono: 'Courier New', 'Consolas', monospace;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
-            text-align: center;
+            text-transform: uppercase;
         }
+
+        /* Scanlines Overlay */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: linear-gradient(to bottom,
+                    rgba(255, 255, 255, 0),
+                    rgba(255, 255, 255, 0) 50%,
+                    rgba(0, 0, 0, 0.2) 50%,
+                    rgba(0, 0, 0, 0.2));
+            background-size: 100% 4px;
+            z-index: 10;
+            opacity: 0.6;
+        }
+
+        /* Glitch Animation for Border */
+        @keyframes border-flicker {
+            0% {
+                border-color: var(--border-primary);
+            }
+
+            50% {
+                border-color: #004400;
+            }
+
+            100% {
+                border-color: var(--border-primary);
+            }
+        }
+
         #game-container {
-            width: 90%;
+            width: 95%;
             max-width: 600px;
-            background-color: #2d3748;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            border: 2px solid #4a5568;
+            background-color: rgba(10, 10, 10, 0.95);
+            padding: var(--spacing-md);
+            border: 2px solid var(--border-primary);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
+            position: relative;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            animation: border-flicker 4s infinite;
         }
+
+        /* Timer Bar */
         #timer-bar {
             width: 100%;
-            height: 10px;
-            background-color: #4a5568;
-            border-radius: 5px;
-            overflow: hidden;
-            margin-bottom: 1rem;
+            height: 8px;
+            background-color: #222;
+            border: 1px solid var(--border-secondary);
+            margin-bottom: var(--spacing-md);
+            position: relative;
         }
+
         #timer-progress {
             width: 100%;
             height: 100%;
-            background-color: #63b3ed;
-            transition: width 0.1s linear;
+            background-color: var(--text-secondary);
+            /* Magenta for time */
+            box-shadow: 0 0 10px var(--text-secondary);
+            transition: width 0.1s linear, background-color 0.3s;
         }
+
+        /* Header */
         #header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid #4a5568;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1rem;
+            border-bottom: 1px dashed var(--border-primary);
+            padding-bottom: 5px;
+            margin-bottom: var(--spacing-md);
         }
-        #title { font-size: 1.5rem; font-weight: 700; color: #63b3ed; }
-        #client { font-size: 0.9rem; color: #a0aec0; }
-        
-        .stage { display: none; }
-        .stage.active { display: block; }
-        
+
+        #title-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--text-primary);
+            text-shadow: 0 0 5px var(--text-primary);
+            margin: 0;
+        }
+
+        #client {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        #xp-display {
+            text-align: right;
+            font-size: 0.9rem;
+            color: var(--text-warning);
+        }
+
+        /* Stages */
+
+        /* Stages */
+        .stage {
+            display: none;
+            width: 100%;
+        }
+
+        .stage.active {
+            display: block;
+        }
+
+        /* Device Info */
         #device-info {
             display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            border: 1px solid #333;
+            background: rgba(0, 20, 0, 0.3);
+            padding: 10px;
         }
+
         #device-image {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             object-fit: cover;
-            border-radius: 8px;
-            border: 2px solid #4a5568;
-            background-color: #1a202c;
+            border: 1px solid var(--border-secondary);
+            filter: grayscale(100%) contrast(1.2);
         }
-        #device-details { text-align: left; }
-        #device-name { font-size: 1.2rem; font-weight: 700; margin: 0; }
-        #prompt { font-size: 1rem; color: #cbd5e0; margin-top: 0.5rem; }
-        
+
+        #device-details {
+            text-align: left;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        #device-name {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--text-primary);
+            margin: 0 0 5px 0;
+        }
+
+        .prompt-text {
+            font-size: 0.85rem;
+            color: #ddd;
+            line-height: 1.4;
+        }
+
+        /* Options Grid */
         #options-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
+            gap: 10px;
         }
+
         .option-btn {
-            background-color: #4a5568;
-            color: white;
-            padding: 1.25rem;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-family: 'Roboto Mono', monospace;
+            background-color: rgba(0, 50, 0, 0.2);
+            color: var(--text-primary);
+            padding: 15px;
+            border: 1px solid var(--border-primary);
+            font-size: 0.9rem;
+            font-family: var(--font-mono);
             cursor: pointer;
             transition: all 0.2s;
-            border: none;
+            text-transform: uppercase;
+            font-weight: bold;
         }
-        .option-btn:hover { background-color: #63b3ed; }
-        
-        /* Estilos para el Puzzle de Secuencia */
+
+        .option-btn:hover {
+            background-color: var(--text-primary);
+            color: #000;
+            box-shadow: 0 0 10px var(--text-primary);
+        }
+
+        /* Puzzle Grid (Security Bypass) */
         #puzzle-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-top: 1rem;
+            gap: 10px;
+            margin-top: var(--spacing-md);
         }
+
         .puzzle-btn {
-            height: 80px;
-            background-color: #4a5568;
-            border-radius: 8px;
+            height: 60px;
+            background-color: #111;
+            border: 1px solid #444;
             cursor: pointer;
-            transition: background-color 0.1s;
+            transition: all 0.1s;
+            position: relative;
         }
-        .puzzle-btn.p-1 { background-color: #e53e3e; } /* Rojo */
-        .puzzle-btn.p-2 { background-color: #38a169; } /* Verde */
-        .puzzle-btn.p-3 { background-color: #3182ce; } /* Azul */
-        .puzzle-btn.p-4 { background-color: #d69e2e; } /* Amarillo */
-        .puzzle-btn.p-5 { background-color: #805ad5; } /* Morado */
-        .puzzle-btn.p-6 { background-color: #319795; } /* Teal */
-        
+
+        /* Puzzle Colors (Cyberpunk Payload) */
+        .puzzle-btn.p-1 {
+            border-color: #ff0000;
+            box-shadow: inset 0 0 5px #550000;
+        }
+
+        /* Red */
+        .puzzle-btn.p-2 {
+            border-color: #00ff00;
+            box-shadow: inset 0 0 5px #005500;
+        }
+
+        /* Green */
+        .puzzle-btn.p-3 {
+            border-color: #0000ff;
+            box-shadow: inset 0 0 5px #000055;
+        }
+
+        /* Blue */
+        .puzzle-btn.p-4 {
+            border-color: #ffff00;
+            box-shadow: inset 0 0 5px #555500;
+        }
+
+        /* Yellow */
+        .puzzle-btn.p-5 {
+            border-color: #ff00ff;
+            box-shadow: inset 0 0 5px #550055;
+        }
+
+        /* Magenta */
+        .puzzle-btn.p-6 {
+            border-color: #00ffff;
+            box-shadow: inset 0 0 5px #005555;
+        }
+
+        /* Cyan */
+
         .puzzle-btn.flash {
-            animation: flash 0.3s;
+            background-color: white !important;
+            box-shadow: 0 0 20px white !important;
+            border-color: white !important;
         }
-        @keyframes flash {
-            0% { opacity: 1; }
-            50% { opacity: 0.2; }
-            100% { opacity: 1; }
+
+
+        /* Loading Stage */
+        #stage-loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        /* Result Stage */
+        #stage-result {
+            text-align: center;
+        }
+
+        #result-title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        #result-xp {
+            font-size: 2rem;
+            margin: 20px 0;
+            text-shadow: 0 0 10px;
+        }
+
+        #result-msg {
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+
+        #btn-finish {
+            background: var(--text-primary);
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        #btn-finish:hover {
+            box-shadow: 0 0 15px var(--text-primary);
+        }
+
+        .loading-text {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
         }
     </style>
 </head>
+
 <body>
+    <div class="scanlines"></div>
+
     <div id="game-container">
-        <div id="timer-bar"><div id="timer-progress"></div></div>
-        
-        <div id="header">
-            <h2 id="title">Cargando Taller...</h2>
-            <span id="client">Esperando asignación...</span>
+        <div id="timer-bar">
+            <div id="timer-progress"></div>
         </div>
-        
+
+        <div id="header">
+            <div id="title-group">
+                <h2 id="title">INIT_SYSTEM...</h2>
+                <span id="client">WAITING_LINK...</span>
+            </div>
+            <div id="xp-display">XP: --</div>
+        </div>
+
+        <!-- Stage 1: Diagnosis -->
         <div id="stage-diagnosis" class="stage">
             <div id="device-info">
-                <img id="device-image" src="" alt="Aparato"/>
+                <img id="device-image" src="" alt="DEVICE_IMG" />
                 <div id="device-details">
-                    <h3 id="device-name"></h3>
-                    <p id="prompt-diagnosis"></p>
+                    <h3 id="device-name">UNKNOWN_DEVICE</h3>
+                    <p id="prompt-diagnosis" class="prompt-text"></p>
                 </div>
             </div>
             <div id="options-grid" class="options-diagnosis">
-                </div>
+                <!-- Buttons injected here -->
+            </div>
         </div>
 
+        <!-- Stage 2: Parts -->
         <div id="stage-parts" class="stage">
-            <h3 id="prompt-parts"></h3>
+            <h3 id="prompt-parts" class="prompt-text" style="font-size:1rem; margin-bottom:15px; color:white;"></h3>
             <div id="options-grid" class="options-parts">
-                </div>
+                <!-- Buttons injected here -->
+            </div>
         </div>
 
+        <!-- Stage 3: Puzzle -->
         <div id="stage-puzzle" class="stage">
-            <h3 id="prompt-puzzle"></h3>
+            <h3 id="prompt-puzzle" class="prompt-text" style="text-align:center; margin-bottom:10px;">Security Bypass
+                Sequence</h3>
             <div id="puzzle-grid">
                 <div class="puzzle-btn p-1" data-id="1"></div>
                 <div class="puzzle-btn p-2" data-id="2"></div>
@@ -159,22 +384,430 @@
                 <div class="puzzle-btn p-6" data-id="6"></div>
             </div>
         </div>
-        
+
+        <!-- Stage Loading -->
         <div id="stage-loading" class="stage active">
-            <p>Conectando con el sistema del taller...</p>
+            <p class="loading-text" id="loading-msg">CONNECTING TO WORKSHOP NODE...</p>
+        </div>
+
+
+
+
+
+        <!-- Stage Result -->
+        <div id="stage-result" class="stage">
+            <h2 id="result-title">RESULT</h2>
+            <p id="result-msg">Status report...</p>
+            <div id="result-xp">0 XP</div>
+            <button id="btn-finish">CLOSE_CONNECTION</button>
         </div>
     </div>
 
     <script>
-        // --- 1. Variables de Configuración ---
-        let appConfig = {};
+        // =========================================
+        // 0. INTERNAL REPAIR DATABASE (BILINGUAL)
+        // =========================================
+        const REPAIR_DATABASE = {
+            // ID used in 'repairId'
+            "radio_vigilante": {
+                // Shared Data
+                image: "https://i.imgur.com/v8S7f4n.png",
+                timeLimit: 30000,
+                costoExito: 50,
+                costoFracaso: -10,
+                // Localized Data
+                es: {
+                    title: "Taller de Reparaciones",
+                    device: "Radio de Onda Corta",
+                    client: "Cliente: El Vigilante Nocturno",
+                    stages: [
+                        { type: "diagnosis", prompt: "Solo se oye estática, no hay señal clara. ¿Cuál es la falla?", options: ["Antena rota", "Batería agotada", "Transistor quemado"], correct: "Transistor quemado" },
+                        { type: "parts", prompt: "Necesitas un repuesto para el transmisor.", options: ["Bobina de cobre", "Transistor BC547", "Diodo LED"], correct: "Transistor BC547" },
+                        { type: "puzzle", prompt: "¡Sintoniza la frecuencia correcta!", sequenceLength: 4 }
+                    ]
+                },
+                en: {
+                    title: "Repair Workshop",
+                    device: "Shortwave Radio",
+                    client: "Client: The Night Watchman",
+                    stages: [
+                        { type: "diagnosis", prompt: "Only static is heard, no clear signal. What is the fault?", options: ["Broken Antenna", "Dead Battery", "Burnt Transistor"], correct: "Burnt Transistor" },
+                        { type: "parts", prompt: "You need a replacement part for the transmitter.", options: ["Copper Coil", "Transistor BC547", "LED Diode"], correct: "Transistor BC547" },
+                        { type: "puzzle", prompt: "Tune in the correct frequency!", sequenceLength: 4 }
+                    ]
+                }
+            },
+
+            // --- AUDIO EQUIPMENT ---
+            "amp_bulbos": {
+                image: "https://i.imgur.com/example_amp.png",
+                timeLimit: 45000,
+                costoExito: 2500,
+                costoFracaso: -200,
+                es: {
+                    title: "Taller de Audio Vintage",
+                    device: "Amplificador de Bulbos Marshall",
+                    client: "Cliente: Guitarrista de Rock",
+                    stages: [
+                        { type: "diagnosis", prompt: "El amplificador enciende pero no suena y los bulbos brillan violeta.", options: ["Fusible fundido", "Bulbos gaseosos", "Jack de entrada roto"], correct: "Bulbos gaseosos" },
+                        { type: "parts", prompt: "Selecciona el reemplazo correcto de válvulas.", options: ["EL34 Matched Pair", "Transistor 2N3055", "Capacitor 47uF"], correct: "EL34 Matched Pair" },
+                        { type: "puzzle", prompt: "¡Ajusta el BIAS de las válvulas!", sequenceLength: 5 }
+                    ]
+                },
+                en: {
+                    title: "Vintage Audio Workshop",
+                    device: "Tube Amp Marshall",
+                    client: "Client: Rock Guitarist",
+                    stages: [
+                        { type: "diagnosis", prompt: "The amp powers on but no sound, tubes glowing violet.", options: ["Blown Fuse", "Gassy Tubes", "Broken Input Jack"], correct: "Gassy Tubes" },
+                        { type: "parts", prompt: "Select the correct valve replacement.", options: ["EL34 Matched Pair", "Transistor 2N3055", "Capacitor 47uF"], correct: "EL34 Matched Pair" },
+                        { type: "puzzle", prompt: "Adjust the tube BIAS!", sequenceLength: 5 }
+                    ]
+                }
+            },
+            "synth_analog": {
+                image: "https://i.imgur.com/example_synth.png",
+                timeLimit: 40000,
+                costoExito: 2200,
+                costoFracaso: -150,
+                es: {
+                    title: "Laboratorio de Sintetizadores",
+                    device: "Sintetizador Análogo Moog",
+                    client: "Cliente: Músico Electrónico",
+                    stages: [
+                        { type: "diagnosis", prompt: "El oscilador se desafina constantemente tras 10 minutos.", options: ["Teclas sucias", "Falla térmica en VCO", "Cable MIDI malo"], correct: "Falla térmica en VCO" },
+                        { type: "parts", prompt: "Componente necesario para estabilizar la temperatura.", options: ["Resistor Tempco", "Potenciómetro Log", "Jack 1/4"], correct: "Resistor Tempco" },
+                        { type: "puzzle", prompt: "¡Calibra la escala del oscilador!", sequenceLength: 5 }
+                    ]
+                },
+                en: {
+                    title: "Synth Lab",
+                    device: "Analog Synth Moog",
+                    client: "Client: Electronic Musician",
+                    stages: [
+                        { type: "diagnosis", prompt: "Oscillator drifts out of tune after 10 minutes.", options: ["Dirty Keys", "VCO Thermal Failure", "Bad MIDI Cable"], correct: "VCO Thermal Failure" },
+                        { type: "parts", prompt: "Component needed for temp stabilization.", options: ["Tempco Resistor", "Log Potentiometer", "1/4 Jack"], correct: "Tempco Resistor" },
+                        { type: "puzzle", prompt: "Calibrate the oscillator scaling!", sequenceLength: 5 }
+                    ]
+                }
+            },
+            "turntable_pitch": {
+                image: "https://i.imgur.com/example_turntable.png",
+                timeLimit: 25000,
+                costoExito: 500,
+                costoFracaso: -50,
+                es: {
+                    title: "Taller de Audio",
+                    device: "Tornamesa Technics SL-1200",
+                    client: "Cliente: DJ Local",
+                    stages: [
+                        { type: "diagnosis", prompt: "La velocidad fluctúa y el estrobo no se queda quieto.", options: ["Aguja rota", "Potenciómetro Pitch sucio", "Plato deformado"], correct: "Potenciómetro Pitch sucio" },
+                        { type: "parts", prompt: "Líquido necesario para la reparación.", options: ["Aceite de motor", "Limpiacontactos Isopropílico", "Pegamento Epóxico"], correct: "Limpiacontactos Isopropílico" },
+                        { type: "puzzle", prompt: "¡Estabiliza la rotación!", sequenceLength: 3 }
+                    ]
+                },
+                en: {
+                    title: "Audio Workshop",
+                    device: "Technics SL-1200 Turntable",
+                    client: "Client: Local DJ",
+                    stages: [
+                        { type: "diagnosis", prompt: "Speed fluctuates, strobe dots drift.", options: ["Broken Needle", "Dirty Pitch Pot", "Warped Platter"], correct: "Dirty Pitch Pot" },
+                        { type: "parts", prompt: "Fluid needed for repair.", options: ["Motor Oil", "Contact Cleaner", "Epoxy Glue"], correct: "Contact Cleaner" },
+                        { type: "puzzle", prompt: "Stabilize the rotation!", sequenceLength: 3 }
+                    ]
+                }
+            },
+
+            // --- MOBILE DEVICES ---
+            "cel_logic": {
+                image: "https://i.imgur.com/example_logic.png",
+                timeLimit: 50000,
+                costoExito: 1800,
+                costoFracaso: -300,
+                es: {
+                    title: "Centro de Servicio Móvil",
+                    device: "Smartphone Gama Alta",
+                    client: "Cliente: Empresario",
+                    stages: [
+                        { type: "diagnosis", prompt: "El teléfono no enciende y consume 0.05A en la fuente.", options: ["Batería desconectada", "Corto en línea principal", "Falla de PMIC"], correct: "Corto en línea principal" },
+                        { type: "parts", prompt: "Herramienta para detectar el corto térmico.", options: ["Cámara Térmica", "Multímetro Básico", "Desarmador Phillips"], correct: "Cámara Térmica" },
+                        { type: "puzzle", prompt: "¡Realiza el reballing del IC!", sequenceLength: 6 }
+                    ]
+                },
+                en: {
+                    title: "Mobile Service Center",
+                    device: "High-End Smartphone",
+                    client: "Client: Businessman",
+                    stages: [
+                        { type: "diagnosis", prompt: "Phone dead, drawing 0.05A on power supply.", options: ["Battery Disconnected", "Short on Main Line", "PMIC Failure"], correct: "Short on Main Line" },
+                        { type: "parts", prompt: "Tool to detect thermal short.", options: ["Thermal Camera", "Basic Multimeter", "Phillips Screwdriver"], correct: "Thermal Camera" },
+                        { type: "puzzle", prompt: "Perform IC Reballing!", sequenceLength: 6 }
+                    ]
+                }
+            },
+            "cel_screen": {
+                image: "https://i.imgur.com/example_screen.png",
+                timeLimit: 30000,
+                costoExito: 1200,
+                costoFracaso: -100,
+                es: {
+                    title: "Reparación Express",
+                    device: "Smartphone con Pantalla Rota",
+                    client: "Cliente: Estudiante",
+                    stages: [
+                        { type: "diagnosis", prompt: "Cristal estrellado y manchas negras en la imagen.", options: ["Solo cambio de cristal", "Cambio display completo", "Limpieza de flex"], correct: "Cambio display completo" },
+                        { type: "parts", prompt: "Tipo de pantalla requerida.", options: ["LCD Genérica", "Panel OLED Original", "Vidrio Templado"], correct: "Panel OLED Original" },
+                        { type: "puzzle", prompt: "¡Conecta los flexores con cuidado!", sequenceLength: 4 }
+                    ]
+                },
+                en: {
+                    title: "Express Repair",
+                    device: "Cracked Screen Phone",
+                    client: "Client: Student",
+                    stages: [
+                        { type: "diagnosis", prompt: "Shattered glass and black spots on image.", options: ["Glass swap only", "Full Display Replacement", "Flex cleaning"], correct: "Full Display Replacement" },
+                        { type: "parts", prompt: "Type of screen required.", options: ["Generic LCD", "Original OLED Panel", "Tempered Glass"], correct: "Original OLED Panel" },
+                        { type: "puzzle", prompt: "Connect the flex cables carefully!", sequenceLength: 4 }
+                    ]
+                }
+            },
+            "cel_port": {
+                image: "https://i.imgur.com/example_port.png",
+                timeLimit: 20000,
+                costoExito: 400,
+                costoFracaso: -50,
+                es: {
+                    title: "Reparación Express",
+                    device: "Teléfono no carga",
+                    client: "Cliente: Mensajero",
+                    stages: [
+                        { type: "diagnosis", prompt: "El cable no entra bien y no detecta carga.", options: ["Batería inflada", "Puerto de carga sucio/dañado", "Cargador malo"], correct: "Puerto de carga sucio/dañado" },
+                        { type: "parts", prompt: "Refacción necesaria.", options: ["Flex de Carga USB-C", "Batería Litio", "Botón Power"], correct: "Flex de Carga USB-C" },
+                        { type: "puzzle", prompt: "¡Solda los pines de datos!", sequenceLength: 3 }
+                    ]
+                },
+                en: {
+                    title: "Express Repair",
+                    device: "Phone won't charge",
+                    client: "Client: Courier",
+                    stages: [
+                        { type: "diagnosis", prompt: "Cable doesn't fit well, no charge detected.", options: ["Swollen Battery", "Dirty/Damaged Charging Port", "Bad Charger"], correct: "Dirty/Damaged Charging Port" },
+                        { type: "parts", prompt: "Part needed.", options: ["USB-C Charging Flex", "Lithium Battery", "Power Button"], correct: "USB-C Charging Flex" },
+                        { type: "puzzle", prompt: "Solder the data pins!", sequenceLength: 3 }
+                    ]
+                }
+            },
+
+            // --- COMPUTING ---
+            "pc_os": {
+                image: "https://i.imgur.com/example_pc.png",
+                timeLimit: 20000,
+                costoExito: 350,
+                costoFracaso: -20,
+                es: {
+                    title: "Soporte Técnico PC",
+                    device: "Laptop Lenta",
+                    client: "Cliente: Oficinista",
+                    stages: [
+                        { type: "diagnosis", prompt: "El sistema arroja pantallas azules y errores de arranque.", options: ["Monitor dañado", "Sistema Operativo Corrupto", "Teclado sucio"], correct: "Sistema Operativo Corrupto" },
+                        { type: "parts", prompt: "Herramienta de software necesaria.", options: ["USB Booteable Windows", "Limpiador de registro", "Antivirus gratuito"], correct: "USB Booteable Windows" },
+                        { type: "puzzle", prompt: "¡Configura la BIOS!", sequenceLength: 3 }
+                    ]
+                },
+                en: {
+                    title: "PC Tech Support",
+                    device: "Slow Laptop",
+                    client: "Client: Office Worker",
+                    stages: [
+                        { type: "diagnosis", prompt: "System throws blue screens and boot errors.", options: ["Damaged Monitor", "Corrupt OS", "Dirty Keyboard"], correct: "Corrupt OS" },
+                        { type: "parts", prompt: "Software tool needed.", options: ["Bootable Windows USB", "Registry Cleaner", "Free Antivirus"], correct: "Bootable Windows USB" },
+                        { type: "puzzle", prompt: "Configure the BIOS!", sequenceLength: 3 }
+                    ]
+                }
+            },
+            "pc_ram": {
+                image: "https://i.imgur.com/example_ram.png",
+                timeLimit: 15000,
+                costoExito: 200,
+                costoFracaso: -10,
+                es: {
+                    title: "Upgrade Station",
+                    device: "PC Gamer Básica",
+                    client: "Cliente: Gamer",
+                    stages: [
+                        { type: "diagnosis", prompt: "Los juegos se cierran por falta de memoria.", options: ["Tarjeta de video mala", "Falta RAM", "Disco lleno"], correct: "Falta RAM" },
+                        { type: "parts", prompt: "Tipo de memoria para PC moderna.", options: ["DDR4 3200MHz", "DDR2 Antigua", "Memoria USB"], correct: "DDR4 3200MHz" },
+                        { type: "puzzle", prompt: "¡Inserta los módulos en Dual Channel!", sequenceLength: 3 }
+                    ]
+                },
+                en: {
+                    title: "Upgrade Station",
+                    device: "Basic Gaming PC",
+                    client: "Client: Gamer",
+                    stages: [
+                        { type: "diagnosis", prompt: "Games crash due to lack of memory.", options: ["Bad GPU", "Insuficient RAM", "Disk Full"], correct: "Insuficient RAM" },
+                        { type: "parts", prompt: "Memory type for modern PC.", options: ["DDR4 3200MHz", "Old DDR2", "USB Drive"], correct: "DDR4 3200MHz" },
+                        { type: "puzzle", prompt: "Insert modules in Dual Channel!", sequenceLength: 3 }
+                    ]
+                }
+            },
+
+            // --- VIDEO & PRINTERS ---
+            "tv_leds": {
+                image: "https://i.imgur.com/example_tv.png",
+                timeLimit: 40000,
+                costoExito: 1500,
+                costoFracaso: -200,
+                es: {
+                    title: "Taller de Electrónica",
+                    device: "Smart TV 55 Pulgadas",
+                    client: "Cliente: Familia",
+                    stages: [
+                        { type: "diagnosis", prompt: "Hay sonido pero la pantalla está negra. Si iluminas se ve imagen al fondo.", options: ["Panel roto", "Falla de Backlight (LEDs)", "Mainboard dañada"], correct: "Falla de Backlight (LEDs)" },
+                        { type: "parts", prompt: "Repuesto necesario.", options: ["Tiras LED nuevas", "Cable HDMI", "Control Remoto"], correct: "Tiras LED nuevas" },
+                        { type: "puzzle", prompt: "¡Ensambla el panel sin romperlo!", sequenceLength: 5 }
+                    ]
+                },
+                en: {
+                    title: "Electronics Workshop",
+                    device: "55 Inch Smart TV",
+                    client: "Client: Family",
+                    stages: [
+                        { type: "diagnosis", prompt: "Sound exists but screen is black. Image visible with flashlight.", options: ["Broken Panel", "Backlight Failure (LEDs)", "Bad Mainboard"], correct: "Backlight Failure (LEDs)" },
+                        { type: "parts", prompt: "Spare part needed.", options: ["New LED Strips", "HDMI Cable", "Remote Control"], correct: "New LED Strips" },
+                        { type: "puzzle", prompt: "Assemble panel without breaking it!", sequenceLength: 5 }
+                    ]
+                }
+            },
+            "printer_laser": {
+                image: "https://i.imgur.com/example_printer.png",
+                timeLimit: 30000,
+                costoExito: 900,
+                costoFracaso: -100,
+                es: {
+                    title: "Servicio de Impresión",
+                    device: "Impresora Láser HP",
+                    client: "Cliente: Contador",
+                    stages: [
+                        { type: "diagnosis", prompt: "Las hojas salen manchadas y el tóner no se fija (se borra).", options: ["Falta de tóner", "Unidad de Fusor dañada", "Papel húmedo"], correct: "Unidad de Fusor dañada" },
+                        { type: "parts", prompt: "Componente que calienta y fija el tóner.", options: ["Rodillo de Transferencia", "Kit de Fusor", "Cartucho Negro"], correct: "Kit de Fusor" },
+                        { type: "puzzle", prompt: "¡Sincroniza los engranajes!", sequenceLength: 4 }
+                    ]
+                },
+                en: {
+                    title: "Printing Service",
+                    device: "HP Laser Printer",
+                    client: "Client: Accountant",
+                    stages: [
+                        { type: "diagnosis", prompt: "Pages are smudged and toner rubs off.", options: ["Low Toner", "Damaged Fuser Unit", "Damp Paper"], correct: "Damaged Fuser Unit" },
+                        { type: "parts", prompt: "Component that heats and fixes toner.", options: ["Transfer Roller", "Fuser Kit", "Black Cartridge"], correct: "Fuser Kit" },
+                        { type: "puzzle", prompt: "Synchronize the gears!", sequenceLength: 4 }
+                    ]
+                }
+            },
+            "cctv_cam": {
+                image: "https://i.imgur.com/example_cctv.png",
+                timeLimit: 25000,
+                costoExito: 800,
+                costoFracaso: -50,
+                es: {
+                    title: "Seguridad Electrónica",
+                    device: "Cámara PTZ Exterior",
+                    client: "Cliente: Centro Comercial",
+                    stages: [
+                        { type: "diagnosis", prompt: "La cámara no gira y huele a quemado.", options: ["Lente sucio", "Motor/Lógica quemada", "Falta internet"], correct: "Motor/Lógica quemada" },
+                        { type: "parts", prompt: "Componente a reemplazar.", options: ["Tarjeta Controladora PTZ", "Cable UTP", "Domo de plástico"], correct: "Tarjeta Controladora PTZ" },
+                        { type: "puzzle", prompt: "¡Restablece la posición HOME!", sequenceLength: 4 }
+                    ]
+                },
+                en: {
+                    title: "Electronic Security",
+                    device: "Outdoor PTZ Camera",
+                    client: "Client: Shopping Mall",
+                    stages: [
+                        { type: "diagnosis", prompt: "Camera won't rotate and smells burnt.", options: ["Dirty Lens", "Burnt Motor/Logic", "No Internet"], correct: "Burnt Motor/Logic" },
+                        { type: "parts", prompt: "Component to replace.", options: ["PTZ Controller Board", "UTP Cable", "Plastic Dome"], correct: "PTZ Controller Board" },
+                        { type: "puzzle", prompt: "Reset HOME position!", sequenceLength: 4 }
+                    ]
+                }
+            },
+            "projector_lamp": {
+                image: "https://i.imgur.com/example_projector.png",
+                timeLimit: 20000,
+                costoExito: 600,
+                costoFracaso: -50,
+                es: {
+                    title: "Medios Audiovisuales",
+                    device: "Proyector Epson aula",
+                    client: "Cliente: Escuela",
+                    stages: [
+                        { type: "diagnosis", prompt: "El proyector enciende el led de 'LAMP' y no da imagen.", options: ["Lámpara fundida", "Filtro sucio", "Tapa lente puesta"], correct: "Lámpara fundida" },
+                        { type: "parts", prompt: "Repuesto requerido.", options: ["Bulbo/Lámpara Original", "Cable VGA", "Control Remoto"], correct: "Bulbo/Lámpara Original" },
+                        { type: "puzzle", prompt: "¡Reinicia el contador de horas!", sequenceLength: 3 }
+                    ]
+                },
+                en: {
+                    title: "AV Media",
+                    device: "Classroom Epson Projector",
+                    client: "Client: School",
+                    stages: [
+                        { type: "diagnosis", prompt: "Projector shows 'LAMP' LED and no image.", options: ["Blown Lamp", "Dirty Filter", "Lens cap on"], correct: "Blown Lamp" },
+                        { type: "parts", prompt: "Spare part required.", options: ["Original Bulb/Lamp", "VGA Cable", "Remote Control"], correct: "Original Bulb/Lamp" },
+                        { type: "puzzle", prompt: "Reset the lamp hour counter!", sequenceLength: 3 }
+                    ]
+                }
+            }
+            // Add more items here...
+        };
+
+        // --- 1. SYSTEM TRANSLATIONS ---
+        const translations = {
+            es: {
+                titleInit: "CARGANDO TALLER...",
+                clientWait: "ESPERANDO ASIGNACIÓN...",
+                loadingMsg: "CONECTANDO CON NODO DEL TALLER...",
+                successTitle: "¡REPARACIÓN EXITOSA!",
+                failureTitle: "¡FALLO CRÍTICO!",
+                defaultDevice: "APARATO",
+                unknown: "DESCONOCIDO",
+                errorParams: "ERROR DE PARÁMETROS: ID NO ENCONTRADO",
+                reward: "RECOMPENSA",
+                penalty: "PENALIZACIÓN",
+                finishBtn: "COBRAR Y SALIR",
+                failBtn: "REPORTAR FALLO",
+                trustGain: "¡Confianza aumentada!",
+                trustLoss: "Reputación dañada."
+            },
+            en: {
+                titleInit: "LOADING WORKSHOP...",
+                clientWait: "WAITING FOR ASSIGNMENT...",
+                loadingMsg: "CONNECTING TO WORKSHOP NODE...",
+                successTitle: "REPAIR SUCCESSFUL!",
+                failureTitle: "CRITICAL FAILURE!",
+                defaultDevice: "DEVICE",
+                unknown: "UNKNOWN",
+                errorParams: "PARAM ERROR: ID NOT FOUND",
+                reward: "REWARD",
+                penalty: "PENALTY",
+                finishBtn: "COLLECT & EXIT",
+                failBtn: "REPORT FAILURE",
+                trustGain: "Trust increased!",
+                trustLoss: "Reputation damaged."
+            }
+        };
+
+        let currentLanguage = 'es';
+        const t = (key) => translations[currentLanguage][key] || key;
+
+        // --- 2. CONFIG VARIABLE ---
+        let currentRepairData = null; // Loaded from DB
+        let appConfig = {}; // Raw config from parent (legacy support or wrapper)
         let successRecompensaId = undefined;
         let failureRecompensaId = undefined;
         let isConfigLoaded = false;
-        let gameTimer;
         let timerInterval;
 
-        // --- 2. Variables del Juego ---
+        // --- 3. GAME VARIABLES ---
         let currentStageIndex = 0;
         let timeRemaining;
         let totalTime;
@@ -182,18 +815,26 @@
         let playerSequence = [];
         let puzzleLength = 3;
 
-        // --- 3. Elementos del DOM ---
         const dom = {
             title: document.getElementById('title'),
             client: document.getElementById('client'),
+            xpDisplay: document.getElementById('xp-display'),
             timerProgress: document.getElementById('timer-progress'),
             deviceImage: document.getElementById('device-image'),
             deviceName: document.getElementById('device-name'),
+            loadingMsg: document.getElementById('loading-msg'),
             stages: {
                 diagnosis: document.getElementById('stage-diagnosis'),
                 parts: document.getElementById('stage-parts'),
                 puzzle: document.getElementById('stage-puzzle'),
-                loading: document.getElementById('stage-loading')
+                loading: document.getElementById('stage-loading'),
+                result: document.getElementById('stage-result')
+            },
+            result: {
+                title: document.getElementById('result-title'),
+                msg: document.getElementById('result-msg'),
+                xp: document.getElementById('result-xp'),
+                btn: document.getElementById('btn-finish')
             },
             prompts: {
                 diagnosis: document.getElementById('prompt-diagnosis'),
@@ -207,149 +848,220 @@
             puzzleGrid: document.getElementById('puzzle-grid')
         };
 
-        // --- 4. Lógica de Comunicación (Receptor) ---
+        // --- 5. COMMUNICATION LOGIC ---
         window.addEventListener('message', (event) => {
-            if (event.data && event.data.source === 'FlujoNarrativoUsuario' && event.data.appData && !isConfigLoaded) {
-                isConfigLoaded = true;
-                
-                // Parsear la appConfig (enviada como string JSON)
-                appConfig = JSON.parse(event.data.appData);
-                successRecompensaId = event.data.successRecompensaId;
-                failureRecompensaId = event.data.failureRecompensaId;
+            if (event.data && event.data.source === 'FlujoNarrativoUsuario' && event.data.appData) {
 
-                console.log("[Taller] Configuración recibida:", appConfig);
-                setupGame();
+                // 5.1 Set Language
+                if (event.data.cc) {
+                    currentLanguage = event.data.cc;
+                    console.log(`[ReparaApp] Language set to: ${currentLanguage}`);
+                    updateStaticTexts();
+                }
+
+                if (!isConfigLoaded) {
+                    isConfigLoaded = true;
+
+                    // Parse Parent Payload
+                    appConfig = JSON.parse(event.data.appData);
+                    successRecompensaId = event.data.successRecompensaId;
+                    failureRecompensaId = event.data.failureRecompensaId;
+
+                    console.log("[ReparaApp] Payload received:", appConfig);
+                    setupGame();
+                }
             }
         });
 
-        // --- 5. Configuración del Juego ---
+        function updateStaticTexts() {
+            if (!isConfigLoaded) {
+                dom.title.innerText = t('titleInit');
+                dom.client.innerText = t('clientWait');
+                dom.loadingMsg.innerText = t('loadingMsg');
+            }
+        }
+
+        // --- 6. GAME SETUP (Refactored) ---
         function setupGame() {
-            // Aplicar configuración
-            dom.title.innerText = appConfig.title || "Taller";
-            dom.client.innerText = appConfig.clientName || "N/A";
-            dom.deviceImage.src = appConfig.deviceImage || "";
-            dom.deviceName.innerText = appConfig.deviceName || "Aparato";
-            totalTime = appConfig.timeLimit || 30000;
+            // Check if we have a repairId in the config
+            const repairId = appConfig.repairId; // e.g., "radio_vigilante"
+
+            // Or fallback to legacy 'stages' passed directly (if any)
+            let dbEntry = null;
+
+            if (repairId && REPAIR_DATABASE[repairId]) {
+                dbEntry = REPAIR_DATABASE[repairId];
+                console.log(`[ReparaApp] Loaded from DB: ${repairId}`);
+            } else if (appConfig.stages) {
+                console.log("[ReparaApp] Using legacy/direct config");
+                // Construct a temporary entry from direct props
+                dbEntry = {
+                    image: appConfig.deviceImage,
+                    timeLimit: appConfig.timeLimit,
+                    costoExito: appConfig.costoExito,
+                    costoFracaso: appConfig.costoFracaso,
+                    es: {
+                        title: appConfig.title,
+                        device: appConfig.deviceName,
+                        client: appConfig.clientName,
+                        stages: appConfig.stages
+                    },
+                    en: {
+                        // Fallback to Spanish/Same for EN if not provided
+                        title: appConfig.title,
+                        device: appConfig.deviceName,
+                        client: appConfig.clientName,
+                        stages: appConfig.stages
+                    }
+                };
+            } else {
+                console.error("No valid configuration found!");
+                dom.loadingMsg.innerText = t('errorParams');
+                dom.loadingMsg.style.color = "red";
+                return;
+            }
+
+            // Save loaded data
+            currentRepairData = dbEntry;
+
+            // Load Locale Specific Data
+            const localeData = dbEntry[currentLanguage] || dbEntry['es'];
+
+            // UI Setup
+            dom.title.innerText = localeData.title || "Taller";
+            dom.client.innerText = localeData.client || "Client";
+            dom.deviceImage.src = dbEntry.image || "";
+            dom.deviceName.innerText = localeData.device || t('defaultDevice');
+
+            // Show potential reward
+            dom.xpDisplay.innerText = `+${dbEntry.costoExito} XP / ${dbEntry.costoFracaso} XP`;
+
+            totalTime = dbEntry.timeLimit || 30000;
             timeRemaining = totalTime;
 
-            // Construir etapas dinámicamente
-            appConfig.stages.forEach(stage => {
-                if (stage.type === 'diagnosis') {
-                    dom.prompts.diagnosis.innerText = stage.prompt;
-                    stage.options.forEach(opt => {
-                        dom.options.diagnosis.innerHTML += `<button class="option-btn">${opt}</button>`;
-                    });
-                } else if (stage.type === 'parts') {
-                    dom.prompts.parts.innerText = stage.prompt;
-                    stage.options.forEach(opt => {
-                        dom.options.parts.innerHTML += `<button class="option-btn">${opt}</button>`;
-                    });
-                } else if (stage.type === 'puzzle') {
-                    dom.prompts.puzzle.innerText = stage.prompt;
-                    puzzleLength = stage.sequenceLength || 3;
-                }
-            });
+            // Clear options
+            dom.options.diagnosis.innerHTML = '';
+            dom.options.parts.innerHTML = '';
 
-            // Iniciar Event Listeners
+            // Build Stages
+            if (localeData.stages) {
+                localeData.stages.forEach(stage => {
+                    if (stage.type === 'diagnosis') {
+                        dom.prompts.diagnosis.innerText = stage.prompt;
+                        stage.options.forEach(opt => {
+                            dom.options.diagnosis.innerHTML += `<button class="option-btn">${opt}</button>`;
+                        });
+                    } else if (stage.type === 'parts') {
+                        dom.prompts.parts.innerText = stage.prompt;
+                        stage.options.forEach(opt => {
+                            dom.options.parts.innerHTML += `<button class="option-btn">${opt}</button>`;
+                        });
+                    } else if (stage.type === 'puzzle') {
+                        dom.prompts.puzzle.innerText = stage.prompt;
+                        puzzleLength = stage.sequenceLength || 3;
+                    }
+                });
+            }
+
             setupListeners();
-            
-            // Iniciar Juego
             startTimer();
             showStage(0);
         }
 
         function showStage(stageIndex) {
             currentStageIndex = stageIndex;
-            const stage = appConfig.stages[stageIndex];
-            
-            // Ocultar todas
-            Object.values(dom.stages).forEach(s => s.classList.remove('active'));
-            
-            // Mostrar la actual
+
+            // Get stages from current language data
+            const localeData = currentRepairData[currentLanguage] || currentRepairData['es'];
+            const stage = localeData.stages[stageIndex];
+
+            // Hide all
+            Object.values(dom.stages).forEach(s => {
+                if (s) s.classList.remove('active');
+            });
+
+            // Show current
             if (stage && dom.stages[stage.type]) {
                 dom.stages[stage.type].classList.add('active');
-                
-                // Si es el puzzle, iniciar la secuencia
-                if (stage.type === 'puzzle') {
-                    startPuzzle();
-                }
+                if (stage.type === 'puzzle') startPuzzle();
             } else if (!stage) {
-                // No hay más etapas = ÉXITO
                 endGame('success');
             }
         }
 
-        // --- 6. Lógica de Temporizador ---
+        // --- 7. TIMER LOGIC ---
         function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 timeRemaining -= 100;
                 const percent = (timeRemaining / totalTime) * 100;
                 dom.timerProgress.style.width = `${percent}%`;
-                
+
                 if (percent < 30) {
-                    dom.timerProgress.style.backgroundColor = '#f56565'; // Rojo
+                    dom.timerProgress.style.backgroundColor = '#ff3333';
+                    dom.timerProgress.style.boxShadow = '0 0 15px #ff3333';
                 }
-                
                 if (timeRemaining <= 0) {
                     endGame('failure');
                 }
             }, 100);
         }
 
-        // --- 7. Lógica de Etapas ---
+        // --- 8. INPUT LOGIC ---
         function setupListeners() {
-            // Etapa 1: Diagnóstico
-            dom.options.diagnosis.addEventListener('click', (e) => {
+            // Remove old listeners? Only if re-running.
+            // Using 'onclick' for simplicity in replacement or clean setup
+            dom.options.diagnosis.onclick = (e) => {
                 if (e.target.classList.contains('option-btn')) {
                     checkAnswer(0, e.target.innerText);
                 }
-            });
-            
-            // Etapa 2: Repuestos
-            dom.options.parts.addEventListener('click', (e) => {
+            };
+            dom.options.parts.onclick = (e) => {
                 if (e.target.classList.contains('option-btn')) {
                     checkAnswer(1, e.target.innerText);
                 }
-            });
-            
-            // Etapa 3: Puzzle
-            dom.puzzleGrid.addEventListener('click', (e) => {
+            };
+            dom.puzzleGrid.onclick = (e) => {
                 if (e.target.classList.contains('puzzle-btn')) {
                     const id = e.target.getAttribute('data-id');
                     handlePuzzleClick(id);
                 }
-            });
+            };
         }
 
         function checkAnswer(stageIndex, answer) {
-            const correct = appConfig.stages[stageIndex].correct;
-            if (answer === correct) {
-                // Correcto, avanzar a la siguiente etapa
+            const localeData = currentRepairData[currentLanguage] || currentRepairData['es'];
+            const correct = localeData.stages[stageIndex].correct; // Get correct string for language
+
+            // Normalize
+            const normAnswer = String(answer).toLowerCase().trim();
+            const normCorrect = String(correct).toLowerCase().trim();
+
+            if (normAnswer === normCorrect) {
                 showStage(stageIndex + 1);
             } else {
-                // Incorrecto, fallar
+                console.log(`[ReparaApp] Mismatch: '${normAnswer}' vs '${normCorrect}'`);
                 endGame('failure');
             }
         }
-        
-        // --- 8. Lógica del Puzzle (Simón Dice) ---
+
+        // --- 9. PUZZLE LOGIC ---
         function startPuzzle() {
             puzzleSequence = [];
             playerSequence = [];
             for (let i = 0; i < puzzleLength; i++) {
                 puzzleSequence.push(Math.floor(Math.random() * 6) + 1);
             }
-            console.log("Secuencia del puzzle:", puzzleSequence);
-            playSequence();
+            setTimeout(playSequence, 500);
         }
 
         function playSequence() {
-            dom.puzzleGrid.style.pointerEvents = 'none'; // Deshabilitar clics
+            dom.puzzleGrid.style.pointerEvents = 'none';
             let i = 0;
             const interval = setInterval(() => {
                 if (i >= puzzleSequence.length) {
                     clearInterval(interval);
-                    dom.puzzleGrid.style.pointerEvents = 'auto'; // Habilitar clics
+                    dom.puzzleGrid.style.pointerEvents = 'auto';
                     return;
                 }
                 const btnId = puzzleSequence[i];
@@ -369,51 +1081,89 @@
                 btn.classList.add('flash');
                 setTimeout(() => btn.classList.remove('flash'), 200);
             }
-
-            // Checar si el clic es correcto
             const lastIndex = playerSequence.length - 1;
             if (playerSequence[lastIndex] !== puzzleSequence[lastIndex]) {
-                endGame('failure'); // Error en la secuencia
+                endGame('failure');
                 return;
             }
-            
-            // Checar si completó la secuencia
             if (playerSequence.length === puzzleSequence.length) {
-                // Éxito, avanzar a la siguiente (e imaginaria) etapa
                 setTimeout(() => showStage(currentStageIndex + 1), 500);
             }
         }
 
-        // --- 9. Lógica de Fin de Juego (Emisor) ---
+        // --- 10. END GAME ---
+
+        // --- 10. END GAME ---
+
         function endGame(status) {
-            clearInterval(timerInterval);
-            
-            let recompensaId;
-            let costoXP = 0;
+            console.log(`[ReparaApp] endGame called with status: ${status}`);
+            try {
+                clearInterval(timerInterval);
+                console.log("[ReparaApp] Timer cleared.");
 
-            if (status === 'success') {
-                recompensaId = successRecompensaId;
-                costoXP = appConfig.costoExito || 0;
-                dom.title.innerText = "¡Reparación Exitosa!";
-                dom.timerProgress.style.backgroundColor = '#48bb78';
-            } else {
-                recompensaId = failureRecompensaId;
-                costoXP = appConfig.costoFracaso || 0;
-                dom.title.innerText = "¡Fallo Crítico!";
-                dom.timerProgress.style.backgroundColor = '#f56565';
+                // Get rewards config from loaded data or payload
+                const costSuccess = currentRepairData?.costoExito ?? appConfig.costoExito ?? 0;
+                const costFail = currentRepairData?.costoFracaso ?? appConfig.costoFracaso ?? 0;
+
+                let recompensaId;
+                let costoXP = 0;
+
+                // Hide all game stages
+                console.log("[ReparaApp] Switching to result stage...");
+                Object.values(dom.stages).forEach(s => {
+                    if (s) s.classList.remove('active');
+                });
+
+                if (dom.stages.result) {
+                    dom.stages.result.classList.add('active');
+                } else {
+                    console.error("[ReparaApp] Critical: Result stage DOM element missing!");
+                }
+
+                if (status === 'success') {
+                    recompensaId = successRecompensaId;
+                    costoXP = costSuccess;
+                    dom.result.title.innerText = t('successTitle');
+                    dom.result.title.style.color = "#00ff00";
+                    dom.result.xp.innerText = `+${costoXP} XP`;
+                    dom.result.xp.style.color = "#00ff00";
+                    dom.result.msg.innerText = t('trustGain');
+                    dom.result.btn.innerText = t('finishBtn');
+                    dom.timerProgress.style.backgroundColor = '#00ff00';
+                } else {
+                    recompensaId = failureRecompensaId;
+                    costoXP = costFail;
+                    dom.result.title.innerText = t('failureTitle');
+                    dom.result.title.style.color = "#ff3333";
+                    dom.result.xp.innerText = `${costoXP} XP`;
+                    dom.result.xp.style.color = "#ff3333";
+                    dom.result.msg.innerText = t('trustLoss');
+                    dom.result.btn.innerText = t('failBtn');
+                    dom.timerProgress.style.backgroundColor = '#ff3333';
+                }
+
+                console.log("[ReparaApp] UI updated for result.");
+
+                // Setup finish button to actually close
+                dom.result.btn.onclick = () => {
+                    console.log("[ReparaApp] Finish button clicked. Sending message.");
+                    window.parent.postMessage({
+                        source: 'ReparaApp',
+                        type: 'app-result',
+                        status: status,
+                        recompensaId: recompensaId,
+                        costoXP: costoXP
+                    }, '*');
+
+                    // Visual feedback of closing
+                    dom.result.title.innerText = "TERMINATED";
+                    dom.result.btn.style.display = 'none';
+                };
+            } catch (e) {
+                console.error("[ReparaApp] Error in endGame:", e);
             }
-            
-            // Ocultar todas las etapas
-            Object.values(dom.stages).forEach(s => s.classList.remove('active'));
-
-            window.parent.postMessage({
-                source: 'RentalApp', // 👈 IMPORTANTE: Usamos el mismo source 'RentalApp'
-                type: 'app-result',
-                status: status,
-                recompensaId: recompensaId,
-                costoXP: costoXP
-            }, '*');
         }
     </script>
 </body>
+
 </html>

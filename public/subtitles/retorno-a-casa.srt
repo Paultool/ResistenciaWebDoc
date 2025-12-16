@@ -124,7 +124,7 @@ it, I removed circuits and burned it. I
 think that's where my vocation as an
 
 26
-00:02:55,880 --> 00:02:10,060
+00:02:05,880 --> 00:02:10,060
 engineer was revealed, although in a very
 peculiar way. Instead of
 
@@ -189,7 +189,7 @@ um,
 
 39
 00:03:01,660 --> 00:03:03,360
-HUBLab Laboratory,
+HackLab Laboratory,
 
 40
 00:03:41,680 --> 00:03:11,100
@@ -198,7 +198,7 @@ of course, the
 
 41
 00:03:11,010 --> 00:03:13,880
-training so you can make a
+training so you can make a Collage
 
 42
 00:03:13,880 --> 00:03:32,040

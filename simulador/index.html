@@ -621,8 +621,8 @@
         <!-- SMS OVERLAY (Initial State) -->
         <div id="sms-overlay">
             <div class="sms-box">
-                <div class="sms-sender">DE: SRA. EDITH (Casera)</div>
-                <div class="sms-body">
+                <div class="sms-sender" id="sms-sender">DE: SRA. EDITH (Casera)</div>
+                <div class="sms-body" id="sms-body">
                     Pablo, buenas tardes.
                     <br><br>
                     Te aviso que este es tu último mes en el departamento. Voy a remodelar todo el edificio para Airbnb.
@@ -633,7 +633,7 @@
                     <br><br>
                     - Edith.
                 </div>
-                <button onclick="startSimulation()">ENTENDIDO</button>
+                <button onclick="startSimulation()" id="sms-btn">ENTENDIDO</button>
             </div>
         </div>
 
@@ -690,6 +690,7 @@
             {
                 id: 'FONCA',
                 name: 'FONCA - JOVENES',
+                name_en: 'ARTS GRANT - YOUTH',
                 cost: 1500,
                 days: 10,
                 chance: 0.15,
@@ -700,26 +701,29 @@
             {
                 id: 'IMCINE',
                 name: 'IMCINE - GUION',
+                name_en: 'FILM FUND - SCRIPT',
                 cost: 2000,
                 days: 15,
                 chance: 0.10,
                 gainMin: 5000,
                 gainMax: 10000,
-                reqItem: 'Portafolio' // Maybe 'Guion' if we want to be specific, using Portafolio for now
+                reqItem: 'Portafolio'
             },
             {
                 id: 'PECDA',
                 name: 'PECDA ESTATAL',
+                name_en: 'STATE ARTS FUND',
                 cost: 800,
                 days: 7,
                 chance: 0.25,
                 gainMin: 1500,
                 gainMax: 4000,
-                reqItem: null // No item required
+                reqItem: null
             },
             {
                 id: 'COINVERSION',
                 name: 'COINVERSIONES',
+                name_en: 'ADM CO-INVESTMENT',
                 cost: 500,
                 days: 5,
                 chance: 0.15,
@@ -730,9 +734,10 @@
             {
                 id: 'FREELANCE',
                 name: 'CHAMBITA FREELANCER',
+                name_en: 'FREELANCE GIG',
                 cost: 0,
                 days: 3,
-                chance: 1.0, // Guaranteed
+                chance: 1.0,
                 gainMin: 800,
                 gainMax: 1200,
                 reqItem: null,
@@ -751,8 +756,99 @@
 
         let playerInventory = [];
         let successRecompensaId = null;
-        let failureRecompensaId = null;
-        let initialXP = 0; // To track delta if needed
+        // failureRecompensaId declared below
+        // let failureRecompensaId = null; // Removing duplicate
+        let currentLanguage = 'es';
+
+        const translations = {
+            es: {
+                title: "GESTION DE BECAS",
+                stats: { capital: "CAPITAL (XP)", days: "DIAS RESTANTES", meta: "META / ESTADO", risk: "EN RIESGO", safe: "SEGURO" },
+                convocatorias: "CONVOCATORIAS DISPONIBLES:",
+                btns: { apply: "APLICAR", wait: "ESPERANDO...", result: "RESULTADO" },
+                sms: {
+                    sender: "DE: SRA. EDITH (Casera)",
+                    body: "Pablo, buenas tardes.<br><br>Te aviso que este es tu último mes en el departamento. Voy a remodelar todo el edificio para Airbnb.<br><br>Si te quieres quedar, la nueva renta es de <strong>$20,000 XP</strong>.<br>Tienes 30 días para juntar el capital o desalojar. Sin excepciones.<br><br>- Edith.",
+                    btn: "ENTENDIDO"
+                },
+                logs: {
+                    init: "> Sistema inicializado...",
+                    db: "> Esperando conexión con base de datos...",
+                    sync: "> Datos de usuario sincronizados.",
+                    apply: "> Aplicando a convocatoría...",
+                    approved: "APROBADO. PAGADO.",
+                    rejected: "RECHAZADO. SIN REEMBOLSO.",
+                    noFunds: "ERROR: Fondos insuficientes para trámites.",
+                    noItem: "ERROR: Falta requisito: ",
+                    wait: "Procesando solicitud...",
+                    gameOver: "META NO ALCANZADA. DESALOJO INMINENTE.",
+                    success: "META ALCANZADA. RENTA ASEGURADA.",
+                    surrender: "DECLARAR BANCARROTA / SALIR",
+                    surrenderMsg: "RENDICION VOLUNTARIA."
+                },
+                gameOver: {
+                    title: "TIEMPO AGOTADO"
+                },
+                successMsg: {
+                    sender: "SRA. EDITH",
+                    body: "Vaya, conseguiste el dinero ({amount}).<br><br>Supongo que puedes quedarte un mes más.<br>(Has desbloqueado un final alternativo temporal)",
+                    btn: "CONTINUAR"
+                },
+                failureMsg: {
+                    title: "💀 ORDEN DE DESALOJO 💀",
+                    body: "Has fallado en asegurar tu vivienda.<br>Sal a buscar un nuevo hogar.",
+                    footer: "Saldo Final:",
+                    btn: "ACEPTAR DESTINO"
+                }
+            },
+            en: {
+                title: "GRANT MANAGEMENT",
+                stats: { capital: "FUNDS (XP)", days: "DAYS LEFT", meta: "GOAL / STATUS", risk: "AT RISK", safe: "SECURED" },
+                convocatorias: "AVAILABLE GRANTS:",
+                btns: { apply: "APPLY", wait: "WAITING...", result: "RESULT" },
+                sms: {
+                    sender: "FROM: MRS. EDITH (Landlady)",
+                    body: "Pablo, good afternoon.<br><br>This is your last month in the apartment. I'm remodeling the whole building for Airbnb.<br><br>If you want to stay, new rent is <strong>$20,000 XP</strong>.<br>You have 30 days to raise the capital or vacate. No exceptions.<br><br>- Edith.",
+                    btn: "UNDERSTOOD"
+                },
+                logs: {
+                    init: "> System initialized...",
+                    db: "> Waiting for database connection...",
+                    sync: "> User data synchronized.",
+                    apply: "> Applying for grant...",
+                    approved: "APPROVED. PAID OUT.",
+                    rejected: "REJECTED. NO REFUND.",
+                    noFunds: "ERROR: Insufficient funds for processing.",
+                    noItem: "ERROR: Missing requirement: ",
+                    wait: "Processing application...",
+                    gameOver: "GOAL NOT MET. EVICTION IMMINENT.",
+                    success: "GOAL MET. RENT SECURED.",
+                    surrender: "DECLARE BANKRUPTCY / EXIT",
+                    surrenderMsg: "VOLUNTARY SURRENDER."
+                },
+                gameOver: {
+                    title: "TIME OUT"
+                },
+                successMsg: {
+                    sender: "MRS. EDITH",
+                    body: "Wow, you got the money ({amount}).<br><br>I guess you can stay one more month.<br>(You unlocked a temporary alternate ending)",
+                    btn: "CONTINUE"
+                },
+                failureMsg: {
+                    title: "💀 EVICTION ORDER 💀",
+                    body: "You failed to secure your housing.<br>Go find a new home.",
+                    footer: "Final Balance:",
+                    btn: "ACCEPT FATE"
+                }
+            }
+        };
+
+        const t = (key) => {
+            const keys = key.split('.');
+            let val = translations[currentLanguage];
+            for (let k of keys) val = val && val[k];
+            return val || key;
+        };
         // --- ELEMENTS ---
         const balanceEl = document.getElementById('balance-val');
         const daysEl = document.getElementById('days-val');
@@ -782,6 +878,18 @@
                 // Update UI for connection
                 document.querySelector('.stat-box:nth-child(3) .stat-value').innerText = `$${GOAL.toLocaleString()}`;
 
+                // 0. Set Language FIRST
+                if (event.data.cc) {
+                    currentLanguage = event.data.cc;
+                    console.log(`[Simulador] Language set to: ${currentLanguage}`);
+                }
+
+                // Force update UI strings
+                document.querySelector('header h1').textContent = t('title');
+                document.getElementById('sms-sender').textContent = t('sms.sender');
+                document.getElementById('sms-body').innerHTML = t('sms.body');
+                document.getElementById('sms-btn').textContent = t('sms.btn');
+
                 // 1. Get XP, Inventory, and User ID
                 if (event.data.playerStats) {
                     balance = event.data.playerStats.puntuacion || 0;
@@ -796,8 +904,8 @@
 
                 // 2. Render UI
                 renderGrants();
-                updateUI();
-                log("> Datos de usuario sincronizados.");
+                updateUI(true); // Force full update
+                log(t('logs.sync'));
 
                 // Update version - REMOVED
                 // document.querySelector('header div').innerText = "v2.6.1 (CONFIGURABLE)";
@@ -807,7 +915,7 @@
         function startSimulation() {
             overlay.style.display = 'none';
             isGameActive = true;
-            log("> Sesión iniciada. Cronómetro activo.");
+            log("> " + (currentLanguage === 'en' ? "Session started. Timer active." : "Sesión iniciada. Cronómetro activo."));
         }
 
         // --- RENDER ---
@@ -821,21 +929,23 @@
                 btn.className = 'grant-card';
                 if (grant.isFreelance) btn.classList.add('card-freelance');
 
+                const displayName = currentLanguage === 'en' ? (grant.name_en || grant.name) : grant.name;
+
                 // Visual content
                 let html = `
                     <div class="grant-header">
-                        <span class="grant-name">${grant.name}</span>
+                        <span class="grant-name">${displayName}</span>
                 `;
 
                 if (grant.isFreelance) {
                     html += `<span class="grant-gain">+ $${grant.gainMin}-${grant.gainMax}</span>`;
                 } else {
-                    html += `<span class="grant-cost">COSTO: $${grant.cost}</span>`;
+                    html += `<span class="grant-cost">${t('btns.apply')}: $${grant.cost}</span>`;
                 }
 
                 html += `</div>`;
 
-                html += `<div style="font-size:0.8rem; font-weight:bold;">🕒 ${grant.days} Días</div>`;
+                html += `<div style="font-size:0.8rem; font-weight:bold;">🕒 ${grant.days} ${currentLanguage === 'en' ? 'Days' : 'Días'}</div>`;
 
                 // Requirement Logic
                 if (grant.reqItem) {
@@ -847,7 +957,7 @@
                 // Click Handler
                 btn.onclick = () => {
                     if (!hasItem) {
-                        log(`ERROR: Requiere tener '${grant.reqItem}'.`, "error");
+                        log(`${t('logs.noItem')}'${grant.reqItem}'.`, "error");
                         return;
                     }
                     playTurn(grant);
@@ -857,16 +967,26 @@
             });
         }
 
-        function updateUI() {
+        function updateUI(force = false) {
             balanceEl.textContent = `$${balance.toLocaleString()}`;
             daysEl.textContent = days;
 
+            // Translate static labels
+            document.querySelectorAll('.stat-box').forEach((box, i) => {
+                const label = box.querySelector('.stat-label');
+                if (i === 0) label.textContent = t('stats.capital');
+                if (i === 1) label.textContent = t('stats.days');
+                if (i === 2) label.textContent = t('stats.meta');
+            });
+            document.querySelector('#grant-container > div:first-child').textContent = t('convocatorias');
+
             if (balance < 1000) {
                 balanceEl.classList.add('balance-low');
+                statusEl.textContent = "CRITICO"; // Could translate, but 'CRITICO' is kinda universal/techy. Let's leave or translate? t('risk') usage.
                 statusEl.textContent = "CRITICO";
             } else {
                 balanceEl.classList.remove('balance-low');
-                statusEl.textContent = "EN RIESGO";
+                statusEl.textContent = t('stats.risk');
             }
 
             // check if stuck
@@ -904,7 +1024,7 @@
             // Or we strictly block it?
 
             if (days < grant.days) {
-                log(`ALERTA: Tiempo insuficiente. Quedan ${days} días, requiere ${grant.days}.`, "error");
+                log(`ALERTA: ${currentLanguage === 'en' ? 'Insufficient time' : 'Tiempo insuficiente'}. (${days} vs ${grant.days})`, "error");
                 // If we are strictly stuck (days < 3), force end.
                 if (days < 3) checkGameState();
                 return;
@@ -912,7 +1032,7 @@
 
             // 2. Logic Check: Money
             if (!grant.isFreelance && balance < grant.cost) {
-                log(`ERROR: Fondos insuficientes (${balance}/${grant.cost}).`, "error");
+                log(`${t('logs.noFunds')} (${balance}/${grant.cost}).`, "error");
                 return;
             }
 
@@ -923,7 +1043,8 @@
             grantListArea.style.pointerEvents = 'none';
 
             // Wait...
-            log(`Procesando solicitud: ${grant.name}...`);
+            const displayName = currentLanguage === 'en' ? (grant.name_en || grant.name) : grant.name;
+            log(`${t('logs.wait')} [${displayName}]...`);
 
             setTimeout(() => {
                 // Determine Result
@@ -934,17 +1055,19 @@
                 if (grant.isFreelance) {
                     success = true;
                     gain = Math.floor(Math.random() * (grant.gainMax - grant.gainMin + 1)) + grant.gainMin;
-                    message = `Chamba terminada. Ganaste $${gain}.`;
+                    message = currentLanguage === 'en' ? `Gig done. Earned $${gain}.` : `Chamba terminada. Ganaste $${gain}.`;
                 } else {
                     // Check probability
                     if (Math.random() < grant.chance) {
                         success = true;
                         gain = Math.floor(Math.random() * (grant.gainMax - grant.gainMin + 1)) + grant.gainMin;
-                        message = `¡APROBADO! Subsidio otorgado: $${gain}.`;
+                        message = `${t('logs.approved')} $${gain}.`;
                     } else {
                         success = false;
-                        const excuses = ["Carpeta incompleta.", "Sin presupuesto.", "Otro candidato seleccionado.", "Error adm."];
-                        message = `RECHAZADO. ${excuses[Math.floor(Math.random() * excuses.length)]}`;
+                        const excuses = currentLanguage === 'en'
+                            ? ["Incomplete folder.", "No budget.", "Other candidate selected.", "Admin error."]
+                            : ["Carpeta incompleta.", "Sin presupuesto.", "Otro candidato seleccionado.", "Error adm."];
+                        message = `${t('logs.rejected')} ${excuses[Math.floor(Math.random() * excuses.length)]}`;
                     }
                 }
 
@@ -980,14 +1103,14 @@
             // Condition 2: Out of Time
             // If days is 0, or less than minimum possible action (Freelance = 3)
             if (days < 3) {
-                triggerGameOver("TIEMPO AGOTADO.");
+                triggerGameOver(t('logs.gameOver'));
                 return;
             }
 
             // Condition 3: Out of Money AND Time to recover?
             // If balance is 0 and cant do freelance (already covered by days < 3 check mostly)
             if (balance <= 0 && days < 3) {
-                triggerGameOver("BANCARROTA TOTAL.");
+                triggerGameOver("FATAL.");
             }
         }
 
@@ -1015,17 +1138,15 @@
                         </svg>
                     </div>
                     
-                    <div class="sms-sender" style="color:var(--text-error); text-align:center;">💀 ORDEN DE DESALOJO 💀</div>
+                    <div class="sms-sender" style="color:var(--text-error); text-align:center;">${t('failureMsg.title')}</div>
                     <div class="sms-body" style="text-align:center;">
                         <strong style="color:red; font-size:1.2rem;">${reason}</strong>
                         <br><br>
-                        Has fallado en asegurar tu vivienda.
-                        <br>
-                        Sal a buscar un nuevo hogar.
+                        ${t('failureMsg.body')}
                         <br><br>
-                        <span style="color:#aaa;">Saldo Final: $${balance.toLocaleString()}</span>
+                        <span style="color:#aaa;">${t('failureMsg.footer')} $${balance.toLocaleString()}</span>
                     </div>
-                    <button onclick="sendResult(false)" style="border-color:var(--text-error); color:var(--text-error); background:#300; width:100%;">ACEPTAR DESTINO</button>
+                    <button onclick="sendResult(false)" style="border-color:var(--text-error); color:var(--text-error); background:#300; width:100%;">${t('failureMsg.btn')}</button>
                 </div>
             `;
 
@@ -1039,15 +1160,11 @@
 
             const finalHtml = `
                 <div class="sms-box" style="border-color:var(--text-primary);">
-                    <div class="sms-sender">SRA. EDITH</div>
+                    <div class="sms-sender">${t('successMsg.sender')}</div>
                     <div class="sms-body">
-                        Vaya, conseguiste el dinero ($${balance.toLocaleString()}).
-                        <br><br>
-                        Supongo que puedes quedarte un mes más.
-                        <br>
-                        (Has desbloqueado un final alternativo temporal)
+                        ${t('successMsg.body').replace('{amount}', '$' + balance.toLocaleString())}
                     </div>
-                    <button onclick="sendResult(true)">CONTINUAR</button>
+                    <button onclick="sendResult(true)">${t('successMsg.btn')}</button>
                 </div>
             `;
             overlay.innerHTML = finalHtml;

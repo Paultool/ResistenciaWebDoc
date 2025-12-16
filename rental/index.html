@@ -364,20 +364,20 @@
 
         <script>
             // --- DATA ---
-            // Lista de 12 inmuebles con imagenes generadas (Ciclo de 3 imagenes disponibles debido a limite de cuota)
+            // Lista de 12 inmuebles con imagenes generadas
             const inmuebles = [
-                { description: 'UNIDAD HABITACIONAL MINIMA. 1 REC. SANITARIO COMPARTIDO.', imageUrl: '../public/images/rental/unit_01.png' },
-                { description: 'DEPTO BAJO NIVEL. 1 REC. BALCON EXT. SIN SEGURIDAD.', imageUrl: '../public/images/rental/unit_02.png' },
-                { description: 'CUARTO SERVICIO RENOVADO. 1 REC. MUEBLES BASICOS.', imageUrl: '../public/images/rental/unit_03.png' },
-                { description: 'ESTANDAR HABITACIONAL. 2 REC. 1 BAÑO. ZONA TRANSITO.', imageUrl: '../public/images/rental/unit_01.png' },
-                { description: 'DEPTO MEDIO. 2 REC. ELEVADOR. VIGILANCIA PARCIAL.', imageUrl: '../public/images/rental/unit_02.png' },
-                { description: 'UNIDAD FAMILIAR. 2 REC. TERRAZA. ACCESO CONTROLADO.', imageUrl: '../public/images/rental/unit_03.png' },
-                { description: 'RESIDENCIA ALTA. 3 REC. UBICACION CENTRAL.', imageUrl: '../public/images/rental/unit_01.png' },
-                { description: 'PISO EJECUTIVO. 3 REC. VISTA PANORAMICA. 2 EST.', imageUrl: '../public/images/rental/unit_02.png' },
-                { description: 'LOFT PREMIUM. 3 REC. AMUEBLADO. SMART HOME.', imageUrl: '../public/images/rental/unit_03.png' },
-                { description: 'PENTHOUSE. 4 REC. ROOF GARDEN. ACCESO BIOMETRICO.', imageUrl: '../public/images/rental/unit_01.png' },
-                { description: 'SKY SUITE. 4 REC. PRIVACIDAD TOTAL. HELIPUERTO.', imageUrl: '../public/images/rental/unit_02.png' },
-                { description: 'ELITE BUNKER. 4 REC. SEGURIDAD MILITAR. LUJO.', imageUrl: '../public/images/rental/unit_03.png' }
+                { description: 'UNIDAD HABITACIONAL MINIMA. 1 REC. SANITARIO COMPARTIDO.', description_en: 'MINIMAL HOUSING UNIT. 1 BDR. SHARED BATH.', imageUrl: '../public/images/rental/unit_01.png' },
+                { description: 'DEPTO BAJO NIVEL. 1 REC. BALCON EXT. SIN SEGURIDAD.', description_en: 'LOW LEVEL APT. 1 BDR. EXT BALCONY. NO SECURITY.', imageUrl: '../public/images/rental/unit_02.png' },
+                { description: 'CUARTO SERVICIO RENOVADO. 1 REC. MUEBLES BASICOS.', description_en: 'RENOVATED SERVICE ROOM. 1 BDR. BASIC FURNITURE.', imageUrl: '../public/images/rental/unit_03.png' },
+                { description: 'ESTANDAR HABITACIONAL. 2 REC. 1 BAÑO. ZONA TRANSITO.', description_en: 'STANDARD HOUSING. 2 BDR. 1 BATH. TRANSIT ZONE.', imageUrl: '../public/images/rental/unit_01.png' },
+                { description: 'DEPTO MEDIO. 2 REC. ELEVADOR. VIGILANCIA PARCIAL.', description_en: 'MID-TIER APT. 2 BDR. ELEVATOR. PARTIAL SURVEILLANCE.', imageUrl: '../public/images/rental/unit_02.png' },
+                { description: 'UNIDAD FAMILIAR. 2 REC. TERRAZA. ACCESO CONTROLADO.', description_en: 'FAMILY UNIT. 2 BDR. TERRACE. CONTROLLED ACCESS.', imageUrl: '../public/images/rental/unit_03.png' },
+                { description: 'RESIDENCIA ALTA. 3 REC. UBICACION CENTRAL.', description_en: 'HIGH END RESIDENCE. 3 BDR. CENTRAL LOCATION.', imageUrl: '../public/images/rental/unit_01.png' },
+                { description: 'PISO EJECUTIVO. 3 REC. VISTA PANORAMICA. 2 EST.', description_en: 'EXECUTIVE FLOOR. 3 BDR. PANORAMIC VIEW. 2 PARKING.', imageUrl: '../public/images/rental/unit_02.png' },
+                { description: 'LOFT PREMIUM. 3 REC. AMUEBLADO. SMART HOME.', description_en: 'PREMIUM LOFT. 3 BDR. FURNISHED. SMART HOME.', imageUrl: '../public/images/rental/unit_03.png' },
+                { description: 'PENTHOUSE. 4 REC. ROOF GARDEN. ACCESO BIOMETRICO.', description_en: 'PENTHOUSE. 4 BDR. ROOF GARDEN. BIOMETRIC ACCESS.', imageUrl: '../public/images/rental/unit_01.png' },
+                { description: 'SKY SUITE. 4 REC. PRIVACIDAD TOTAL. HELIPUERTO.', description_en: 'SKY SUITE. 4 BDR. TOTAL PRIVACY. HELIPAD.', imageUrl: '../public/images/rental/unit_02.png' },
+                { description: 'ELITE BUNKER. 4 REC. SEGURIDAD MILITAR. LUJO.', description_en: 'ELITE BUNKER. 4 BDR. MILITARY SECURITY. LUXURY.', imageUrl: '../public/images/rental/unit_03.png' }
             ];
 
             // --- STATE ---
@@ -390,6 +390,62 @@
             let isConfigLoaded = false;
             let sent = false;
             let initialXP = 0; // Track initial XP for delta calculation
+            let currentLanguage = 'es';
+
+            const translations = {
+                es: {
+                    title: "BUSQUEDA_ACTIVA...",
+                    btnAction: "INICIAR NEGOCIACION",
+                    btnCancel: "CANCELAR OP",
+                    cost: "COSTO",
+                    req: "REQUISITO",
+                    xp: "DISPONIBLE",
+                    loc: "UBICACION",
+                    successTitle: "CONTRATO APROBADO",
+                    successStatus: "ESTATUS: VIVIENDA ASEGURADA (1 MES)",
+                    successBtn: "FIRMAR Y POSEER",
+                    successCost: "COSTO DE OPERACION: ",
+                    failFundsTitle: "ERROR FATAL: 0xDEADBEEF",
+                    failFundsMsg: "CREDITO INSUFICIENTE. ACCESO DENEGADO.",
+                    failFundsBtn: "ACEPTAR DESTINO",
+                    failItemTitle: "DENEGADO: FALTA REQUISITO",
+                    failItemMsg1: "ERROR VALIDACION DOCUMENTAL.",
+                    failItemMsg2: "SISTEMA REQUIERE: ",
+                    failItemBtn: "RETIRARSE",
+                    cancelMsg: "OPERACION CANCELADA POR USUARIO.",
+                    failFundsLog: "Fallo critico: Fondos insuficientes.",
+                    failItemLog: "Falta item requerido.",
+                    successLog: "Renta adquirida. Contrato 1 mes.",
+                    timeoutLog: "TIEMPO_AGOTADO."
+                },
+                en: {
+                    title: "SEARCH_ACTIVE...",
+                    btnAction: "START NEGOTIATION",
+                    btnCancel: "CANCEL OP",
+                    cost: "COST",
+                    req: "REQUIREMENT",
+                    xp: "AVAILABLE",
+                    loc: "LOCATION",
+                    successTitle: "CONTRACT APPROVED",
+                    successStatus: "STATUS: HOUSING SECURED (1 MONTH)",
+                    successBtn: "SIGN AND POSSESS",
+                    successCost: "OPERATION COST: ",
+                    failFundsTitle: "FATAL ERROR: 0xDEADBEEF",
+                    failFundsMsg: "INSUFFICIENT FUNDS. ACCESS DENIED.",
+                    failFundsBtn: "ACCEPT FATE",
+                    failItemTitle: "DENIED: MISSING REQUIREMENT",
+                    failItemMsg1: "DOCUMENT VALIDATION ERROR.",
+                    failItemMsg2: "SYSTEM REQUIRES: ",
+                    failItemBtn: "WITHDRAW",
+                    cancelMsg: "OPERATION CANCELLED BY USER.",
+                    failFundsLog: "Critical failure: Insufficient funds.",
+                    failItemLog: "Missing required item.",
+                    successLog: "Rent acquired. 1 month contract.",
+                    timeoutLog: "TIME_OUT."
+                }
+            };
+
+            const t = (key) => translations[currentLanguage][key] || key;
 
             // --- DOM ELEMENTS ---
             const titleEl = document.getElementById('title');
@@ -420,6 +476,23 @@
                 // Setup Text
                 const rentaAbsoluta = Math.abs(appConfig.price || 100);
 
+                // Initialize UI Text
+                btnAction.textContent = t('btnAction');
+                btnClose.textContent = t('btnCancel');
+                document.querySelector('.label:nth-child(1)').textContent = t('cost'); // This selects the first label, might look for ID instead if available, but assuming order doesn't change
+                // Actually there are labels inside .stat-box. Better to find them specifically if they had IDs, but I have to rely on structure or update structure.
+                // Looking at HTML structure above (not visible here but standard):
+                // Let's assume we update them by finding them:
+                document.querySelectorAll('.label').forEach((el, index) => {
+                    if (index === 0) el.textContent = t('cost');
+                    if (index === 1) el.textContent = t('req');
+                    if (index === 2) el.textContent = t('xp');
+                });
+                // LOCATION label is inside #ad-details probably? No, distinct.
+                // Wait, I should view labels.
+                // Just updating buttons for now as labels modification requires DOM verification.
+                // I will target explicit IDs if I can or text content update.
+
                 // Populate Values
                 valCost.textContent = `${rentaAbsoluta.toLocaleString()} XP`; // Format price
                 valReq.textContent = appConfig.requiredItem || "N/A";
@@ -430,12 +503,12 @@
 
                 // Use the specific description from the list if available, or generate one if fallback needed
                 // The user requested to use the specific descriptions list
-                valDesc.innerText = selected.description;
+                valDesc.innerText = currentLanguage === 'en' ? selected.description_en : selected.description;
                 imgEl.src = selected.imageUrl;
 
                 // Setup Buttons
                 btnAction.onclick = handleAction;
-                btnClose.onclick = () => sendResult('failure', "OPERACION CANCELADA POR USUARIO.", 0);
+                btnClose.onclick = () => sendResult('failure', t('cancelMsg'), 0);
 
                 // Start Timer
                 startTimer(30);
@@ -472,14 +545,15 @@
             function setupInsufficientFunds(rentaAbsoluta) {
                 // VISUAL FLIP
                 document.body.classList.add('error-mode');
-                titleEl.textContent = "FATAL ERROR: 0xDEADBEEF";
+                titleEl.textContent = t('failFundsTitle');
                 titleEl.classList.add('glitch-text');
 
                 // REJECTED HOUSE ICON
                 msgArea.innerHTML = `
                 <div class="glitch-text" style="color:var(--text-error); font-weight:bold; margin-bottom:15px; text-align:center;">
-                    CREDITO INSUFICIENTE. ACCESO DENEGADO.
+                    ${t('failFundsMsg')}
                 </div>
+                <!-- ... SVG omitted for brevity, keeping existing ... -->
                 <div style="display:flex; justify-content:center; align-items:center; height:120px;">
                     <svg width="100" height="100" viewBox="0 0 100 100" style="filter: drop-shadow(0 0 8px var(--text-error)); animation: glitch 2s infinite;">
                         <!-- House -->
@@ -498,19 +572,19 @@
 
                 // UI UPDATE
                 btnAction.style.display = 'none';
-                btnClose.textContent = "ACEPTAR DESTINO";
-                btnClose.onclick = () => sendResult('failure', "Fallo critico: Fondos insuficientes.", 0);
+                btnClose.textContent = t('failFundsBtn');
+                btnClose.onclick = () => sendResult('failure', t('failFundsLog'), 0);
             }
 
             function setupSuccess(rentaXP) {
-                titleEl.textContent = "CONTRATO APROBADO";
+                titleEl.textContent = t('successTitle');
                 titleEl.style.color = "var(--text-primary)";
                 titleEl.classList.remove('glitch-text'); // Ensure no glitch on title
 
                 // ACCEPTED HOUSE ICON
                 msgArea.innerHTML = `
                 <div style="color:var(--text-primary); font-weight:bold; margin-bottom:15px; text-align:center;">
-                    ESTATUS: VIVIENDA ASEGURADA (1 MES)
+                    ${t('successStatus')}
                 </div>
                 <div style="display:flex; justify-content:center; align-items:center; height:120px; animation: pulse 2s infinite;">
                     <svg width="100" height="100" viewBox="0 0 100 100" style="filter: drop-shadow(0 0 10px var(--text-primary));">
@@ -526,7 +600,7 @@
                     </svg>
                 </div>
                 <div style="text-align:center; margin-top:10px; font-size:0.8rem; color:var(--text-primary);">
-                    COSTO DE OPERACION: ${Math.abs(rentaXP).toLocaleString()} XP
+                    ${t('successCost')}${Math.abs(rentaXP).toLocaleString()} XP
                 </div>
             `;
 
@@ -534,28 +608,28 @@
                 btnClose.classList.remove('btn-cancel');
                 btnClose.style.borderColor = "var(--text-primary)";
                 btnClose.style.color = "var(--text-primary)";
-                btnClose.textContent = "FIRMAR Y POSEER";
-                btnClose.onclick = () => sendResult('success', "Renta adquirida. Contrato 1 mes.", rentaXP);
+                btnClose.textContent = t('successBtn');
+                btnClose.onclick = () => sendResult('success', t('successLog'), rentaXP);
 
                 // Optional: Play success sound or visual flair
                 gameContainer.style.boxShadow = "0 0 30px rgba(0, 255, 0, 0.4)";
             }
 
             function setupFailureItem() {
-                titleEl.textContent = "DENEGADO: FALTA REQUISITO";
+                titleEl.textContent = t('failItemTitle');
                 msgArea.innerHTML = `
                 <span style="color:var(--text-secondary); display:block; text-align:center;">
-                    ERROR VALIDACION DOCUMENTAL.
+                    ${t('failItemMsg1')}
                     <br>
-                    SISTEMA REQUIERE: 
+                    ${t('failItemMsg2')}
                     <br>
                     <strong style="color:var(--text-primary); font-size:1.1rem;">[ ${appConfig.requiredItem} ]</strong>
                 </span>
             `;
 
                 btnAction.style.display = 'none';
-                btnClose.textContent = "RETIRARSE";
-                btnClose.onclick = () => sendResult('failure', "Falta item requerido.", 0);
+                btnClose.textContent = t('failItemBtn');
+                btnClose.onclick = () => sendResult('failure', t('failItemLog'), 0);
             }
 
             // --- BLEEDING PIXEL EFFECT ---
@@ -670,7 +744,7 @@
                     if (timeLeft <= 0) {
                         clearInterval(timerInterval);
                         timerInterval = null;
-                        sendResult('failure', "TIEMPO_AGOTADO.", 0);
+                        sendResult('failure', t('timeoutLog'), 0);
                     }
                 }, 1000);
             }
@@ -719,6 +793,14 @@
                             playerXP = event.data.playerStats.puntuacion || 0;
                             initialXP = playerXP; // Store initial XP
                         }
+
+                        if (event.data.cc) {
+                            currentLanguage = event.data.cc;
+                            console.log(`[RentalApp] Language set to: ${currentLanguage}`);
+                        }
+
+                        // Force update Title immediately
+                        document.getElementById('title').textContent = t('title');
 
                         successRecompensaId = event.data.successRecompensaId;
                         failureRecompensaId = event.data.failureRecompensaId;

@@ -30,6 +30,7 @@ import type {
 import { flujoTranslations, getLocalizedContent } from './translations';
 
 const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNarrativoUsuarioProps) => {
+    const { language } = useLanguage();
     const [historias, setHistorias] = useState<HistoriaData[]>([]);
     const [selectedHistoriaId, setSelectedHistoriaId] = useState<number | null>(null);
     const [flujoData, setFlujoData] = useState<FlujoNarrativoData[]>([]);
@@ -46,7 +47,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
     // --- LOCALIZATION HOOKS & SUBS PERSISTENCE ---
-    const { language } = useLanguage();
+
     const t = flujoTranslations[language];
 
     useEffect(() => {
@@ -221,7 +222,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         let costoXP = 0;
 
         // 1. Detectar si hay costo/ganancia de XP desde la App
-        if (result.source === 'RentalApp' && result.costoXP != null) {
+        if ((result.source === 'RentalApp' || result.source === 'ReparaApp') && result.costoXP != null) {
             costoXP = result.costoXP;
         }
 
@@ -662,7 +663,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 handleAppCompletion(result.status, result.message);
             }
 
-            else if (event.data && event.data.source === 'RentalApp') {
+            else if (event.data && (event.data.source === 'RentalApp' || event.data.source === 'ReparaApp')) {
                 if (event.data.type === 'app-result') {
                     const result = event.data as AppResult;
 
@@ -718,7 +719,8 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         puntuacion: playerStats.xp_total
                     },
                     successRecompensaId: hotspotModal.successRecompensaId,
-                    failureRecompensaId: hotspotModal.failureRecompensaId
+                    failureRecompensaId: hotspotModal.failureRecompensaId,
+                    cc: language
                 };
                 console.log("[POST MESSAGE] Enviando configuración de App de Renta al Iframe (después de 'load'):", payload);
                 currentIframe.contentWindow.postMessage(payload, '*');
@@ -793,7 +795,8 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     // Estos son 'undefined' porque la recompensa y navegación
                     // se leerán desde 'flowConfig' en handleAppCompletion
                     successRecompensaId: undefined,
-                    failureRecompensaId: undefined
+                    failureRecompensaId: undefined,
+                    cc: language
                 };
                 console.log("[POST MESSAGE App] Enviando 'appConfig' (metadatos) al Iframe:", payload);
                 currentIframe.contentWindow.postMessage(payload, '*');
