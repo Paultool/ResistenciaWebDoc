@@ -1,436 +1,617 @@
+/* UserDashboard.css - Reconstructed & Cleaned */
+
 /* ============================================================
-   USER DASHBOARD - ESTILO "COMPACT TERMINAL" (FIX SCROLL)
+   ESTILOS GENERALES DASHBOARD
    ============================================================ */
-
-.dashboard-container {
-  /* DEJAR QUE EL CONTENIDO FLUYA PARA USAR SCROLL GLOBAL */
-  min-height: 100vh;
-  width: 100%;
-  /* overflow removido para evitar doble barra */
-
-  padding: 10px;
-  /* Padding mínimo */
-  background-color: #050505;
-  color: #a8a8a8;
-  font-family: 'Courier Prime', monospace;
-  z-index: 0;
-  background-size: 100% 2px, 3px 100%;
-  padding-bottom: 80px;
-  /* Espacio extra abajo para que la BottomBar no tape contenido */
+.user-dashboard {
+    color: #fff;
+    font-family: 'Courier Prime', monospace;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-/* --- 1. BARRA DE ESTADO (HEADER) ULTRA COMPACTA --- */
+.dashboard-header {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+}
+
+.dashboard-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* ============================================================
+   CARRUSEL DE HISTORIAS (Horizontal Scroll)
+   ============================================================ */
+.historias-disponibles-section {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    color: #33ff00;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border-left: 3px solid #33ff00;
+    padding-left: 10px;
+}
+
+.historias-horizontal-scroll {
+    display: flex;
+    overflow-x: auto;
+    gap: 20px;
+    padding-bottom: 20px;
+    /* Espacio para scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: #33ff00 #111;
+}
+
+.historias-horizontal-scroll::-webkit-scrollbar {
+    height: 8px;
+}
+
+.historias-horizontal-scroll::-webkit-scrollbar-track {
+    background: #111;
+}
+
+.historias-horizontal-scroll::-webkit-scrollbar-thumb {
+    background-color: #33ff00;
+    border-radius: 4px;
+}
+
+/* CARD DE HISTORIA */
+.historia-card-horizontal {
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid #333;
+    min-width: 300px;
+    /* Ancho fijo para carrusel */
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    /* No encogerse */
+}
+
+.historia-card-horizontal:hover {
+    transform: translateY(-5px);
+    border-color: #33ff00;
+    box-shadow: 0 5px 15px rgba(51, 255, 0, 0.2);
+}
+
+/* Badges Superiores */
+.historia-badges-top {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 10;
+}
+
+.badge-sec {
+    background: rgba(0, 0, 0, 0.8);
+    color: #33ff00;
+    font-size: 10px;
+    padding: 2px 6px;
+    border: 1px solid #33ff00;
+    font-weight: 700;
+}
+
+.badge-completado-top {
+    background: #33ff00;
+    color: #000;
+    font-size: 10px;
+    padding: 4px 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 10px #33ff00;
+}
+
+.badge-bloqueado-top {
+    background: #dc2626 !important;
+    /* ROJO FUERTE */
+    color: #fff;
+    font-size: 10px;
+    padding: 4px 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 0 8px rgba(220, 38, 38, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Preview Image */
+.historia-preview {
+    height: 160px;
+    background: #111;
+    overflow: hidden;
+    position: relative;
+}
+
+.historia-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+}
+
+.historia-card-horizontal:hover .historia-preview img {
+    opacity: 1;
+}
+
+.historia-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: 3rem;
+    color: #333;
+}
+
+/* Info Section */
+.historia-info {
+    padding: 15px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.historia-titulo {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+    line-height: 1.2;
+}
+
+.historia-descripcion {
+    font-size: 0.8rem;
+    color: #aaa;
+    margin-bottom: 12px;
+    line-height: 1.4;
+    height: 40px;
+    /* Altura fija para 2 líneas aprox */
+    overflow: hidden;
+}
+
+/* Progress Bar */
+.historia-progreso-container {
+    height: 4px;
+    background: #222;
+    margin-bottom: 12px;
+    width: 100%;
+}
+
+.historia-progreso-bar {
+    height: 100%;
+    background: #33ff00;
+    box-shadow: 0 0 5px #33ff00;
+}
+
+/* Actions & Footer Badges */
+.historia-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    /* Empujar al fondo */
+}
+
+.historia-badges {
+    display: flex;
+    gap: 5px;
+}
+
+.badge-completado {
+    color: #33ff00;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.badge-bloqueado {
+    color: #dc2626;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.badge-disponible {
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.historia-favorite-btn {
+    background: transparent;
+    border: none;
+    color: #dc2626;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+    padding: 0;
+    line-height: 1;
+}
+
+.historia-favorite-btn:hover {
+    transform: scale(1.2);
+}
+
+/* ============================================================
+   MINI MAPA - RADAR TÁCTICO
+   ============================================================ */
+.dashboard-minimap-section {
+    margin-top: 30px;
+}
+
+.section-title-map {
+    color: #33ff00;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.mini-map-container {
+    width: 100%;
+    height: 200px;
+    background: #000;
+    border: 1px solid #33ff00;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.mini-map-container:hover {
+    border-color: #fff;
+    box-shadow: 0 0 15px rgba(51, 255, 0, 0.3);
+}
+
+.mini-map-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 500;
+    pointer-events: none;
+    background: radial-gradient(circle, transparent 50%, rgba(0, 20, 0, 0.8) 100%);
+    box-shadow: inset 0 0 20px #000;
+}
+
+.mini-map-label {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    color: #33ff00;
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 2px 6px;
+    border: 1px solid #33ff00;
+    letter-spacing: 1px;
+}
+
+.mini-map-grid-lines {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(51, 255, 0, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(51, 255, 0, 0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.3;
+}
+
+.radar-ping {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: rgba(51, 255, 0, 0.4);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: radar-pulse 2s infinite;
+}
+
+.user-dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #fff;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 5px #33ff00;
+}
+
+@keyframes radar-pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
+    }
+}
+
+.mini-story-marker {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #000;
+    border: 2px solid;
+}
+
+/* ============================================================
+   OVERRIDE FORZADO PARA GAME STATS GRID (HACKER STYLE)
+   ============================================================ */
+/* Usamos selectores with .resistance-dashboard para mayor especificidad */
+.resistance-dashboard .stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    /* 5 COLUMNAS EN UNA FILA */
+    gap: 8px !important;
+    margin-top: 15px !important;
+    width: 100% !important;
+}
+
+.resistance-dashboard .stat-card {
+    background: rgba(0, 0, 0, 0.6) !important;
+    border: 1px solid #333 !important;
+    padding: 8px 4px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 70px !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1) !important;
+}
+
+/* HOVER EFFECT */
+.resistance-dashboard .stat-card:hover {
+    background: rgba(51, 255, 0, 0.15) !important;
+    border-color: #33ff00 !important;
+    box-shadow: 0 0 15px rgba(51, 255, 0, 0.3) !important;
+    transform: translateY(-2px) !important;
+}
+
+.resistance-dashboard .stat-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(51, 255, 0, 0.2), transparent);
+    transition: 0.5s;
+}
+
+.resistance-dashboard .stat-card:hover::after {
+    left: 100%;
+}
+
+.resistance-dashboard .stat-value {
+    font-family: 'Courier Prime', monospace !important;
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    color: #fff !important;
+    line-height: 1 !important;
+}
+
+.resistance-dashboard .stat-label {
+    font-size: 0.5rem !important;
+    color: #aaa !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    margin-top: 4px !important;
+    text-shadow: none !important;
+}
+
+.resistance-dashboard .stat-icon {
+    color: #33ff00 !important;
+    font-size: 1.2rem !important;
+    margin-bottom: 2px !important;
+    text-shadow: 0 0 5px rgba(51, 255, 0, 0.5) !important;
+}
+
+/* Animations */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* ============================================================
+   ESTILOS HEADER (RECUPERADOS)
+   ============================================================ */
+.dashboard-container {
+    min-height: 100vh;
+    position: relative;
+}
+
 .dashboard-status-bar {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 5px 10px;
-  margin-bottom: 10px;
-  /* Margen reducido */
-  background: rgba(51, 255, 0, 0.03);
-  border: 1px solid #33ff00;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #333;
+    margin-bottom: 20px;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
 }
 
 .status-label {
-  font-size: 0.7rem;
-  color: #33ff00;
-  font-weight: 700;
-  text-transform: uppercase;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+    display: flex;
+    align-items: center;
+    color: #33ff00;
 }
 
 .user-id-display {
-  color: #fff;
-  letter-spacing: 1px;
+    color: #fff;
+    font-weight: bold;
 }
 
-.btn-status-logout {
-  background: transparent;
-  border: 1px solid #33ff00;
-  color: #33ff00;
-  font-weight: 700;
-  font-size: 0.65rem;
-  padding: 2px 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-transform: uppercase;
+.dashboard-logout-btn {
+    background: transparent;
+    border: 1px solid #333;
+    color: #aaa;
+    padding: 2px 8px;
+    font-family: inherit;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
 }
 
-.btn-status-logout:hover {
-  background: #33ff00;
-  color: #000;
-}
-
-/* --- 2. GRID PRINCIPAL --- */
-.main-dashboard-grid {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  /* Ajuste de columnas: Izquierda 70%, Derecha 30% aprox */
-  grid-template-columns: 3fr 1fr;
-  gap: 10px;
-  /* Gap reducido */
-  align-items: start;
-}
-
-/* Estilos de Paneles */
-.game-stats-panel,
-.data-metrics-panel {
-  background: #080808;
-  border: 1px solid #333;
-  padding: 10px;
-  /* Padding interno reducido */
-  position: relative;
-}
-
-.game-stats-panel {
-  border-left: 2px solid #33ff00;
-}
-
-.data-metrics-panel {
-  border-right: 2px solid #333;
-}
-
-/* Decoración Esquinas */
-.game-stats-panel::before {
-  content: '';
-  position: absolute;
-  top: -1px;
-  left: -1px;
-  width: 6px;
-  height: 6px;
-  border-top: 2px solid #33ff00;
-  border-left: 2px solid #33ff00;
-}
-
-.data-metrics-panel::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  right: -1px;
-  width: 6px;
-  height: 6px;
-  border-bottom: 2px solid #33ff00;
-  border-right: 2px solid #33ff00;
-}
-
-/* --- TÍTULOS DE SECCIÓN --- */
-.section-title {
-  font-size: 0.8rem;
-  /* Títulos pequeños */
-  font-weight: 700;
-  color: #fff;
-  margin: 0 0 10px 0;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: 1px dashed #333;
-  padding-bottom: 4px;
-}
-
-.main-title {
-  color: #33ff00;
-}
-
-/* --- GRID DE MÉTRICAS (Lado Derecho) --- */
-.info-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.info-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid #333;
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transition: all 0.2s;
-}
-
-.info-card:hover {
-  border-color: #33ff00;
-  background: rgba(51, 255, 0, 0.05);
-}
-
-.info-icon {
-  font-size: 1rem;
-}
-
-.info-content {
-  display: flex;
-  flex-direction: column;
-}
-
-.info-number {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #fff;
-  line-height: 1;
-}
-
-.info-label {
-  font-size: 0.6rem;
-  color: #666;
-  font-weight: 700;
-  letter-spacing: 1px;
-  margin-top: 1px;
-}
-
-/* Footer Lateral */
-.side-panel-footer {
-  margin-top: 15px;
-  padding-top: 8px;
-  border-top: 1px solid #333;
-  font-size: 0.6rem;
-  color: #555;
-  text-align: right;
-}
-
-.admin-status {
-  color: #ff0000;
-  font-weight: 700;
-  margin-top: 2px;
-  font-size: 0.6rem;
-}
-
-/* --- ESTILOS PARA GAME STATS (Heredados) --- */
-/* Esto fuerza a que el contenido dentro del panel de stats no sea gigante */
-.game-stats-panel h1,
-.game-stats-panel h2,
-.game-stats-panel h3 {
-  font-size: 1rem !important;
-  margin-bottom: 0.5rem !important;
-}
-
-.game-stats-panel p,
-.game-stats-panel li,
-.game-stats-panel span {
-  font-size: 0.8rem !important;
-}
-
-/* --- RESPONSIVE (MÓVIL) --- */
-@media (max-width: 900px) {
-  .dashboard-container {
-    height: auto;
-    /* En móvil dejamos que crezca natural */
-    min-height: 100vh;
-    overflow-y: visible;
-  }
-
-  .main-dashboard-grid {
-    grid-template-columns: 1fr;
-    /* Una sola columna */
-    gap: 15px;
-  }
-
-  /* Métricas horizontales en móvil para ahorrar espacio vertical */
-  .info-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 5px;
-  }
-
-  .info-card {
-    flex-direction: column;
-    text-align: center;
-    padding: 5px;
-    gap: 2px;
-  }
-
-  .info-icon {
-    font-size: 0.9rem;
-  }
-
-  .info-number {
-    font-size: 0.9rem;
-  }
-
-  .info-label {
-    font-size: 0.55rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .dashboard-container {
-    padding: 5px;
-    padding-bottom: 80px;
-  }
-
-  .info-grid {
-    grid-template-columns: 1fr;
-    /* Vuelve a vertical si la pantalla es muy estrecha */
-  }
-
-  .info-card {
-    flex-direction: row;
-    text-align: left;
-  }
+.dashboard-logout-btn:hover {
+    border-color: #ff3333;
+    color: #ff3333;
 }
 
 /* ============================================================
-   STAT MODALS
+   ESTILOS MODALES STATS (RECUPERADOS)
    ============================================================ */
 .stat-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.9);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(4px);
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    /* Fondo oscuro */
+    backdrop-filter: blur(5px);
+    z-index: 9999;
+    /* ALTO Z-INDEX */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
 }
 
 .stat-modal-content {
-  background: #0a0a0a;
-  border: 2px solid #33ff00;
-  max-width: 600px;
-  width: 90%;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 0 30px rgba(51, 255, 0, 0.3);
-  animation: slideIn 0.3s ease;
+    background: #000;
+    border: 1px solid #33ff00;
+    width: 100%;
+    max-width: 500px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 30px rgba(51, 255, 0, 0.2);
+    animation: modalSlideIn 0.3s ease-out;
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .stat-modal-header {
-  padding: 15px 20px;
-  border-bottom: 1px solid #33ff00;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(51, 255, 0, 0.05);
+    padding: 15px;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(51, 255, 0, 0.05);
 }
 
 .stat-modal-header h3 {
-  margin: 0;
-  font-size: 1rem;
-  color: #33ff00;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2px;
+    margin: 0;
+    color: #33ff00;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }
 
 .stat-modal-close {
-  background: transparent;
-  border: 1px solid #33ff00;
-  color: #33ff00;
-  font-size: 1.5rem;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  padding: 0;
-  line-height: 1;
+    background: transparent;
+    border: none;
+    color: #aaa;
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
 }
 
 .stat-modal-close:hover {
-  background: #33ff00;
-  color: #000;
-  transform: rotate(90deg);
+    color: #fff;
 }
 
 .stat-modal-body {
-  padding: 20px;
-  overflow-y: auto;
-  flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
 }
 
+/* Lista dentro del modal */
 .stat-modal-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .stat-modal-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 15px;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid #333;
-  transition: all 0.2s;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 10px;
+    border: 1px solid #333;
+    background: rgba(255, 255, 255, 0.02);
+    transition: all 0.2s;
 }
 
 .stat-modal-item:hover {
-  border-color: #33ff00;
-  background: rgba(51, 255, 0, 0.05);
-  transform: translateX(5px);
+    border-color: #33ff00;
+    background: rgba(51, 255, 0, 0.05);
 }
 
 .stat-modal-item-icon {
-  font-size: 1.5rem;
-  min-width: 30px;
+    font-size: 1.5rem;
+    margin-top: -2px;
 }
 
 .stat-modal-item-content {
-  flex: 1;
+    flex: 1;
 }
 
 .stat-modal-item-name {
-  font-size: 0.9rem;
-  color: #fff;
-  font-weight: 700;
-  margin-bottom: 5px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
 }
 
 .stat-modal-item-desc {
-  font-size: 0.75rem;
-  color: #999;
-  line-height: 1.4;
-}
-
-/* Mobile responsiveness */
-@media (max-width: 600px) {
-  .stat-modal-content {
-    width: 95%;
-    max-height: 90vh;
-  }
-
-  .stat-modal-header h3 {
-    font-size: 0.85rem;
-  }
-
-  .stat-modal-item {
-    padding: 10px;
-    gap: 10px;
-  }
-
-  .stat-modal-item-icon {
-    font-size: 1.2rem;
-  }
+    color: #888;
+    font-size: 0.8rem;
+    line-height: 1.4;
 }

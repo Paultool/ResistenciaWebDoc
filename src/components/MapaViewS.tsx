@@ -24,12 +24,14 @@ interface MapaViewSProps {
   historiasVisitadas: number[];
   // 👇 Esta es la función clave que llama al padre
   onStartNarrativeFromMap: (historiaId: number) => void;
+  onExit?: () => void; // Prop opcional para cerrar el mapa
 }
 
 const MapaViewS: React.FC<MapaViewSProps> = ({
   historias,
   historiasVisitadas,
-  onStartNarrativeFromMap
+  onStartNarrativeFromMap,
+  onExit
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -266,6 +268,23 @@ const MapaViewS: React.FC<MapaViewSProps> = ({
             </div>
           </div>
         </div>
+
+        {/* BOTÓN SALIR / CERRAR MAPA (FIXED) */}
+        {onExit && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log("Cerrando mapa...");
+              onExit();
+            }}
+            className="absolute top-6 right-6 z-[9999] w-12 h-12 bg-black/90 border-2 border-[#dc2626] text-[#dc2626] rounded-full flex items-center justify-center hover:bg-[#dc2626] hover:text-white transition-all shadow-[0_0_20px_rgba(220,38,38,0.5)] cursor-pointer"
+            title="CERRAR MAPA TÁCTICO"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* MODAL DE DETALLE */}

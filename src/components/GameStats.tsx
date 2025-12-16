@@ -207,77 +207,50 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
 
       {showDetailed && (
         <>
-          {/* SECCIÓN 2: ESTADÍSTICAS TÁCTICAS */}
+          {/* SECCIÓN 2: ESTADÍSTICAS TÁCTICAS (GRID COMPACTO) */}
           <div className="stats-grid">
-            <div className="stat-item fade-in clickable" onClick={() => onStatClick?.('missions')}>
+            <div className="stat-card" onClick={() => onStatClick?.('missions')}>
               <div className="stat-icon">📂</div>
-              <div className="stat-number">{stats.historiasCompletadas}</div>
-              <div className="stat-label">{t.missions}</div>
+              <div className="stat-content">
+                <span className="stat-value">{stats.historiasCompletadas}</span>
+                <span className="stat-label">{t.missions}</span>
+              </div>
             </div>
 
-            <div className="stat-item fade-in clickable" style={{ animationDelay: '0.1s' }} onClick={() => onStatClick?.('contacts')}>
+            <div className="stat-card" onClick={() => onStatClick?.('contacts')}>
               <div className="stat-icon">👥</div>
-              <div className="stat-number">{stats.personajesConocidos}</div>
-              <div className="stat-label">{t.contacts}</div>
+              <div className="stat-content">
+                <span className="stat-value">{stats.personajesConocidos}</span>
+                <span className="stat-label">{t.contacts}</span>
+              </div>
             </div>
 
-            <div className="stat-item fade-in clickable" style={{ animationDelay: '0.2s' }} onClick={() => onStatClick?.('locations')}>
+            <div className="stat-card" onClick={() => onStatClick?.('locations')}>
               <div className="stat-icon">📍</div>
-              <div className="stat-number">{stats.ubicacionesVisitadas}</div>
-              <div className="stat-label">{t.locations}</div>
+              <div className="stat-content">
+                <span className="stat-value">{stats.ubicacionesVisitadas}</span>
+                <span className="stat-label">{t.locations}</span>
+              </div>
             </div>
 
-            <div className="stat-item fade-in clickable" style={{ animationDelay: '0.3s' }} onClick={() => onStatClick?.('merits')}>
+            <div className="stat-card" onClick={() => onStatClick?.('merits')}>
               <div className="stat-icon">🎖️</div>
-              <div className="stat-number">{stats.logrosDesbloqueados}</div>
-              <div className="stat-label">{t.merits}</div>
+              <div className="stat-content">
+                <span className="stat-value">{stats.logrosDesbloqueados}</span>
+                <span className="stat-label">{t.merits}</span>
+              </div>
             </div>
 
-            <div className="stat-item fade-in clickable" style={{ animationDelay: '0.4s' }} onClick={() => onStatClick?.('resources')}>
+            <div className="stat-card" onClick={() => onStatClick?.('resources')}>
               <div className="stat-icon">🎒</div>
-              <div className="stat-number">{stats.inventarioItems}</div>
-              <div className="stat-label">{t.resources}</div>
-            </div>
-
-            <div className="stat-item fade-in" style={{ animationDelay: '0.5s' }}>
-              <div className="stat-icon">🔥</div>
-              <div className="stat-number">{stats.rachaDias}</div>
-              <div className="stat-label">{t.streak}</div>
+              <div className="stat-content">
+                <span className="stat-value">{stats.inventarioItems}</span>
+                <span className="stat-label">{t.resources}</span>
+              </div>
             </div>
           </div>
 
           <div className="terminal-separator" />
-
-          {/* SECCIÓN 3: ARCHIVOS PRIORITARIOS */}
-          <div className="favorites-section">
-            <div className="favorites-header">
-              {'>'} {t.priorityFiles} [{favoriteStories.length}]
-            </div>
-
-            {loadingFavorites ? (
-              <div className="favorites-empty">{t.loadingIndex}</div>
-            ) : favoriteStories.length === 0 ? (
-              <div className="favorites-empty">
-                {t.noFiles}
-              </div>
-            ) : (
-              <div className="favorites-row">
-                {favoriteStories.map((historia) => (
-                  <div
-                    key={historia.id_historia}
-                    className="folder-item"
-                    onClick={() => handleFavoriteClick(historia.id_historia)}
-                    title={historia.titulo}
-                  >
-                    <div className="folder-icon">📁</div>
-                    <div className="folder-name">
-                      {historia.titulo || 'ARCH_001'}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </>
       )}
     </div>
