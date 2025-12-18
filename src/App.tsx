@@ -10,8 +10,11 @@ import InventarioView from './components/InventarioView';
 import HistoriaDetail from './components/HistoriaDetail';
 import AdminPanel from './components/AdminPanel';
 import FlujoNarrativoUsuario from './components/FlujoNarrativoUsuario';
+import CharacterDossier from './components/CharacterDossier';
 
-import { supabase, testConnection, obtenerHistorias, Historia } from './supabaseClient';
+import { supabase, testConnection, obtenerHistorias, Historia, obtenerFichaPersonajePorId, Personaje } from './supabaseClient';
+import { gameServiceUser as gameService } from './services/GameServiceUser';
+import StatsModal from './components/StatsModal';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './App.css';
@@ -531,11 +534,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
   );
 };
 
+
 // ==========================================================
 // --- 3. CONTENIDO PRINCIPAL (LOGGED IN) ---
 // ==========================================================
-const MainContent: React.FC = () => {
-  const { user } = useAuth();
+interface MainContentProps {
+  onRequestFullscreen: () => void;
+}
+
+const MainContent: React.FC<MainContentProps> = ({ onRequestFullscreen }) => {
+  const { user, signOut } = useAuth();
   const { language, toggleLanguage } = useLanguage();
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentView, setCurrentView] = useState<'dashboard' | 'historias' | 'personajes' | 'mapa' | 'inventario' | 'admin' | 'wip'>('dashboard');
@@ -547,20 +555,144 @@ const MainContent: React.FC = () => {
   const [showNavBar, setShowNavBar] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const [userStats, setUserStats] = useState<any>(null);
+  const [activeStatModal, setActiveStatModal] = useState<'missions' | 'contacts' | 'locations' | 'merits' | 'resources' | null>(null);
+  const [statModalData, setStatModalData] = useState<any[] | null>(null);
+  const [loadingStatModal, setLoadingStatModal] = useState(false);
+  const [selectedCharacterForDossier, setSelectedCharacterForDossier] = useState<Personaje | null>(null);
+
+  const handleViewDossier = async (characterBasic: any) => {
+    // characterBasic might just have 'nombre' if it's from the old stats
+    // But we need the ID to fetch full details.
+    setLoadingStatModal(true);
+    try {
+      let characterId = characterBasic.id_personaje || characterBasic.id;
+
+      // If no ID, we have to search by name in the 'personaje' table
+      if (!characterId) {
+        const { data, error } = await supabase
+          .from('personaje')
+          .select('id_personaje')
+          .eq('nombre', characterBasic.nombre)
+          .single();
+
+        if (!error && data) {
+          characterId = data.id_personaje;
+        }
+      }
+
+      if (characterId) {
+        const fullDetails = await obtenerFichaPersonajePorId(characterId);
+        if (fullDetails) {
+          setSelectedCharacterForDossier(fullDetails);
+        }
+      } else {
+        console.error("No se pudo encontrar el ID del personaje:", characterBasic.nombre);
+      }
+    } catch (error) {
+      console.error("Error al cargar expediente:", error);
+    } finally {
+      setLoadingStatModal(false);
+    }
+  };
+
+  const getRankName = (lvl: number) => {
+    if (lvl >= 10) return 'LEYENDA';
+    if (lvl >= 7) return 'COMANDANTE';
+    if (lvl >= 5) return 'VETERANO';
+    if (lvl >= 3) return 'EXPLORADOR';
+    return 'RECLUTA';
+  };
+
   useEffect(() => {
     const init = async () => {
       if (user) {
         setIsAdmin(user.email === 'paultool@gmail.com');
         const hist = await obtenerHistorias();
         setHistorias(hist);
-        // Cargar perfil
-        const { data } = await supabase.from('perfiles_jugador').select('*').eq('user_id', user.id).single();
-        if (data) setUserProfile(data);
-        else await supabase.from('perfiles_jugador').insert({ user_id: user.id });
+
+        // Cargar perfil y stats globalmente
+        const loadStats = async () => {
+          const stats = await gameService.getPlayerStats(user.id);
+          if (stats) {
+            setUserStats({
+              missions: stats.historias_completadas,
+              contacts: (stats.personajes_conocidos || []).length,
+              locations: (stats.historias_visitadas || []).length, // Placeholder, updated below
+              merits: (stats.logros_desbloqueados || []).length,
+              resources: (stats.inventario || []).length,
+              xp: stats.xp_total,
+              nivel: stats.nivel || 1
+            });
+
+            // Calculate unique locations based on stories
+            if (stats.historias_visitadas?.length > 0) {
+              const hIds = stats.historias_visitadas.map((id: string) => Number(id)).filter((id: number) => !isNaN(id));
+              if (hIds.length > 0) {
+                const { data: storiesData } = await supabase
+                  .from('historia')
+                  .select('id_ubicacion')
+                  .in('id_historia', hIds);
+                if (storiesData) {
+                  const uniqueLocs = new Set(storiesData.filter(s => s.id_ubicacion).map(s => s.id_ubicacion));
+                  setUserStats((prev: any) => ({ ...prev, locations: uniqueLocs.size }));
+                }
+              }
+            }
+          } else {
+            await supabase.from('perfiles_jugador').insert({ user_id: user.id });
+          }
+        };
+        loadStats();
+
+        // Polling para actualizar stats (opcional, o usar suscripción)
+        const interval = setInterval(loadStats, 30000);
+        return () => clearInterval(interval);
       }
     };
     init();
   }, [user]);
+
+  // Traducciones para la barra de navegación
+  const navTranslations = {
+    es: {
+      missions: 'MISIONES',
+      contacts: 'CONTACTOS',
+      locations: 'TOTAL UBICACIONES',
+      merits: 'LOGROS',
+      resources: 'RECURSOS'
+    },
+    en: {
+      missions: 'MISSIONS',
+      contacts: 'CONTACTS',
+      locations: 'TOTAL LOCATIONS',
+      merits: 'ACHIEVEMENTS',
+      resources: 'RESOURCES'
+    }
+  };
+  const t = navTranslations[language === 'en' ? 'en' : 'es'];
+
+  const handleStatClick = async (type: 'missions' | 'contacts' | 'locations' | 'merits' | 'resources') => {
+    if (!user?.id) return;
+    setActiveStatModal(type);
+    setLoadingStatModal(true);
+    try {
+      let data;
+      switch (type) {
+        case 'missions': data = await gameService.getCompletedStories(user.id); break;
+        case 'contacts': data = await gameService.getKnownCharacters(user.id); break;
+        case 'locations': data = await gameService.getVisitedLocations(user.id); break;
+        case 'merits': data = await gameService.getUnlockedRewards(user.id); break;
+        case 'resources': data = await gameService.getInventoryItems(user.id); break;
+      }
+      setStatModalData(data);
+    } catch (e) {
+      console.error(e);
+      setStatModalData([]);
+    } finally {
+      setLoadingStatModal(false);
+    }
+  };
 
   const handleStartNarrative = (historia: Historia) => {
     setFlujoNarrativoHistoriaId(historia.id);
@@ -573,10 +705,27 @@ const MainContent: React.FC = () => {
   };
 
   const handleUpdateProfile = async (pos: number, neg: number, loc: string) => {
-    // Lógica simplificada para actualizar perfil
-    if (userProfile) {
+    if (userProfile && user) {
       const xp = userProfile.xp_total + pos + neg;
-      await supabase.from('perfiles_jugador').update({ xp_total: xp }).eq('user_id', userProfile.user_id);
+      const nivel = Math.floor(Math.sqrt(xp / 100)) + 1;
+      const { data: updatedStats } = await supabase
+        .from('perfiles_jugador')
+        .update({
+          xp_total: xp,
+          nivel: nivel
+        })
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (updatedStats) {
+        setUserProfile(updatedStats);
+        setUserStats((prev: any) => ({
+          ...prev,
+          xp: updatedStats.xp_total,
+          nivel: updatedStats.nivel
+        }));
+      }
     }
   };
 
@@ -601,116 +750,165 @@ const MainContent: React.FC = () => {
   return (
     <div className="app-authenticated">
       {showNavBar && (
-        <nav className="term-navbar">
+        <nav className="term-navbar unified-header" style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          height: '48px', padding: '0 10px', background: '#000', borderBottom: '1px solid #33ff00'
+        }}>
 
-          {/* 1. LOGO */}
-          <div className="term-logo">
-            <h1>
-              <span className="term-cursor">{'>'}</span> LA_RESISTENCIA
-            </h1>
-          </div>
-
-          {/* 2. BOTÓN HAMBURGUESA (Solo Móvil) */}
+          {/* 1. LEFT: LOGO (Home) */}
           <button
-            className="term-hamburger-btn"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            onClick={() => setCurrentView('dashboard')}
+            className="term-logo-btn flex items-center gap-2 hover:bg-[#33ff00]/10 px-2 rounded transition-colors group"
+            title="DASHBOARD / HOME"
           >
-            {isMobileMenuOpen ? '☠' : '☠'}
+            <span className="term-cursor text-[#33ff00] font-bold">{'>'}</span>
+            <h1 className="text-[#33ff00] font-bold font-mono tracking-tighter text-sm md:text-base mb-0">
+              <span className="hidden md:inline">LA_RESISTENCIA</span>
+              <span className="md:hidden">L_R</span>
+            </h1>
           </button>
 
-          {/* 3. CONTENEDOR DE MENÚ (Links + User) */}
-          <div className={`term-menu-container ${isMobileMenuOpen ? 'is-open' : ''}`}>
+          {/* 2. CENTER: COMMAND BAR (Stats + XP) */}
+          <div className="flex-1 flex justify-center items-center gap-2 md:gap-6 mx-2 overflow-x-auto scrollbar-hide">
 
-            <div className="term-links flex items-center gap-2 h-full">
-              {/* Botón Minimizar (Compacto) */}
-              <button
-                className="term-hide-btn flex items-center justify-center w-6 h-6 p-0 border border-[#33ff00]/30 hover:border-[#33ff00] text-[#33ff00] transition-colors bg-black/50"
-                onClick={() => setShowNavBar(false)}
-                title={language === 'es' ? 'OCULTAR INTERFAZ' : 'HIDE INTERFACE'}
-              >
-                <span className="text-xs">☠</span>
-              </button>
-
-              {/* Enlaces Mapeados */}
-              <div className="flex flex-wrap gap-1 justify-center items-center max-w-5xl h-full">
-                {[
-                  { id: 'dashboard', icon: 'fas fa-chart-network' }, // SYSTEM
-                  { id: 'historias', icon: 'fas fa-stream' },        // LOGS
-                  { id: 'mapa', icon: 'fas fa-map-marker-alt' },   // MAP
-                  { id: 'inventario', icon: 'fas fa-box-open' },     // ITEMS
-                  { id: 'personajes', icon: 'fas fa-users-cog' },    // CREW
-                  { id: 'wip', icon: 'fas fa-flask' }                // LAB
-                ].map(item => {
-                  // Diccionario de navegación
-                  const navLabels: Record<string, { es: string; en: string }> = {
-                    dashboard: { es: 'SISTEMA', en: 'SYSTEM' },
-                    historias: { es: 'LOGS', en: 'LOGS' },
-                    mapa: { es: 'MAPA', en: 'MAP' },
-                    inventario: { es: 'ITEMS', en: 'ITEMS' },
-                    personajes: { es: 'CREW', en: 'CREW' },
-                    wip: { es: 'LAB', en: 'LAB' }
-                  };
-                  const label = navLabels[item.id][language];
-
+            {/* XP WIDGET */}
+            <div className="flex flex-col justify-center min-w-[70px] md:min-w-[150px] relative group cursor-help">
+              <div className="flex justify-between w-full text-[8px] text-[#33ff00]/70 font-mono mb-[2px]">
+                {(() => {
+                  const currentXP = userStats?.xp || 0;
+                  const lvl = Math.floor(Math.sqrt(currentXP / 100)) + 1;
                   return (
-                    <button
-                      key={item.id}
-                      className={`term-link-btn ${currentView === item.id ? 'active' : ''} group relative flex items-center gap-1.5 px-2 py-0.5 border border-[#33ff00]/30 hover:border-[#33ff00] transition-all bg-black/50 hover:bg-[#33ff00]/10`}
-                      onClick={() => {
-                        if (item.id === 'historias') setFlujoNarrativoHistoriaId(null);
-                        setCurrentView(item.id as any);
-                        setIsMobileMenuOpen(false);
-                      }}
-                      title={label}
-                    >
-                      <i className={`${item.icon} text-xs group-hover:text-[#33ff00] transition-colors`}></i>
-                      {/* Texto visible solo en desktop, compacto y estilo OS */}
-                      <span className="hidden md:block text-[9px] tracking-widest font-bold uppercase">{label}</span>
-                    </button>
+                    <>
+                      <span className="font-bold">LVL.{lvl} - {getRankName(lvl)}</span>
+                      <span className="hidden md:inline">{currentXP} XP</span>
+                    </>
                   );
-                })}
-                {/* Botón Idioma (Cloud Cachups / CC) */}
+                })()}
+              </div>
+              <div className="w-full h-1 bg-[#001100] border border-[#33ff00]/30 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[#33ff00]"
+                  style={{
+                    width: (() => {
+                      const currentXP = userStats?.xp || 0;
+                      const lvl = Math.floor(Math.sqrt(currentXP / 100)) + 1;
+                      const baseXP = Math.pow(lvl - 1, 2) * 100;
+                      const nextXP = Math.pow(lvl, 2) * 100;
+                      const progress = ((currentXP - baseXP) / (nextXP - baseXP)) * 100;
+                      return `${Math.min(100, Math.max(0, progress))}%`;
+                    })()
+                  }}
+                ></div>
+              </div>
+            </div>
+
+            {/* STATS ICONS */}
+            <div className="flex items-center gap-1 md:gap-2">
+              {[
+                { id: 'missions', icon: 'fa-folder', count: userStats?.missions, label: t.missions },
+                { id: 'contacts', icon: 'fa-address-book', count: userStats?.contacts, label: t.contacts },
+                { id: 'locations', icon: 'fa-map-marker-alt', count: userStats?.locations, label: t.locations },
+                { id: 'merits', icon: 'fa-medal', count: userStats?.merits, label: t.merits },
+                { id: 'resources', icon: 'fa-box-open', count: userStats?.resources, label: t.resources }
+              ].map((stat) => (
                 <button
-                  className="term-link-btn group relative flex items-center justify-center px-2 py-0.5 border border-[#33ff00]/30 hover:border-[#33ff00] transition-all bg-black/50 hover:bg-[#33ff00]/10"
-                  onClick={toggleLanguage}
-                  title={language === 'es' ? 'CAMBIAR A INGLÉS (CC)' : 'SWITCH TO SPANISH (CC)'}
+                  key={stat.id}
+                  onClick={() => handleStatClick(stat.id as any)}
+                  className="flex items-center justify-center w-8 h-8 md:w-auto md:px-2 md:py-1 rounded hover:bg-[#33ff00]/20 transition-all group relative"
+                  title={stat.label}
                 >
-                  <i className="fas fa-closed-captioning text-xs group-hover:text-[#33ff00] transition-colors mr-1"></i>
-                  <span className="text-[9px] font-bold">
-                    {language === 'es' ? 'EN' : 'ES'}
+                  <i className={`fas ${stat.icon} text-xs md:text-sm text-[#33ff00] group-hover:scale-110 transition-transform`}></i>
+                  <span className="absolute -top-1 -right-1 md:static md:ml-1 text-[9px] md:text-xs font-bold text-white md:text-[#33ff00] bg-red-600 md:bg-transparent px-1 rounded-full md:px-0 leading-none">
+                    {stat.count || 0}
                   </span>
                 </button>
-
-              </div>
-              {isAdmin && (
-                <button
-                  className={`term-link-btn flex items-center justify-center px-2 py-0.5 ${currentView === 'admin' ? 'active' : ''}`}
-                  style={{ color: '#ff0000', borderColor: currentView === 'admin' ? '#ff0000' : 'transparent' }}
-                  onClick={() => { setCurrentView('admin'); setIsMobileMenuOpen(false); }}
-                  title="ADMIN PANEL"
-                >
-                  <i className="fas fa-user-shield text-xs"></i>
-                </button>
-              )}
-
+              ))}
             </div>
           </div>
+
+          {/* 3. RIGHT: UTILITIES (OP, Admin, CC, Fullscreen, Hide) */}
+          <div className="flex items-center gap-2 md:gap-3 text-[#33ff00]">
+
+            {/* OP INFO (Desktop Only) */}
+            <div className="hidden lg:flex items-center text-[10px] font-mono border-r border-[#33ff00]/30 pr-3 mr-1">
+              <span className="opacity-50 mr-1">OP:</span> {user?.email?.split('@')[0] || 'GHOST'}
+            </div>
+
+            {/* ADMIN */}
+            {isAdmin && (
+              <button onClick={() => setCurrentView('admin')} className="hover:text-white" title="ADMIN PANEL">
+                <i className="fas fa-user-shield text-xs"></i>
+              </button>
+            )}
+
+            {/* CC / LANG */}
+            <button onClick={toggleLanguage} className="hover:text-white font-bold text-[10px]" title="SWITCH LANGUAGE">
+              {language === 'es' ? 'ES' : 'EN'}
+            </button>
+
+            {/* FULLSCREEN */}
+            <button onClick={onRequestFullscreen} className="hover:text-white hidden md:block" title="FULLSCREEN">
+              <i className="fas fa-expand text-xs"></i>
+            </button>
+
+            {/* HIDE GUI */}
+            <button onClick={() => setShowNavBar(false)} className="hover:text-red-500 transition-colors" title="HIDE HEADER">
+              <i className="fas fa-eye-slash text-xs"></i>
+            </button>
+
+            {/* EXIT */}
+            <button
+              onClick={() => { if (window.confirm('¿Cerrar sesión?')) signOut(); }}
+              className="text-red-600 hover:text-red-400 font-bold ml-1 flex items-center justify-center w-8 h-8 rounded hover:bg-red-600/10 transition-colors"
+              title="LOGOUT / SALIR"
+            >
+              <i className="fas fa-sign-out-alt text-base"></i>
+            </button>
+          </div>
+
         </nav>
       )}
-      {!showNavBar && (
-        <button
-          className="term-restore-btn"
-          onClick={() => setShowNavBar(true)}
-          title={language === 'es' ? 'RESTAURAR INTERFAZ' : 'RESTORE INTERFACE'}
-        >
-          <span className="term-restore-icon">▼</span>
-          {language === 'es' ? 'DESPLEGAR_MENU' : 'EXPAND_MENU'}
-        </button>
-      )}
-      <main className={`app-main ${!showNavBar ? 'navbar-hidden' : ''}`}>
-        {renderCurrentView()}
-      </main>
 
+      {/* RESTORE BUTTON (Floating) */}
+      {!showNavBar && (
+        <div className="fixed top-2 right-2 z-50 flex flex-col gap-2">
+          <button
+            className="bg-black/80 text-[#33ff00] border border-[#33ff00] w-8 h-8 flex items-center justify-center rounded hover:bg-[#33ff00] hover:text-black transition-all"
+            onClick={() => setShowNavBar(true)}
+            title="SHOW HEADER"
+          >
+            <i className="fas fa-eye text-xs"></i>
+          </button>
+          <button
+            className="bg-black/80 text-red-600 border border-red-600 w-8 h-8 flex items-center justify-center rounded hover:bg-red-600 hover:text-white transition-all"
+            onClick={() => { if (window.confirm('¿Cerrar sesión?')) signOut(); }}
+            title="LOGOUT / SALIR"
+          >
+            <i className="fas fa-sign-out-alt text-xs"></i>
+          </button>
+        </div>
+      )}
+      <div className="term-main-content">
+        {renderCurrentView()}
+      </div>
+
+      {/* STATS MODAL GLOBAL */}
+      <StatsModal
+        activeModal={activeStatModal}
+        onClose={() => setActiveStatModal(null)}
+        data={statModalData}
+        loading={loadingStatModal}
+        language={language}
+        onViewDossier={handleViewDossier}
+      />
+
+      {selectedCharacterForDossier && (
+        <CharacterDossier
+          character={selectedCharacterForDossier}
+          language={language}
+          onClose={() => setSelectedCharacterForDossier(null)}
+        />
+      )}
     </div>
   );
 };
@@ -769,10 +967,17 @@ const AppContent: React.FC = () => {
       <GlobalStyles />
 
       <video className="glitch-overlay" autoPlay muted loop playsInline>
-        <source src="https://ia903404.us.archive.org/18/items/fondo_202511/Fondo.mp4" type="video/webm" />
+        <source src="https://ia803404.us.archive.org/18/items/fondo_202511/Fondo.mp4" type="video/mp4" />
       </video>
 
-      {user ? <MainContent /> : <LandingPage onLoginSuccess={() => { }} onRequestFullscreen={requestAppFullscreen} />}
+      {!user ? (
+        <LandingPage
+          onLoginSuccess={() => { }}
+          onRequestFullscreen={requestAppFullscreen}
+        />
+      ) : (
+        <MainContent onRequestFullscreen={requestAppFullscreen} />
+      )}
     </div>
   );
 };

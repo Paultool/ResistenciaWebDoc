@@ -117,8 +117,13 @@ class GameServiceUser {
                 if (error) throw error;
             } else {
                 // Si el usuario ya existe, se actualizan las estadísticas.
+                const newXP = stats.xp_total + xpToAdd;
+                const newLevel = this.calculateLevel(newXP);
                 const { error } = await supabase.from('perfiles_jugador')
-                    .update({ xp_total: stats.xp_total + xpToAdd })
+                    .update({
+                        xp_total: newXP,
+                        nivel: newLevel
+                    })
                     .eq('user_id', userId);
                 if (error) throw error;
             }
@@ -191,12 +196,16 @@ class GameServiceUser {
             }
 
             const currentXP = currentData?.xp_total || 0;
-            const newXP = currentXP + xpAmount; // Suma algebraica (si xpAmount es -150, restará)
+            const newXP = currentXP + xpAmount;
+            const newLevel = this.calculateLevel(newXP);
 
-            // 2. ACTUALIZAR EL XP EN LA BASE DE DATOS
+            // 2. ACTUALIZAR EN LA BASE DE DATOS
             const { error: updateError } = await supabase
                 .from('perfiles_jugador')
-                .update({ xp_total: newXP }) // Asegúrate que la columna se llama 'puntuacion'
+                .update({
+                    xp_total: newXP,
+                    nivel: newLevel
+                })
                 .eq('user_id', userId);
 
             if (updateError) {
@@ -236,13 +245,15 @@ class GameServiceUser {
 
             const nuevoInventario = [...(stats.inventario ?? []), newItem];
             const nuevoXP = stats.xp_total + valorRecompensa;
+            const nuevoNivel = this.calculateLevel(nuevoXP);
 
             // Actualizar inventario
             const { error: updateError } = await supabase
                 .from('perfiles_jugador')
                 .update({
                     inventario: nuevoInventario,
-                    xp_total: nuevoXP
+                    xp_total: nuevoXP,
+                    nivel: nuevoNivel
                 })
                 .eq('user_id', userId);
 
@@ -300,7 +311,7 @@ class GameServiceUser {
             const inventarioActual: InventoryItem[] = currentProfile.inventario || [];
             const recompensaExistenteIndex = inventarioActual.findIndex(item => item.id === recompensaId);
 
-            let nuevoInventario = [...inventarioActual];
+            const nuevoInventario = [...inventarioActual];
 
             if (recompensaExistenteIndex !== -1) {
                 nuevoInventario[recompensaExistenteIndex].cantidad += 1;
@@ -319,7 +330,7 @@ class GameServiceUser {
                 nuevoInventario.push(nuevoItem);
             }
             const historiasActuales = currentProfile.historias_visitadas || [];
-            let nuevasHistorias = [...historiasActuales];
+            const nuevasHistorias = [...historiasActuales];
 
             // ✅ Solo agregar si se especifica explícitamente
             if (marcarComoVisitada && !nuevasHistorias.includes(historiaId)) {
@@ -879,7 +890,8 @@ class GameServiceUser {
             console.log('📊 [getDashboardStats] Stats obtenidos:', stats);
             console.log('📊 [getDashboardStats] historias_visitadas:', stats.historias_visitadas);
 
-            const xpSiguienteNivel = this.getXPForNextLevel(stats.nivel)
+            const level = this.calculateLevel(stats.xp_total)
+            const xpSiguienteNivel = this.getXPForNextLevel(level)
             const xpParaSiguienteNivel = Math.max(0, xpSiguienteNivel - stats.xp_total)
 
             // Calcular ubicaciones únicas visitadas
@@ -919,20 +931,19 @@ class GameServiceUser {
                 console.log('⚠️ [getDashboardStats] No hay historias visitadas en el perfil.');
             }
 
-            const result = {
-                nivel: stats.nivel,
+            return {
+                nivel: level,
                 xpTotal: stats.xp_total,
                 xpParaSiguienteNivel,
-                historiasCompletadas: stats.historias_visitadas?.length || 0,
-                personajesConocidos: stats.personajes_conocidos?.length || 0,
+                historiasCompletadas: stats.historias_completadas,
+                personajesConocidos: stats.personajes_conocidos.length,
                 ubicacionesVisitadas: uniqueLocationsCount,
-                logrosDesbloqueados: stats.logros_desbloqueados?.length || 0,
+                logrosDesbloqueados: stats.logros_desbloqueados.length,
                 rachaDias: stats.racha_dias_consecutivos,
-                inventarioItems: stats.inventario?.length || 0
-            };
+                inventarioItems: (stats.inventario || []).length
+            }
 
-            console.log('✅ [getDashboardStats] Resultado calculado:', result);
-            return result;
+            console.log('✅ [getDashboardStats] Resultado calculado');
         } catch (error: any) {
             console.error('❌ [getDashboardStats] Error obteniendo estadísticas del dashboard:', error)
             return null

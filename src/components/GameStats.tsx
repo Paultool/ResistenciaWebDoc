@@ -142,8 +142,9 @@ const GameStats: React.FC<GameStatsProps> = ({ className = '', showDetailed = tr
 
   const getProgressPercentage = () => {
     if (!stats) return 0
-    const xpNivelActual = stats.nivel === 1 ? 0 : Math.pow(stats.nivel - 1, 2) * 100
-    const xpNivelSiguiente = Math.pow(stats.nivel, 2) * 100
+    const lvl = Math.floor(Math.sqrt(stats.xpTotal / 100)) + 1
+    const xpNivelActual = lvl === 1 ? 0 : Math.pow(lvl - 1, 2) * 100
+    const xpNivelSiguiente = Math.pow(lvl, 2) * 100
     const xpEnNivelActual = stats.xpTotal - xpNivelActual
     const xpNecesarioNivel = xpNivelSiguiente - xpNivelActual
     return Math.min(100, Math.max(0, (xpEnNivelActual / xpNecesarioNivel) * 100))

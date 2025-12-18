@@ -63,7 +63,7 @@
   bottom: 0;
   right: 0;
   background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
-              linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
   z-index: 2;
   background-size: 100% 2px, 3px 100%;
   pointer-events: none;
@@ -86,17 +86,39 @@
   position: relative;
   display: inline-block;
   margin-bottom: 2rem;
-  text-shadow: 2px 2px #ff0000, -2px -2px #0000ff; /* Efecto anaglifo base */
+  text-shadow: 2px 2px #ff0000, -2px -2px #0000ff;
+  /* Efecto anaglifo base */
   animation: glitch-skew 1s infinite linear alternate-reverse;
 }
 
 /* Animación de Glitch (Clip-path) */
 @keyframes glitch-skew {
-  0% { transform: skew(0deg); clip-path: inset(0 0 0 0); }
-  2% { transform: skew(10deg); clip-path: inset(10% 0 80% 0); }
-  4% { transform: skew(-10deg); clip-path: inset(80% 0 5% 0); }
-  6% { transform: skew(0deg); clip-path: inset(0 0 0 0); }
-  100% { transform: skew(0deg); clip-path: inset(0 0 0 0); } /* Pausa larga */
+  0% {
+    transform: skew(0deg);
+    clip-path: inset(0 0 0 0);
+  }
+
+  2% {
+    transform: skew(10deg);
+    clip-path: inset(10% 0 80% 0);
+  }
+
+  4% {
+    transform: skew(-10deg);
+    clip-path: inset(80% 0 5% 0);
+  }
+
+  6% {
+    transform: skew(0deg);
+    clip-path: inset(0 0 0 0);
+  }
+
+  100% {
+    transform: skew(0deg);
+    clip-path: inset(0 0 0 0);
+  }
+
+  /* Pausa larga */
 }
 
 /* Barra de Progreso ASCII */
@@ -125,7 +147,8 @@
   background-color: rgba(51, 255, 0, 0.2);
   display: inline-block;
   height: 20px;
-  width: 0%; /* Se animará */
+  width: 0%;
+  /* Se animará */
   vertical-align: middle;
   position: relative;
   overflow: hidden;
@@ -144,7 +167,9 @@
 }
 
 @keyframes loading-shine {
-  100% { transform: translateX(100%); }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* Terminal Logs (Texto de sistema) */
@@ -155,7 +180,8 @@
   margin-top: 1rem;
   opacity: 0.7;
   font-family: 'Courier Prime', monospace;
-  height: 60px; /* Espacio fijo */
+  height: 60px;
+  /* Espacio fijo */
   overflow: hidden;
 }
 
@@ -319,6 +345,13 @@
   /* Por encima de todo */
   font-family: 'Courier Prime', monospace;
   box-shadow: 0 0 20px rgba(51, 255, 0, 0.15);
+}
+
+.term-main-content {
+  padding-top: 20px;
+  /* Altura de la navbar */
+  min-height: calc(100vh - 48px);
+  box-sizing: border-box;
 }
 
 /* Efecto Scanlines Sutil */

@@ -40,7 +40,11 @@ const dashboardTranslations = {
     badgeCompleted: '✓ COMPLETADO',
     badgeLocked: '🔒 BLOQUEADO',
     badgeAvailable: '▶ DISPONIBLE',
-    tapToExpand: 'RADAR TÁCTICO > TOCAR PARA EXPANDIR'
+    tapToExpand: 'RADAR TÁCTICO > TOCAR PARA EXPANDIR',
+    leader: 'LÍDER DE RESISTENCIA',
+    merits: 'MÉRITOS',
+    resources: 'RECURSOS',
+    contacts: 'CONTACTOS'
   },
   en: {
     connection: 'CONNECTION ESTABLISHED',
@@ -67,7 +71,11 @@ const dashboardTranslations = {
     badgeCompleted: '✓ COMPLETED',
     badgeLocked: '🔒 LOCKED',
     badgeAvailable: '▶ AVAILABLE',
-    tapToExpand: 'TACTICAL RADAR > TAP TO EXPAND'
+    tapToExpand: 'TACTICAL RADAR > TAP TO EXPAND',
+    leader: 'RESISTANCE LEADER',
+    merits: 'MERITS',
+    resources: 'RESOURCES',
+    contacts: 'CONTACTS'
   }
 }
 
@@ -80,42 +88,13 @@ const UserDashboard: React.FC<{
   const { language } = useLanguage()
   const t = dashboardTranslations[language] || dashboardTranslations.es
 
-  const [profileData, setProfileData] = useState<DashboardData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [showFullMap, setShowFullMap] = useState(false); // Estado para mostrar mapa full
-
   // Agregamos estado para historias visitadas
   const [userProfile, setUserProfile] = useState<any>(null);
   const [favoritas, setFavoritas] = useState<string[]>([]); // Estado local para favoritas
 
-  // Nuevo estado para los modales
-  const [activeModal, setActiveModal] = useState<'missions' | 'contacts' | 'locations' | 'merits' | 'resources' | null>(null);
-  const [modalData, setModalData] = useState<any[] | null>(null);
-  const [loadingModal, setLoadingModal] = useState(false);
-
   // Mapa para imágenes de historias
   const [imagenesMap, setImagenesMap] = useState<Map<number, string>>(new Map());
 
-
-  const cargarDatosBasicos = useCallback(async () => {
-    if (!user) return
-
-    try {
-      setLoading(true)
-      const data = await gameService.getPlayerStats(user.id)
-      setProfileData({
-        totalHistorias: data?.historias_completadas || 0,
-        totalPersonajes: data?.personajes_encontrados || 0,
-        totalUbicaciones: data?.ubicaciones_descubiertas || 0
-      })
-    } catch (err: any) {
-      console.error('Error cargando datos básicos:', err)
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }, [user])
 
   // Cargar perfil completo del jugador (incluyendo historias visitadas)
   const initializarPerfilJugador = useCallback(async () => {
@@ -132,13 +111,10 @@ const UserDashboard: React.FC<{
   // Cargar imágenes de historias (recursos multimedia)
   useEffect(() => {
     const cargarImagenes = async () => {
-      // Necesitamos cargar recursos multimedia que sean imágenes de historias
-      // Esto es un parche porque no tenemos las URLs directas en la prop historias
-      // En una implementación ideal, "historias" ya traería la URL de la imagen
       try {
         const { data, error } = await supabase
-          .from('recursomultimedia') // CORRECTED TABLE NAME
-          .select('id_recurso, archivo') // CORRECTED COLUMNS
+          .from('recursomultimedia')
+          .select('id_recurso, archivo')
           .eq('tipo', 'imagen');
 
         if (data) {
@@ -152,334 +128,147 @@ const UserDashboard: React.FC<{
         console.error("Error cargando imagenes:", e);
       }
     };
-
     cargarImagenes();
   }, []);
 
   useEffect(() => {
     if (user) {
-      cargarDatosBasicos();
       initializarPerfilJugador();
     }
-  }, [user, cargarDatosBasicos, initializarPerfilJugador]);
-
-  const handleSignOut = async () => {
-    try {
-      if (gameService.clearCache) gameService.clearCache();
-    } catch (e) {
-      console.warn(e);
-    } finally {
-      await signOut();
-    }
-  };
-
-  const handleStatClick = async (type: 'missions' | 'contacts' | 'locations' | 'merits' | 'resources') => {
-    if (!user?.id) return;
-
-    setActiveModal(type);
-    setLoadingModal(true);
-
-    try {
-      let data;
-      switch (type) {
-        case 'missions':
-          data = await gameService.getCompletedStories(user.id);
-          break;
-        case 'contacts':
-          data = await gameService.getKnownCharacters(user.id);
-          break;
-        case 'locations':
-          data = await gameService.getVisitedLocations(user.id);
-          break;
-        case 'merits':
-          data = await gameService.getUnlockedRewards(user.id);
-          break;
-        case 'resources':
-          data = await gameService.getInventoryItems(user.id);
-          break;
-      }
-      setModalData(data);
-    } catch (error) {
-      console.error('Error loading modal data:', error);
-      setModalData([]);
-    } finally {
-      setLoadingModal(false);
-    }
-  }
-
-  const closeModal = () => {
-    setActiveModal(null);
-    setModalData(null);
-  }
-
-  const renderModalContent = () => {
-    if (!activeModal) return null;
-    const getModalTitle = () => {
-      switch (activeModal) {
-        case 'missions': return t.titleMissions;
-        case 'contacts': return t.titleContacts;
-        case 'locations': return t.titleLocations;
-        case 'merits': return t.titleMerits;
-        case 'resources': return t.titleResources;
-      }
-    };
-    return (
-      <div className="stat-modal-overlay" onClick={closeModal}>
-        <div className="stat-modal-content" onClick={(e) => e.stopPropagation()}>
-          <div className="stat-modal-header">
-            <h3>{getModalTitle()}</h3>
-            <button onClick={closeModal} className="stat-modal-close">×</button>
-          </div>
-          <div className="stat-modal-body">
-            {loadingModal ? (
-              <div className="text-center py-8 text-[#33ff00]">
-                <p>{t.loadingData}</p>
-              </div>
-            ) : modalData && modalData.length > 0 ? (
-              <div className="stat-modal-list">
-                {modalData.map((item: any, index: number) => (
-                  <div key={index} className="stat-modal-item">
-                    <div className="stat-modal-item-icon">
-                      {activeModal === 'missions' && '📂'}
-                      {activeModal === 'contacts' && '👤'}
-                      {activeModal === 'locations' && '📍'}
-                      {activeModal === 'merits' && '🎖️'}
-                      {activeModal === 'resources' && '🎒'}
-                    </div>
-                    <div className="stat-modal-item-content">
-                      <div className="stat-modal-item-name">
-                        {item.nombre || item.titulo || item.name || 'Item'}
-                      </div>
-                      {item.descripcion && (
-                        <div className="stat-modal-item-desc">{item.descripcion}</div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <p>{t.nodata}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
+  }, [user, initializarPerfilJugador]);
 
   return (
-    <div className="dashboard-container">
-      {/* 1. HEADER DE ESTADO */}
-      <div className="dashboard-status-bar">
-        <div className="status-label">
-          <span className="animate-pulse text-green-500">●</span>
-          <span className="hidden sm:inline ml-2">{t.connection} |</span>
-          <span className="user-id-display ml-2">OP: {user?.email?.split('@')[0]}</span>
-        </div>
-        <button onClick={handleSignOut} className="btn-status-logout">
-          {t.exit}
-        </button>
-      </div>
+    <div className="dashboard-container user-dashboard" style={{ background: '#000', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
-      {error && (
-        <div className="border border-red-500 text-red-500 p-2 text-center text-xs mb-4 bg-red-500/10">
-          <p>⚠️ {t.error + error} <button onClick={cargarDatosBasicos} className="underline ml-2">{t.retry}</button></p>
-        </div>
-      )}
+      {/* GRID LAYOUT PRINCIPAL (FLEX GROW) */}
+      <div className="dashboard-grid" style={{ flex: 1, overflow: 'hidden' }}>
 
-      {loading ? (
-        <div className="text-center p-10 text-[#33ff00] text-sm animate-pulse">
-          <p>{'>'} {t.loading || 'CARGANDO INTERFAZ DE COMANDO...'}</p>
-        </div>
-      ) : showFullMap ? (
-        /* VISTA DE MAPA COMPLETA */
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#000' }}>
+        {/* PANEL IZQUIERDO: MAPA TÁCTICO */}
+        <div className="map-panel">
           <MapaViewS
             historias={historias}
             historiasVisitadas={userProfile?.historias_visitadas || []}
-            onStartNarrativeFromMap={(id) => {
-              setShowFullMap(false);
-              onStartNarrative?.(id);
-            }}
-            onExit={() => setShowFullMap(false)}
+            onStartNarrativeFromMap={(id) => onStartNarrative?.(id)}
+            onExit={undefined} // Undefined para ocultar botón cerrar
           />
+          {/* Overlay sutil para integrarlo visualmente */}
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', boxShadow: 'inset 0 0 50px rgba(0,0,0,0.8)' }}></div>
         </div>
-      ) : (
-        /* VISTA NORMAL DASHBOARD */
-        null
-      )}
 
-      {/* LAYOUT RESTAURADO: GameStats arriba como estaba originalmente */}
+        {/* PANEL DERECHO: LISTA DE OPERACIONES (RESTAURADO) */}
+        <div className="missions-panel">
+          <h3 className="section-title" style={{ position: 'sticky', top: 0, background: '#000', zIndex: 10, padding: '10px 0', borderBottom: '1px solid #333' }}>
+            {t.activeMissions} [{historias.length}]
+          </h3>
 
-      {!loading && (
-        <>
-          {/* 1. GAME STATS - ARRIBA (muestra PROGRESO INDIVIDUAL completo) */}
-          <div className="game-stats-panel-top">
-            <h3 className="section-title main-title">&gt; {t.progress}</h3>
-            <GameStats showDetailed={true} onNavigateToStory={onStartNarrative} onStatClick={handleStatClick} />
-          </div>
+          {historias.map((historia, index) => {
+            const historiaId = historia.id_historia || historia.id;
+            const titulo = historia.titulo || 'OPERACIÓN DESCONOCIDA';
+            const descripcion = historia.narrativa || historia.descripcion || '';
 
-          {/* 2. HISTORIAS - DESPUÉS DE STATS */}
-          {historias && historias.length > 0 && (() => {
-            // Obtener favoritos del perfil
+            // RESTAURADO: Imágenes via Map
+            const imagenUrl = historia.id_imagen_historia
+              ? imagenesMap.get(historia.id_imagen_historia) || null
+              : null;
+
+            // RESTAURADO: Lógica de Estado y Favoritos
             const favoritas = userProfile?.historias_favoritas || [];
+            const esFavorita = favoritas.includes(String(historiaId));
 
-            // Función para toggle favorite
-            const handleToggleFavorite = async (historiaId: number, e: React.MouseEvent) => {
+            const esCompletada = (userProfile?.historias_visitadas || []).map(String).includes(String(historiaId));
+            const esBloqueada = historia.id_historia_dependencia
+              ? !(userProfile?.historias_visitadas || []).map(String).includes(String(historia.id_historia_dependencia))
+              : false;
+
+            const progreso = esCompletada ? 100 : 0;
+
+            // Handler para Favoritos (Copiado de original)
+            const handleToggleFavorite = async (e: React.MouseEvent) => {
               e.stopPropagation();
               if (!user?.id) return;
-
               const favs = [...favoritas];
               const historiaIdStr = String(historiaId);
-              const index = favs.indexOf(historiaIdStr);
+              const idx = favs.indexOf(historiaIdStr);
+              if (idx > -1) favs.splice(idx, 1);
+              else favs.push(historiaIdStr);
 
-              if (index > -1) {
-                favs.splice(index, 1);
-              } else {
-                favs.push(historiaIdStr);
-              }
+              // Optimistic update local
+              const newProfile = { ...userProfile, historias_favoritas: favs };
+              setUserProfile(newProfile);
 
-              // Actualizar en BD
-              await supabase
-                .from('perfiles_jugador')
-                .update({ historias_favoritas: favs })
-                .eq('user_id', user.id);
-
-              // Recargar perfil
+              await supabase.from('perfiles_jugador').update({ historias_favoritas: favs }).eq('user_id', user.id);
+              // Background refresh
               const perfil = await gameService.getPlayerStats(user.id);
               setUserProfile(perfil);
             };
 
             return (
-              <div className="historias-disponibles-section">
-                <h3 className="section-title">{t.activeMissions} [{historias.length}]</h3>
+              <div
+                key={historiaId}
+                className="operation-row"
+                style={{ opacity: esBloqueada ? 0.6 : 1, padding: '10px', display: 'grid', gridTemplateColumns: '80px 1fr', gap: '15px', alignItems: 'start' }}
+                onClick={() => !esBloqueada && onStartNarrative?.(historiaId)}
+              >
+                {/* IMAGEN THUMBNAIL */}
+                <div style={{ width: '80px', height: '80px', background: '#111', borderRadius: '4px', overflow: 'hidden', border: '1px solid #333' }}>
+                  {imagenUrl ? (
+                    <img src={imagenUrl} alt={titulo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-2xl">📂</div>
+                  )}
+                </div>
 
-                <div className="historias-horizontal-scroll">
-                  {historias.map((historia, index) => {
-                    const historiaId = historia.id_historia || historia.id;
-                    const titulo = historia.titulo || 'MISIÓN SIN TÍTULO';
-                    const descripcion = historia.narrativa || historia.descripcion || '';
+                {/* CONTENIDO */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', width: '100%' }}>
 
-                    // EXACTAMENTE como FlujoNarrativo - usar imagenesMap.get()
-                    const imagenUrl = historia.id_imagen_historia
-                      ? imagenesMap.get(historia.id_imagen_historia) || null
-                      : null;
+                  <div className="operation-header" style={{ padding: 0, border: 'none', marginBottom: 0 }}>
+                    <span className="operation-title" style={{ fontSize: '0.85rem' }}>{titulo}</span>
+                    <div className="flex gap-2">
+                      {esCompletada && <span className="operation-status status-completed">{t.badgeCompleted}</span>}
+                      {esBloqueada && <span className="operation-status status-locked">{t.badgeLocked}</span>}
+                    </div>
+                  </div>
 
-                    // Verificar si es favorita - usar favoritas del scope externo
-                    const esFavorita = favoritas.includes(String(historiaId));
+                  {/* Descripción Corta */}
+                  <div style={{ fontSize: '0.7rem', color: '#aaa', lineHeight: '1.2', height: '2.4em', overflow: 'hidden' }}>
+                    {descripcion.substring(0, 80)}{descripcion.length > 80 ? '...' : ''}
+                  </div>
 
-                    // Calcular estado bloqueado (asegurando comparación de strings)
-                    const esBloqueada = historia.id_historia_dependencia
-                      ? !(userProfile?.historias_visitadas || []).map(String).includes(String(historia.id_historia_dependencia))
-                      : false;
+                  {/* Barra Progreso */}
+                  <div className="operation-progress-bar" style={{ marginTop: 'auto' }}>
+                    <div className="operation-progress-fill" style={{ width: `${progreso}%` }}></div>
+                  </div>
 
-                    // Calcular estado completada (asegurando comparación de strings)
-                    const esCompletada = (userProfile?.historias_visitadas || []).map(String).includes(String(historiaId));
-
-                    const progreso = esCompletada ? 100 : 0;
-
-                    return (
-                      <div
-                        key={historiaId}
-                        className="historia-card-horizontal"
-                        onClick={() => !esBloqueada && onStartNarrative?.(historiaId)}
-                        title={titulo}
-                        style={{ cursor: esBloqueada ? 'not-allowed' : 'pointer' }}
+                  {/* Footer Card: Botones */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '5px' }}>
+                    {/* Botón Favorito */}
+                    {!esBloqueada && (
+                      <button
+                        onClick={handleToggleFavorite}
+                        style={{ background: 'none', border: 'none', color: esFavorita ? '#dc2626' : '#555', fontSize: '1.2rem', cursor: 'pointer', padding: 0 }}
                       >
-                        {/* BADGES SUPERIORES */}
-                        <div className="historia-badges-top">
-                          <span className="badge-sec">SEC 0{index + 1}</span>
-                          {esCompletada && <span className="badge-completado-top">{t.badgeCompleted}</span>}
-                          {esBloqueada && <span className="badge-bloqueado-top">{t.badgeLocked}</span>}
-                        </div>
+                        {esFavorita ? '♥' : '♡'}
+                      </button>
+                    )}
 
-                        {/* Preview image */}
-                        <div className="historia-preview">
-                          {imagenUrl ? (
-                            <img src={imagenUrl} alt={titulo} />
-                          ) : (
-                            <div className="historia-placeholder">📂</div>
-                          )}
-                        </div>
+                    {!esBloqueada && (
+                      <button className="operation-execute-btn" style={{ padding: '2px 8px', fontSize: '0.7rem' }}>
+                        EJECUTAR &gt;
+                      </button>
+                    )}
+                  </div>
 
-                        {/* Info */}
-                        <div className="historia-info">
-                          <div className="historia-titulo">{titulo}</div>
-
-                          {/* Descripción */}
-                          {descripcion && (
-                            <div className="historia-descripcion">
-                              {descripcion.substring(0, 65)}{descripcion.length > 65 ? '...' : ''}
-                            </div>
-                          )}
-
-                          {/* Progress bar */}
-                          <div className="historia-progreso-container">
-                            <div
-                              className="historia-progreso-bar"
-                              style={{ width: `${progreso}%` }}
-                            />
-                          </div>
-
-                          {/* Botones de acción */}
-                          <div className="historia-actions">
-                            {/* Status badge */}
-                            <div className="historia-badges">
-                              {esCompletada ? (
-                                <span className="badge-completado">{t.badgeCompleted}</span>
-                              ) : esBloqueada ? (
-                                <span className="badge-bloqueado">{t.badgeLocked}</span>
-                              ) : (
-                                <span className="badge-disponible">{t.badgeAvailable}</span>
-                              )}
-                            </div>
-
-                            {/* Botón de favoritos - IGUAL que FlujoNarrativo */}
-                            {!esBloqueada && (
-                              <button
-                                className="historia-favorite-btn"
-                                onClick={(e) => handleToggleFavorite(historiaId, e)}
-                                title={esFavorita ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                              >
-                                {esFavorita ? '♥' : '♡'}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
                 </div>
               </div>
             );
-          })()}
+          })}
+        </div>
 
-          {/* 3. MINI MAPA - RADAR */}
-          <div className="dashboard-minimap-section">
-            <div className="section-title-map" style={{
-              color: '#33ff00',
-              fontSize: '0.9rem',
-              marginBottom: '10px',
-              fontWeight: 'bold',
-              letterSpacing: '2px'
-            }}>
-              {t.tacticalRadar}
-            </div>
-            <MapaMiniPreview
-              historias={historias}
-              userProfile={userProfile}
-              onExpand={() => setShowFullMap(true)}
-              label={t.tapToExpand}
-            />
-          </div>
-        </>
-      )}
+      </div>
 
-      {/* MODAL */}
-      {renderModalContent()}
-    </div >
+    </div>
   )
 }
+
 
 export default UserDashboard

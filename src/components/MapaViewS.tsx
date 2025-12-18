@@ -27,6 +27,13 @@ interface MapaViewSProps {
   onExit?: () => void; // Prop opcional para cerrar el mapa
 }
 
+const userIcon = L.divIcon({
+  className: 'custom-user-marker',
+  html: '<div class="user-location-marker"></div>',
+  iconSize: [20, 20],
+  iconAnchor: [10, 10]
+});
+
 const MapaViewS: React.FC<MapaViewSProps> = ({
   historias,
   historiasVisitadas,
@@ -66,12 +73,7 @@ const MapaViewS: React.FC<MapaViewSProps> = ({
   }, [historias]);
 
   // --- 2. Iconos ---
-  const userIcon = L.divIcon({
-    className: 'custom-user-marker',
-    html: '<div class="user-location-marker"></div>',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
-  });
+
 
   const createStoryIcon = (imgUrl: string | undefined, locked: boolean) => {
     const content = imgUrl
@@ -101,11 +103,9 @@ const MapaViewS: React.FC<MapaViewSProps> = ({
         attributionControl: false
       }).setView(defaultCenter, 13);
 
-      // CAMBIO: Usar CartoDB Dark Matter para un mapa negro real y elegante
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 20
+      // USAR OpenStreetMap para permitir el "hack" de inversion de colores por CSS y que sea igual al Flujo Narrativo
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
 
       mapInstanceRef.current = map;
@@ -251,20 +251,21 @@ const MapaViewS: React.FC<MapaViewSProps> = ({
         )}
 
         {/* Leyenda Flotante */}
-        <div className="absolute bottom-8 left-6 bg-black/90 border border-[#33ff00]/30 p-4 z-[500] backdrop-blur-md shadow-lg rounded-sm">
-          <h4 className="text-[#33ff00] text-[10px] uppercase tracking-widest mb-2 border-b border-[#33ff00]/20 pb-1">SIMBOLOGÍA</h4>
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-sm bg-green-500 shadow-[0_0_5px_green]"></div>
-              <span className="text-gray-300 text-[10px] uppercase">NODO DISPONIBLE</span>
+        {/* Leyenda Flotante (Ajustada a Top-Left - Más arriba) */}
+        <div className="absolute top-6 left-6 bg-black/90 border border-[#33ff00]/30 p-2 z-[500] backdrop-blur-md shadow-lg rounded-sm transform scale-90 origin-top-left">
+          <h4 className="text-[#33ff00] text-[9px] uppercase tracking-widest mb-1 border-b border-[#33ff00]/20 pb-1">SIMBOLOGÍA</h4>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-sm bg-green-500 shadow-[0_0_5px_green]"></div>
+              <span className="text-gray-300 text-[8px] uppercase">NODO DISPONIBLE</span>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-sm bg-yellow-500 shadow-[0_0_5px_yellow]"></div>
-              <span className="text-gray-300 text-[10px] uppercase">ACCESO RESTRINGIDO</span>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-sm bg-yellow-500 shadow-[0_0_5px_yellow]"></div>
+              <span className="text-gray-300 text-[8px] uppercase">ACCESO RESTRINGIDO</span>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full border-2 border-blue-500 bg-blue-500/20"></div>
-              <span className="text-gray-300 text-[10px] uppercase">TU UBICACIÓN</span>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full border-2 border-blue-500 bg-blue-500/20"></div>
+              <span className="text-gray-300 text-[8px] uppercase">TU UBICACIÓN</span>
             </div>
           </div>
         </div>
