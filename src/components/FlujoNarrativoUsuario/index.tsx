@@ -1079,19 +1079,24 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
     // useEffect para convertir subtítulos del hotspot
     useEffect(() => {
+        let currentSubtitleUrl: string | null = null;
+
         if (hotspotModal?.subtitlesUrl) {
             fetchAndConvertSubtitle(hotspotModal.subtitlesUrl)
-                .then(url => setHotspotSubtitleUrl(url))
+                .then(url => {
+                    currentSubtitleUrl = url;
+                    setHotspotSubtitleUrl(url);
+                })
                 .catch(() => setHotspotSubtitleUrl(null));
         } else {
             setHotspotSubtitleUrl(null);
         }
         return () => {
-            if (hotspotSubtitleUrl) {
-                URL.revokeObjectURL(hotspotSubtitleUrl);
+            if (currentSubtitleUrl) {
+                URL.revokeObjectURL(currentSubtitleUrl);
             }
         };
-    }, [hotspotModal, getRecurso, hotspotSubtitleUrl]);
+    }, [hotspotModal, getRecurso]);
 
     // useEffect para manejar la carga y reproducción de recursos multimedia al cambiar de paso
     useEffect(() => {
