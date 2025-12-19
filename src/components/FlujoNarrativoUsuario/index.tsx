@@ -3,11 +3,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { gameServiceUser, PlayerStats } from '../../services/GameServiceUser';
-import MapaView from '../MapaView';
-//FICHA PERSONAJES
-import { Personaje } from '../../supabaseClient';
-import { obtenerFichaPersonajePorId } from '../../supabaseClient';
-import { fail } from 'assert';
 import { fetchAndConvertSubtitle } from '../../utils/subtitleUtils';
 
 // Import types from separate file
@@ -17,13 +12,10 @@ import type {
     RecursoMultimediaData,
     FlujoNarrativoData,
     HistoriaData,
-    HistoriaConEstado,
     RecompensaData,
     PersonajeData,
     RentalAppConfig,
-    PersonajeFicha,
-    HotspotConfig,
-    MapaViewProps
+    HotspotConfig
 } from './types';
 
 // Import translations from separate file
@@ -63,64 +55,52 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
     const [showAudioOverlay, setShowAudioOverlay] = useState(false);
     const iframeRef = useRef<HTMLIFrameElement>(null);
-    const [showInventory, setShowInventory] = useState(false);
-    const [showCharacters, setShowCharacters] = useState(false);
-    const [showStories, setShowStories] = useState(false);
+
     const [lockedHistoryModal, setLockedHistoryModal] = useState<{ historia: HistoriaData, historiaMadre: HistoriaData } | null>(null);
-    const [selectedCharacterForModal, setSelectedCharacterForModal] = useState<Personaje | null>(null); const [hotspotModal, setHotspotModal] = useState<HotspotConfig | null>(null);
-    const [loadingCharacter, setLoadingCharacter] = useState(false);
+    const [hotspotModal, setHotspotModal] = useState<HotspotConfig | null>(null);
     const [discoveredHotspots, setDiscoveredHotspots] = useState<number>(0);
     const totalHotspotsRef = useRef<number>(0);
     const discoveredHotspotIds = useRef<Set<string>>(new Set());
-    const [appConfig, setAppConfig] = useState<any>(null); // Configuración para la App (ej. RentalApp)
-    const userId = useAuth().user?.id || null;
-    const aframeContainerRef = useRef<HTMLDivElement>(null);
-    const iframeAppRef = useRef<HTMLIFrameElement>(null);
-    // Obtener el usuario autenticado
     const { user, loading: authLoading } = useAuth();
-    // Coordenadas por defecto (ej. Zócalo de CDMX), por si no hay historia
-    const [mapCenter, setMapCenter] = useState<[number, number]>([19.4326, -99.1332]);
-    // Subtitles
-    const [subtitleUrl, setSubtitleUrl] = useState<string | null>(null);
+    const [isHotspotModalOpen, setIsHotspotModalOpen] = useState(false);
+    const [backgroundMusicUrl, setBackgroundMusicUrl] = useState<string | null>(null);
+    const [backgroundMusicVolume, setBackgroundMusicVolume] = useState(0.3);
+    const backgroundAudioRef = useRef<HTMLAudioElement | null>(null);
+    const [showVolumeControl, setShowVolumeControl] = useState(false);
+    const [showHeightControl, setShowHeightControl] = useState(false);
+    const [cameraHeight, setCameraHeight] = useState(-0.8);
+    const [isMobile, setIsMobile] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [showInitial3DPopup, setShowInitial3DPopup] = useState(false);
     const [subtitlesEnabled, setSubtitlesEnabled] = useState(false);
-    // Hotspot Subtitles
+    const [subtitleUrl, setSubtitleUrl] = useState<string | null>(null);
     const [hotspotSubtitleUrl, setHotspotSubtitleUrl] = useState<string | null>(null);
     const [hotspotSubtitlesEnabled, setHotspotSubtitlesEnabled] = useState(false);
-    // Check if current story is completed
+    const iframeAppRef = useRef<HTMLIFrameElement>(null);
+    const aframeContainerRef = useRef<HTMLDivElement>(null);
+
     const isStoryCompleted = React.useMemo(() => {
         if (!selectedHistoriaId || !playerStats?.historias_visitadas) return false;
         return playerStats.historias_visitadas.includes(String(selectedHistoriaId));
     }, [selectedHistoriaId, playerStats?.historias_visitadas]);
 
-    // Referencia para el contenedor del carrusel
-    const scrollContainerRef = React.useRef(null);
-
-    // Función para mover el carrusel con los botones
-    const scroll = (direction) => {
-        if (scrollContainerRef.current) {
-            const { current } = scrollContainerRef;
-            const scrollAmount = 350; // Cantidad de desplazamiento
-            if (direction === 'left') {
-                current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-            } else {
-                current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-            }
-        }
-    };
+    const getRecurso = useCallback((recursoId: number | null) => {
+        if (!recursoId) return null;
+        return recursosData.find(r => r.id_recurso === recursoId);
+    }, [recursosData]);
 
     const fetchPlayerStats = React.useCallback(async () => {
         if (!user) return;
         try {
             const stats = await gameServiceUser.getPlayerStats(user.id);
             setPlayerStats(stats);
-            console.log("Estadísticas del jugador cargadas:", stats);
         } catch (error) {
             console.error("Error al refrescar las estadísticas del jugador:", error);
             setPlayerStats({
                 id: '',
                 user_id: user.id,
                 nivel: 1,
-                xp_total: 0, // <--- ESTE ES EL IMPORTANTE
+                xp_total: 0,
                 historias_completadas: 0,
                 historias_visitadas: [],
                 personajes_conocidos: [],
@@ -132,35 +112,25 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 historias_favoritas: []
             } as PlayerStats);
         }
-    }, [user]); // Añade 'user' como dependencia
+    }, [user]);
 
-    // Estado para el favorito
-    const [favoritingHistoriaId, setFavoritingHistoriaId] = useState<number | null>(null);
-
-    // Función para marcar una historia como favorita
-    const handleToggleFavorite = async (historiaId: number, e: React.MouseEvent) => {
-        e.stopPropagation();
-
-        if (!user?.id || favoritingHistoriaId === historiaId) return;
-        try {
-            setFavoritingHistoriaId(historiaId);
-            const historiaIdStr = String(historiaId);
-            await gameServiceUser.toggleFavoriteStory(user.id, historiaIdStr);
-
-            // CRÍTICO: Recargar stats INMEDIATAMENTE para actualizar la UI
-            await fetchPlayerStats();
-
-            console.log(`Historia ${historiaId} favorito actualizado`);
-        } catch (error: any) {
-            console.error('Error toggling favorite:', error);
-        } finally {
-            setFavoritingHistoriaId(null);
+    const goBack = useCallback(() => {
+        if (currentStepIndex > 0) {
+            setCurrentStepIndex(prev => prev - 1);
+            setShowStepContent(false);
         }
-    };
+    }, [currentStepIndex]);
 
-    // ====================================================================
-    // FUNCIÓN REEMPLAZADA: closeHotspotModal
-    // ====================================================================
+    const goNext = useCallback(() => {
+        if (currentStepIndex < flujoData.length - 1) {
+            setCurrentStepIndex(prev => prev + 1);
+            setShowStepContent(false);
+        }
+    }, [currentStepIndex, flujoData.length]);
+
+    // --- CALLBACKS & LOGIC (UNCONDITIONAL HOOKS) ---
+
+    // Move hooks up here to avoid conditional calls
     const closeHotspotModal = React.useCallback(() => {
         setHotspotModal(null);
         setIsHotspotModalOpen(false);
@@ -168,430 +138,221 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             iframeRef.current.src = '';  // Reset iframe para prevenir mensajes residuales
         }
 
-        // =========================================================
-        // ✅ CRITICAL FIX: Reset isClicked state for all hotspots
-        // =========================================================
         const modelEl = document.querySelector('[gltf-hotspot-interaction]');
         if (modelEl) {
             const obj = (modelEl as any).getObject3D('mesh');
             if (obj) {
                 obj.traverse((child: any) => {
                     if (child.isMesh && child.userData && child.userData.isHotspot && child.userData.isClicked) {
-                        // Reset the clicked state
                         child.userData.isClicked = false;
-                        // Restore original material
                         if (child.userData.originalMaterial) {
                             child.material = child.userData.originalMaterial;
                             child.material.needsUpdate = true;
                         }
                     }
                 });
-                console.log('✅ Hotspot clicked states reset');
             }
         }
 
-        // =========================================================
-        // ✅ SOLUCIÓN: Re-activar wasd-controls de A-Frame
-        // =========================================================
         const cameraEl = document.querySelector('a-camera');
-        // Aseguramos que A-Frame esté cargado y que la cámara exista
         if (cameraEl && (window as any).AFRAME) {
             const wasdControls = (cameraEl as any).components['wasd-controls'];
-
             if (wasdControls) {
-                // wasdControls.play() fuerza al componente a reanudar su lógica de movimiento.
                 wasdControls.play();
-                console.log('✅ A-Frame: wasd-controls re-activado al cerrar el modal.');
             } else {
-                // Plan de respaldo: reanudar el elemento completo
                 (cameraEl as any).play();
-                console.log('✅ A-Frame: Elemento a-camera re-activado al cerrar el modal.');
             }
         }
+    }, []);
 
-        // Reanuda audio...
-        console.log('[closeHotspotModal] Modal cerrado y iframe reseteado.');
-    }, []); // Se mantiene sin dependencias internas
-
-
-
-    // Función de manejo centralizado de recompensas/costos, envuelta en useCallback
     const handleRecompensa = useCallback(async (result: AppResult) => {
-        if (!userId) return;
+        if (!user?.id) return;
 
         let costoXP = 0;
-
-        // 1. Detectar si hay costo/ganancia de XP desde la App
         if ((result.source === 'RentalApp' || result.source === 'ReparaApp') && result.costoXP != null) {
             costoXP = result.costoXP;
         }
 
-        console.log(`[Flujo] Procesando XP: ${costoXP} | RecompensaID: ${result.recompensaId}`);
-
-        // --- PARTE A: ACTUALIZAR XP VISUALMENTE ---
         if (costoXP !== 0) {
-            // Llamamos al servicio
             const { data: newStats, error: costError } = await gameServiceUser.aplicarXPDirecto(
-                userId,
+                user.id,
                 costoXP,
                 "Interacción App"
             );
 
-            if (costError) {
-                console.error("🔴 Error actualizando XP:", costError);
-            } else if (newStats) {
-                // ¡AQUÍ ESTÁ LA CLAVE! 
-                // newStats contiene el objeto actualizado que devolvió getPlayerStats
-                console.log("✅ Actualizando UI con nuevo XP:", newStats.puntuacion || newStats.xp_total);
-                setPlayerStats(newStats); // <--- ESTO ACTUALIZA EL CONTADOR
-                // Notify other components (e.g., GameStats) to refresh stats
+            if (!costError && newStats) {
+                setPlayerStats(newStats);
                 window.dispatchEvent(new Event('statsUpdated'));
             }
         }
 
-        // --- PARTE B: OTORGAR ITEM/RECOMPENSA ---
         let recompensaIdToApply: number | null = null;
         if (result.status === 'success' && result?.recompensaId) recompensaIdToApply = result.recompensaId;
-        else if (result.status === 'failure' && result?.recompensaId) recompensaIdToApply = result.recompensaId;
 
         if (recompensaIdToApply && recompensaIdToApply > 0) {
-            const { data: finalStats, error: recompensaError } = await gameServiceUser.otorgarRecompensa(
-                userId,
+            const { data: finalStats } = await gameServiceUser.otorgarRecompensa(
+                user.id,
                 recompensaIdToApply,
                 String(selectedHistoriaId)
             );
-
-            if (!recompensaError && finalStats) {
-                // También actualizamos aquí por si ganaste un item
-                setPlayerStats(finalStats);
-            } else {
-                // Respaldo por si acaso
-                await fetchPlayerStats();
-            }
+            if (finalStats) setPlayerStats(finalStats);
+            else await fetchPlayerStats();
         }
-    }, [userId, selectedHistoriaId, fetchPlayerStats]);
+    }, [user, selectedHistoriaId, fetchPlayerStats]);
 
 
-    // ==================================================================
-    // --- ✅ FUNCIÓN MOVIDA Y ENVUELTA EN useCallback ---
-    // ==================================================================
-    // Función para obtener recurso multimedia por ID
-    const getRecurso = useCallback((recursoId: number | null) => {
-        if (!recursoId) return null;
-        // Usamos recursosData del estado
-        return recursosData.find(r => r.id_recurso === recursoId);
-    }, [recursosData]); // Depende de recursosData
-
-    // Función para manejar la finalización de una app integrada
     const handleAppCompletion = React.useCallback(async (status: 'success' | 'failure', message: string) => {
-
         const currentStep = flujoData[currentStepIndex];
         if (!user || !currentStep) return;
 
-        console.log(`[handleAppCompletion] Iniciando con status: ${status}.`);
+        let options: any[] | undefined | null = null;
 
-        // --- INICIO DE LA MODIFICACIÓN ---
-
-        let options: { texto: string, siguiente_paso_id: number, recompensaId?: number }[] | undefined | null = null;
-        const recompensaAppId: number | undefined | null = null;
-
-        // 1. Determinar de dónde sacar las opciones
         if (currentStep.tipo_paso === 'app') {
-            // Para 'tipo_paso: app', las leemos del RECURSO (metadatos)
-            const recursoActual = getRecurso(currentStep.recursomultimedia_id);
+            const recursoActual = recursosData.find(r => r.id_recurso === currentStep.recursomultimedia_id);
             if (recursoActual && recursoActual.metadatos) {
                 try {
                     const parsedMetadata = JSON.parse(recursoActual.metadatos);
-                    // Leemos la navegación desde la nueva estructura unificada
                     options = parsedMetadata?.flowConfig?.opciones_siguientes_json;
-                    console.log("[DEBUG APP] Opciones leídas desde metadatos (tipo_paso: app):", options);
                 } catch (e) {
-                    console.error("[DEBUG APP] Error al parsear metadatos para flowConfig:", e);
+                    console.error("Error parseando metadatos:", e);
                 }
             }
         } else {
-            // Para 'contentType: interactive' (hotspot), mantenemos la lógica antigua.
-            // Las opciones vienen del flujo_narrativo Y cerramos el modal.
             options = currentStep.opciones_decision?.opciones_siguientes_json;
-            console.log("[DEBUG APP] Opciones leídas desde flujo_narrativo (hotspot/pregunta):", options);
-
-            // Cierra el modal SÓLO si es un hotspot
             closeHotspotModal();
-            console.log('[handleAppCompletion] Cierre de Hotspot Modal llamado.');
         }
 
-        // 2. Encontrar la opción de decisión correspondiente
         const resultOption = options?.find(op => op.texto === status);
 
-        // --- FIN DE LA MODIFICACIÓN ---
-
-        // LOG CRÍTICO 1:
-        console.log(`[DEBUG-APP] 1. Opciones de decisión (BD):`, options);
-
         if (resultOption) {
-            console.log(`[DEBUG 5 - RESULT OPTION] Found option! Next Flow ID: ${resultOption.siguiente_paso_id}`);
-
-            // 3. ¡IMPORTANTE! Aplicar la recompensa definida en la navegación
-            // (Esto reemplaza la lógica de 'handleRecompensa' para 'tipo_paso: app')
             if (resultOption.recompensaId && resultOption.recompensaId > 0 && user) {
-                console.log(`[DEBUG APP] Otorgando recompensa desde flowConfig: ${resultOption.recompensaId}`);
                 await gameServiceUser.otorgarRecompensa(
                     user.id,
                     resultOption.recompensaId,
                     String(selectedHistoriaId)
                 );
-                await fetchPlayerStats(); // Refrescar stats
+                await fetchPlayerStats();
             }
 
-            // 4. Avanzar al siguiente paso narrativo
             setShowStepContent(false);
             const nextIndex = flujoData.findIndex(p => p.id_flujo === resultOption.siguiente_paso_id);
 
             if (nextIndex !== -1) {
-                console.log(`Avanzando al flujo_id: ${resultOption.siguiente_paso_id}`);
                 setCurrentStepIndex(nextIndex);
             } else {
-                console.log('📚 Mostrando mensaje final.');
                 setShowEndMessage(true);
             }
-
-        } else {
-            console.error(`[DEBUG 5 - ERROR] NO se encontró una opción de decisión para el estado: ${status}. JSON de Opciones:`, options);
-            return;
         }
-    }, [
-        flujoData,
-        currentStepIndex,
-        user,
-        closeHotspotModal,
-        getRecurso,
-        fetchPlayerStats,
-        selectedHistoriaId
-    ]);
+    }, [flujoData, currentStepIndex, user, closeHotspotModal, fetchPlayerStats, selectedHistoriaId, recursosData]);
 
-    // NUEVA FUNCIÓN para manejar la apertura del modal del mapa
-    const handleOpenMap = () => {
-        // 1. Definir coordenadas de fallback
-        const DEFAULT_COORDS: [number, number] = [19.4326, -99.1332];
-
-        // 2. Comprobar si hay una historia seleccionada
-        if (selectedHistoriaId) {
-            // 3. Encontrar la historia actual en el array de historias
-            const currentStory = historias.find(h => h.id_historia === selectedHistoriaId);
-
-            // 4. Comprobar si la historia y su ubicación existen
-            if (currentStory && currentStory.id_ubicacion && currentStory.id_ubicacion.coordenadas) {
-
-                // 5. Parsear el string de coordenadas "lat,lng" a un array [lat, lng]
-                const coordsArray = currentStory.id_ubicacion.coordenadas
-                    .split(',')
-                    .map(coord => parseFloat(coord.trim()));
-
-                // 6. Validar que las coordenadas sean correctas
-                if (coordsArray.length === 2 && !isNaN(coordsArray[0]) && !isNaN(coordsArray[1])) {
-                    // Si son válidas, establecerlas como el centro
-                    setMapCenter([coordsArray[0], coordsArray[1]]);
-                } else {
-                    // Si el string es inválido, usar el fallback
-                    console.warn(`Coordenadas inválidas para historia ${selectedHistoriaId}: ${currentStory.id_ubicacion.coordenadas}`);
-                    setMapCenter(DEFAULT_COORDS);
-                }
-            } else {
-                // Si la historia no tiene ubicación, usar el fallback
-                setMapCenter(DEFAULT_COORDS);
-            }
-        } else {
-            // Si no hay historia seleccionada (ej. menú principal), usar el fallback
-            setMapCenter(DEFAULT_COORDS);
-        }
-
-        // 7. Finalmente, mostrar el modal del mapa
-        setShowMap(true);
-    };
-
-
-    // Función para cerrar el modal de la ficha del personaje
-    const closeCharacterModal = () => {
-        setSelectedCharacterForModal(null);
-    };
-
-    // FUNCIÓN ACTUALIZADA para abrir la ficha del personaje con datos REALES
-    const handleCharacterClickInBar = async (characterName: string) => {
-        // 1. Cierra el modal de la lista
-        setShowCharacters(false);
-
-        // 2. Busca la información básica (necesitamos el ID)
-        const basicCharacter = personajesData.find(p => p.nombre === characterName);
-
-        if (!basicCharacter) {
-            console.error(`Personaje '${characterName}' no encontrado en personajesData.`);
-            return;
-        }
-
-        setLoadingCharacter(true); // <--- Muestra el loader
-        setSelectedCharacterForModal(null); // Limpia el modal anterior
-
-        try {
-            // 3. ¡LLAMADA REAL! Llama a la nueva función de supabaseClient
-            const fullDetails = await obtenerFichaPersonajePorId(basicCharacter.id_personaje);
-
-            if (fullDetails) {
-                // 4. Abre el modal de detalle con la data real
-                setSelectedCharacterForModal(fullDetails);
-            } else {
-                alert(`No se pudo encontrar la ficha para ${characterName}.`);
-            }
-        } catch (error: any) {
-            console.error('Error cargando ficha de personaje:', error);
-            alert('Error al cargar la ficha: ' + error.message);
-        } finally {
-            setLoadingCharacter(false); // <--- Oculta el loader
-        }
-    };
-
-    // ESTADO para el modal del mapa
-    const [showMap, setShowMap] = useState(false);
-
-    // NUEVA FUNCIÓN para manejar el inicio desde el mapa
-    // Esta función será llamada por MapaView (a través de HistoriaDetail)
-    const handleStartStoryFromMap = (historiaId: number) => {
-        console.log("🎬 Padre: Iniciando historia desde mapa con ID:", historiaId);
-        // 1. Ocultar el modal del mapa
-        setShowMap(false);
-
-        // 2. Iniciar la narrativa con la historia seleccionada
-        // Reutilizamos la función que ya tienes
-        handleHistoriaSelect(historiaId);
-    };
-
-    // Nuevo estado para el pop-up de instrucciones inicial del 3D
-    const [showInitial3DPopup, setShowInitial3DPopup] = useState(false);
-    const [isFullscreen, setIsFullscreen] = useState(false);
-
-    // Nuevo estado para mostrar/ocultar la barra inferior
-    const [showBottomBar, setShowBottomBar] = useState(true);
-
-    // Detectar si es dispositivo móvil
-    const [isMobile, setIsMobile] = useState(false);
-
-    // Estado para controlar la altura de la cámara
-    const [cameraHeight, setCameraHeight] = useState(-0.8);
-
-    // Estado para música de fondo
-    const backgroundAudioRef = useRef<HTMLAudioElement | null>(null);
-    const [backgroundMusicVolume, setBackgroundMusicVolume] = useState(0.3);
-    const [isHotspotModalOpen, setIsHotspotModalOpen] = useState(false);
-    const [backgroundMusicUrl, setBackgroundMusicUrl] = useState<string | null>(null);
-    const [showVolumeControl, setShowVolumeControl] = useState(false);
-    const [showHeightControl, setShowHeightControl] = useState(false);
-
-
-    // Manejador de fullscreen
-    const toggleFullscreen = () => {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().then(() => {
-                setIsFullscreen(true);
-            }).catch(err => {
-                console.error('Error al entrar en fullscreen:', err);
-            });
-        } else {
-            document.exitFullscreen().then(() => {
-                setIsFullscreen(false);
-            }).catch(err => {
-                console.error('Error al salir de fullscreen:', err);
-            });
-        }
-    };
-
-
-    // Función para manejar la selección de historia desde el mapa o menú
     const handleHistoriaSelect = useCallback((historiaId: number) => {
-
-        // 1. Resetear el estado de finalización del juego ✅ AÑADIR/ASEGURAR ESTA LÍNEA
         setShowEndMessage(false);
-
-        // Detener música de fondo al cambiar de historia
-        // SIMPLEMENTE actualiza el estado. Los useEffect se encargarán de pausar y limpiar.
         setBackgroundMusicUrl(null);
-
         setSelectedHistoriaId(historiaId);
         setCurrentStepIndex(0);
         setShowStepContent(false);
-        setShowEndMessage(false);
-
-        // ⬇️ --- ¡AÑADE ESTAS 3 LÍNEAS AQUÍ! --- ⬇️
-        console.log("🔄 Reseteando contadores de hotspots para la nueva historia...");
         setDiscoveredHotspots(0);
         totalHotspotsRef.current = 0;
-        discoveredHotspotIds.current.clear(); // Limpia el Set de IDs
-
+        discoveredHotspotIds.current.clear();
     }, []);
 
-    // Función que maneja la apertura del modal de hotspot
     const handleHotspotClick = useCallback(async (hotspot: HotspotConfig) => {
-        // Log para depuración
-        console.log('Hotspot clickeado:', hotspot);
-        console.log('ContentType del hotspot:', hotspot.contentType);
-
-        // Asegurar que el contentType existe antes de abrir el modal
-        if (!hotspot.contentType) {
-            console.error('Error: contentType no definido en el hotspot');
-            return;
-        }
+        if (!hotspot.contentType) return;
 
         if (!discoveredHotspotIds.current.has(hotspot.meshName)) {
             discoveredHotspotIds.current.add(hotspot.meshName);
             setDiscoveredHotspots(prev => prev + 1);
 
-            // Solo otorga la recompensa simple si NO es de tipo 'interactive'
-            // Las recompensas 'interactive' se manejan al recibir el mensaje de la app
             if (hotspot.recompensaId && hotspot.contentType !== 'interactive') {
-
                 const recompensa = recompensasData.find(r => r.id_recompensa === hotspot.recompensaId);
-                if (recompensa) {
-                    const message = `¡Has ganado ${recompensa.valor} XP por '${recompensa.nombre}'!`;
-                    setNotification(message);
+                if (recompensa && user?.id) {
+                    setNotification(`¡XP Ganado!`);
                     setTimeout(() => setNotification(null), 5000);
-                    // La función otorgarRecompensa espera historiaId como STRING
-                    await gameServiceUser.otorgarRecompensa(user?.id as string, recompensa.id_recompensa, String(selectedHistoriaId));
+                    await gameServiceUser.otorgarRecompensa(user.id, recompensa.id_recompensa, String(selectedHistoriaId));
                     await fetchPlayerStats();
                 }
             }
 
-            if (hotspot.personajeId) {
+            if (hotspot.personajeId && user?.id) {
                 const personaje = personajesData.find(p => p.id_personaje === hotspot.personajeId);
-                if (personaje && user) {
+                if (personaje) {
                     const { error } = await gameServiceUser.knowCharacter(user.id, personaje.nombre);
                     if (!error) {
                         await fetchPlayerStats();
-                        const message = `Has conocido a ${personaje.nombre}. ¡Añadido a tus estadísticas!`;
-                        setNotification(message);
+                        setNotification(`Ficha: ${personaje.nombre}`);
                         setTimeout(() => setNotification(null), 3000);
                     }
                 }
             }
         }
 
-        // Silenciar música de fondo al abrir hotspot
-        if (backgroundAudioRef.current && !backgroundAudioRef.current.paused) {
-
-            console.log("🎵 Tipo de contenido del hotspot 0:", hotspot.contentType);
-            /*
-            if (hotspot.contentType !== 'interactive')  {
-                console.log("🎵 Pausando música de fondo (no es interactive).");
-                backgroundAudioRef.current.pause();
-             }
-                */
-        }
-
-        // Mostrar el modal
         setHotspotModal(hotspot);
         setIsHotspotModalOpen(true);
-
-        // Reproducir un sonido de click simulado
-        new Audio('https://cdn.aframe.io/360-image-gallery-boilerplate/audio/click.ogg').play().catch(e => console.error("Error al reproducir audio:", e));
+        new Audio('https://cdn.aframe.io/360-image-gallery-boilerplate/audio/click.ogg').play().catch(() => { });
     }, [user, selectedHistoriaId, recompensasData, personajesData, fetchPlayerStats]);
 
+    const handleReturnToMenu = useCallback(() => {
+        console.log("🎵 Deteniendo música de fondo y volviendo al menú.");
+        setBackgroundMusicUrl(null);
+        setSelectedHistoriaId(null);
+        setFlujoData([]);
+        setCurrentStepIndex(0);
+        setShowEndMessage(false);
+    }, []);
+
+    const handleNextStep = useCallback(async (nextStepId: number | null) => {
+        const currentStep = flujoData[currentStepIndex];
+        if (!currentStep) return;
+
+        if (currentStep.id_recompensa !== null && !isStoryCompleted) {
+            const personaje = personajesData.find(p => p.id_personaje === currentStep.id_personaje);
+            if (personaje && user) {
+                const { error } = await gameServiceUser.knowCharacter(user.id, personaje.nombre);
+                if (!error) {
+                    await fetchPlayerStats();
+                    const message = `Has conocido a ${personaje.nombre}. ¡Añadido a tus estadísticas!`;
+                    setNotification(message);
+                    setTimeout(() => setNotification(null), 3000);
+                }
+            }
+        }
+
+        if (currentStep.tipo_paso === 'final' && selectedHistoriaId !== null && user) {
+            try {
+                await gameServiceUser.completeStory(user.id, String(selectedHistoriaId));
+            } catch (error) {
+                console.error('❌ Error completando historia:', error);
+            }
+
+            if (nextStepId) {
+                setSelectedHistoriaId(nextStepId);
+                setCurrentStepIndex(0);
+                setShowStepContent(false);
+                setShowEndMessage(false);
+                return;
+            } else {
+                handleReturnToMenu();
+                return;
+            }
+        }
+
+        if (!user || nextStepId === null) {
+            setShowEndMessage(true);
+            return;
+        }
+
+        setShowStepContent(false);
+        const nextIndex = flujoData.findIndex(p => p.id_flujo === nextStepId);
+        if (nextIndex !== -1) {
+            setCurrentStepIndex(nextIndex);
+        } else {
+            setShowEndMessage(true);
+        }
+    }, [flujoData, currentStepIndex, isStoryCompleted, personajesData, user, selectedHistoriaId, fetchPlayerStats, handleReturnToMenu]);
+
+
+
+    // --- MEDIA & AUTOPLAY ---
 
     // Función de manejo de audio para el video/audio del modal (para evitar problemas de autoplay)
     const handleMediaAutoplay = (element: HTMLMediaElement) => {
@@ -741,7 +502,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             currentIframe.removeEventListener('load', handleLoad);
         };
 
-    }, [isHotspotModalOpen, hotspotModal, playerStats]); // Mantén las dependencias
+    }, [isHotspotModalOpen, hotspotModal, playerStats, language]); // Mantén las dependencias
 
     // ====================================================================
     // ✅ NUEVO: useEffect para enviar data (metadatos) al iframe de TIPO_PASO 'app'
@@ -815,8 +576,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 currentIframe.removeEventListener('load', sendConfigToApp);
             }
         };
-
-    }, [currentStepIndex, flujoData, playerStats, recursosData, getRecurso]); // Depende de estos datos
+    }, [flujoData, currentStepIndex, getRecurso, playerStats, language]);
 
     // Escuchar cambios de fullscreen
     useEffect(() => {
@@ -1070,89 +830,6 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             color: rgba(255, 255, 255, 0.8);
             transform: translateY(-50%) scale(1.1);
         }
-      .bottom-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            
-            /* Estilo Terminal Hacker */
-            background: rgba(10, 10, 10, 0.95);
-            border-top: 1px solid #333;
-            padding: 10px 20px;
-            
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1.5rem;
-            z-index: 60;
-            
-            box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.8);
-            font-family: 'Courier New', monospace;
-            transition: transform 0.3s ease-in-out;
-        }
-        .bottom-bar.hidden {
-            transform: translateY(100%);
-        }
-        .story-timeline {
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            padding: 0 1rem;
-        }
-        .story-timeline::before {
-            content: '';
-            position: absolute;
-            width: calc(100% - 2rem);
-            height: 2px;
-            background-color: rgba(255, 255, 255, 0.3);
-            z-index: 1;
-        }
-        .story-step {
-            width: 1.5rem;
-            height: 1.5rem;
-            background-color: #4a5568;
-            margin: 0.5rem 0.5rem;
-            cursor: default;
-            transition: background-color 0.3s, transform 0.2s;
-            position: relative;
-            z-index: 2;
-            border-radius: 4px;
-        }
-        .story-step.active {
-            background-color: #63b3ed;
-            transform: scale(1.2);
-            box-shadow: 0 0 8px #63b3ed;
-        }
-        .info-icons {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-        .info-display {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #e2e8f0;
-            font-size: 1rem;
-            white-space: nowrap;
-        }
-        .tool-icon {
-            cursor: pointer;
-            transition: color 0.2s;
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-        .tool-icon:hover {
-            color: #63b3ed;
-        }
-        .tool-icon span:first-child {
-            font-size: 1.5rem;
-        }
         .top-left-button {
             position: absolute;
             top: 1rem;
@@ -1208,16 +885,6 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         }
         .close-button:hover, .close-button:focus {
             color: #e2e8f0;
-        }
-        .list-item {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            background-color: #2d3748;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            border-left: 4px solid #63b3ed;
         }
         .decision-container {
             position: absolute;
@@ -1762,135 +1429,10 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     // ==================================================================
     // --- NUEVA FUNCIÓN PARA VOLVER AL MENÚ (ACTUALIZADA) ---
     // ==================================================================
-    const handleReturnToMenu = () => {
-        console.log("🎵 Deteniendo música de fondo y volviendo al menú.");
-
-        // 1. Detener la música
-        setBackgroundMusicUrl(null);
-
-        // 2. Volver al menú
-        setSelectedHistoriaId(null);
-
-        // 3. (SOLUCIÓN) Limpiar los datos de la historia anterior para evitar condiciones de carrera
-        setFlujoData([]);
-        setCurrentStepIndex(0); // Reset index
-        setShowEndMessage(false); // Ensure end message is hidden
-    };
+    // Movida al inicio del componente para hoist
 
 
 
-    // ==================================================================
-    // --- FUNCIÓN handleNextStep (CORREGIDA) ---
-    // ==================================================================
-    // Función para manejar el avance al siguiente paso
-    const handleNextStep = async (nextStepId: number | null) => {
-        const currentStep = flujoData[currentStepIndex];
-        // Otorgar recompensa si existe (SOLO si la historia NO está completada)
-        if (currentStep.id_recompensa !== null && !isStoryCompleted) {
-            const personaje = personajesData.find(p => p.id_personaje === currentStep.id_personaje);
-
-            if (personaje && user) {
-                const { error } = await gameServiceUser.knowCharacter(user.id, personaje.nombre);
-                if (!error) {
-                    await fetchPlayerStats();
-                    const message = `Has conocido a ${personaje.nombre}. ¡Añadido a tus estadísticas!`;
-                    setNotification(message);
-                    setTimeout(() => setNotification(null), 3000);
-                }
-            }
-        }
-
-        // --- INICIO DE LA SOLUCIÓN ---
-        // 2. Comprobar PRIMERO si el paso actual es 'final'.
-        // Esta lógica debe ejecutarse ANTES del guard "nextStepId === null".
-        if (currentStep.tipo_paso === 'final' && selectedHistoriaId !== null && user) {
-            console.log('=== DEBUG: PASO FINAL (Lógica Corregida) ===');
-            console.log('Tipo de paso:', currentStep.tipo_paso);
-            console.log('Historia actual ID:', selectedHistoriaId);
-            console.log('Paso completo:', JSON.stringify(currentStep, null, 2));
-
-            // *** ¡AQUÍ ES DONDE SE GUARDA LA HISTORIA! ***
-            try {
-                await gameServiceUser.completeStory(user.id, String(selectedHistoriaId));
-                console.log(`✅ Historia ${selectedHistoriaId} completada para el usuario ${user.id}`);
-            } catch (error) {
-                console.error('❌ Error completando historia:', error);
-            }
-
-            // 'nextStepId' (que es 'currentStep.id_siguiente_paso')
-            // aquí se interpreta como el ID de la *siguiente historia*.
-            if (nextStepId) {
-                const siguienteHistoriaId = nextStepId;
-                console.log(`📖 Cambiando a la siguiente historia con ID: ${siguienteHistoriaId}`);
-
-                // Buscar el primer paso de la siguiente historia
-                const { data: siguienteFlujo, error: flujoError } = await gameServiceUser.fetchNarrativeFlowByHistoriaId(siguienteHistoriaId);
-                if (flujoError) {
-                    console.error('❌ Error cargando flujo de la siguiente historia:', flujoError);
-                } else if (siguienteFlujo && siguienteFlujo.length > 0) {
-                    console.log('✅ Primer paso de la siguiente historia encontrado:', siguienteFlujo[0]);
-                    console.log('Total de pasos en la siguiente historia:', siguienteFlujo.length);
-                } else {
-                    console.warn('⚠️ No se encontraron pasos para la historia:', siguienteHistoriaId);
-                }
-
-                setSelectedHistoriaId(siguienteHistoriaId);
-                setCurrentStepIndex(0);
-                setShowStepContent(false);
-                setShowEndMessage(false); // Asegurarse de que no se muestre el mensaje final
-                console.log('=========================');
-                return; // Salir de la función
-            } else {
-                // No hay siguiente historia, mostrar mensaje final
-                console.log('📚 No hay siguiente historia. Volviendo al menú.');
-                console.log('=========================');
-                handleReturnToMenu(); // <--- SOLUCIÓN: Volver al menú
-                return; // Salir de la función
-            }
-        }
-        // --- FIN DE LA SOLUCIÓN ---
-
-
-        // 3. Comprobación de guardia (Guard check)
-        // Si no es un paso 'final', ahora sí podemos comprobar si el siguiente paso es nulo.
-        if (!user || nextStepId === null) {
-            console.log('📚 No hay siguiente paso o usuario inválido. Mostrando mensaje final.');
-            setShowEndMessage(true);
-            return;
-        }
-
-
-        // 5. Lógica de avance normal (para pasos 'narrativo' y 'pregunta')
-        setShowStepContent(false);
-        const nextIndex = flujoData.findIndex(p => p.id_flujo === nextStepId);
-        if (nextIndex !== -1) {
-            setCurrentStepIndex(nextIndex);
-        }
-        // Si no se encuentra el siguiente paso, mostrar mensaje de fin
-        else {
-            console.log('📚 Siguiente paso no encontrado. Mostrando mensaje final.');
-            setShowEndMessage(true);
-        }
-    };
-    // ==================================================================
-    // --- FIN DE LA FUNCIÓN handleNextStep (CORREGIDA) ---
-    // ==================================================================
-
-
-    // Función para retroceder al paso anterior (solo para historias completadas)
-    const goBack = () => {
-        if (currentStepIndex > 0) {
-            setShowStepContent(false);
-            setCurrentStepIndex(currentStepIndex - 1);
-        }
-    };
-    // Función para avanzar al siguiente paso (solo para historias completadas)
-    const goNext = () => {
-        if (currentStepIndex < flujoData.length - 1) {
-            setShowStepContent(false);
-            setCurrentStepIndex(currentStepIndex + 1);
-        }
-    };
 
     // Función para renderizar el contenido del paso actual
     const renderStepContent = () => {
@@ -1900,7 +1442,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         if (!step) return null;
 
         // --- Lógica para Pasos de Aplicación (App) ---
-        else if (step.tipo_paso === 'app') {
+        if (step.tipo_paso === 'app') {
             const recursoActual = getRecurso(step.recursomultimedia_id);
 
             // Log 7: Verifica que el paso 'app' se está renderizando y con qué recurso
@@ -2045,7 +1587,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         }
 
         // --- Lógica para Pasos Narrativos ---
-        else if (step.tipo_paso === 'narrativo') {
+        if (step.tipo_paso === 'narrativo') {
 
             // 1. Caso Video/Audio: Avance automático. No se necesita pop-up de "Siguiente →".
             if (isVideoOrAudio) {
@@ -2262,7 +1804,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         }
 
         // --- Lógica para Pasos Finales ---
-        else if (step.tipo_paso === 'final') {
+        if (step.tipo_paso === 'final') {
             const isChapterEnd = step.id_siguiente_paso !== null;
             return (
                 <div className={`
@@ -2324,329 +1866,13 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         return null;
     };
 
-    // Determinar qué historias están desbloqueadas
-    const historiasConEstado = historias.map(historia => {
-        let isLocked = false;
-
-        // Si tiene dependencia, verificar si la historia madre fue visitada
-        if (historia.id_historia_dependencia) {
-            isLocked = !historiasVisitadas.includes(historia.id_historia_dependencia);
-        }
-
-        return {
-            ...historia,
-            isLocked
-        };
-    });
-
-    // Crear un mapa de imágenes una sola vez
-    const imagenesMap = React.useMemo(() => {
-        const map = new Map();
-        recursosData.forEach(r => {
-            map.set(r.id_recurso, r.archivo);
-        });
-        return map;
-    }, [recursosData]);
-
-    //  Crear una factory para manejar el clic en historias
-    const handleHistoriaClickFactory = React.useCallback((historia: HistoriaConEstado) => {
-        return () => {
-            if (historia.isLocked) {
-                const historiaMadre = historias.find(h => h.id_historia === historia.id_historia_dependencia);
-                if (historiaMadre) {
-                    setLockedHistoryModal({ historia, historiaMadre });
-                }
-            } else {
-                handleHistoriaSelect(historia.id_historia);
-            }
-        };
-    }, [historias, handleHistoriaSelect]);
-
-    // Renderizado principal
-    if (!selectedHistoriaId) {
-        if (loading) {
-            return (
-                <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center font-mono text-[#33ff00] p-4">
-
-                    {/* Fondo Scanlines */}
-                    <div className="absolute inset-0 pointer-events-none opacity-20"
-                        style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
-                    </div>
-
-                    {/* Loader Visual (Anillos Giratorios) */}
-                    {/* Ajuste: w-20 h-20 en móvil, w-24 h-24 en escritorio (md) */}
-                    <div className="relative w-20 h-20 md:w-24 md:h-24 mb-6 md:mb-8 flex-shrink-0">
-                        {/* Anillo Exterior */}
-                        <div className="absolute inset-0 border-t-2 border-[#33ff00] rounded-full animate-spin shadow-[0_0_15px_#33ff00]"></div>
-
-                        {/* Anillo Interior */}
-                        <div className="absolute inset-4 border-b-2 border-[#33ff00]/50 rounded-full animate-pulse"></div>
-
-                        {/* Icono Central */}
-                        <div className="absolute inset-0 flex items-center justify-center text-2xl md:text-3xl animate-bounce">
-                            📂
-                        </div>
-                    </div>
-
-                    {/* Texto de Estado */}
-                    <div className="text-center space-y-2 relative z-10 w-full max-w-md">
-                        {/* Ajuste: Texto más pequeño y menos espaciado en móvil para evitar desborde */}
-                        <h2 className="text-lg md:text-xl font-bold tracking-[0.15em] md:tracking-[0.3em] uppercase break-words leading-tight">
-                            {t.loading_stories}
-                        </h2>
-
-                        <div className="flex justify-center gap-1 text-[10px] md:text-xs opacity-70">
-                            <span>{t.connect_db}</span>
-                            <span className="animate-[ping_1.5s_infinite]">.</span>
-                            <span className="animate-[ping_1.5s_infinite_0.2s]">.</span>
-                            <span className="animate-[ping_1.5s_infinite_0.4s]">.</span>
-                        </div>
-                    </div>
-
-                    {/* Footer Decorativo */}
-                    {/* Ajuste: Subirlo un poco en móvil (bottom-6) para que no lo tape la UI del navegador */}
-                    <div className="absolute bottom-6 md:bottom-10 text-[9px] md:text-[10px] text-[#33ff00]/30 tracking-widest text-center px-4">
-                        SYSTEM_ID: RESISTENCIA_CORE_v2.5
-                    </div>
-
-                </div>
-            );
-        }
-
-        if (error) {
-            return (
-                <div className="flex items-center justify-center min-h-screen bg-black text-red-500">
-                    <p>{error}</p>
-                </div>
-            );
-        }
-
-        if (historias.length === 0) {
-            return (
-                <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center font-mono select-none">
-
-                    {/* Fondo Scanlines */}
-                    <div className="absolute inset-0 pointer-events-none opacity-20"
-                        style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
-                    </div>
-
-                    {/* Contenedor Central */}
-                    <div className="relative p-12 border border-dashed border-[#33ff00]/30 bg-black/50 backdrop-blur-sm text-center max-w-md">
-
-                        {/* Icono de Señal Perdida */}
-                        <div className="text-6xl mb-6 opacity-50 animate-pulse filter grayscale hover:grayscale-0 transition-all duration-500">
-                            📡
-                        </div>
-
-                        {/* Título Técnico */}
-                        <h2 className="text-[#33ff00] text-2xl font-bold tracking-[0.2em] uppercase mb-4">
-                            {t.no_signal}
-                        </h2>
-
-                        {/* Mensaje Humano (Estilizado) */}
-                        <p className="text-[#a8a8a8] text-sm leading-relaxed mb-8">
-                            {t.no_stories_msg}
-                        </p>
-
-                        {/* Decoración de Estado */}
-                        <div className="flex flex-col items-center gap-2">
-                            <div className="w-24 h-1 bg-[#33ff00]/20 overflow-hidden">
-                                <div className="h-full w-1/2 bg-[#33ff00] animate-[ping_2s_linear_infinite]"></div>
-                            </div>
-                            <span className="text-[10px] text-[#33ff00]/40 uppercase tracking-widest">
-                                {t.await_trans}
-                            </span>
-                        </div>
-
-                        {/* Esquinas Decorativas */}
-                        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#33ff00]"></div>
-                        <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#33ff00]"></div>
-                        <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[#33ff00]"></div>
-                        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#33ff00]"></div>
-
-                    </div>
-                </div>
-            );
-        }
 
 
 
-        // LOG DE DEPURACIÓN
-        console.log("=== DEBUG BLOQUEO DE HISTORIAS ===");
-        console.log("Historias visitadas por el usuario:", historiasVisitadas);
-        console.log("Estado de cada historia:");
-        historiasConEstado.forEach(h => {
-            console.log(`  - Historia ID ${h.id_historia}: "${h.titulo}"`);
-            console.log(`    Depende de: ${h.id_historia_dependencia || 'Ninguna'}`);
-            console.log(`    Estado: ${h.isLocked ? '🔒 BLOQUEADA' : '✅ DESBLOQUEADA'}`);
-        });
-        console.log("===================================");
-
-
-
-        //MENU PRINCIPAL LISTADO DE HISTORIAS
-        return (
-            <div className="relative min-h-screen bg-black text-[#a8a8a8] font-mono selection:bg-[#33ff00] selection:text-black overflow-hidden flex flex-col">
-
-                {/* Fondo Scanlines */}
-                <div className="absolute inset-0 pointer-events-none z-0 opacity-20 fixed"
-                    style={{ backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 2px, 3px 100%' }}>
-                </div>
-
-
-                {/* --- ÁREA PRINCIPAL (CARRUSEL) --- */}
-                <div className="relative z-10 flex-grow flex items-center w-full">
-
-                    {/* Botón Navegación Izquierda (Solo Desktop) */}
-                    <button
-                        onClick={() => scroll('left')}
-                        className="flex absolute left-4 z-50 w-12 h-12 border border-[#33ff00]/50 bg-black/50 text-[#33ff00] items-center justify-center hover:bg-[#33ff00] hover:text-black transition-all rounded-full backdrop-blur-md"
-                    >
-                        {'<'}
-                    </button>
-
-                    {/* Botón Navegación Derecha (Solo Desktop) */}
-                    <button
-                        onClick={() => scroll('right')}
-                        className="flex absolute right-4 z-50 w-12 h-12 border border-[#33ff00]/50 bg-black/50 text-[#33ff00] items-center justify-center hover:bg-[#33ff00] hover:text-black transition-all rounded-full backdrop-blur-md"
-                    >
-                        {'>'}
-                    </button>
-
-                    {/* --- CONTENEDOR DE SCROLL HORIZONTAL --- */}
-                    <div
-                        ref={scrollContainerRef}
-                        className="w-full h-full flex items-center gap-6 overflow-x-auto px-6 md:px-16 snap-x snap-mandatory no-scrollbar py-8"
-                        style={{
-                            scrollBehavior: 'smooth',
-                            WebkitOverflowScrolling: 'touch',
-                            transform: 'translateZ(0)',
-                            backfaceVisibility: 'hidden'
-                        }}
-                    >
-                        {historiasConEstado.map((historia, index) => {
-                            const imagenFondo = historia.id_imagen_historia
-                                ? imagenesMap.get(historia.id_imagen_historia) || null
-                                : null;
-
-                            const isCompleted = historiasVisitadas.includes(historia.id_historia);
-
-
-
-                            return (
-
-                                <div
-                                    key={historia.id_historia}
-                                    className={`
-                                            relative shrink-0 snap-center
-                                            
-                                            /* MÓVIL: 85% del alto visible real del dispositivo */
-                                            w-[85vw] h-[66dvh]
-                                            
-                                            /* ESCRITORIO */
-                                            md:w-[300px] md:h-[500px]
-
-                                            border-2 bg-black overflow-hidden flex flex-col transition-all duration-300
-                                       
-                                        `}
-                                    onClick={handleHistoriaClickFactory(historia)}
-                                >
-                                    {/* 1. IMAGEN FULL (Fondo) */}
-                                    <div className="absolute inset-0 w-full h-full z-0">
-                                        {imagenFondo ? (
-                                            <img
-                                                src={imagenFondo}
-                                                alt={historia.titulo}
-                                                className="w-full h-full object-cover"
-                                                loading="lazy"
-                                                decoding="async"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full bg-[#111] flex items-center justify-center">
-                                                <span className="text-[#33ff00]/20 font-bold">NO_SIGNAL</span>
-                                            </div>
-                                        )}
-                                        {/* Overlay de ruido */}
-                                        <div className="absolute inset-0 opacity-20" style={{
-                                            backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px)'
-                                        }}></div>
-                                        {/* GRADIENTE DE LEGIBILIDAD (Crucial) */}
-                                        {/* Empieza transparente arriba y se vuelve negro sólido abajo para el texto */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
-                                    </div>
-
-                                    {/* 2. BADGES SUPERIORES */}
-                                    <div className="absolute top-4 left-4 right-4 flex justify-between z-20 pointer-events-none">
-                                        <span className="bg-black/80 border border-[#33ff00]/50 text-[#33ff00] text-[10px] px-2 py-1 uppercase font-bold backdrop-blur-md">
-                                            {t.sec_prefix}0{index + 1}
-                                        </span>
-                                        {isCompleted && (
-                                            <span className="bg-[#33ff00] text-black text-[10px] px-2 py-1 font-bold uppercase animate-pulse shadow-[0_0_10px_#33ff00]">
-                                                {t.completed}
-                                            </span>
-                                        )}
-                                        {historia.isLocked && (
-                                            <span className="bg-red-600 text-white text-[10px] px-2 py-1 font-bold uppercase flex items-center gap-2">
-                                                🔒 {t.locked}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {/* 3. CONTENIDO DE TEXTO (Overlay Inferior) */}
-                                    <div className="absolute bottom-0 left-0 right-0 p-6 z-20 flex flex-col">
-
-                                        {/* Título */}
-                                        <h2 className={`text-2xl md:text-3xl font-bold mb-2 uppercase tracking-tighter leading-none drop-shadow-xl ${historia.isLocked ? 'text-red-500' : 'text-white'}`}>
-                                            {getLocalizedContent(historia, 'titulo', language)}
-                                        </h2>
-
-                                        {/* Línea Separadora */}
-                                        <div className={`h-[2px] w-12 mb-3 ${historia.isLocked ? 'bg-red-900' : 'bg-[#33ff00]'}`}></div>
-
-                                        {/* Descripción */}
-                                        <p className="text-sm text-gray-300 font-sans leading-relaxed line-clamp-3 mb-4 drop-shadow-md">
-                                            {getLocalizedContent(historia, 'narrativa', language)}
-                                        </p>
-
-                                        {/* Mensaje de Bloqueo */}
-                                        {historia.isLocked && historia.id_historia_dependencia && (
-                                            <div className="mb-3 text-[10px] text-red-400 font-mono border border-red-900/50 p-2 bg-red-900/20">
-                                                ⚠️ {t.req} {getLocalizedContent(historias.find(h => h.id_historia === historia.id_historia_dependencia), 'titulo', language)}
-                                            </div>
-                                        )}
-
-                                        {/* Botones */}
-                                        {!historia.isLocked && (
-                                            <div className="flex gap-3 pt-2">
-                                                <button className="flex-1 bg-[#33ff00]/10 border border-[#33ff00] text-[#33ff00] py-3 px-4 text-xs font-bold uppercase tracking-widest hover:bg-[#33ff00] hover:text-black transition-all flex justify-between items-center group/btn">
-                                                    <span>{t.execute}</span>
-                                                    <span className="group-hover/btn:translate-x-1 transition-transform">{'>>'}</span>
-                                                </button>
-
-                                                <button
-                                                    className="w-12 flex items-center justify-center border border-[#33ff00]/50 text-[#33ff00] hover:bg-[#33ff00] hover:text-black transition-all disabled:opacity-50"
-                                                    onClick={(e) => handleToggleFavorite(historia.id_historia, e)}
-                                                    disabled={favoritingHistoriaId === historia.id_historia}
-                                                    title={playerStats?.historias_favoritas?.includes(String(historia.id_historia)) ? t.remove_fav : t.add_fav}
-                                                >
-                                                    {favoritingHistoriaId === historia.id_historia ? '...' : (playerStats?.historias_favoritas?.includes(String(historia.id_historia)) ? '♥' : '♡')}
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-
-                        {/* Espacio extra al final para que la última carta no quede pegada */}
-                        <div className="w-4 shrink-0"></div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     // --- LÓGICA DE RENDERIZADO CORREGIDA ---
+
+    if (!user?.id) return null;
 
     // 1. Si estamos cargando datos, mostrar un loader.
     // Esto previene la condición de carrera (race condition).
@@ -2760,11 +1986,11 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     }
 
     // 3. Obtener el paso actual.
-    const currentStep = flujoData[currentStepIndex];
+    const stepActual = flujoData[currentStepIndex];
 
     // 4. Si NO estamos cargando, y NO es el fin, pero AÚN ASÍ no hay un paso
     //    (ej. flujoData vino vacío de la DB), ahora sí mostramos el fin.
-    if (!currentStep) {
+    if (!stepActual) {
         console.error("Error: No se encontró un paso actual (currentStep), pero 'loading' es false. Mostrando fin.");
         return (
             <div className="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center p-4 font-mono text-red-500 select-none">
@@ -2821,10 +2047,10 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     // --- FIN DE LA LÓGICA CORREGIDA ---
 
     // Obtener recurso multimedia del paso actual
-    const recursoActual = getRecurso(currentStep.recursomultimedia_id);
+    const recursoActual = getRecurso(stepActual?.recursomultimedia_id);
     const mediaSrc = recursoActual?.archivo || '';
     // Determinar si el paso es de decisión
-    const isDecisionStep = currentStep.tipo_paso === 'pregunta' || (currentStep.opciones_decision?.opciones_siguientes_json && currentStep.opciones_decision.opciones_siguientes_json.length > 0);
+    const isDecisionStep = stepActual?.tipo_paso === 'pregunta' || (stepActual?.opciones_decision?.opciones_siguientes_json && stepActual.opciones_decision.opciones_siguientes_json.length > 0);
     const hasNext = currentStepIndex < flujoData.length - 1;
     const hasPrevious = currentStepIndex > 0;
     const is3DModel = recursoActual?.tipo === '3d_model';
@@ -2847,19 +2073,22 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         key={mediaSrc}
                         src={mediaSrc}
                         autoPlay
-                        onEnded={() => {
-                            // SIEMPRE llamar handleNextStep - la función ya maneja casos de final con siguiente historia
-                            handleNextStep(currentStep.id_siguiente_paso);
-                        }}
+                        onEnded={() => { handleNextStep(stepActual?.id_siguiente_paso || null); }}
                     />
                 )}
 
-                {/* CAMBIO CLAVE para avance automático */}
                 {recursoActual?.tipo === 'video' && (
-                    <video ref={videoRef} key={mediaSrc} src={mediaSrc} autoPlay onEnded={() => {
-                        // SIEMPRE llamar handleNextStep - la función ya maneja casos de final con siguiente historia
-                        handleNextStep(currentStep.id_siguiente_paso);
-                    }}>{subtitleUrl && subtitlesEnabled && (<track kind="subtitles" src={subtitleUrl} srcLang="en" label="English" default />)}</video>
+                    <video
+                        ref={videoRef}
+                        key={mediaSrc}
+                        src={mediaSrc}
+                        autoPlay
+                        onEnded={() => { handleNextStep(stepActual?.id_siguiente_paso || null); }}
+                    >
+                        {subtitleUrl && subtitlesEnabled && (
+                            <track kind="subtitles" src={subtitleUrl} srcLang="en" label="English" default />
+                        )}
+                    </video>
                 )}
                 {recursoActual?.tipo === 'interactive' && (
                     <canvas id="interactiveCanvas"></canvas>
@@ -2916,195 +2145,79 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
 
 
-            {/*-- BOTTOM HUD BAR --*/}
-            {/* 1. BOTÓN RESTAURAR (Solo si está oculta) */}
-            {!showBottomBar && (
-                <button
-                    onClick={() => setShowBottomBar(true)}
-                    className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 
-                    bg-black/90 border border-[#33ff00] text-[#33ff00] 
-                    w-10 h-10 flex items-center justify-center rounded-full shadow-[0_0_15px_rgba(51,255,0,0.4)] 
-                    hover:bg-[#33ff00] hover:text-black transition-all animate-in slide-in-from-bottom-10"
-                    title="Abrir HUD"
-                >
-                    ▲
-                </button>
-            )}
+            {/* HUD Minimalista Flotante (Solo para escenarios 3D) */}
+            {is3DModel && (
+                <div className="fixed bottom-2 right-2 z-[100] flex flex-col gap-1.5 items-end">
 
-            {/* 2. BARRA INFERIOR COMPACTA */}
-            {playerStats && (
-                <div
-                    id="bottomBar"
-                    className={`
-                        fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40
-                        w-[95%] md:w-auto max-w-4xl transition-all duration-500 ease-in-out
-                        ${!showBottomBar ? 'translate-y-[200%] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100 pointer-events-auto'}
-                    `}
-                >
-                    <div className="bg-black/95 backdrop-blur-md border border-[#33ff00] shadow-[0_0_15px_rgba(51,255,0,0.2)] flex items-stretch rounded-sm overflow-visible h-12">
+                    {/* Contador de Nodos */}
+                    <div className="bg-black/95 border border-[#33ff00]/80 px-2 py-1 flex flex-col items-center min-w-[45px] shadow-[0_0_10px_rgba(51,255,0,0.1)] backdrop-blur-sm">
+                        <span className="text-[7px] text-[#33ff00]/70 font-mono uppercase tracking-[0.05em] mb-0.5">{t.nodes}</span>
+                        <span className="text-white font-mono text-[11px] font-bold leading-none">
+                            {discoveredHotspots}<span className="text-[#33ff00]/30 mx-0.5">/</span>{totalHotspotsRef.current}
+                        </span>
+                    </div>
 
-                        {/* A. SECCIÓN FIJA IZQUIERDA (Controles Sistema + Stats) */}
-                        <div className="flex flex-shrink-0 border-r border-[#33ff00]/30 bg-black/60">
-
-                            {/* Minimizar */}
-
-                            <button
-                                className="w-8 hover:bg-[#33ff00] text-[#33ff00] hover:text-black transition-colors flex items-center justify-center font-bold text-xs border-r border-[#33ff00]/20"
-                                onClick={() => setShowBottomBar(false)}
-                            >
-                                ▼
-                            </button>
-                            {/* Subtítulos */}
-                            {recursoActual?.tipo === 'video' && (
+                    <div className="flex gap-1.5">
+                        {/* Control de Volumen */}
+                        {backgroundMusicUrl && (
+                            <div className="relative">
                                 <button
-                                    className={`w-10 hover:bg-[#33ff00] hover:text-black transition-colors flex items-center justify-center font-bold text-xs border-r border-[#33ff00]/20 ${subtitlesEnabled ? 'text-[#33ff00]' : 'text-gray-500'}`}
-                                    onClick={() => setSubtitlesEnabled(!subtitlesEnabled)}
-                                    title={subtitlesEnabled ? 'Desactivar Subtítulos' : 'Activar Subtítulos'}
+                                    onClick={() => {
+                                        setShowVolumeControl(!showVolumeControl);
+                                        setShowHeightControl(false);
+                                    }}
+                                    className={`w-6 h-6 bg-black/95 border border-[#33ff00]/80 flex items-center justify-center transition-all hover:bg-[#33ff00]/20 ${showVolumeControl ? 'bg-[#33ff00]/30' : ''}`}
+                                    title={t.vol}
                                 >
-                                    CC
+                                    <span className="text-[11px]">🔊</span>
                                 </button>
-                            )}
-
-                            {/* Fullscreen (Movido aquí) */}
-                            <button
-                                className="w-8 hover:bg-[#33ff00] text-white hover:text-black transition-colors flex items-center justify-center text-sm border-r border-[#33ff00]/20"
-                                onClick={toggleFullscreen}
-                                title="Pantalla Completa"
-                            >
-                                {isFullscreen ? '⇲' : '⛶'}
-                            </button>
-
-
-                            {/* XP Compacto */}
-                            <div className="flex flex-col justify-center px-3 min-w-[60px] text-center">
-                                <span className="text-[8px] text-[#33ff00] tracking-wider leading-none mb-0.5">XP</span>
-                                <span className="text-white font-mono text-xs font-bold leading-none">{playerStats.xp_total}</span>
+                                {showVolumeControl && (
+                                    <div className="absolute bottom-8 right-0 bg-black/98 border border-[#33ff00] p-2 flex flex-col items-center gap-1.5 animate-in fade-in slide-in-from-bottom-1 shadow-[0_0_15px_rgba(51,255,0,0.2)]">
+                                        <div className="h-24 flex items-center justify-center py-1">
+                                            <input
+                                                type="range" min="0" max="1" step="0.1"
+                                                value={backgroundMusicVolume}
+                                                onChange={(e) => setBackgroundMusicVolume(parseFloat(e.target.value))}
+                                                className="h-20 accent-[#33ff00] cursor-pointer"
+                                                style={{ writingMode: 'vertical-lr', direction: 'rtl', WebkitAppearance: 'slider-vertical' }}
+                                            />
+                                        </div>
+                                        <span className="text-[8px] text-white font-mono border-t border-[#33ff00]/20 pt-1 w-full text-center">
+                                            {Math.round(backgroundMusicVolume * 100)}%
+                                        </span>
+                                    </div>
+                                )}
                             </div>
+                        )}
 
-                            {/* Nodos (Solo 3D) */}
-                            {is3DModel && (
-                                <div className="flex flex-col justify-center px-3 border-l border-[#33ff00]/20 min-w-[60px] text-center animate-in fade-in">
-                                    <span className="text-[8px] text-[#33ff00] tracking-wider leading-none mb-0.5">{t.nodes}</span>
-                                    <span className="text-white font-mono text-xs font-bold leading-none">
-                                        {discoveredHotspots}/{totalHotspotsRef.current}
+                        {/* Control de Cámara */}
+                        <div className="relative">
+                            <button
+                                onClick={() => {
+                                    setShowHeightControl(!showHeightControl);
+                                    setShowVolumeControl(false);
+                                }}
+                                className={`w-6 h-6 bg-black/95 border border-[#33ff00]/80 flex items-center justify-center transition-all hover:bg-[#33ff00]/20 ${showHeightControl ? 'bg-[#33ff00]/30' : ''}`}
+                                title={t.cam}
+                            >
+                                <span className="text-[11px]">📷</span>
+                            </button>
+                            {showHeightControl && (
+                                <div className="absolute bottom-8 right-0 bg-black/98 border border-[#33ff00] p-2 flex flex-col items-center gap-1.5 animate-in fade-in slide-in-from-bottom-1 shadow-[0_0_15px_rgba(51,255,0,0.2)]">
+                                    <div className="h-24 flex items-center justify-center py-1">
+                                        <input
+                                            type="range" min="-3" max="2" step="0.1"
+                                            value={cameraHeight}
+                                            onChange={(e) => setCameraHeight(parseFloat(e.target.value))}
+                                            className="h-20 accent-[#33ff00] cursor-pointer"
+                                            style={{ writingMode: 'vertical-lr', direction: 'rtl', WebkitAppearance: 'slider-vertical' }}
+                                        />
+                                    </div>
+                                    <span className="text-[8px] text-white font-mono border-t border-[#33ff00]/20 pt-1 w-full text-center">
+                                        {cameraHeight.toFixed(1)}m
                                     </span>
                                 </div>
                             )}
-                        </div>
-
-                        {/* B. SECCIÓN DERECHA SCROLLABLE (Herramientas) */}
-                        <div className="flex overflow-x-auto no-scrollbar flex-grow items-stretch">
-
-                            {/* Item Generador (Mapa, Inv, Crew, Logs) */}
-                            {[
-                                { icon: '🗺️', label: t.map, action: handleOpenMap },
-                                { icon: '📦', label: t.inv, action: () => setShowInventory(true), badge: playerStats.inventario?.length },
-                                { icon: '👥', label: t.crew, action: () => setShowCharacters(true), badge: playerStats.personajes_conocidos?.length },
-                                { icon: '📚', label: t.logs, action: () => setShowStories(true), badge: playerStats.historias_visitadas?.length }
-                            ].map((btn, idx) => (
-                                <div
-                                    key={idx}
-                                    className="group relative flex flex-col items-center justify-center px-3 cursor-pointer hover:bg-[#33ff00]/10 transition-all border-r border-[#33ff00]/10 min-w-[55px] flex-shrink-0"
-                                    onClick={btn.action}
-                                >
-                                    {/* Badge si existe */}
-                                    {btn.badge ? (
-                                        <span className="absolute top-1 right-1 bg-[#33ff00] text-black text-[8px] font-bold px-1 rounded-[2px] leading-tight">
-                                            {btn.badge}
-                                        </span>
-                                    ) : null}
-
-                                    <span className="text-base mb-0.5 grayscale group-hover:grayscale-0 transition-all">{btn.icon}</span>
-                                    <span className="text-[8px] text-[#33ff00] font-mono tracking-wider group-hover:text-white">{btn.label}</span>
-                                </div>
-                            ))}
-
-                            {/* --- CONTROLES 3D (Audio y Cámara) --- */}
-
-                            {/* Audio Control */}
-                            {is3DModel && backgroundMusicUrl && (
-                                <div className="relative flex flex-col items-center justify-center px-3 cursor-pointer hover:bg-[#33ff00]/10 transition-all border-r border-[#33ff00]/10 min-w-[55px] flex-shrink-0 group">
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowVolumeControl(!showVolumeControl);
-                                            setShowHeightControl(false);
-                                        }}
-                                        className="flex flex-col items-center w-full h-full justify-center outline-none"
-                                    >
-                                        <span className={`text-base mb-0.5 transition-colors ${showVolumeControl ? 'text-[#33ff00]' : 'text-gray-400 group-hover:text-white'}`}>🔊</span>
-                                        <span className="text-[8px] text-[#33ff00] font-mono tracking-wider">{t.vol}</span>
-                                    </button>
-
-                                    {/* Slider Popup */}
-                                    {showVolumeControl && (
-                                        <div className="fixed bottom-16 left-1/2 transform -translate-x-1/2 z-[100] bg-black border border-[#33ff00] shadow-[0_0_30px_rgba(51,255,0,0.5)] w-[50px] h-[160px] flex flex-col items-center rounded-sm animate-in slide-in-from-bottom-2">
-                                            {/* Header con Cerrar */}
-                                            <div className="w-full flex justify-center border-b border-[#33ff00]/30 py-1 mb-2 bg-[#33ff00]/10 cursor-pointer hover:bg-red-900/50 group/close" onClick={() => setShowVolumeControl(false)}>
-                                                <span className="text-[10px] text-[#33ff00] group-hover/close:text-red-500">▼</span>
-                                            </div>
-
-                                            {/* Slider Wrapper */}
-                                            <div className="h-[90px] flex items-center justify-center w-full">
-                                                <input
-                                                    type="range"
-                                                    min="0"
-                                                    max="1"
-                                                    step="0.1"
-                                                    value={backgroundMusicVolume}
-                                                    onChange={(e) => setBackgroundMusicVolume(parseFloat(e.target.value))}
-                                                    className="h-[80px] w-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-[#33ff00]"
-                                                    style={{ writingMode: 'vertical-lr', direction: 'rtl', WebkitAppearance: 'slider-vertical' }}
-                                                />
-                                            </div>
-                                            <span className="text-[9px] text-white font-mono mt-2">{Math.round(backgroundMusicVolume * 100)}%</span>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Camara Control */}
-                            {is3DModel && (
-                                <div className="relative flex flex-col items-center justify-center px-3 cursor-pointer hover:bg-[#33ff00]/10 transition-all min-w-[55px] flex-shrink-0 group">
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowHeightControl(!showHeightControl);
-                                            setShowVolumeControl(false);
-                                        }}
-                                        className="flex flex-col items-center w-full h-full justify-center outline-none"
-                                    >
-                                        <span className={`text-base mb-0.5 transition-colors ${showHeightControl ? 'text-[#33ff00]' : 'text-gray-400 group-hover:text-white'}`}>📷</span>
-                                        <span className="text-[8px] text-[#33ff00] font-mono tracking-wider">{t.cam}</span>
-                                    </button>
-
-                                    {/* Slider Popup */}
-                                    {showHeightControl && (
-                                        <div className="fixed bottom-16 left-1/2 transform -translate-x-1/2 z-[100] bg-black border border-[#33ff00] shadow-[0_0_30px_rgba(51,255,0,0.5)] w-[50px] h-[160px] flex flex-col items-center rounded-sm animate-in slide-in-from-bottom-2">
-                                            {/* Header con Cerrar */}
-                                            <div className="w-full flex justify-center border-b border-[#33ff00]/30 py-1 mb-2 bg-[#33ff00]/10 cursor-pointer hover:bg-red-900/50 group/close" onClick={() => setShowHeightControl(false)}>
-                                                <span className="text-[10px] text-[#33ff00] group-hover/close:text-red-500">▼</span>
-                                            </div>
-
-                                            {/* Slider Wrapper */}
-                                            <div className="h-[90px] flex items-center justify-center w-full">
-                                                <input
-                                                    type="range"
-                                                    min="-3"
-                                                    max="2"
-                                                    step="0.1"
-                                                    value={cameraHeight}
-                                                    onChange={(e) => setCameraHeight(parseFloat(e.target.value))}
-                                                    className="h-[80px] w-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-[#33ff00]"
-                                                    style={{ writingMode: 'vertical-lr', direction: 'rtl', WebkitAppearance: 'slider-vertical' }}
-                                                />
-                                            </div>
-                                            <span className="text-[9px] text-white font-mono mt-2">{cameraHeight.toFixed(1)}m</span>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
                         </div>
                     </div>
                 </div>
@@ -3177,8 +2290,8 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         fixed z-40 select-none touch-none 
                         transition-all duration-500 ease-in-out
                         left-2  /* Más a la izquierda */
+                        bottom-6 /* Posición fija sin barra inferior */
                         ${showInitial3DPopup ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'}
-                        ${showBottomBar ? 'bottom-20' : 'bottom-4'} /* Dinámico: Sube si hay barra, baja si no */
                     `}
                     style={{ width: '150px', height: '150px' }}
                 >
@@ -3312,7 +2425,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                     controls
                                     autoPlay
                                     className="w-full h-full object-cover hotspot-video"
-                                    onCanPlay={(e) => handleMediaAutoplay(e.currentTarget)}
+                                    onCanPlay={(e) => { handleMediaAutoplay(e.currentTarget); }}
                                 >
                                     {hotspotSubtitleUrl && subtitlesEnabled && (
                                         <track kind="subtitles" src={hotspotSubtitleUrl} srcLang="en" label="English" default />
@@ -3346,7 +2459,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                     controls
                                     autoPlay
                                     className="w-full filter invert hue-rotate-180 contrast-150 opacity-90"
-                                    onCanPlay={(e) => handleMediaAutoplay(e.currentTarget)}
+                                    onCanPlay={(e) => { handleMediaAutoplay(e.currentTarget); }}
                                 />
                             </div>
                         )}
@@ -3366,401 +2479,14 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     </div>
                 </div>
             </div>
-            {/* Modal del mapa*/}
-            {showMap && (
-                <div
-                    className="modal"
-                    style={{
-                        display: 'flex',
-                        zIndex: 101, // Aseguramos que esté sobre otros modales si es necesario
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}
-                >
-                    <div
-                        className="modal-content"
-                        style={{
-                            width: '95vw',
-                            height: '90vh',
-                            maxWidth: '1200px',
-                            padding: '0', // MapaView manejará su propio padding
-                            overflow: 'hidden', // Evita que el mapa se desborde
-                            position: 'relative'
-                        }}
-                    >
-                        {/* Botón de cerrar el modal del mapa */}
-                        <span
-                            className="close-button"
-                            onClick={() => setShowMap(false)}
-                            style={{ zIndex: 1000, color: '#fff', background: 'rgba(0,0,0,0.5)', borderRadius: '50%', padding: '0 0.5rem' }}
-                        >
-                            &times;
-                        </span>
 
-                        <MapaView
-                            // Pasamos las historias que ya cargamos en este componente
-                            historias={historias}
-                            // Pasamos las historias visitadas para los colores de pines
-                            historiasVisitadas={historiasVisitadas}
-                            // Pasamos la nueva función de "arranque"
-                            onStartNarrativeFromMap={handleStartStoryFromMap}
-                            // Pasamos la función para cerrar (que es la misma)
-                            onBack={() => setShowMap(false)}
-                            // Centro inicial del mapa
-                            initialCenter={mapCenter}
-                            recursos={recursosData} // <--- ¡AÑADE ESTA LÍNEA!
-                        />
-                    </div>
-                </div>
-            )}
-            {/* Modal de Inventario */}
-            <div
-                id="inventoryModal"
-                className={`
-                    fixed inset-0 z-[60] flex items-center justify-center 
-                    bg-black/85 backdrop-blur-sm font-mono
-                    ${showInventory ? 'flex' : 'hidden'}
-                `}
-            >
-                {/* Contenedor del Modal */}
-                <div className="w-[90%] max-w-[600px] bg-black/95 border border-[#33ff00] shadow-[0_0_30px_rgba(51,255,0,0.15)] flex flex-col">
-
-                    {/* Encabezado */}
-                    <div className="flex justify-between items-center p-4 border-b border-[#33ff00]/30 bg-[#33ff00]/5">
-                        <h3 className="text-[#33ff00] text-lg font-bold tracking-widest uppercase flex items-center gap-2">
-                            <span className="animate-pulse">_</span> {t.res_storage}
-                        </h3>
-                        <button
-                            className="text-[#33ff00] hover:text-white hover:bg-[#33ff00]/20 px-2 py-1 transition-colors text-xl leading-none"
-                            onClick={() => setShowInventory(false)}
-                        >
-                            [X]
-                        </button>
-                    </div>
-
-                    <div className="p-6">
-
-                        {/* Estadísticas rápidas (Header interno) */}
-                        <div className="flex justify-between text-xs text-[#33ff00]/60 mb-4 border-b border-[#33ff00]/20 pb-2">
-                            <span>{t.capacity}</span>
-                            <span>{t.items_label}: {playerStats?.inventario?.length || 0}</span>
-                        </div>
-
-                        {/* Lista de Items */}
-                        <div id="inventoryItems" className="max-h-80 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
-
-                            {/* Estilos para scrollbar personalizado */}
-                            <style>{`
-                                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-                                .custom-scrollbar::-webkit-scrollbar-track { background: #111; }
-                                .custom-scrollbar::-webkit-scrollbar-thumb { background: #33ff00; border-radius: 2px; }
-                            `}</style>
-
-                            {playerStats?.inventario && playerStats.inventario.length > 0 ? (
-                                playerStats.inventario.map((item, index) => (
-                                    <div key={index} className="flex gap-3 border border-[#33ff00]/20 p-3 bg-white/5 hover:bg-[#33ff00]/10 transition-colors cursor-default group">
-
-                                        {/* Icono / Placeholder Gráfico */}
-                                        <div className="w-12 h-12 border border-[#33ff00]/30 flex items-center justify-center bg-black text-2xl group-hover:border-[#33ff00] transition-colors">
-                                            📦
-                                        </div>
-
-                                        {/* Datos del Item */}
-                                        <div className="flex-1">
-                                            <div className="flex justify-between items-start mb-1">
-                                                <p className="text-[#33ff00] font-bold text-sm uppercase group-hover:text-white transition-colors">
-                                                    {item.nombre}
-                                                </p>
-                                                <span className="text-[9px] text-[#33ff00]/50 font-mono">
-                                                    ID_{index + 100}
-                                                </span>
-                                            </div>
-                                            <p className="text-xs text-gray-400 leading-tight group-hover:text-gray-300">
-                                                {item.descripcion}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="text-center py-10 border border-dashed border-[#33ff00]/30 text-gray-500 text-sm">
-                                    <p className="mb-2 text-2xl opacity-50">🚫</p>
-                                    [ ! ] {t.empty_storage}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {/* Modal de Personajes */}
-            {showCharacters && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 backdrop-blur-sm font-mono">
-
-                    {/* Contenedor del Modal */}
-                    <div className="w-[90%] max-w-[500px] bg-black/95 border border-[#33ff00] shadow-[0_0_30px_rgba(51,255,0,0.15)] flex flex-col">
-
-                        {/* Encabezado */}
-                        <div className="flex justify-between items-center p-4 border-b border-[#33ff00]/30 bg-[#33ff00]/5">
-                            <h3 className="text-[#33ff00] text-lg font-bold tracking-widest uppercase flex items-center gap-2">
-                                <span className="animate-pulse">_</span> {t.db_crew}
-                            </h3>
-                            <button
-                                className="text-[#33ff00] hover:text-white hover:bg-[#33ff00]/20 px-2 py-1 transition-colors text-xl leading-none"
-                                onClick={() => setShowCharacters(false)}
-                            >
-                                [X]
-                            </button>
-                        </div>
-
-                        <div className="p-6">
-
-                            {/* Instrucciones / Subtítulo técnico */}
-                            <div className="flex justify-between items-end mb-4 border-b border-[#33ff00]/20 pb-2">
-                                <p className="text-xs text-[#33ff00]/70">
-                                    {'>'} {t.select_subj}
-                                </p>
-                                <span className="text-[9px] bg-[#33ff00]/10 text-[#33ff00] px-1 rounded">
-                                    {t.total}: {playerStats?.personajes_conocidos?.length || 0}
-                                </span>
-                            </div>
-
-                            {/* Lista de Personajes */}
-                            <div className="max-h-96 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
-
-                                {/* Estilos scrollbar */}
-                                <style>{`
-                                    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-                                    .custom-scrollbar::-webkit-scrollbar-track { background: #111; }
-                                    .custom-scrollbar::-webkit-scrollbar-thumb { background: #33ff00; border-radius: 2px; }
-                                `}</style>
-
-                                {(playerStats?.personajes_conocidos || []).length > 0 ? (
-                                    (playerStats?.personajes_conocidos || []).map((name, index) => (
-                                        <div
-                                            key={index}
-                                            className="group flex items-center gap-4 border border-[#33ff00]/20 p-3 bg-white/5 hover:bg-[#33ff00]/10 hover:border-[#33ff00]/50 transition-all cursor-pointer"
-                                            onClick={() => handleCharacterClickInBar(name)}
-                                        >
-                                            {/* Icono de Avatar Genérico */}
-                                            <div className="w-10 h-10 bg-black border border-[#33ff00]/30 flex items-center justify-center text-xl group-hover:border-[#33ff00] transition-colors">
-                                                👤
-                                            </div>
-
-                                            {/* Datos del Personaje */}
-                                            <div className="flex-1">
-                                                <div className="flex justify-between items-center">
-                                                    <p className="text-[#33ff00] font-bold text-sm uppercase group-hover:text-white transition-colors">
-                                                        {name}
-                                                    </p>
-                                                    <span className="text-[8px] border border-[#33ff00]/30 text-[#33ff00]/70 px-1 group-hover:bg-[#33ff00] group-hover:text-black transition-colors">
-                                                        {t.view_file} ↗
-                                                    </span>
-                                                </div>
-                                                <p className="text-[10px] text-gray-500 font-mono mt-1">
-                                                    ID_REF: {name.substring(0, 3).toUpperCase()}_{index + 1024}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    // Estado Vacío
-                                    <div className="text-center py-8 border border-dashed border-[#33ff00]/30 text-gray-500 text-sm">
-                                        <p className="mb-2 text-2xl opacity-50">🚫</p>
-                                        [ ! ] {t.no_records}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-            {/* Modal de Historias */}
-            <div
-                id="storiesModal"
-                className={`
-                    fixed inset-0 z-[60] flex items-center justify-center 
-                    bg-black/85 backdrop-blur-sm font-mono
-                    ${showStories ? 'flex' : 'hidden'}
-                `}
-            >
-                {/* Contenedor del Modal */}
-                <div className="w-[90%] max-w-[600px] bg-black/95 border border-[#33ff00] shadow-[0_0_30px_rgba(51,255,0,0.15)] flex flex-col">
-
-                    {/* Encabezado */}
-                    <div className="flex justify-between items-center p-4 border-b border-[#33ff00]/30 bg-[#33ff00]/5">
-                        <h3 className="text-[#33ff00] text-lg font-bold tracking-widest uppercase flex items-center gap-2">
-                            <span className="animate-pulse">_</span> {t.mission_logs}
-                        </h3>
-                        <button
-                            className="text-[#33ff00] hover:text-white hover:bg-[#33ff00]/20 px-2 py-1 transition-colors text-xl leading-none"
-                            onClick={() => setShowStories(false)}
-                        >
-                            [X]
-                        </button>
-                    </div>
-
-                    <div className="p-6">
-
-                        {/* Botón Volver (Estilo Táctico) */}
-                        <button
-                            className="w-full mb-6 group relative py-3 px-4 border border-[#33ff00]/50 text-[#33ff00] text-sm tracking-wider uppercase
-                            transition-all duration-300 hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_15px_rgba(51,255,0,0.4)] flex items-center justify-center gap-3"
-                            onClick={() => {
-                                setShowStories(false);
-                                handleReturnToMenu();
-                            }}
-                        >
-                            <span>{'<<'} {t.return_hub_btn}</span>
-                        </button>
-
-                        {/* Lista de Items */}
-                        <div id="storyItems" className="max-h-80 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
-
-                            {/* Estilos para scrollbar personalizado inline */}
-                            <style>{`
-                                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-                                .custom-scrollbar::-webkit-scrollbar-track { background: #111; }
-                                .custom-scrollbar::-webkit-scrollbar-thumb { background: #33ff00; border-radius: 2px; }
-                            `}</style>
-
-                            {playerStats?.historias_visitadas && historias.length > 0 ? (
-                                playerStats.historias_visitadas.map((storyId, index) => {
-                                    const story = historias.find(h => h.id_historia === parseInt(storyId));
-                                    return story ? (
-                                        <div key={index} className="border border-[#33ff00]/20 p-3 bg-white/5 hover:bg-[#33ff00]/10 transition-colors cursor-default group">
-                                            <div className="flex justify-between items-start mb-1">
-                                                <p className="text-[#33ff00] font-bold text-sm uppercase group-hover:text-white transition-colors">
-                                                    {getLocalizedContent(story, 'titulo', language)}
-                                                </p>
-                                                <span className="text-[9px] bg-[#33ff00]/20 text-[#33ff00] px-1.5 py-0.5 rounded-sm">
-                                                    FILE_{storyId}
-                                                </span>
-                                            </div>
-                                            <p className="text-xs text-gray-400 group-hover:text-gray-300">{getLocalizedContent(story, 'descripcion', language)}</p>
-                                        </div>
-                                    ) : null;
-                                })
-                            ) : (
-                                <div className="text-center py-10 border border-dashed border-[#33ff00]/30 text-gray-500 text-sm">
-                                    <p className="mb-2 text-2xl opacity-50">📂</p>
-                                    [ ! ] {t.no_data_logs}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
             {notification && (
                 <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 text-white py-3 px-6 rounded-full shadow-lg transition-all duration-500 ease-in-out animate-fade-in-down">
                     {notification}
                 </div>
             )}
 
-            {/* Modal de la FICHA del Personaje (Ficha del PersonajeView) */}
-            {selectedCharacterForModal && (
-                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/85 backdrop-blur-sm font-mono" style={{ display: 'flex' }}>
 
-                    {/* Contenedor Principal del Expediente */}
-                    <div className="relative w-[90%] max-w-lg bg-black/95 border border-[#33ff00] shadow-[0_0_40px_rgba(51,255,0,0.15)] flex flex-col max-h-[90vh] overflow-hidden">
-
-                        {/* Decoración de Esquinas */}
-                        <div className="absolute top-0 left-0 w-3 h-3 bg-[#33ff00] z-10"></div>
-                        <div className="absolute top-0 right-0 w-3 h-3 bg-[#33ff00] z-10"></div>
-                        <div className="absolute bottom-0 left-0 w-3 h-3 bg-[#33ff00] z-10"></div>
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#33ff00] z-10"></div>
-
-                        {/* ENCABEZADO */}
-                        <div className="flex justify-between items-center p-5 border-b border-[#33ff00]/30 bg-[#33ff00]/5">
-                            <div>
-                                <h2 className="text-[#33ff00] text-xl font-bold tracking-widest uppercase flex items-center gap-2">
-                                    {t.file_title} {getLocalizedContent(selectedCharacterForModal, 'nombre', language)}
-                                </h2>
-                                <p className="text-[9px] text-[#33ff00]/60 mt-1">{t.access_lvl}</p>
-                            </div>
-                            <button
-                                className="text-[#33ff00] hover:bg-[#33ff00] hover:text-black border border-[#33ff00] w-8 h-8 flex items-center justify-center transition-colors font-bold"
-                                onClick={closeCharacterModal}
-                            >
-                                X
-                            </button>
-                        </div>
-
-                        {/* CONTENIDO SCROLLABLE */}
-                        <div className="p-6 overflow-y-auto custom-scrollbar space-y-6">
-
-                            {/* Estilos Scrollbar */}
-                            <style>{`
-                                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-                                .custom-scrollbar::-webkit-scrollbar-track { background: #111; }
-                                .custom-scrollbar::-webkit-scrollbar-thumb { background: #33ff00; border-radius: 0px; }
-                            `}</style>
-
-                            {/* SECCIÓN 1: IDENTIFICACIÓN VISUAL */}
-                            <div className="flex flex-col items-center">
-                                {selectedCharacterForModal.imagen ? (
-                                    <div className="relative group">
-                                        {/* Marco de la foto */}
-                                        <div className="absolute -top-2 -left-2 w-4 h-4 border-t-2 border-l-2 border-[#33ff00]"></div>
-                                        <div className="absolute -bottom-2 -right-2 w-4 h-4 border-b-2 border-r-2 border-[#33ff00]"></div>
-
-                                        <img
-                                            src={selectedCharacterForModal.imagen}
-                                            alt={selectedCharacterForModal.nombre}
-                                            className="w-40 h-40 object-cover filter grayscale contrast-125 border border-[#33ff00]/50 group-hover:grayscale-0 transition-all duration-500"
-                                        />
-
-                                        {/* Overlay de escaneo */}
-                                        <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(51,255,0,0.1)_50%)] bg-[length:100%_4px] pointer-events-none"></div>
-                                    </div>
-                                ) : (
-                                    <div className="w-32 h-32 border border-dashed border-[#33ff00]/50 flex items-center justify-center bg-black">
-                                        <span className="text-[#33ff00]/30 text-4xl">?</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* SECCIÓN 2: DESCRIPCIÓN */}
-                            <div className="border-l-2 border-[#33ff00] pl-4 bg-[#33ff00]/5 py-2">
-                                <h4 className="text-[#33ff00] text-xs font-bold uppercase tracking-wider mb-2">
-                                    {'>'} {t.psych_profile}
-                                </h4>
-                                <p className="text-sm text-gray-300 leading-relaxed font-sans">
-                                    {getLocalizedContent(selectedCharacterForModal, 'descripcion', language)}
-                                </p>
-                            </div>
-
-                            {/* SECCIÓN 3: METADATOS (GRID TÉCNICA) */}
-                            {selectedCharacterForModal.metadata && (
-                                <div>
-                                    <h4 className="text-[#33ff00] text-xs font-bold uppercase tracking-wider mb-3 border-b border-[#33ff00]/20 pb-1">
-                                        {'>'} {t.tech_attr}
-                                    </h4>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        {Object.entries(selectedCharacterForModal.metadata).map(([key, value]) => (
-                                            <div key={key} className="bg-black border border-[#33ff00]/20 p-2 flex flex-col hover:border-[#33ff00]/60 transition-colors">
-                                                <span className="text-[9px] text-[#33ff00]/60 uppercase tracking-widest mb-1">{key}</span>
-                                                <span className="text-white text-sm font-bold truncate" title={String(value)}>
-                                                    {String(value)}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* FOOTER / BOTÓN CIERRE */}
-                        <div className="p-5 border-t border-[#33ff00]/30 bg-black">
-                            <button
-                                onClick={closeCharacterModal}
-                                className="w-full group relative py-3 border border-[#33ff00] text-[#33ff00] font-bold text-sm tracking-[0.2em] uppercase
-                                transition-all duration-300 hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_15px_rgba(51,255,0,0.4)]"
-                            >
-                                <span>{t.close_btn}</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Modal de Historia Bloqueada */}
             {lockedHistoryModal && (
@@ -3823,4 +2549,5 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         </div>
     );
 };
+
 export default FlujoNarrativoUsuario;
