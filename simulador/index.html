@@ -1181,11 +1181,13 @@
 
             // Send back to parent for XP update and rewards
             window.parent.postMessage({
-                source: 'Simulador',
+                source: 'ResistenciaApp', // Protocolo Unificado
+                appName: 'Simulador',     // Identificador para logs
                 type: 'app-result',
                 status: success ? 'success' : 'failure',
                 recompensaId: success ? successRecompensaId : failureRecompensaId,
-                costoXP: xpDelta,  // Always send XP delta to parent for proper database update
+                xpDelta: xpDelta, // Unified Protocol
+                costoXP: xpDelta, // Legacy support
                 message: success ? "Meta alcanzada." : "Desalojo ejecutado."
             }, '*');
         }

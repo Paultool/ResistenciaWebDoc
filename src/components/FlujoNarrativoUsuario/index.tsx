@@ -168,37 +168,105 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     const handleRecompensa = useCallback(async (result: AppResult) => {
         if (!user?.id) return;
 
-        let costoXP = 0;
-        if ((result.source === 'RentalApp' || result.source === 'ReparaApp') && result.costoXP != null) {
-            costoXP = result.costoXP;
+
+
+        // --- UNIFIED XP PROTOCOL ---
+        // 1. Determinar el Delta Total de XP (Ganancia neta o costo neto)
+        // Preferimos 'xpDelta'. Si no existe, usamos 'costoXP' (legacy support).
+        let totalXpDelta = 0;
+        if (result.xpDelta !== undefined) {
+            totalXpDelta = result.xpDelta;
+        } else if (result.costoXP !== undefined) {
+            totalXpDelta = result.costoXP;
         }
 
-        if (costoXP !== 0) {
+        // 2. Aplicar el cambio de XP (si existe)
+        if (totalXpDelta !== 0) {
+            console.log(`[Unified XP] Aplicando Delta: ${totalXpDelta} XP desde ${result.source}`);
             const { data: newStats, error: costError } = await gameServiceUser.aplicarXPDirecto(
                 user.id,
-                costoXP,
-                "Interacción App"
+                totalXpDelta,
+                `App: ${result.source}` // Motivo más descriptivo
             );
 
             if (!costError && newStats) {
+                // Actualización optimista parcial (aunque fetchPlayerStats viene después)
                 setPlayerStats(newStats);
                 window.dispatchEvent(new Event('statsUpdated'));
             }
         }
 
-        let recompensaIdToApply: number | null = null;
-        if (result.status === 'success' && result?.recompensaId) recompensaIdToApply = result.recompensaId;
-
-        if (recompensaIdToApply && recompensaIdToApply > 0) {
-            const { data: finalStats } = await gameServiceUser.otorgarRecompensa(
+        // 3. Otorgar recompensa (Item/Badge)
+        // La App envía solo costos operacionales en xpDelta.
+        // La recompensa tiene su propio valor de XP en la BD que se aplicará aquí.
+        if (result?.recompensaId && typeof result.recompensaId === 'number' && result.recompensaId > 0) {
+            console.log(`[Unified XP] Otorgando Recompensa ID: ${result.recompensaId} (XP from DB will be applied)`);
+            await gameServiceUser.otorgarRecompensa(
                 user.id,
-                recompensaIdToApply,
-                String(selectedHistoriaId)
+                result.recompensaId,
+                String(selectedHistoriaId),
+                false, // marcarComoVisitada
+                false  // CRITICAL: Allow DB to apply reward XP separately
             );
-            if (finalStats) setPlayerStats(finalStats);
-            else await fetchPlayerStats();
+
+            // Refrescar stats finales para asegurar consistencia (inventario + xp)
+            await fetchPlayerStats();
+            window.dispatchEvent(new Event('statsUpdated'));
         }
-    }, [user, selectedHistoriaId, fetchPlayerStats]);
+
+        // 4. NAVEGACIÓN: Avanzar al siguiente paso
+        const currentStep = flujoData[currentStepIndex];
+        if (!currentStep) return;
+
+        let options: any[] | undefined | null = null;
+
+        if (currentStep.tipo_paso === 'app') {
+            const recursoActual = recursosData.find(r => r.id_recurso === currentStep.recursomultimedia_id);
+            if (recursoActual && recursoActual.metadatos) {
+                try {
+                    const parsedMetadata = JSON.parse(recursoActual.metadatos);
+                    options = parsedMetadata?.flowConfig?.opciones_siguientes_json;
+                } catch (e) {
+                    console.error("Error parseando metadatos:", e);
+                }
+            }
+        }
+
+        const resultOption = options?.find(op => op.texto === result.status);
+
+        if (resultOption) {
+            // 5. RECOMPENSA DEL PASO DEL FLUJO (adicional a la recompensa de la app)
+            // Los pasos del flujo pueden tener su propia recompensa definida en flowConfig
+            if (resultOption.recompensaId && resultOption.recompensaId > 0) {
+                console.log(`[Unified XP] Otorgando Recompensa del Paso: ${resultOption.recompensaId}`);
+                await gameServiceUser.otorgarRecompensa(
+                    user.id,
+                    resultOption.recompensaId,
+                    String(selectedHistoriaId),
+                    false,
+                    false
+                );
+                await fetchPlayerStats();
+                window.dispatchEvent(new Event('statsUpdated'));
+            }
+
+            // 6. NAVEGACIÓN: Avanzar al siguiente paso
+            console.log(`[Unified XP] Navegando a siguiente paso: ${resultOption.siguiente_paso_id}`);
+            setShowStepContent(false);
+            const nextIndex = flujoData.findIndex(p => p.id_flujo === resultOption.siguiente_paso_id);
+
+            if (nextIndex !== -1) {
+                console.log(`[Unified XP] ✅ Navegación exitosa. Index actual: ${currentStepIndex} -> Nuevo Index: ${nextIndex}`);
+                setCurrentStepIndex(nextIndex);
+            } else {
+                console.warn(`[Unified XP] ⚠️ ID de paso siguiente (${resultOption.siguiente_paso_id}) no encontrado en flujo. Mostrando fin.`);
+                console.log("IDs disponibles:", flujoData.map(f => f.id_flujo));
+                setShowEndMessage(true);
+            }
+        } else {
+            console.warn(`[Unified XP] ⚠️ No se encontró opción para status: ${result.status}`);
+        }
+    }, [user, selectedHistoriaId, fetchPlayerStats, flujoData, currentStepIndex, recursosData]);
 
 
     const handleAppCompletion = React.useCallback(async (status: 'success' | 'failure', message: string) => {
@@ -304,6 +372,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         const currentStep = flujoData[currentStepIndex];
         if (!currentStep) return;
 
+        // Validar si el paso actual tiene recompensa por conocer personaje (Lógica existente)
         if (currentStep.id_recompensa !== null && !isStoryCompleted) {
             const personaje = personajesData.find(p => p.id_personaje === currentStep.id_personaje);
             if (personaje && user) {
@@ -317,25 +386,63 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             }
         }
 
+        // --- LÓGICA DE PASO FINAL Y REDIRECCIÓN DE HISTORIA ---
         if (currentStep.tipo_paso === 'final' && selectedHistoriaId !== null && user) {
+            console.log("🏁 Completando historia actual:", selectedHistoriaId);
             try {
                 await gameServiceUser.completeStory(user.id, String(selectedHistoriaId));
             } catch (error) {
                 console.error('❌ Error completando historia:', error);
             }
 
-            if (nextStepId) {
-                setSelectedHistoriaId(nextStepId);
+            // Determinar el ID de la siguiente HISTORIA (no paso)
+            let nextStoryId = nextStepId;
+
+            // Si no viene por argumento, intentar extraerlo de las opciones del paso actual
+            if (!nextStoryId) {
+                // Intentar sacar de opciones_siguientes_json
+                let opts: any[] = [];
+                const rawOpts = currentStep.opciones_decision; // Usamos el campo crudo o el localizado
+                // Nota: getLocalizedContent ya se usó para renderizar, aquí accedemos a data cruda es mejor si la estructura es constante
+
+                if (rawOpts && typeof rawOpts === 'object' && (rawOpts as any).opciones_siguientes_json) {
+                    opts = (rawOpts as any).opciones_siguientes_json;
+                } else if (typeof rawOpts === 'string') {
+                    try {
+                        const parsed = JSON.parse(rawOpts);
+                        opts = parsed.opciones_siguientes_json || (Array.isArray(parsed) ? parsed : []);
+                    } catch (e) {
+                        // ignore
+                    }
+                }
+
+                if (opts.length > 0 && opts[0].siguiente_paso_id) {
+                    nextStoryId = opts[0].siguiente_paso_id;
+                    console.log("🔗 ID de siguiente historia extraído de opciones:", nextStoryId);
+                }
+            }
+
+            if (nextStoryId) {
+                console.log("🔄 Redirigiendo a siguiente historia ID:", nextStoryId);
+                // EVITAR ERROR "No se encontró un paso actual": 
+                // 1. Poner loading en true INMEDIATAMENTE para bloquear renderizado de pasos.
+                setLoading(true);
+                // 2. Limpiar flujo anterior para que no exista "paso actual" viejo.
+                setFlujoData([]);
+                // 3. Cambiar ID para disparar el useEffect de carga.
+                setSelectedHistoriaId(nextStoryId);
                 setCurrentStepIndex(0);
                 setShowStepContent(false);
                 setShowEndMessage(false);
                 return;
             } else {
+                console.log("⏹️ No hay siguiente historia definida. Volviendo al menú.");
                 handleReturnToMenu();
                 return;
             }
         }
 
+        // --- LÓGICA DE PASO NORMAL (Mismo Flujo) ---
         if (!user || nextStepId === null) {
             setShowEndMessage(true);
             return;
@@ -346,6 +453,9 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         if (nextIndex !== -1) {
             setCurrentStepIndex(nextIndex);
         } else {
+            // Si el paso siguiente no existe en el flujo actual, ¿podría ser un salto a otra historia?
+            // Por ahora asumimos fin de flujo.
+            console.warn("⚠️ Paso siguiente no encontrado en flujo actual. Mostrando fin.");
             setShowEndMessage(true);
         }
     }, [flujoData, currentStepIndex, isStoryCompleted, personajesData, user, selectedHistoriaId, fetchPlayerStats, handleReturnToMenu]);
@@ -412,41 +522,34 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             console.log('[Flujo] Mensaje recibido del iframe:', event.data);
 
 
-            if (event.data && event.data.source === 'Simulador') {
-                console.log('[Flujo] Source:', event.data.source);
-                console.log('[Flujo] Type:', event.data.type);
-                // CIERRA EL MODAL INMEDIATAMENTE (antes de procesar)
-                closeHotspotModal();
-                console.log('[Flujo] Modal cerrado inmediatamente tras recibir app-result.');
-                // Luego procesa
-                const result = event.data as AppResult;
-                handleRecompensa(result);
-                handleAppCompletion(result.status, result.message);
-            }
+            // --- PROTOCOLO UNIFICADO DE APPS (ResistenciaApp) ---
+            if (event.data && event.data.source === 'ResistenciaApp') {
+                const appName = event.data.appName || 'UnknownApp';
+                console.log(`[Flujo] 📩 Mensaje recibido de ${appName} (${event.data.type})`);
 
-            else if (event.data && (event.data.source === 'RentalApp' || event.data.source === 'ReparaApp')) {
                 if (event.data.type === 'app-result') {
                     const result = event.data as AppResult;
 
-                    // Genera un ID único basado en timestamp o contenido (para detectar duplicados)
-                    const messageId = `${result.status}-${result.recompensaId}-${result.costoXP}-${Date.now()}`;
+                    // Deduplicación de mensajes
+                    const messageId = `${appName}-${result.status}-${result.recompensaId}-${Date.now()}`;
                     if (processedMessages.has(messageId)) {
-                        console.log('[Flujo] Mensaje duplicado ignorado:', messageId);
+                        console.warn(`[Flujo] ⚠️ Mensaje duplicado de ${appName} ignorado.`);
                         return;
                     }
                     processedMessages.add(messageId);
 
-                    // CIERRA EL MODAL INMEDIATAMENTE (antes de procesar)
+                    // 1. Cerrar Modal (Limpieza UI)
                     closeHotspotModal();
-                    console.log('[Flujo] Modal cerrado inmediatamente tras recibir app-result.');
+                    console.log(`[Flujo] Modal cerrado tras resultado de ${appName}.`);
 
-                    // Luego procesa
+                    // 2. Procesar Lógica Unificada (XP + Recompensa + Navegación)
                     handleRecompensa(result);
-                    handleAppCompletion(result.status, result.message);
-                } else if (event.data.action === 'close') {
-                    // Similar guard si es necesario
+                }
+                else if (event.data.action === 'close') {
+                    console.log(`[Flujo] ❌ Cierre solicitado por ${appName}.`);
                     closeHotspotModal();
-                    handleAppCompletion('failure', 'Cierre por usuario');
+                    // Opcional: Manejar como fallo si se cierra sin terminar
+                    // handleAppCompletion('failure', 'Cierre por usuario');
                 }
             }
         };
@@ -545,6 +648,21 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 return;
             }
 
+            // ✅ FIX: Extraer los IDs de recompensa del flowConfig para enviarlos al simulador
+            let successRecompensaId: number | undefined = undefined;
+            let failureRecompensaId: number | undefined = undefined;
+
+            if (parsedMetadata.flowConfig?.opciones_siguientes_json) {
+                const opciones = parsedMetadata.flowConfig.opciones_siguientes_json;
+                const successOption = opciones.find((op: any) => op.texto === 'success');
+                const failureOption = opciones.find((op: any) => op.texto === 'failure');
+
+                if (successOption?.recompensaId) successRecompensaId = successOption.recompensaId;
+                if (failureOption?.recompensaId) failureRecompensaId = failureOption.recompensaId;
+
+                console.log("[POST MESSAGE App] Recompensas extraídas del flowConfig:", { successRecompensaId, failureRecompensaId });
+            }
+
             if (currentIframe.contentWindow) {
                 const payload = {
                     source: 'FlujoNarrativoUsuario',
@@ -553,10 +671,8 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         inventario: playerStats.inventario,
                         puntuacion: playerStats.xp_total
                     },
-                    // Estos son 'undefined' porque la recompensa y navegación
-                    // se leerán desde 'flowConfig' en handleAppCompletion
-                    successRecompensaId: undefined,
-                    failureRecompensaId: undefined,
+                    successRecompensaId: successRecompensaId,
+                    failureRecompensaId: failureRecompensaId,
                     cc: language
                 };
                 console.log("[POST MESSAGE App] Enviando 'appConfig' (metadatos) al Iframe:", payload);
@@ -597,87 +713,91 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     (window as any).AFRAME.registerComponent('gltf-hotspot-interaction', {
                         schema: {
                             hotspotMeshes: { type: 'array', default: [] },
-                            hotspotData: { type: 'string' }
+                            hotspotData: { type: 'string' },
+                            visitedMeshes: { type: 'array', default: [] } // ✅ NUEVO: Recibir lista de visitados
                         },
 
-                        // --- LÓGICA DE LOS HOTSPOTS (REFACTORIZADA) ---
                         setupHotspots: function () {
                             const obj = this.el.getObject3D('mesh');
                             if (!obj) {
-                                console.log('🟠 setupHotspots: Mesh no listo, reintentando en 500ms.');
-                                // Reintentar si el mesh no está cargado (puede pasar en un 'update')
                                 setTimeout(this.setupHotspots, 500);
                                 return;
                             }
 
-                            console.log('🔄 Ejecutando setupHotspots...');
                             const allHotspotConfigs = JSON.parse(this.data.hotspotData);
-                            const hotspotConfigs = allHotspotConfigs.filter(h => h.contentType !== 'backgroundMusic');
+                            const hotspotConfigs = allHotspotConfigs.filter((h: any) => h.contentType !== 'backgroundMusic');
+                            const visitedSet = new Set(this.data.visitedMeshes); // Optimizar búsqueda
 
-                            // Recorrer todos los objetos del modelo
-                            obj.traverse((child) => {
+                            obj.traverse((child: any) => {
                                 if (child.isMesh) {
-                                    // Buscar configuración del hotspot
-                                    const config = hotspotConfigs.find(c => c.meshName === child.name);
+                                    const config = hotspotConfigs.find((c: any) => c.meshName === child.name);
 
                                     if (config) {
-                                        // APLICAR/RE-APLICAR CONFIGURACIÓN
                                         child.userData.isHotspot = true;
                                         child.userData.hotspotConfig = config;
-                                        child.userData.originalMaterial = child.material.clone();
-                                        child.userData.isClicked = false; // <-- CRÍTICO: Resetear estado
-                                        child.userData.isHovered = false; // <-- CRÍTICO: Resetear estado
-                                        console.log('✅ Hotspot configurado en mesh:', child.name);
-                                    } else {
-                                        // LIMPIAR MESHES QUE YA NO SON HOTSPOTS
-                                        if (child.userData.isHotspot) {
-                                            child.userData.isHotspot = false;
-                                            child.userData.hotspotConfig = null;
+
+                                        // Guardar material original si no existe
+                                        if (!child.userData.originalMaterial) {
+                                            child.userData.originalMaterial = child.material.clone();
                                         }
+
+                                        // ✅ LÓGICA HACKER: Si está visitado, aplicar Wireframe Verde
+                                        const isVisited = visitedSet.has(child.name);
+                                        child.userData.isVisited = isVisited;
+
+                                        if (isVisited) {
+                                            if (!child.userData.visitedMaterial) {
+                                                child.userData.visitedMaterial = new (window as any).THREE.MeshBasicMaterial({
+                                                    color: 0x33ff00,
+                                                    wireframe: true,
+                                                    transparent: true,
+                                                    opacity: 0.8
+                                                });
+                                            }
+                                            child.material = child.userData.visitedMaterial;
+                                        } else {
+                                            child.material = child.userData.originalMaterial;
+                                        }
+
+                                        child.userData.isClicked = false;
+                                        child.userData.isHovered = false;
                                     }
                                 }
                             });
-
-                            console.log('✅ Interacción configurada en modelo GLB');
                         },
 
-                        // --- INICIO: Se ejecuta 1 vez al crear ---
                         init: function () {
-                            // Bindeamos la función para que 'this' funcione correctamente
                             this.setupHotspots = this.setupHotspots.bind(this);
                             this.el.addEventListener('model-loaded', this.setupHotspots);
                         },
 
-                        // --- UPDATE: Se ejecuta CADA VEZ que la data (hotspotData) cambia ---
-                        update: function (oldData) {
-                            if (this.data.hotspotData !== oldData.hotspotData) {
-                                console.log('🔄 Datos del componente actualizados. Re-configurando hotspots...');
-                                // El modelo ya está cargado, solo necesitamos re-escanearlo
-                                // Usamos un timeout corto para asegurar que el modelo (obj) esté accesible
+                        update: function (oldData: any) {
+                            // Re-ejecutar si cambia la data o la lista de visitados
+                            if (this.data.hotspotData !== oldData.hotspotData ||
+                                JSON.stringify(this.data.visitedMeshes) !== JSON.stringify(oldData.visitedMeshes)) {
                                 setTimeout(this.setupHotspots, 100);
                             }
                         },
 
-                        // --- REMOVE: Se ejecuta al destruir ---
                         remove: function () {
                             this.el.removeEventListener('model-loaded', this.setupHotspots);
                         },
 
-                        // --- TICK: (Tu función 'tick' existente va aquí) ---
                         tick: function () {
-                            // ... (tu código de 'tick' de la línea 889 va aquí sin cambios) ...
-                            // Obtener el cursor y su raycaster
                             const cursor = document.querySelector('a-cursor');
                             if (!cursor) return;
 
                             const raycaster = (cursor as any).components?.raycaster;
                             if (!raycaster || !raycaster.intersections || raycaster.intersections.length === 0) {
-                                // No hay intersecciones, restaurar todos los materiales que no estén clickeados
                                 const obj = this.el.getObject3D('mesh');
                                 if (obj) {
-                                    obj.traverse((child) => {
-                                        if (child.isMesh && child.userData.isHotspot && child.userData.isHovered && !child.userData.isClicked) {
-                                            child.material = child.userData.originalMaterial;
+                                    obj.traverse((child: any) => {
+                                        if (child.isMesh && child.userData.isHotspot && child.userData.isHovered) {
+                                            // Restaurar al material correcto (Visitado o Original)
+                                            child.material = child.userData.isVisited
+                                                ? child.userData.visitedMaterial
+                                                : child.userData.originalMaterial;
+
                                             child.material.needsUpdate = true;
                                             child.userData.isHovered = false;
                                         }
@@ -689,29 +809,47 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                             const intersection = raycaster.intersections[0];
                             const mesh = intersection.object;
 
-                            // Si el mesh intersectado es un hotspot
                             if (mesh && mesh.userData && mesh.userData.isHotspot) {
-                                // Crear material de hover si no existe
+                                // Crear materiales de hover si no existen
                                 if (!mesh.userData.hoverMaterial) {
                                     mesh.userData.hoverMaterial = mesh.userData.originalMaterial.clone();
-                                    mesh.userData.hoverMaterial.emissive = new (window as any).THREE.Color(0xFFFF00); // Amarillo
+                                    mesh.userData.hoverMaterial.emissive = new (window as any).THREE.Color(0xFFFF00);
                                     mesh.userData.hoverMaterial.emissiveIntensity = 0.9;
                                 }
 
-                                // Aplicar material de hover solo si no está clickeado
-                                if (!mesh.userData.isClicked && !mesh.userData.isHovered) {
-                                    mesh.material = mesh.userData.hoverMaterial;
-                                    mesh.material.needsUpdate = true;
-                                    mesh.userData.isHovered = true;
-                                    console.log('👆 Hover en:', mesh.name);
+                                // ✅ Hover especial para nodos hackers (Sólido verde brillante)
+                                if (!mesh.userData.hoverVisitedMaterial) {
+                                    mesh.userData.hoverVisitedMaterial = new (window as any).THREE.MeshBasicMaterial({
+                                        color: 0xccffcc, // Verde muy claro casi blanco
+                                        wireframe: true, // Mantener wireframe pero más brillante? O sólido? Probemos wireframe + fill effect visual
+                                    });
+                                    // O mejor: simplemente un verde más brillante sólido para destaque
+                                    mesh.userData.hoverVisitedMaterial = new (window as any).THREE.MeshBasicMaterial({
+                                        color: 0x33ff00,
+                                        wireframe: false,
+                                        transparent: true,
+                                        opacity: 0.3
+                                    });
                                 }
 
-                                // Restaurar otros meshes que no sean este y no estén clickeados
+                                if (!mesh.userData.isClicked && !mesh.userData.isHovered) {
+                                    // Elegir material según estado
+                                    mesh.material = mesh.userData.isVisited
+                                        ? mesh.userData.hoverVisitedMaterial
+                                        : mesh.userData.hoverMaterial;
+
+                                    mesh.material.needsUpdate = true;
+                                    mesh.userData.isHovered = true;
+                                }
+
+                                // Limpiar otros hovers
                                 const obj = this.el.getObject3D('mesh');
                                 if (obj) {
-                                    obj.traverse((child) => {
-                                        if (child.isMesh && child.userData.isHotspot && child !== mesh && child.userData.isHovered && !child.userData.isClicked) {
-                                            child.material = child.userData.originalMaterial;
+                                    obj.traverse((child: any) => {
+                                        if (child.isMesh && child.userData.isHotspot && child !== mesh && child.userData.isHovered) {
+                                            child.material = child.userData.isVisited
+                                                ? child.userData.visitedMaterial
+                                                : child.userData.originalMaterial;
                                             child.material.needsUpdate = true;
                                             child.userData.isHovered = false;
                                         }
@@ -720,8 +858,8 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                             }
                         }
                     });
-                    console.log('✅ Componente gltf-hotspot-interaction registrado');
                 }
+                console.log('✅ Componente gltf-hotspot-interaction registrado');
             } else {
                 setTimeout(registerComponent, 100);
             }
@@ -1099,12 +1237,14 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     }, [hotspotModal, getRecurso]);
 
     // useEffect para manejar la carga y reproducción de recursos multimedia al cambiar de paso
+    // Ref para evitar resetear estados si el efecto corre por actualización de datos (no cambio de paso)
+    const lastStepIndexRef = useRef<number | null>(null);
+
+    // useEffect para manejar la carga y reproducción de recursos multimedia al cambiar de paso
     useEffect(() => {
         // --- INICIO DE LA SOLUCIÓN ---
-        // Si no hay historia seleccionada (estamos en el menú), no procesar ningún paso.
-        // Esto previene que el useEffect se dispare con datos antiguos (flujoData) 
-        // mientras selectedHistoriaId ya es null, lo que causaba que la música se reiniciara.
         if (!selectedHistoriaId) {
+            lastStepIndexRef.current = null; // Reset ref on exit
             return;
         }
         // --- FIN DE LA SOLUCIÓN ---
@@ -1112,21 +1252,27 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         const currentStep = flujoData[currentStepIndex];
         if (!currentStep) return;
 
+        // Detectar si es un cambio de paso real
+        const isStepChange = lastStepIndexRef.current !== currentStepIndex;
+
+        if (isStepChange) {
+            console.log(`[Media Effect] Cambio de paso detectado (${lastStepIndexRef.current} -> ${currentStepIndex}). Reseteando estados.`);
+            // Oculta el contenido del paso al iniciar la carga o reproducción
+            setShowStepContent(false);
+            // Asegúrate de resetear el pop-up inicial cada vez que cambias de paso
+            setShowInitial3DPopup(false);
+
+            lastStepIndexRef.current = currentStepIndex;
+        }
+
         const recursoActual = getRecurso(currentStep.recursomultimedia_id);
         const isVideo = recursoActual?.tipo === 'video';
         const isAudio = recursoActual?.tipo === 'audio';
         const is3DModel = recursoActual?.tipo === '3d_model';
-        const isApp = recursoActual?.tipo === 'app';
 
-
-        // Oculta el contenido del paso al iniciar la carga o reproducción
-        setShowStepContent(false);
-        // Asegúrate de resetear el pop-up inicial cada vez que cambias de paso
-        setShowInitial3DPopup(false);
 
         // Detener música de fondo si no es un modelo 3D
         if (!is3DModel) {
-
             // Detener música de fondo si está sonando
             if (backgroundAudioRef.current) {
                 console.log("⏸️ Deteniendo música de fondo al cambiar de paso.");
@@ -1134,7 +1280,6 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 backgroundAudioRef.current = null;
             }
             setBackgroundMusicUrl(null);
-
         }
 
         if (recursoActual && recursoActual.tipo === '3d_model') {
@@ -1176,8 +1321,11 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 return;
             }
 
-            setShowInitial3DPopup(true);
-            setShowStepContent(false);
+            // SOLO activar popup si es cambio de paso (para que no reaparezca en updates)
+            if (isStepChange) {
+                setShowInitial3DPopup(true);
+                // setShowStepContent(false); <--- REMOVED (Redundant, handled at start of effect)
+            }
 
             const hotspotConfigs = recursoActual.metadatos ? JSON.parse(recursoActual.metadatos) as HotspotConfig[] : [];
             const interactiveHotspots = hotspotConfigs.filter(h => h.contentType !== 'backgroundMusic');
@@ -1186,7 +1334,11 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             console.log("Hotspot Configs cargadas:", hotspotConfigs);
             console.log("Número total de Hotspots interactivos:", totalHotspotsRef.current);
 
-            setShowStepContent(true);
+            // FORCE UPDATE via timeout to break race condition
+            setTimeout(() => {
+                console.log("[Media Effect] ⏰ Forcing ShowStepContent = TRUE via Timeout");
+                setShowStepContent(true);
+            }, 100);
         }
 
     }, [currentStepIndex, flujoData, recursosData, selectedHistoriaId, getRecurso]); // <-- AÑADIR selectedHistoriaId
@@ -1321,7 +1473,11 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
     // Controles de movimiento para móvil con joystick virtual mejorado
     useEffect(() => {
-        if (!isMobile || !selectedHistoriaId) return;
+        // Obtenemos recursoActual aquí para usarlo en dependencias
+        const recursoActual = recursosData.find(r => r.id_recurso === flujoData[currentStepIndex]?.recursomultimedia_id);
+        const is3DModel = recursoActual?.tipo === '3d_model';
+
+        if (!isMobile || !selectedHistoriaId || !is3DModel) return;
 
         const currentKeys: Set<string> = new Set();
 
@@ -1330,23 +1486,29 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
         const simulateKeyPress = (key: string, press: boolean) => {
             const camera = document.querySelector('a-camera');
-            if (!camera) {
-                console.warn('⚠️ Cámara A-Frame no encontrada');
-                return;
+            if (camera) {
+                const wasdControls = (camera as any).components['wasd-controls'];
+                if (wasdControls) {
+                    wasdControls.keys[key] = press;
+                }
             }
 
-            const wasdControls = (camera as any).components['wasd-controls'];
-            if (!wasdControls) {
-                console.warn('⚠️ wasd-controls no encontrado en la cámara');
-                return;
-            }
+            // FEEDBACK VISUAL MANUAL (Porque preventDefault anula :active)
+            let btnId = '';
+            if (key === 'KeyW') btnId = 'mobile-btn-up';
+            if (key === 'KeyS') btnId = 'mobile-btn-down';
+            if (key === 'KeyA') btnId = 'mobile-btn-left';
+            if (key === 'KeyD') btnId = 'mobile-btn-right';
 
-            if (press) {
-                wasdControls.keys[key] = true;
-                console.log(`🎮 Tecla ${key} presionada`);
-            } else {
-                wasdControls.keys[key] = false;
-                console.log(`🎮 Tecla ${key} liberada`);
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                if (press) {
+                    btn.classList.add('bg-[#33ff00]', 'text-black', 'shadow-[0_0_15px_#33ff00]');
+                    btn.classList.remove('text-[#33ff00]', 'bg-black/60');
+                } else {
+                    btn.classList.remove('bg-[#33ff00]', 'text-black', 'shadow-[0_0_15px_#33ff00]');
+                    btn.classList.add('text-[#33ff00]', 'bg-black/60');
+                }
             }
         };
 
@@ -1396,21 +1558,29 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 addListener(btnUp, 'touchstart', (e) => { preventDefaults(e); startMoving('KeyW'); }, { passive: false });
                 addListener(btnUp, 'touchend', (e) => { preventDefaults(e); stopMoving('KeyW'); }, { passive: false });
                 addListener(btnUp, 'touchcancel', (e) => { preventDefaults(e); stopMoving('KeyW'); }, { passive: false });
+                addListener(btnUp, 'mousedown', (e) => { startMoving('KeyW'); }, { passive: false });
+                addListener(btnUp, 'mouseup', (e) => { stopMoving('KeyW'); }, { passive: false });
             }
             if (btnDown) {
                 addListener(btnDown, 'touchstart', (e) => { preventDefaults(e); startMoving('KeyS'); }, { passive: false });
                 addListener(btnDown, 'touchend', (e) => { preventDefaults(e); stopMoving('KeyS'); }, { passive: false });
                 addListener(btnDown, 'touchcancel', (e) => { preventDefaults(e); stopMoving('KeyS'); }, { passive: false });
+                addListener(btnDown, 'mousedown', (e) => { startMoving('KeyS'); }, { passive: false });
+                addListener(btnDown, 'mouseup', (e) => { stopMoving('KeyS'); }, { passive: false });
             }
             if (btnLeft) {
                 addListener(btnLeft, 'touchstart', (e) => { preventDefaults(e); startMoving('KeyA'); }, { passive: false });
                 addListener(btnLeft, 'touchend', (e) => { preventDefaults(e); stopMoving('KeyA'); }, { passive: false });
                 addListener(btnLeft, 'touchcancel', (e) => { preventDefaults(e); stopMoving('KeyA'); }, { passive: false });
+                addListener(btnLeft, 'mousedown', (e) => { startMoving('KeyA'); }, { passive: false });
+                addListener(btnLeft, 'mouseup', (e) => { stopMoving('KeyA'); }, { passive: false });
             }
             if (btnRight) {
                 addListener(btnRight, 'touchstart', (e) => { preventDefaults(e); startMoving('KeyD'); }, { passive: false });
                 addListener(btnRight, 'touchend', (e) => { preventDefaults(e); stopMoving('KeyD'); }, { passive: false });
                 addListener(btnRight, 'touchcancel', (e) => { preventDefaults(e); stopMoving('KeyD'); }, { passive: false });
+                addListener(btnRight, 'mousedown', (e) => { startMoving('KeyD'); }, { passive: false });
+                addListener(btnRight, 'mouseup', (e) => { stopMoving('KeyD'); }, { passive: false });
             }
 
             console.log(`✅ ${listeners.size} botones vinculados con ${Array.from(listeners.values()).reduce((sum, arr) => sum + arr.length, 0)} listeners totales`);
@@ -1429,7 +1599,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             listeners.clear();
             console.log('🧹 Listeners de joystick removidos');
         };
-    }, [isMobile, selectedHistoriaId, currentStepIndex]);
+    }, [isMobile, selectedHistoriaId, currentStepIndex, recursosData, flujoData]); // ✅ Dependencia crítica agregada
 
     // ==================================================================
     // --- NUEVA FUNCIÓN PARA VOLVER AL MENÚ (ACTUALIZADA) ---
@@ -1705,7 +1875,10 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         <button
                             className="w-full group relative py-4 px-5 border border-[#33ff00] text-[#33ff00] font-bold tracking-widest uppercase text-sm md:text-base
                             transition-all duration-300 hover:bg-[#33ff00] hover:text-black hover:shadow-[0_0_20px_rgba(51,255,0,0.4)] active:scale-95"
-                            onClick={() => setShowInitial3DPopup(false)}
+                            onClick={(e) => {
+                                e.stopPropagation(); // 🔴 FIX: Evitar que el click se propague al documento y cause efectos secundarios
+                                setShowInitial3DPopup(false);
+                            }}
                         >
                             <span className="absolute inset-0 w-full h-full bg-[#33ff00]/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></span>
                             <span className="relative flex items-center justify-center gap-2">
@@ -1994,8 +2167,28 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     const stepActual = flujoData[currentStepIndex];
 
     // 4. Si NO estamos cargando, y NO es el fin, pero AÚN ASÍ no hay un paso
-    //    (ej. flujoData vino vacío de la DB), ahora sí mostramos el fin.
+    //    (ej. flujoData vino vacío de la DB o estamos en transición), validamos:
     if (!stepActual) {
+        // Si hay una historia seleccionada pero no hay datos, probablemente es una transición rápida
+        // o un lag en el estado 'loading'. Mostramos cargando en lugar de error.
+        if (selectedHistoriaId) {
+            return (
+                <div className="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center font-mono">
+                    <h2 className="text-[#33ff00] animate-pulse text-xl">
+                        {'>'} ACCEDIENDO A MEMORIA...
+                    </h2>
+                    {/* DEBUG INFO: Mostrar por qué está trabado */}
+                    <div className="mt-4 text-[10px] text-gray-500 font-mono text-center">
+                        <div>ID Historia: {selectedHistoriaId}</div>
+                        <div>Paso Index: {currentStepIndex} / {flujoData.length}</div>
+                        <div>Datos Flujo: {flujoData.length > 0 ? "CARGADOS" : "VACÍOS"}</div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Si NO hay historia seleccionada (y por lógica anterior no estamos en el menú??)
+        // O realmente falló todo.
         console.error("Error: No se encontró un paso actual (currentStep), pero 'loading' es false. Mostrando fin.");
         return (
             <div className="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center p-4 font-mono text-red-500 select-none">
@@ -2111,7 +2304,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                         id="gltf-model-entity"
                                         gltf-model={recursoActual.archivo}
                                         position="0 0 0"
-                                        gltf-hotspot-interaction={`hotspotMeshes: ${meshNames.join(', ')}; hotspotData: ${JSON.stringify(hotspotConfigs)}`}
+                                        gltf-hotspot-interaction={`hotspotMeshes: ${meshNames.join(', ')}; hotspotData: ${JSON.stringify(hotspotConfigs)}; visitedMeshes: ${Array.from(discoveredHotspotIds.current).join(',')}`}
                                     />
                                 );
                             })()}

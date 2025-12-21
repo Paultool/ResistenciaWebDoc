@@ -348,6 +348,7 @@ interface LandingPageProps {
 const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFullscreen }) => {
   const [showContent, setShowContent] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [isBuffering, setIsBuffering] = useState(false);
 
   // Estados para la barra
   const [showBottomBar, setShowBottomBar] = useState(true); // Cambiado a true para aparecer inmediatamente 
@@ -363,7 +364,28 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
   const subtitlesEnabled = language === 'en'; // Mapeo lógico: Inglés = Subtítulos ON
 
   const videoRef = useRef<HTMLVideoElement>(null);
-  const videoSrc = "https://ia800103.us.archive.org/12/items/intro_resistencia/intro%20resistencia%20.mp4";
+  // VIDEO SOURCES
+  // Desktop: Video original
+  const desktopVideoSrc = "https://archive.org/download/intro_resistencia/intro%20resistencia%20.mp4";
+  // Mobile: Optimizado (<720p, ~1-1.5Mbps)
+  const mobileVideoSrc = "https://archive.org/download/intro_mobile/intro_mobile.mp4";
+
+  const [videoSrc, setVideoSrc] = useState(() => window.innerWidth < 768 ? mobileVideoSrc : desktopVideoSrc);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth < 768;
+      const newSrc = isMobile ? mobileVideoSrc : desktopVideoSrc;
+      setVideoSrc(prev => {
+        if (prev !== newSrc) return newSrc;
+        return prev;
+      });
+    };
+
+    // Check on resize (orientation change)
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (showContent) {
@@ -410,9 +432,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
       <div className="absolute inset-0 z-0">
         <video
           ref={videoRef}
-          className="absolute inset-0 w-full h-full object-cover opacity-70"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${isBuffering ? 'opacity-40' : 'opacity-70'}`}
           autoPlay loop={false} muted={isMuted} playsInline
-          src={videoSrc} key={videoSrc} onEnded={handleVideoEnd}
+          preload="auto"
+          poster="/movie_poster_realistic.png"
+          src={videoSrc} key={videoSrc}
+          onEnded={handleVideoEnd}
+          onWaiting={() => setIsBuffering(true)}
+          onPlaying={() => setIsBuffering(false)}
+          onCanPlay={() => setIsBuffering(false)}
         >
           {subtitleUrl && subtitlesEnabled && (
             <track
@@ -425,6 +453,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
           )}
           Tu navegador no soporta video.
         </video>
+
+        {/* BUFFERING INDICATOR */}
+        {isBuffering && (
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col items-center pointer-events-none">
+            <div className="w-12 h-12 border-4 border-[#33ff00] border-t-transparent rounded-full animate-spin mb-4"></div>
+            <span className="text-[#33ff00] bg-black/50 px-2 font-mono text-xs tracking-widest animate-pulse">ESTABLECIENDO SEÑAL...</span>
+          </div>
+        )}
         {/* Capa de efecto gris separada */}
         <div className="absolute inset-0 bg-black/30 mix-blend-saturation pointer-events-none"></div>
       </div>
@@ -477,7 +513,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRequestFull
             </div>
             {/* TÍTULO CON CLASE GLITCH-YELLOW */}
             <h1
-              className="glitch-yellow text-5xl md:text-7xl lg:text-8xl font-black mb-10 tracking-tighter select-none z-10"
+              className="landing-glitch-title mb-10 select-none z-10"
               data-text="LA RESISTENCIA"
               style={{
                 animation: showContent ? 'text-reveal 1.5s cubic-bezier(0.19, 1, 0.22, 1) forwards' : 'none'
@@ -763,24 +799,24 @@ const MainContent: React.FC<MainContentProps> = ({ onRequestFullscreen }) => {
           >
             <span className="term-cursor text-[#33ff00] font-bold">{'>'}</span>
             <h1 className="text-[#33ff00] font-bold font-mono tracking-tighter text-sm md:text-base mb-0">
-              <span className="hidden md:inline">LA_RESISTENCIA</span>
-              <span className="md:hidden">L_R</span>
+              <span className="hidden sm:inline">LA_RESISTENCIA</span>
+              <span className="sm:hidden">LR</span>
             </h1>
           </button>
 
           {/* 2. CENTER: COMMAND BAR (Stats + XP) */}
-          <div className="flex-1 flex justify-center items-center gap-2 md:gap-6 mx-2 overflow-x-auto scrollbar-hide">
+          <div className="flex-1 flex flex-nowrap justify-center items-center gap-1 md:gap-6 mx-1 md:mx-2 overflow-x-auto scrollbar-hide">
 
             {/* XP WIDGET */}
-            <div className="flex flex-col justify-center min-w-[70px] md:min-w-[150px] relative group cursor-help">
+            <div className="flex flex-col justify-center min-w-[60px] md:min-w-[150px] relative group cursor-help shrink-0">
               <div className="flex justify-between w-full text-[8px] text-[#33ff00]/70 font-mono mb-[2px]">
                 {(() => {
                   const currentXP = userStats?.xp || 0;
-                  const lvl = Math.floor(Math.sqrt(currentXP / 100)) + 1;
+                  const lvl = Math.floor(Math.sqrt(Math.max(0, currentXP) / 100)) + 1;
                   return (
                     <>
                       <span className="font-bold">LVL.{lvl} - {getRankName(lvl)}</span>
-                      <span className="hidden md:inline">{currentXP} XP</span>
+                      <span className="hidden lg:inline">{currentXP} XP</span>
                     </>
                   );
                 })()}
@@ -791,7 +827,7 @@ const MainContent: React.FC<MainContentProps> = ({ onRequestFullscreen }) => {
                   style={{
                     width: (() => {
                       const currentXP = userStats?.xp || 0;
-                      const lvl = Math.floor(Math.sqrt(currentXP / 100)) + 1;
+                      const lvl = Math.floor(Math.sqrt(Math.max(0, currentXP) / 100)) + 1;
                       const baseXP = Math.pow(lvl - 1, 2) * 100;
                       const nextXP = Math.pow(lvl, 2) * 100;
                       const progress = ((currentXP - baseXP) / (nextXP - baseXP)) * 100;
@@ -803,7 +839,7 @@ const MainContent: React.FC<MainContentProps> = ({ onRequestFullscreen }) => {
             </div>
 
             {/* STATS ICONS */}
-            <div className="flex items-center gap-1 md:gap-2">
+            <div className="flex flex-nowrap items-center gap-1 md:gap-2 shrink-0">
               {[
                 { id: 'missions', icon: 'fa-folder', count: userStats?.missions, label: t.missions },
                 { id: 'contacts', icon: 'fa-address-book', count: userStats?.contacts, label: t.contacts },
@@ -818,7 +854,7 @@ const MainContent: React.FC<MainContentProps> = ({ onRequestFullscreen }) => {
                   title={stat.label}
                 >
                   <i className={`fas ${stat.icon} text-xs md:text-sm text-[#33ff00] group-hover:scale-110 transition-transform`}></i>
-                  <span className="absolute -top-1 -right-1 md:static md:ml-1 text-[9px] md:text-xs font-bold text-white md:text-[#33ff00] bg-red-600 md:bg-transparent px-1 rounded-full md:px-0 leading-none">
+                  <span className="absolute top-0 right-0 md:static md:ml-1 text-[9px] md:text-xs font-bold text-white md:text-[#33ff00] bg-red-600 md:bg-transparent px-1 rounded-full md:px-0 leading-none">
                     {stat.count || 0}
                   </span>
                 </button>
@@ -967,7 +1003,7 @@ const AppContent: React.FC = () => {
       <GlobalStyles />
 
       <video className="glitch-overlay" autoPlay muted loop playsInline>
-        <source src="https://ia803404.us.archive.org/18/items/fondo_202511/Fondo.mp4" type="video/mp4" />
+        <source src="https://archive.org/download/fondo_202511/Fondo.mp4" type="video/mp4" />
       </video>
 
       {!user ? (

@@ -8,13 +8,15 @@ export interface FlujoNarrativoUsuarioProps {
 
 // Definición de la estructura del resultado de la aplicación (rental.html)
 export interface AppResult {
-    source: 'RentalApp';
+    source: 'RentalApp' | 'Simulador' | 'ReparaApp' | 'BenitoJuarez';
     type: 'app-result';
     status: 'success' | 'failure';
-    // recompensaId aquí es la recompensa **positiva** o **negativa** definida en el Hotspot, no en la app
-    recompensaId: number | undefined;
-    // Ahora la app DEBE devolver el costo de XP si la operación fue exitosa
-    costoXP?: number; // Valor de XP a aplicar (NEGATIVO para costos, POSITIVO para premios)
+    // Standard Protocol Fields
+    xpDelta?: number;      // CAMBIO NETO DE XP (Positivo=Ganancia, Negativo=Costo/Multa). Reemplaza a costoXP.
+    recompensaId?: number; // ID del Item/Logro a entregar
+
+    // Deprecated fields (Mantener soporte temporal si es necesario, o eliminar si migramos todo de una vez)
+    costoXP?: number;
     message: string;
 }
 

@@ -762,12 +762,20 @@
                 console.log(`[RentalApp] Sending result - Status: ${status}, Cost XP: ${costoXP}`);
 
                 let recompensaId = status === 'success' ? successRecompensaId : failureRecompensaId;
+
+                // UNIFIED PROTOCOL: Solo costos operacionales
+                // Success: costo de renta (negativo)
+                // Failure: 0 (la penalización viene de la recompensa en BD)
+                const totalXpDelta = costoXP;
+
                 const result = {
-                    source: 'RentalApp',
+                    source: 'ResistenciaApp',
+                    appName: 'RentalApp',
                     type: 'app-result',
                     status: status,
                     recompensaId: recompensaId,
-                    costoXP: costoXP, // Always send the actual cost
+                    xpDelta: totalXpDelta, // Solo costos operacionales
+                    costoXP: totalXpDelta, // Legacy support
                     message: message
                 };
 

@@ -57,33 +57,12 @@ export type TranslationKeys = {
     click_drag: string;
     start: string;
 
-    // Modals & Bottom Bar
-    map: string;
-    inv: string;
-    crew: string;
-    logs: string;
     xp: string;
     nodes: string;
     vol: string;
     cam: string;
 
-    res_storage: string;
-    capacity: string;
-    items_label: string;
-    empty_storage: string;
-    db_crew: string;
-    select_subj: string;
     view_file: string;
-    no_records: string;
-    mission_logs: string;
-    return_hub_btn: string;
-    no_data_logs: string;
-
-    file_title: string;
-    access_lvl: string;
-    psych_profile: string;
-    tech_attr: string;
-
     hotspot_unknown: string;
 
     // Modals Extra
@@ -156,33 +135,12 @@ export const flujoTranslations: Record<'es' | 'en', TranslationKeys> = {
         click_drag: "Clic + Arrastrar: Mirar",
         start: "INICIAR",
 
-        // Modals & Bottom Bar
-        map: "MAPA",
-        inv: "INV",
-        crew: "CREW",
-        logs: "LOGS",
         xp: "XP",
-        nodes: "NODOS",
+        nodes: "NODES",
         vol: "VOL",
         cam: "CAM",
 
-        res_storage: "ALMACÉN DE RECURSOS",
-        capacity: "CAPACIDAD: ILIMITADA",
-        items_label: "ITEMS",
-        empty_storage: "ALMACÉN VACÍO. RECOLECTA OBJETOS.",
-        db_crew: "BASE DE DATOS: CREW",
-        select_subj: "SELECCIONE SUJETO PARA ANÁLISIS DETALLADO",
         view_file: "VER EXPEDIENTE",
-        no_records: "SIN REGISTROS. INTERACTÚA CON EL ENTORNO.",
-        mission_logs: "LOGS DE MISIÓN",
-        return_hub_btn: "RETORNAR AL HUB",
-        no_data_logs: "SIN DATOS. EXPLORACIÓN REQUERIDA.",
-
-        file_title: "EXPEDIENTE:",
-        access_lvl: "NIVEL DE ACCESO: CONFIDENCIAL",
-        psych_profile: "PERFIL PSICOLÓGICO / BIO",
-        tech_attr: "ATRIBUTOS TÉCNICOS",
-
         hotspot_unknown: "ARCHIVO_DESCONOCIDO",
 
         locked_title: "Historia Bloqueada",
@@ -252,33 +210,12 @@ export const flujoTranslations: Record<'es' | 'en', TranslationKeys> = {
         click_drag: "Click + Drag: Look",
         start: "START",
 
-        // Modals & Bottom Bar
-        map: "MAP",
-        inv: "INV",
-        crew: "CREW",
-        logs: "LOGS",
         xp: "XP",
         nodes: "NODES",
         vol: "VOL",
         cam: "CAM",
 
-        res_storage: "RESOURCE STORAGE",
-        capacity: "CAPACITY: UNLIMITED",
-        items_label: "ITEMS",
-        empty_storage: "STORAGE EMPTY. COLLECT OBJECTS.",
-        db_crew: "DATABASE: CREW",
-        select_subj: "SELECT SUBJECT FOR DETAILED ANALYSIS",
         view_file: "VIEW FILE",
-        no_records: "NO RECORDS. INTERACT WITH ENVIRONMENT.",
-        mission_logs: "MISSION LOGS",
-        return_hub_btn: "RETURN TO HUB",
-        no_data_logs: "NO DATA. EXPLORATION REQUIRED.",
-
-        file_title: "FILE:",
-        access_lvl: "ACCESS LEVEL: CONFIDENTIAL",
-        psych_profile: "PSYCH PROFILE / BIO",
-        tech_attr: "TECH ATTRIBUTES",
-
         hotspot_unknown: "UNKNOWN_FILE",
 
         locked_title: "Story Locked",

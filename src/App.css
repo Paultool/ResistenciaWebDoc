@@ -330,7 +330,7 @@
 
 /* Contenedor Principal */
 .term-navbar {
-  position: fixed;
+  position: sticky;
   top: 0;
   left: 0;
   width: 100%;
@@ -470,14 +470,22 @@
 
 /* RESPONSIVE (MÓVIL) */
 @media (max-width: 960px) {
+  .term-navbar {
+    height: 85px;
+    /* Increased height for mobile safe area */
+    padding: 25px 10px 0 10px;
+    /* Top padding to avoid notch */
+    padding-top: max(25px, env(safe-area-inset-top, 25px));
+  }
+
   .term-hamburger-btn {
     display: block;
   }
 
   .term-menu-container {
     position: absolute;
-    top: 60px;
-    /* Debajo de la barra */
+    top: 100%;
+    /* Relative to navbar bottom */
     left: 0;
     width: 100%;
     background: #050505;
@@ -795,17 +803,38 @@
 }
 
 .info-modal-content {
-  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
-  color: #ffffff;
+  background: #050505;
+  /* Black background */
+  color: #33ff00;
+  /* Green text */
   padding: 2rem;
-  border-radius: 12px;
+  border-radius: 4px;
+  /* Slightly squared */
   max-width: 600px;
   width: 100%;
   position: relative;
-  /* CLAVE para posicionar el botón 'x' */
-  border: 1px solid #4a4a4a;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  border: 1px solid #33ff00;
+  /* Green border */
+  box-shadow: 0 0 20px rgba(51, 255, 0, 0.2);
+  font-family: 'Courier Prime', 'Courier New', monospace;
   animation: modalFadeIn 0.3s ease-out;
+}
+
+/* Efecto Scanlines en el modal */
+.info-modal-content::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: -1;
+  /* Detran del contenido */
+  background-size: 100% 2px, 3px 100%;
+  pointer-events: none;
 }
 
 /* ESTILO ESPECÍFICO PARA EL MODAL DE LOGIN (MÁS COMPACTO) */
@@ -816,37 +845,66 @@
 
 /* --- BOTÓN CERRAR --- */
 .info-modal-close-btn {
-  color: #555;
-  font-family: Arial, sans-serif;
+  color: #33ff00;
+  font-family: 'Courier Prime', monospace;
+  font-size: 1.5rem;
   top: 15px;
   right: 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  position: absolute;
+  transition: all 0.3s ease;
 }
 
 .info-modal-close-btn:hover {
   color: #fff;
+  text-shadow: 0 0 5px #33ff00;
+  transform: scale(1.1);
 }
 
 
 .info-modal-title {
-  color: #fff;
-  border-bottom: 1px solid #333;
+  color: #33ff00;
+  border-bottom: 2px solid #33ff00;
   padding-bottom: 15px;
   margin-bottom: 20px;
   font-size: 1.5rem;
   text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 5px rgba(51, 255, 0, 0.5);
 }
 
 .info-modal-title::before {
-  content: 'FILE: ';
-  color: #555;
+  content: '> ';
+  color: #33ff00;
+  animation: blink 1s infinite;
 }
 
 .info-modal-body {
   font-size: 1rem;
-  color: #e0e0e0;
-  line-height: 1.7;
+  color: #a8f3a8;
+  /* Un verde un poco más claro para lectura */
+  line-height: 1.6;
   max-height: 60vh;
   overflow-y: auto;
+  font-family: 'Courier Prime', monospace;
+  scrollbar-width: thin;
+  scrollbar-color: #33ff00 #000;
+}
+
+/* Custom Scrollbar for Modal Body */
+.info-modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.info-modal-body::-webkit-scrollbar-track {
+  background: #000;
+}
+
+.info-modal-body::-webkit-scrollbar-thumb {
+  background-color: #33ff00;
+  border-radius: 4px;
 }
 
 .login-modal-subtitle {
@@ -955,6 +1013,7 @@
   /* Limitar a unas pocas líneas para el preview */
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1219,16 +1278,16 @@
 
   /* Modales más pequeños en móviles */
   .info-modal-content {
-    background-color: #0a0a0a;
-    border: 1px solid #333;
-    border-top: 4px solid #CD853F;
-    /* Tope naranja */
+    background-color: #050505;
+    border: 1px solid #33ff00;
+    border-top: 4px solid #33ff00;
+    /* Green top border */
     border-radius: 0;
     /* Cuadrado */
-    font-family: 'Courier New', monospace;
-    color: #ccc;
+    font-family: 'Courier Prime', monospace;
+    color: #a8f3a8;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
-    max-width: 700px;
+    max-width: 90%;
   }
 
   .login-modal-override {
@@ -1952,7 +2011,8 @@
   /* Fuente gruesa necesaria */
   font-weight: 900;
   font-size: 6rem;
-  color: #e29c05d3;
+  color: #33ff00;
+  /* Green Hacker */
   text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
   -webkit-text-stroke: 1px #000;
   text-transform: uppercase;

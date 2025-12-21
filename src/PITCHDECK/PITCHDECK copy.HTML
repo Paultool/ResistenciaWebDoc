@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Resistencia - Ingenia Play Lab Pitch</title>
+    <!-- Fuentes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600;800;900&family=Roboto+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* =========================================
+           ESTILOS: CYBER-INDUSTRIAL INTEGRATED
+           ========================================= */
+        :root {
+            --bg-dark: #020202;
+            --panel-bg: rgba(15, 15, 15, 0.95);
+            --neon-green: #39ff14;
+            --neon-red: #ff003c;
+            --cyber-blue: #00f2ff;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: #333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            font-family: 'Urbanist', sans-serif;
+            color: var(--text-main);
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* EFECTOS VISUALES (Scanlines + Noise) */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.2));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0.4;
+        }
+
+        .noise {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('https://grainy-gradients.vercel.app/noise.svg');
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 998;
+        }
+
+        /* CONTENEDOR PRINCIPAL */
+        #deck-container {
+            width: 1440px;
+            height: 810px;
+            background-color: #050505;
+            border: 1px solid var(--border);
+            position: relative;
+            box-shadow: 0 0 80px rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform-origin: center center;
+        }
+
+        /* UI ELEMENTS */
+        .system-header {
+            height: 40px;
+            border-bottom: 1px solid #222;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px;
+            color: var(--neon-green);
+            background: #080808;
+            z-index: 50;
+            letter-spacing: 1px;
+        }
+
+        .slide {
+            display: none;
+            flex: 1;
+            padding: 40px 60px;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            position: relative;
+            z-index: 10;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* TIPOGRAFÍA */
+        h1 {
+            font-size: 80px;
+            line-height: 0.9;
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            color: #fff;
+            letter-spacing: -2px;
+            text-shadow: 2px 2px 0px rgba(57, 255, 20, 0.3);
+        }
+
+        h2 {
+            font-size: 42px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+            color: #fff;
+            border-left: 6px solid var(--neon-green);
+            padding-left: 20px;
+        }
+
+        h3 {
+            font-family: 'Roboto Mono', monospace;
+            color: var(--cyber-blue);
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        h4 {
+            color: #fff;
+            margin-bottom: 5px;
+            font-size: 18px;
+            text-transform: uppercase;
+        }
+
+        p {
+            font-size: 18px;
+            line-height: 1.5;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+
+        .mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        .highlight {
+            color: var(--neon-green);
+            font-weight: bold;
+        }
+
+        /* LAYOUTS */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 50px;
+            height: 100%;
+            align-items: center;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            width: 100%;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            width: 100%;
+        }
+
+        /* COMPONENTES */
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid #222;
+            padding: 20px;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            border-color: var(--neon-green);
+            background: rgba(57, 255, 20, 0.05);
+            transform: translateY(-3px);
+        }
+
+        .img-box {
+            width: 100%;
+            height: 100%;
+            min-height: 350px;
+            background: #111;
+            border: 1px dashed #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: all 0.5s;
+        }
+
+        .img-box:hover img {
+            transform: scale(1.05);
+        }
+
+        /* Layout apilado para capturas landscape */
+        .stacked-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            height: 100%;
+        }
+
+        .stacked-layout .img-box {
+            flex: 1;
+            min-height: 450px;
+        }
+
+        .stacked-layout .content {
+            flex: 0 0 auto;
+            max-height: 200px;
+        }
+
+        .label {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: #000;
+            color: var(--neon-green);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 10px;
+            padding: 4px 8px;
+            border: 1px solid var(--neon-green);
+            z-index: 20;
+        }
+
+        /* TEAM GRID */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+        }
+
+        .team-card h5 {
+            color: var(--cyber-blue);
+            font-size: 16px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .team-card small {
+            display: block;
+            margin-bottom: 10px;
+            color: #666;
+            font-family: 'Roboto Mono';
+        }
+
+        /* TECH LIST */
+        .tech-list li {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #222;
+            padding: 8px 0;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 12px;
+        }
+
+        .tech-list span:last-child {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        /* FOOTER NAV */
+        .nav-footer {
+            height: 50px;
+            border-top: 1px solid #222;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            background: #050505;
+            z-index: 50;
+        }
+
+        .btn {
+            background: transparent;
+            border: 1px solid #444;
+            color: var(--text-main);
+            padding: 8px 20px;
+            font-family: 'Roboto Mono', monospace;
+            cursor: pointer;
+            font-size: 12px;
+            text-transform: uppercase;
+            transition: 0.2s;
+        }
+
+        .btn:hover {
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+            box-shadow: 0 0 10px rgba(57, 255, 20, 0.2);
+        }
+
+        /* PRINT STYLES - STRICT PDF */
+        @media print {
+            @page {
+                size: 297mm 210mm;
+                margin: 0;
+            }
+
+            body {
+                background: #000;
+                -webkit-print-color-adjust: exact;
+            }
+
+            #deck-container {
+                width: 297mm;
+                height: auto;
+                transform: none !important;
+                border: none;
+                box-shadow: none;
+            }
+
+            .slide {
+                display: flex !important;
+                opacity: 1 !important;
+                page-break-after: always;
+                width: 297mm;
+                height: 210mm;
+                padding: 15mm;
+                border: 1px solid transparent;
+            }
+
+            .nav-footer,
+            .scanlines,
+            .noise {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="scanlines"></div>
+    <div class="noise"></div>
+
+    <div id="deck-container">
+        <!-- SYSTEM HEADER -->
+        <div class="system-header">
+            <span>// INGENIA_PLAY_LAB_APP_v10.0</span>
+            <span id="clock" style="color: #fff;">00:00:00</span>
+            <span>STATUS: <span style="color:var(--neon-green)">PITCH_READY</span></span>
+        </div>
+
+        <!-- =================================================================
+             1. PORTADA
+             ================================================================= -->
+        <div class="slide active" id="s1">
+            <div style="position: absolute; top:0; left:0; width:100%; height:100%; z-index:-1; opacity: 0.25;">
+                <img src="images/sello.png" style="width:100%; height:100%; object-fit:cover;">
+            </div>
+            <div style="z-index: 2; max-width: 900px; text-align: left;">
+                <span class="mono"
+                    style="background: var(--neon-green); color:black; padding:4px 10px; font-weight:bold; font-size:12px;">
+                    POSTULACIÓN 2026
+                </span>
+                <h1 style="margin-top: 20px; font-size: 100px;">LA RESISTENCIA</h1>
+                <p class="mono" style="font-size: 24px; color: var(--cyber-blue); letter-spacing: 2px;">
+                    DOCU-GAME & EXPERIENCIA INMERSIVA
+                </p>
+                <div style="margin-top: 60px; border-top: 1px solid #444; padding-top: 20px;">
+                    <p class="mono" style="color: #888; font-size: 14px; margin:0;">DESARROLLADO POR:</p>
+                    <h3 style="color: #fff; font-size: 24px; margin-top:5px;">MELVIN RECORDS / INGENIA PLAY LAB</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             2. CONTEXTO (NUEVO)
+             ================================================================= -->
+        <div class="slide" id="s2">
+            <div class="two-col">
+                <div>
+                    <h3>02. ORIGEN</h3>
+                    <h2>LA HERIDA Y EL SANTUARIO</h2>
+
+                    <div class="card" style="border-left: 4px solid var(--neon-red); margin-bottom: 20px;">
+                        <h4 style="color: var(--neon-red); font-size: 16px;">LA EXPULSIÓN</h4>
+                        <p style="font-size: 14px; margin: 0;">
+                            Pablo, cineasta e ingeniero de audio, ve su vida en la colonia <strong>Narvarte</strong>
+                            desmoronarse bajo la especulación inmobiliaria. En bancarrota,
+                            migra de regreso a <strong>Tultitlán</strong>, ciudad satélite industrial.
+                        </p>
+                    </div>
+
+                    <div class="card" style="border-left: 4px solid var(--neon-green); margin-bottom: 20px;">
+                        <h4 style="color: var(--neon-green); font-size: 16px;">EL HACKLAB</h4>
+                        <p style="font-size: 14px; margin: 0;">
+                            En el garaje de su madre, funda <strong>"Hacklab La Resistencia"</strong>: taller de
+                            electrónica + pulquería + archivo digital. Un acto de dignidad contra el olvido.
+                        </p>
+                    </div>
+
+                    <div class="card" style="border-left: 4px solid var(--cyber-blue);">
+                        <h4 style="color: var(--cyber-blue); font-size: 16px;">LA CLAUSURA</h4>
+                        <p style="font-size: 14px; margin: 0;">
+                            El espacio es cerrado por las autoridades: <strong>venta de pulque en zona
+                                habitacional</strong>. La resistencia física termina. La digital comienza.
+                        </p>
+                    </div>
+                </div>
+                <div class="img-box">
+                    <img src="images/resistencia start.webp" alt="Espacio Físico Real">
+                    <div class="label">FOTO REAL: HACKLAB LA RESISTENCIA</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             3. IDEA GENERAL 
+             ================================================================= -->
+        <div class="slide" id="s3">
+            <div class="two-col">
+                <div>
+                    <h3>03. CONCEPTO</h3>
+                    <h2>SUDAR EL TRAUMA</h2>
+                    <p style="font-size: 18px; color: #fff; margin-bottom: 20px;">
+                        Un <strong>Docu-Game</strong> donde heredas la lucha de Pablo: gestionar la escasez, reparar
+                        electrónica rota y tejer una comunidad para sobrevivir en un sistema diseñado para borrarte.
+                    </p>
+
+                    <div class="card" style="border-left: 4px solid var(--neon-green); margin-bottom: 15px;">
+                        <h4 style="color: var(--neon-green); font-size: 14px;">LA EXPERIENCIA</h4>
+                        <p style="font-size: 13px; margin: 0;">
+                            No eres espectador pasivo. <strong>Habitas el conflicto</strong>: decides si comprar
+                            refacciones o pagar la renta. La narrativa está bloqueada por la precariedad.
+                        </p>
+                    </div>
+
+                    <div class="card" style="border-left: 4px solid var(--cyber-blue);">
+                        <h4 style="color: var(--cyber-blue); font-size: 14px;">EL CORAZÓN</h4>
+                        <p style="font-size: 13px; margin: 0;">
+                            Al reparar objetos, desbloqueas las historias de <strong>Boni</strong> (albañil filósofo),
+                            <strong>Bidek</strong> (grafitero), e <strong>Iván</strong> (músico). Tus decisiones
+                            determinan si el Hacklab sobrevive.
+                        </p>
+                    </div>
+                </div>
+                <div class="img-box">
+                    <img src="images/resistencia.png" alt="Concept Art">
+                    <div class="label">CONCEPT ART</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             4. GÉNERO
+             ================================================================= -->
+        <div class="slide" id="s4">
+            <div class="two-col">
+                <div class="img-box">
+                    <img src="images/boni vs malo.jpeg" alt="Action Shot">
+                    <div class="label">GAMEPLAY: FIGHT</div>
+                </div>
+                <div style="padding-left: 20px;">
+                    <h3>04. DEFINICIÓN</h3>
+                    <h2>GÉNERO: DOCU-RPG</h2>
+
+                    <div class="card" style="margin-bottom: 20px;">
+                        <h4><i class="fa-solid fa-film" style="color:var(--cyber-blue)"></i> DOCUMENTAL INTERACTIVO</h4>
+                        <p style="font-size: 14px;">Entrevistas reales integradas en el mundo del juego.</p>
+                    </div>
+
+                    <div class="card">
+                        <h4><i class="fa-solid fa-chess-board" style="color:var(--neon-green)"></i> RPG DE GESTIÓN</h4>
+                        <p style="font-size: 14px;">Administración de recursos, misiones, diálogo e inventario.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             5. TECNOLOGÍA
+             ================================================================= -->
+        <div class="slide" id="s5">
+            <div class="stacked-layout">
+                <div class="img-box">
+                    <img src="images/dashboard.png" alt="Tech Dashboard">
+                    <div class="label">MOTOR RESISTENCIA (PROPIETARIO)</div>
+                </div>
+                <div class="content">
+                    <h3>05. SOBERANÍA TECNOLÓGICA</h3>
+                    <h2 style="font-size: 28px; margin-bottom: 10px;">MOTOR WEB PROPIO</h2>
+                    <div
+                        style="background: rgba(57,255,20,0.05); padding: 12px; border: 1px solid var(--neon-green); margin-bottom: 10px;">
+                        <h4 style="color: var(--neon-green); font-size: 13px; margin: 0 0 5px 0;">RESISTENCIA ENGINE
+                        </h4>
+                        <p style="font-size: 11px; margin: 0;">
+                            Arquitectura <strong>WebGL/Serverless</strong> propietaria. No dependemos de herramientas
+                            licenciadas (Unity/Unreal). Código 100% nuestro.
+                        </p>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 10px;">
+                        <div
+                            style="background: rgba(0,225,255,0.05); padding: 8px; border-left: 2px solid var(--cyber-blue);">
+                            <strong style="color: var(--cyber-blue);">FRONTEND</strong><br>
+                            React + Three.js (R3F)
+                        </div>
+                        <div
+                            style="background: rgba(255,0,60,0.05); padding: 8px; border-left: 2px solid var(--neon-red);">
+                            <strong style="color: var(--neon-red);">BACKEND</strong><br>
+                            Supabase (PostgreSQL)
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); padding: 8px; border-left: 2px solid #fff;">
+                            <strong>3D ASSETS</strong><br>
+                            LiDAR + Fotogrametría
+                        </div>
+                        <div style="background: rgba(255,157,0,0.05); padding: 8px; border-left: 2px solid #ff9d00;">
+                            <strong style="color: #ff9d00;">PLATAFORMA</strong><br>
+                            Web Universal (Sin descargas)
+                        </div>
+                    </div>
+                    <p style="margin-top: 10px; font-size: 10px; text-align: center; color: #888;">Acceso instantáneo
+                        desde cualquier navegador. Sin barreras técnicas.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             6. PROPUESTA DE VALOR
+             ================================================================= -->
+        <div class="slide" id="s6">
+            <h3>06. PROPUESTA DE VALOR</h3>
+            <h2>¿POR QUÉ ESTE JUEGO?</h2>
+
+            <div class="grid-3" style="gap: 30px; margin-top: 30px;">
+                <div class="card">
+                    <div style="font-size: 30px; color: var(--neon-red); margin-bottom: 10px;"><i
+                            class="fa-solid fa-heart-pulse"></i></div>
+                    <h4>EMPATÍA PROCEDIMENTAL</h4>
+                    <p style="font-size: 14px;">Transmitir ansiedad real mediante mecánicas de juego frustrantes.</p>
+                </div>
+
+                <div class="card">
+                    <div style="font-size: 30px; color: var(--cyber-blue); margin-bottom: 10px;"><i
+                            class="fa-solid fa-database"></i></div>
+                    <h4>SOBERANÍA TECNOLÓGICA</h4>
+                    <p style="font-size: 14px;"> Infraestructura propia de streaming. No dependemos de YouTube.</p>
+                </div>
+
+                <div class="card">
+                    <div style="font-size: 30px; color: #fff; margin-bottom: 10px;"><i class="fa-solid fa-cube"></i>
+                    </div>
+                    <h4>PRESERVACIÓN DIGITAL</h4>
+                    <p style="font-size: 14px;">Guardar la memoria arquitectónica de la ciudad antes de que sea
+                        demolida.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             7. PÚBLICO OBJETIVO
+             ================================================================= -->
+        <div class="slide" id="s7">
+            <h3>07. TARGET</h3>
+            <h2>PÚBLICO Y MERCADO</h2>
+
+            <div class="grid-3" style="gap: 40px; margin-top: 30px;">
+                <div class="card">
+                    <h4>PERFIL</h4>
+                    <p style="font-size: 14px;">Edad: 18-45 años<br>Interés: Cine Arte, Activismo, Tech.</p>
+                </div>
+
+                <div class="card" style="background: rgba(57, 255, 20, 0.05); border-color: var(--neon-green);">
+                    <h4 style="color: var(--neon-green);">SIMILARES</h4>
+                    <div style="font-size: 12px; margin-top: 10px;">
+                        <strong>PAPERS, PLEASE</strong> (Gestión)<br>
+                        <strong>DISCO ELYSIUM</strong> (Narrativa)<br>
+                        <strong>KENTUCKY ROUTE ZERO</strong> (Estética)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             8. VISUALES: PERSONAJES
+             ================================================================= -->
+        <div class="slide" id="s8">
+            <h3>08. VISUALES</h3>
+            <h2>LOS HABITANTES (SCAN 3D)</h2>
+            <p style="margin-bottom: 20px;">Personajes reales capturados con fotogrametría.</p>
+
+            <div class="grid-4" style="height: 400px;">
+                <div class="img-box">
+                    <img src="images/boni.png" alt="Boni">
+                    <div class="label">BONI</div>
+                </div>
+                <div class="img-box">
+                    <img src="images/antigue.png" alt="Antigue">
+                    <div class="label">ANTIGUE</div>
+                </div>
+                <div class="img-box">
+                    <img src="images/ivan.png" alt="Ivan">
+                    <div class="label">IVÁN</div>
+                </div>
+                <div class="img-box">
+                    <img src="images/bidek.png" alt="Bidek">
+                    <div class="label">BIDEK</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             9. VISUALES: ESCENARIOS
+             ================================================================= -->
+        <div class="slide" id="s9">
+            <h3>09. ENTORNO</h3>
+            <h2>PRESERVACIÓN DE ESCENARIOS</h2>
+
+            <div class="two-col">
+                <div class="img-box">
+                    <img src="images/narvarte.png" alt="Entorno 1">
+                    <div class="label">NARVARTE VIRTUAL</div>
+                </div>
+                <div class="img-box">
+                    <img src="images/graffiti-camioneta (3).png" alt="Entorno 2">
+                    <div class="label">INTERVENCIÓN URBANA</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             10. GAMEPLAY (NUEVO)
+             ================================================================= -->
+        <div class="slide" id="s10">
+            <div class="stacked-layout">
+                <div class="img-box">
+                    <img src="images/rental.png" alt="Minijuego Renta">
+                    <div class="label">UI: SISTEMA DE RENTA</div>
+                </div>
+                <div class="content">
+                    <h3>10. MECÁNICAS DE JUEGO</h3>
+                    <h2 style="font-size: 28px; margin-bottom: 15px;">SISTEMA DE MINIJUEGOS INTEGRADOS</h2>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 11px;">
+                        <div
+                            style="background: rgba(57,255,20,0.05); padding: 10px; border-left: 3px solid var(--neon-green);">
+                            <strong style="color: var(--neon-green);">SIMULADORES</strong><br>
+                            • Becas (Formularios burocráticos)<br>
+                            • Renta (Gestión económica)<br>
+                            • Recursos (Inventario/Decisiones)
+                        </div>
+                        <div
+                            style="background: rgba(255,0,60,0.05); padding: 10px; border-left: 3px solid var(--neon-red);">
+                            <strong style="color: var(--neon-red);">REPARACIÓN</strong><br>
+                            • Electrónica (Puzzle técnico)<br>
+                            • Diagnóstico (Lógica)<br>
+                            • Soldadura (Precisión)
+                        </div>
+                        <div
+                            style="background: rgba(0,225,255,0.05); padding: 10px; border-left: 3px solid var(--cyber-blue);">
+                            <strong style="color: var(--cyber-blue);">GRAFFITI 3D</strong><br>
+                            • Spray virtual (Creatividad)<br>
+                            • Intervención urbana<br>
+                            • Arte como resistencia
+                        </div>
+                        <div style="background: rgba(255,157,0,0.05); padding: 10px; border-left: 3px solid #ff9d00;">
+                            <strong style="color: #ff9d00;">SAMPLER MUSICAL</strong><br>
+                            • Composición rítmica<br>
+                            • Loops y samples<br>
+                            • Soundtrack DIY
+                        </div>
+                    </div>
+                    <p style="margin-top: 10px; font-size: 10px; text-align: center; color: #888;">Cada mecánica
+                        desbloquea narrativa y genera recursos para la supervivencia del Hacklab.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             11. ESTADO ACTUAL
+             ================================================================= -->
+        <div class="slide" id="s11">
+            <div class="stacked-layout">
+                <div class="img-box">
+                    <img src="images/landigpage.png" alt="Landing Page">
+                    <div class="label">LANDING PAGE: ONLINE</div>
+                </div>
+                <div class="content">
+                    <h3>11. ESTADO ACTUAL</h3>
+                    <h2 style="font-size: 28px; margin-bottom: 10px;">BETA AVANZADA (3 CAPS @ 60%)</h2>
+
+                    <div
+                        style="background: rgba(57,255,20,0.05); padding: 12px; border: 1px solid var(--neon-green); margin-bottom: 10px;">
+                        <h4 style="color: var(--neon-green); font-size: 13px; margin: 0 0 8px 0;">✓ ARQUITECTURA
+                            COMPLETA (100%)</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 10px;">
+                            <div>• <strong>Frontend & Landing</strong>: UI/UX + Sistema WebGL</div>
+                            <div>• <strong>3D Worlds</strong>: Escaneo Volumétrico (LiDAR)</div>
+                            <div>• <strong>Backoffice CMS</strong>: Editor Visual de Nodos</div>
+                            <div>• <strong>Minigames Core</strong>: 4 mecánicas funcionales</div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="background: rgba(0,225,255,0.05); padding: 12px; border: 1px solid var(--cyber-blue); margin-bottom: 10px;">
+                        <h4 style="color: var(--cyber-blue); font-size: 13px; margin: 0 0 8px 0;">→ EN PRODUCCIÓN (META
+                            INGENIA)</h4>
+                        <div style="font-size: 10px;">
+                            • <strong>Caps 1-3</strong>: 60% integración → Meta: 100% pulido<br>
+                            • <strong>Caps 4-9</strong>: Script + Pre-producción de assets (6 caps restantes)
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 12px; text-align: center;">
+                        <a href="https://melvinrecords.gt.tc/resistencia" target="_blank"
+                            style="color: var(--neon-green); text-decoration: none; border: 1px solid var(--neon-green); padding: 5px 15px; font-size: 10px; margin-right: 10px;"
+                            class="mono">
+                            <i class="fa-solid fa-play"></i> DEMO
+                        </a>
+                        <a href="https://youtube.com" target="_blank"
+                            style="color: var(--neon-red); text-decoration: none; border: 1px solid var(--neon-red); padding: 5px 15px; font-size: 10px;"
+                            class="mono">
+                            <i class="fa-brands fa-youtube"></i> TEASER
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             12. EQUIPO
+             ================================================================= -->
+        <div class="slide" id="s12">
+            <h3>12. CRÉDITOS</h3>
+            <h2>EL EQUIPO</h2>
+            <div class="team-grid" style="grid-template-columns: repeat(4, 1fr);">
+                <!-- Pablo -->
+                <div class="card team-card">
+                    <img src="https://placehold.co/60x60/333/FFF?text=P"
+                        style="width: 60px; height: 60px; object-fit: cover; margin-bottom: 15px; border-radius: 50%;"
+                        alt="Pablo">
+                    <h5>PABLO NIETO</h5>
+                    <small>DIRECTOR / DEVELOPER</small>
+                    <p style="font-size: 11px; color: #aaa;">
+                        Exp: 10+ años en Producción Audiovisual. Fullstack Dev y narrativa transmedia.
+                    </p>
+                </div>
+
+                <!-- Rodrigo -->
+                <div class="card team-card">
+                    <img src="https://placehold.co/60x60/333/FFF?text=R"
+                        style="width: 60px; height: 60px; object-fit: cover; margin-bottom: 15px; border-radius: 50%;"
+                        alt="Rodrigo">
+                    <h5>RODRIGO JARDÓN</h5>
+                    <small>EDITOR NARRATIVO</small>
+                    <p style="font-size: 11px; color: #aaa;">
+                        Exp: Documentalista premiado. Estructuras narrativas de no-ficción.
+                    </p>
+                </div>
+
+                <!-- Melvin -->
+                <div class="card team-card">
+                    <img src="https://placehold.co/60x60/333/FFF?text=M"
+                        style="width: 60px; height: 60px; object-fit: cover; margin-bottom: 15px; border-radius: 50%;"
+                        alt="Melvin">
+                    <h5>MELVIN RECORDS</h5>
+                    <small>PRODUCCIÓN / SONIDO</small>
+                    <p style="font-size: 11px; color: #aaa;">
+                        Exp: Sello independiente. Diseño sonoro industrial. (Audio Engineering).
+                    </p>
+                </div>
+
+                <!-- Visionarios -->
+                <div class="card team-card" style="border-color: var(--cyber-blue);">
+                    <img src="https://placehold.co/60x60/333/FFF?text=V"
+                        style="width: 60px; height: 60px; object-fit: cover; margin-bottom: 15px; border-radius: 50%;"
+                        alt="Visionarios">
+                    <h5>VISIONARIOS CREATIVOS</h5>
+                    <small>IVÁN & BIDEK</small>
+                    <p style="font-size: 11px; color: #fff;">
+                        Colaboración en <strong>Soundtrack Original</strong> y Arte Visual Urbano.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             13. PLAN DE DESARROLLO
+             ================================================================= -->
+        <div class="slide" id="s13">
+            <h3>13. ROADMAP</h3>
+            <h2>PLAN DE DESARROLLO</h2>
+
+            <div class="card" style="margin-bottom: 30px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>FASE 1: PRE-PRODUCCIÓN & RODAJE</span>
+                    <span style="color: var(--neon-green); font-weight: bold;">[COMPLETADO]</span>
+                </div>
+                <div style="height: 6px; background: #222; width: 100%;">
+                    <div style="width: 100%; height: 100%; background: var(--neon-green);"></div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 30px; border: 1px solid var(--cyber-blue);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>FASE 2: INGENIA PLAY LAB (ACTUAL)</span>
+                    <span style="color: var(--cyber-blue); font-weight: bold;">[EN PROCESO]</span>
+                </div>
+                <div style="height: 6px; background: #222; width: 100%;">
+                    <div style="width: 60%; height: 100%; background: var(--cyber-blue);"></div>
+                </div>
+                <p style="font-size: 12px; margin-top: 10px;">
+                    Objetivo: Finalizar Caps 1-3 (100%) y Producción de Caps 4-9 (Script & Assets).
+                </p>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>FASE 3: LANZAMIENTO & FESTIVALES</span>
+                    <span style="color: #666; font-weight: bold;">[Q4 2026]</span>
+                </div>
+                <div style="height: 6px; background: #222; width: 100%;"></div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             14. CIERRE
+             ================================================================= -->
+        <div class="slide" id="s14">
+            <div style="text-align: center; max-width: 800px; margin: 0 auto;">
+                <h1 style="font-size: 60px; margin-bottom: 20px;">GRACIAS</h1>
+                <p style="font-size: 24px; color: #fff; margin-bottom: 50px; font-style: italic;">
+                    "El futuro no está escrito, está siendo programado."
+                </p>
+
+                <div class="grid-3" style="gap: 30px; text-align: left; grid-template-columns: repeat(4, 1fr);">
+                    <div class="card" style="text-align: center;">
+                        <i class="fa-brands fa-youtube"
+                            style="font-size: 24px; color: var(--neon-red); margin-bottom: 10px;"></i>
+                        <p style="font-size: 12px; font-weight: bold;">(LINK PENDIENTE)</p>
+                        <small>VIDEO TEASER</small>
+                    </div>
+                    <div class="card" style="text-align: center;">
+                        <i class="fa-solid fa-envelope"
+                            style="font-size: 24px; color: var(--neon-green); margin-bottom: 10px;"></i>
+                        <p style="font-size: 12px; font-weight: bold;">paultool@gmail.com</p>
+                        <small>EMAIL</small>
+                    </div>
+                    <div class="card" style="text-align: center;">
+                        <i class="fa-solid fa-globe"
+                            style="font-size: 24px; color: var(--cyber-blue); margin-bottom: 10px;"></i>
+                        <p style="font-size: 10px; font-weight: bold;">melvinrecords.gt.tc/resistencia</p>
+                        <small>WEB / DEMO</small>
+                    </div>
+                    <div class="card" style="text-align: center;">
+                        <i class="fa-brands fa-instagram"
+                            style="font-size: 24px; color: var(--text-main); margin-bottom: 10px;"></i>
+                        <p style="font-size: 12px; font-weight: bold;">@paultoolmx</p>
+                        <small>SOCIAL</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- FOOTER NAVIGATION -->
+        <div class="nav-footer">
+            <div class="mono" style="font-size: 12px; color: #555;">
+                // SLIDE <span id="current-ind">01</span> / 14
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" onclick="window.print()" style="margin-right: 10px;">
+                    <i class="fa-solid fa-file-pdf"></i> PDF
+                </button>
+                <button class="btn" onclick="changeSlide(-1)">
+                    < ANTERIOR</button>
+                        <button class="btn" onclick="changeSlide(1)">SIGUIENTE ></button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- LOGICA JAVASCRIPT -->
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const indicator = document.getElementById('current-ind');
+        const deckContainer = document.getElementById('deck-container');
+        const clock = document.getElementById('clock');
+
+        // Reloj
+        setInterval(() => {
+            const now = new Date();
+            clock.innerText = now.toLocaleTimeString('es-MX');
+        }, 1000);
+
+        // Escalado automático (Responsive)
+        function handleResize() {
+            const scaleX = window.innerWidth / 1440;
+            const scaleY = window.innerHeight / 810;
+            const scale = Math.min(scaleX, scaleY);
+            // 0.95 margen
+            deckContainer.style.transform = `scale(${scale * 0.95})`;
+        }
+        window.addEventListener('resize', handleResize);
+        handleResize(); // Init
+
+        // Navegación
+        function updateSlide() {
+            slides.forEach((s, index) => {
+                s.classList.remove('active');
+                if (index === currentSlide) s.classList.add('active');
+            });
+            indicator.innerText = (currentSlide + 1).toString().padStart(2, '0');
+        }
+
+        function changeSlide(dir) {
+            currentSlide += dir;
+            if (currentSlide < 0) currentSlide = slides.length - 1;
+            if (currentSlide >= slides.length) currentSlide = 0;
+            updateSlide();
+        }
+
+        // Teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+        });
+    </script>
+</body>
+
+</html>

@@ -842,7 +842,7 @@
                 if (!val.startsWith('"') && !val.startsWith("'")) return `${attr}="${val.replace(/"/g, '&quot;')}"`;
                 return m;
             });
-            xmlText = xmlText.replace(/<!--.*?-->/gs, '');
+            xmlText = xmlText.replace(/<!--[\s\S]*?--\>/g, '');
             return xmlText.trim();
         }
 
@@ -978,12 +978,18 @@
                 recompensaId = 16;
             }
 
+            // UNIFIED PROTOCOL: Solo enviar costos operacionales
+            // El XP de la recompensa vendrá de la BD
+            const totalXpDelta = -totalXPSpent;
+
             const result = {
-                source: 'RentalApp',
+                source: 'ResistenciaApp',
+                appName: 'BenitoJuarez',
                 type: 'app-result',
                 status: status,
                 recompensaId: recompensaId,
-                costoXP: -totalXPSpent,
+                xpDelta: totalXpDelta, // Solo costos de viaje
+                costoXP: totalXpDelta,  // Legacy support
                 metadata: {
                     visited_colonies: visitedColonies.map(v => v.name),
                     total_rejections: rejectionCount,
@@ -1144,6 +1150,8 @@
         }
 
         // On-click: Fetch data (Sin cambios)
+        // DUPLICATE/LEGACY FUNCTION COMMENTED OUT
+        /*
         async function loadColoniaData(name, center) {
             if (currentPopup) currentPopup.remove();
             document.getElementById('loading').classList.remove('hidden');
@@ -1187,6 +1195,7 @@
                 document.getElementById('loading').classList.add('hidden');
             }
         }
+        */
 
         // ═══════════════════════════════════════
         // LOAD COLONIA DATA (WITH COST SYSTEM)

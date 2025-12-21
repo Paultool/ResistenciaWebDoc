@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TERMINAL LA RESISTENCIA :: EURODOC</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&family=Courier+Prime:wght@400;700&display=swap');
+
+        :root {
+            --bg-color: #050505;
+            --terminal-green: #33ff00;
+            --alert-orange: #ff9d00;
+            --sec-blue: #00e1ff;
+            --text-dim: #a8a8a8;
+            --border-color: #333;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-dim);
+            font-family: 'Courier Prime', monospace;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            background-image: radial-gradient(circle, #1a1a1a 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Lógica de Idiomas */
+        /* Por defecto mostramos inglés (body sin clase 'es-mode') */
+        .lang-es {
+            display: none;
+        }
+
+        /* Cuando el body tiene la clase 'es-mode', ocultamos inglés y mostramos español */
+        body.es-mode .lang-en {
+            display: none;
+        }
+
+        body.es-mode .lang-es {
+            display: block;
+        }
+
+        body.es-mode .menu-en {
+            display: none;
+        }
+
+        /* Para el menú */
+        body.es-mode .menu-es {
+            display: block;
+        }
+
+        /* Para el menú */
+
+        /* Efecto CRT */
+        body::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* LAYOUT */
+        .sidebar {
+            width: 260px;
+            background: #080808;
+            border-right: 2px solid var(--border-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            z-index: 3;
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .main-screen {
+            flex: 1;
+            padding: 40px 60px;
+            overflow-y: auto;
+            position: relative;
+            z-index: 1;
+            scroll-behavior: smooth;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #111;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border: 1px solid var(--terminal-green);
+        }
+
+        /* TEXT STYLES */
+        h1,
+        h2,
+        h3 {
+            font-family: 'VT323', monospace;
+            text-transform: uppercase;
+            font-weight: normal;
+            letter-spacing: 2px;
+        }
+
+        .brand {
+            color: var(--alert-orange);
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            text-shadow: 0 0 5px rgba(255, 157, 0, 0.5);
+            line-height: 1.2;
+        }
+
+        .lang-switch {
+            background: #222;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 5px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            text-align: center;
+            font-family: 'VT323';
+            font-size: 1.2rem;
+        }
+
+        .lang-switch:hover {
+            background: var(--sec-blue);
+            color: #000;
+        }
+
+        .menu-item {
+            color: var(--text-dim);
+            padding: 12px 10px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            margin-bottom: 5px;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+            font-family: 'VT323', monospace;
+        }
+
+        .menu-item:hover,
+        .menu-item.active {
+            color: var(--terminal-green);
+            background: rgba(51, 255, 0, 0.05);
+            border-left: 3px solid var(--terminal-green);
+            text-shadow: 0 0 8px rgba(51, 255, 0, 0.4);
+            padding-left: 20px;
+        }
+
+        .content-section {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding-bottom: 50px;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .header-status {
+            color: var(--sec-blue);
+            font-size: 0.8rem;
+            margin-bottom: 20px;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .big-title {
+            font-size: 5rem;
+            color: #fff;
+            margin: 0;
+            line-height: 0.9;
+            text-shadow: 4px 4px 0px rgba(255, 157, 0, 0.3);
+        }
+
+        .subtitle {
+            color: var(--alert-orange);
+            font-size: 1.8rem;
+            margin-top: 10px;
+            margin-bottom: 40px;
+        }
+
+        .text-body {
+            line-height: 1.6;
+            font-size: 1.05rem;
+            color: #ddd;
+            background: rgba(10, 10, 10, 0.7);
+            padding: 30px;
+            border: 1px solid #333;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+        }
+
+        .highlight {
+            color: var(--terminal-green);
+            font-weight: bold;
+        }
+
+        .warning {
+            color: var(--alert-orange);
+            font-weight: bold;
+        }
+
+        .info {
+            color: var(--sec-blue);
+            font-weight: bold;
+        }
+
+        hr {
+            border: 0;
+            border-bottom: 1px solid #333;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-family: 'VT323', monospace;
+            font-size: 1.1rem;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        th {
+            text-align: left;
+            color: var(--sec-blue);
+            border-bottom: 2px solid var(--border-color);
+            padding: 12px;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #222;
+            vertical-align: top;
+        }
+
+        .money {
+            text-align: right;
+            color: #fff;
+            font-family: 'Courier Prime', monospace;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background: var(--terminal-green);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            border: 1px solid #555;
+            margin-right: 5px;
+            color: #888;
+        }
+
+        /* Menu helper classes for language toggle */
+        .menu-es {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <div class="brand">LA RESISTENCIA<br>OS v.2.5</div>
+
+        <!-- BOTÓN DE IDIOMA -->
+        <div class="lang-switch" onclick="toggleLanguage()">[ EN / ES ]</div>
+
+        <!-- MENÚ INGLÉS -->
+        <div class="menu-en">
+            <div class="menu-item active" onclick="showSection('cover')">> 01_COVER_DATA</div>
+            <div class="menu-item" onclick="showSection('logline')">> 02_LOGLINE_STORY</div>
+            <div class="menu-item" onclick="showSection('director')">> 03_DIRECTOR_NOTE</div>
+            <div class="menu-item" onclick="showSection('budget')">> 04_FINANCIAL_CORE</div>
+            <div class="menu-item" onclick="showSection('strategy')">> 05_PROD_STRATEGY</div>
+            <div class="menu-item" onclick="showSection('producer')">> 06_PRODUCER_BIO</div>
+            <div class="menu-item" onclick="showSection('director_bio')">> 07_DIRECTOR_BIO</div>
+            <div class="menu-item" onclick="showSection('company')">> 08_MELVIN_RECORDS</div>
+            <div class="menu-item" onclick="showSection('links')">> 09_ACCESS_LINKS</div>
+            <div class="menu-item" onclick="showSection('letter')">> 10_MOTIVATION_LOG</div>
+        </div>
+
+        <!-- MENÚ ESPAÑOL -->
+        <div class="menu-es">
+            <div class="menu-item active" onclick="showSection('cover')">> 01_PORTADA_DATOS</div>
+            <div class="menu-item" onclick="showSection('logline')">> 02_SINOPSIS_HISTORIA</div>
+            <div class="menu-item" onclick="showSection('director')">> 03_NOTA_DIRECTOR</div>
+            <div class="menu-item" onclick="showSection('budget')">> 04_FINANZAS_CORE</div>
+            <div class="menu-item" onclick="showSection('strategy')">> 05_ESTRATEGIA_PROD</div>
+            <div class="menu-item" onclick="showSection('producer')">> 06_PERFIL_PRODUCTOR</div>
+            <div class="menu-item" onclick="showSection('director_bio')">> 07_PERFIL_DIRECTOR</div>
+            <div class="menu-item" onclick="showSection('company')">> 08_MELVIN_RECORDS</div>
+            <div class="menu-item" onclick="showSection('links')">> 09_ENLACES_ACCESO</div>
+            <div class="menu-item" onclick="showSection('letter')">> 10_CARTA_MOTIVACION</div>
+        </div>
+    </div>
+
+    <div class="main-screen">
+
+        <!-- 01 COVER -->
+        <div id="cover" class="content-section active">
+            <div class="header-status">
+                <span class="lang-en">SYSTEM: ONLINE</span><span class="lang-es">SISTEMA: EN LÍNEA</span>
+                <span>PROTOCOL: EURODOC_APP</span>
+            </div>
+            <div style="margin-top: 80px; text-align: center;">
+                <h1 class="big-title">HACKLAB<br>LA RESISTENCIA</h1>
+                <h2 class="subtitle">
+                    <span class="lang-en">IMMERSIVE WEB SERIES // DOCU-GAME</span>
+                    <span class="lang-es">SERIE WEB INMERSIVA // DOCU-JUEGO</span>
+                </h2>
+
+                <div
+                    style="display:inline-block; text-align: left; background: #111; padding: 20px; border: 1px solid var(--terminal-green);">
+                    <p class="lang-en">> FORMAT: Immersive Series (90-120 min)</p>
+                    <p class="lang-es">> FORMATO: Serie Inmersiva (90-120 min)</p>
+
+                    <p class="lang-en">> GENRE: Interactive Social Doc / Cyber-Realism</p>
+                    <p class="lang-es">> GÉNERO: Doc. Social Interactivo / Ciber-Realismo</p>
+
+                    <p class="lang-en">> APPLICANT: Pablo Benjamin NIETO MERCADO</p>
+                    <p class="lang-es">> SOLICITANTE: Pablo Benjamin NIETO MERCADO</p>
+
+                    <p class="lang-en">> DIRECTOR: Juan Rodrigo JARDÓN GALEANA</p>
+                    <p class="lang-es">> DIRECTOR: Juan Rodrigo JARDÓN GALEANA</p>
+
+                    <p class="lang-en">> PROD. CO: Melvin Records (Mexico)</p>
+                    <p class="lang-es">> PRODUCTORA: Melvin Records (México)</p>
+                </div>
+
+                <div style="margin-top: 40px; color: var(--terminal-green);">
+                    <span class="lang-en">> SYSTEM READY. AWAITING INPUT...</span>
+                    <span class="lang-es">> SISTEMA LISTO. ESPERANDO COMANDO...</span>
+                    <span class="cursor"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 02 LOGLINE & SUMMARY -->
+        <div id="logline" class="content-section">
+            <div class="header-status"><span>FILE: STORY_SUMMARY.txt</span><span>ACCESS: GRANTED</span></div>
+            <h2 class="subtitle"><span class="lang-en">LOGLINE & STORY SUMMARY</span><span class="lang-es">LOGLINE Y
+                    SINOPSIS</span></h2>
+            <div class="text-body">
+                <div style="border-left: 4px solid var(--alert-orange); padding-left: 15px; margin-bottom: 30px;">
+                    <p class="warning" style="margin-top:0;">LOGLINE</p>
+                    <p class="lang-en" style="font-size: 1.2rem; font-style: italic;">"Expelled by gentrification from
+                        Mexico City, an engineer retreats to the industrial periphery to turn a family garage into a
+                        digital trench. In this immersive docu-game, the user inherits his struggle: managing scarcity,
+                        repairing broken electronics, and weaving a community to survive in a system designed to erase
+                        you."</p>
+                    <p class="lang-es" style="font-size: 1.2rem; font-style: italic;">"Expulsado por la gentrificación
+                        de la Ciudad de México, un ingeniero se retira a la periferia industrial para convertir el
+                        garaje familiar en una trinchera digital. En este docu-juego inmersivo, el usuario hereda su
+                        lucha: gestionar la escasez, reparar electrónica rota y tejer una comunidad para sobrevivir en
+                        un sistema diseñado para borrarte."</p>
+                </div>
+
+                <h3><span class="lang-en">STORY SUMMARY</span><span class="lang-es">SINOPSIS GENERAL</span></h3>
+
+                <p>
+                    <span class="highlight lang-en">THE RETURN (The Wound):</span><span class="highlight lang-es">EL
+                        RETORNO (La Herida):</span><br>
+                    <span class="lang-en"><i>La Resistencia</i> is an intimate chronicle of displacement within the
+                        urban chaos of Mexico. Pablo, a filmmaker and audio engineer, watches his life in the
+                        cosmopolitan "Roma-Condesa" bubble crumble under the weight of real estate speculation. Bankrupt
+                        and with his dignity bruised, he is forced to migrate back to his origin: Tultitlán, a harsh
+                        industrial satellite city.</span>
+                    <span class="lang-es"><i>La Resistencia</i> es una crónica íntima del desplazamiento en el caos
+                        urbano de México. Pablo, cineasta e ingeniero de audio, ve cómo su vida en la burbuja
+                        cosmopolita "Roma-Condesa" se desmorona bajo el peso de la especulación inmobiliaria. En
+                        bancarrota y con la dignidad golpeada, se ve obligado a migrar de regreso a su origen:
+                        Tultitlán, una dura ciudad satélite industrial.</span>
+                </p>
+
+                <p>
+                    <span class="highlight lang-en">THE SANCTUARY (The Space):</span><span class="highlight lang-es">EL
+                        SANTUARIO (El Espacio):</span><br>
+                    <span class="lang-en">There, in his mother's garage, he founds "Hacklab La Resistencia." It is a
+                        hybrid sanctuary—part electronics repair shop, part pulque bar, part digital archive. It is not
+                        just a business; it is a necessary act of dignity against oblivion.</span>
+                    <span class="lang-es">Allí, en el garaje de su madre, funda "Hacklab La Resistencia". Es un
+                        santuario híbrido: parte taller de electrónica, parte pulquería, parte archivo digital. No es
+                        solo un negocio; es un acto necesario de dignidad contra el olvido.</span>
+                </p>
+
+                <p>
+                    <span class="highlight lang-en">THE EXPERIENCE (The Mechanics):</span><span
+                        class="highlight lang-es">LA EXPERIENCIA (La Mecánica):</span><br>
+                    <span class="lang-en">Through a proprietary web platform that fuses photorealistic 3D environments
+                        (LiDAR) with direct cinema, the user steps into Pablo’s shoes. The experience demands active
+                        resilience: you must balance the Hacklab’s precarious economy, deciding whether to buy spare
+                        parts or pay the rent.</span>
+                    <span class="lang-es">A través de una plataforma web propietaria que fusiona entornos 3D
+                        fotorrealistas (LiDAR) con cine directo, el usuario se pone en los zapatos de Pablo. La
+                        experiencia exige resiliencia activa: debes equilibrar la precaria economía del Hacklab,
+                        decidiendo si comprar refacciones o pagar la renta.</span>
+                </p>
+
+                <p>
+                    <span class="highlight lang-en">THE COMMUNITY (The Heart):</span><span class="highlight lang-es">LA
+                        COMUNIDAD (El Corazón):</span><br>
+                    <span class="lang-en">As you repair objects, you unlock the stories of those who inhabit this
+                        margin: <strong>Boni</strong>, the philosopher bricklayer who builds memories;
+                        <strong>Bidek</strong>, the graffiti artist painting his reality; and <strong>Iván</strong>, the
+                        musician harmonizing the noise. Your decisions determine if the Hacklab remains a beacon of
+                        resistance or falls to the inevitable closure.</span>
+                    <span class="lang-es">Al reparar objetos, desbloqueas las historias de quienes habitan este margen:
+                        <strong>Boni</strong>, el albañil filósofo que construye memorias; <strong>Bidek</strong>, el
+                        grafitero pintando su realidad; e <strong>Iván</strong>, el músico armonizando el ruido. Tus
+                        decisiones determinan si el Hacklab sigue siendo un faro de resistencia o cae ante el cierre
+                        inevitable.</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- 03 DIRECTOR -->
+        <div id="director" class="content-section">
+            <div class="header-status"><span>SOURCE: J.R. JARDÓN</span><span>TYPE: TRANSCRIPT</span></div>
+            <h2 class="subtitle"><span class="lang-en">DIRECTOR'S INTENTIONS</span><span class="lang-es">INTENCIONES DEL
+                    DIRECTOR</span></h2>
+            <div class="text-body">
+                <p class="info lang-en">[ THE AXIS: INHABITING OTHERNESS & ARCHIVING DIGNITY ]</p>
+                <p class="info lang-es">[ EL EJE: HABITAR LA OTREDAD Y ARCHIVAR LA DIGNIDAD ]</p>
+
+                <p class="lang-en">My work as a photographer and filmmaker has always been centered on the exploration
+                    of identity through "otherness," examining how subjects and places define themselves within contexts
+                    of invisibility. With <i>La Resistencia</i>, my central intention is to transform an urgent
+                    political problem—gentrification and the right to the city—into an emotive, shared memory
+                    experience.</p>
+                <p class="lang-es">Mi trabajo como fotógrafo y cineasta siempre se ha centrado en la exploración de la
+                    identidad a través de la "otredad", examinando cómo los sujetos y lugares se definen dentro de
+                    contextos de invisibilidad. Con <i>La Resistencia</i>, mi intención central es transformar un
+                    problema político urgente —la gentrificación y el derecho a la ciudad— en una experiencia de memoria
+                    compartida y emotiva.</p>
+
+                <hr>
+
+                <p class="info lang-en">[ THE INTIMACY OF CONFLICT ]</p>
+                <p class="info lang-es">[ LA INTIMIDAD DEL CONFLICTO ]</p>
+
+                <p class="lang-en">The periphery of Tultitlán, often an ignored or stigmatized territory, becomes our
+                    narrative universe. My role as the director is to utilize a rigorous visual and sound language to
+                    weave an intimate narrative that forces the participant to <strong>inhabit the conflict</strong>.
+                </p>
+                <p class="lang-es">La periferia de Tultitlán, a menudo un territorio ignorado o estigmatizado, se
+                    convierte en nuestro universo narrativo. Mi papel como director es utilizar un lenguaje visual y
+                    sonoro riguroso para tejer una narrativa íntima que obligue al participante a <strong>habitar el
+                        conflicto</strong>.</p>
+
+                <p class="lang-en">The immersive format is key to this vision: the experience is not just about
+                    observing, but about <strong>managing chaos and precarity</strong>. By making the user's decisions
+                    have consequences for the Hacklab's survival, we transform viewer passivity into an active act of
+                    resistance and empathy.</p>
+                <p class="lang-es">El formato inmersivo es clave para esta visión: la experiencia no trata solo de
+                    observar, sino de <strong>gestionar el caos y la precariedad</strong>. Al hacer que las decisiones
+                    del usuario tengan consecuencias para la supervivencia del Hacklab, transformamos la pasividad del
+                    espectador en un acto activo de resistencia y empatía.</p>
+
+                <hr>
+
+                <p class="info lang-en">[ A COMMITMENT TO ARTISTIC COHERENCE ]</p>
+                <p class="info lang-es">[ COMPROMISO CON LA COHERENCIA ARTÍSTICA ]</p>
+
+                <p class="lang-en">My collaboration with Pablo (Producer/Technologist) is strategic. My experience in
+                    the international circuit and my visual training ensure that the technological sophistication of the
+                    <i>Resistencia Engine</i> is not an end in itself, but a powerful tool serving the human story.
+                </p>
+                <p class="lang-es">Mi colaboración con Pablo (Productor/Tecnólogo) es estratégica. Mi experiencia en el
+                    circuito internacional y mi formación visual aseguran que la sofisticación tecnológica del <i>Motor
+                        Resistencia</i> no sea un fin en sí mismo, sino una herramienta poderosa al servicio de la
+                    historia humana.</p>
+            </div>
+        </div>
+
+        <!-- 04 BUDGET -->
+        <div id="budget" class="content-section">
+            <div class="header-status"><span>MODULE: FINANCE_CORE</span><span>CURRENCY: EUR</span></div>
+            <h2 class="subtitle"><span class="lang-en">BUDGET & FINANCING PLAN</span><span class="lang-es">PRESUPUESTO Y
+                    FINANCIACIÓN</span></h2>
+            <div class="text-body">
+                <div
+                    style="background: #111; padding: 15px; border: 1px solid var(--terminal-green); margin-bottom: 20px;">
+                    <strong class="lang-en">TOTAL ESTIMATED BUDGET:</strong><strong class="lang-es">PRESUPUESTO TOTAL
+                        ESTIMADO:</strong>
+                    <span class="highlight">€150,249</span> (Approx. $165,000 USD)<br>
+                    <em class="lang-en" style="font-size: 0.9rem; color: #888;">Note: High-risk phases (R&D + Capture)
+                        are already funded.</em>
+                    <em class="lang-es" style="font-size: 0.9rem; color: #888;">Nota: Las fases de alto riesgo (I+D +
+                        Captura) ya están financiadas.</em>
+                </div>
+
+                <h3><span class="lang-en">A. BUDGET BREAKDOWN BY PHASE</span><span class="lang-es">A. DESGLOSE POR
+                        FASE</span></h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th><span class="lang-en">PHASE / CATEGORY</span><span class="lang-es">FASE /
+                                    CATEGORÍA</span></th>
+                            <th><span class="lang-en">DESCRIPTION</span><span class="lang-es">DESCRIPCIÓN</span></th>
+                            <th>COST (EUR)</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1. DEVELOPMENT</td>
+                            <td>Script, R&D, Rights, Admin</td>
+                            <td class="money">€15,128</td>
+                            <td class="highlight">SECURED (10%)</td>
+                        </tr>
+                        <tr>
+                            <td>2. PRODUCTION</td>
+                            <td>Filming (150h+), Crew, LiDAR</td>
+                            <td class="money">€37,393</td>
+                            <td class="highlight">SECURED (25%)</td>
+                        </tr>
+                        <tr style="border: 2px solid var(--alert-orange); background: rgba(255, 157, 0, 0.05);">
+                            <td class="warning">3. POST & TECH</td>
+                            <td class="warning"><span class="lang-en">THE FUNDING GAP (EURODOC)</span><span
+                                    class="lang-es">LA BRECHA (EURODOC)</span></td>
+                            <td class="money warning">€84,092</td>
+                            <td class="warning">SOUGHT (56%)</td>
+                        </tr>
+                        <tr>
+                            <td>4. DISTRIBUTION</td>
+                            <td>Marketing, Festivals, B2B Setup</td>
+                            <td class="money">€13,636</td>
+                            <td>PENDING (9%)</td>
+                        </tr>
+                        <tr style="border-top: 2px solid #fff;">
+                            <td><strong>GRAND TOTAL</strong></td>
+                            <td></td>
+                            <td class="money"><strong>€150,249</strong></td>
+                            <td><strong>100%</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <br>
+                <h3><span class="lang-en">B. FINANCING STRATEGY</span><span class="lang-es">B. ESTRATEGIA
+                        FINANCIERA</span></h3>
+                <p>
+                    <span class="highlight lang-en">> THE MEXICAN FOUNDATION (35% Secured):</span>
+                    <span class="highlight lang-es">> LA BASE MEXICANA (35% Asegurado):</span>
+                    <span class="lang-en">Melvin Records has absorbed the risk. This €52,521 investment covers the R&D
+                        of the Resistencia Engine, volumetric LiDAR scanning, and 150+ hours of documentary
+                        filming.</span>
+                    <span class="lang-es">Melvin Records ha absorbido el riesgo. Esta inversión de 52.521€ cubre el I+D
+                        del Motor Resistencia, el escaneo LiDAR volumétrico y más de 150 horas de rodaje
+                        documental.</span>
+                </p>
+                <p>
+                    <span class="warning lang-en">> THE EUROPEAN PARTNERSHIP (43% Sought):</span>
+                    <span class="warning lang-es">> LA ALIANZA EUROPEA (43% Buscado):</span>
+                    <span class="lang-en">We seek €64,815 from a co-producer to elevate the project. Investment
+                        allocated for <strong>Sensory Excellence</strong> (Sound/Color) and <strong>Technical
+                            Sovereignty</strong> (Full Stack Polish).</span>
+                    <span class="lang-es">Buscamos 64.815€ de un coproductor para elevar el proyecto. Inversión
+                        destinada a <strong>Excelencia Sensorial</strong> (Sonido/Color) y <strong>Soberanía
+                            Técnica</strong> (Pulido Full Stack).</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- 05 STRATEGY -->
+        <div id="strategy" class="content-section">
+            <div class="header-status"><span>STRATEGY: DE-RISKING</span><span>MODE: HYBRID</span></div>
+            <h2 class="subtitle"><span class="lang-en">PRODUCTION STRATEGY</span><span class="lang-es">ESTRATEGIA DE
+                    PRODUCCIÓN</span></h2>
+            <div class="text-body">
+                <p class="lang-en">Our strategy disrupts the traditional model. We present a project where the highest
+                    risks (R&D and Photography) are already absorbed. We are not asking Europe to build the machine; we
+                    are asking Europe to power it up.</p>
+                <p class="lang-es">Nuestra estrategia rompe el modelo tradicional. Presentamos un proyecto donde los
+                    mayores riesgos (I+D y Fotografía) ya están absorbidos. No pedimos a Europa que construya la
+                    máquina; pedimos a Europa que la encienda.</p>
+
+                <div style="margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="border: 1px solid var(--terminal-green); padding: 20px;">
+                        <h3 class="highlight lang-en">1. THE MEXICAN FOUNDATION<br>(Sweat Equity)</h3>
+                        <h3 class="highlight lang-es">1. LA BASE MEXICANA<br>(Sweat Equity)</h3>
+
+                        <p class="lang-en"><strong>Technological Sovereignty:</strong> Creation of the <i>Resistencia
+                                Engine</i> (WebGL/Serverless). Proprietary code, not licensed tools.</p>
+                        <p class="lang-es"><strong>Soberanía Tecnológica:</strong> Creación del <i>Motor Resistencia</i>
+                            (WebGL/Serverless). Código propietario, no herramientas licenciadas.</p>
+
+                        <p class="lang-en"><strong>Content Security:</strong> 150+ hours of footage + LiDAR scans
+                            already in our servers.</p>
+                        <p class="lang-es"><strong>Seguridad de Contenido:</strong> 150+ horas de metraje y escaneos
+                            LiDAR ya en nuestros servidores.</p>
+                    </div>
+
+                    <div style="border: 1px solid var(--alert-orange); padding: 20px;">
+                        <h3 class="warning lang-en">2. THE EUROPEAN PARTNERSHIP<br>(The Quality Leap)</h3>
+                        <h3 class="warning lang-es">2. LA ALIANZA EUROPEA<br>(El Salto de Calidad)</h3>
+
+                        <p class="lang-en"><strong>Sensory Immersion:</strong> Ambisonic Sound Design + High-end Color
+                            Grading. Making the interactive feel cinematic.</p>
+                        <p class="lang-es"><strong>Inmersión Sensorial:</strong> Diseño Sonoro Ambisónico + Etalonaje de
+                            Alta Gama. Hacer que lo interactivo se sienta cinematográfico.</p>
+
+                        <p class="lang-en"><strong>Market Standardization:</strong> Adapting UX/UI to EU standards
+                            (GDPR, inclusivity).</p>
+                        <p class="lang-es"><strong>Estandarización de Mercado:</strong> Adaptar UX/UI a estándares UE
+                            (GDPR, inclusividad).</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; border: 1px solid #fff; padding: 20px;">
+                    <h3 style="color: #fff;" class="lang-en">3. DISTRIBUTION AS IMPACT (The B2B Model)</h3>
+                    <h3 style="color: #fff;" class="lang-es">3. DISTRIBUCIÓN DE IMPACTO (Modelo B2B)</h3>
+
+                    <p class="lang-en">We aim to license the Resistencia Engine to museums, NGOs, and archives. This
+                        creates revenue while democratizing access to high-end immersive tools for other marginalized
+                        communities to build their own <i>Digital Archives of Resistance</i>.</p>
+                    <p class="lang-es">Aspiramos a licenciar el Motor Resistencia a museos, ONGs y archivos. Esto crea
+                        ingresos mientras democratiza el acceso a herramientas inmersivas de alta gama para que otras
+                        comunidades marginadas construyan sus propios <i>Archivos Digitales de Resistencia</i>.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 06 PRODUCER PROFILE (EXPANDED) -->
+        <div id="producer" class="content-section">
+            <div class="header-status"><span>PROFILE: PABLO_NIETO</span><span>ROLE: APPLICANT_CTO</span></div>
+            <h2 class="subtitle"><span class="lang-en">PRODUCER & APPLICANT PROFILE</span><span class="lang-es">PERFIL
+                    DEL PRODUCTOR Y SOLICITANTE</span></h2>
+
+            <div class="text-body">
+                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                    <img src="pablo.jpg" alt="Pablo Nieto"
+                        style="border: 2px solid var(--terminal-green); width: 150px; height: 150px; object-fit: cover; filter: grayscale(100%);">
+                    <div>
+                        <h3 class="highlight">PABLO BENJAMIN NIETO MERCADO</h3>
+                        <p class="tag">MULTIMEDIA ALCHEMIST</p>
+                        <p class="tag">FULL STACK ENGINEER</p>
+                        <p class="tag">FILMMAKER</p>
+                        <p class="lang-en" style="margin-top: 10px;">Mexico, 1979. Founder of Melvin Records. His unique
+                            trajectory is defined by the strategic fusion of advanced technical engineering (Full Stack,
+                            DBA, FINTECH) with high-impact documentary cinema.</p>
+                        <p class="lang-es" style="margin-top: 10px;">México, 1979. Fundador de Melvin Records. Su
+                            trayectoria se define por la fusión estratégica de ingeniería técnica avanzada (Full Stack,
+                            DBA, FINTECH) con cine documental de impacto.</p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <div>
+                        <h4 class="warning lang-en">> TECHNICAL & ARTISTIC INNOVATION</h4>
+                        <h4 class="warning lang-es">> INNOVACIÓN TÉCNICA Y ARTÍSTICA</h4>
+                        <ul class="list-clean lang-en">
+                            <li><strong>Resistencia Engine Creator:</strong> Designed proprietary WebGL/Serverless
+                                architecture.</li>
+                            <li><strong>FINTECH Architect:</strong> Led transaction cores for Banco Santander & Banorte.
+                            </li>
+                            <li><strong>Movistar Iron Geek 2011:</strong> Winner.</li>
+                            <li><strong>Top Ten Artist:</strong> "Microplastic + Human + Nature" (Germany, 2021).</li>
+                        </ul>
+                        <ul class="list-clean lang-es">
+                            <li><strong>Creador del Motor Resistencia:</strong> Arquitectura propietaria
+                                WebGL/Serverless.</li>
+                            <li><strong>Arquitecto FINTECH:</strong> Lideró núcleos transaccionales para Santander y
+                                Banorte.</li>
+                            <li><strong>Movistar Iron Geek 2011:</strong> Ganador.</li>
+                            <li><strong>Top Ten Artist:</strong> "Microplastic + Human + Nature" (Alemania, 2021).</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 class="warning lang-en">> FILM & DOCUMENTARY TRACK RECORD</h4>
+                        <h4 class="warning lang-es">> TRAYECTORIA EN CINE Y DOCUMENTAL</h4>
+                        <ul class="list-clean lang-en">
+                            <li><strong>La cuenca de los ríos de piedra (2016):</strong> Feature Documentary. Directed &
+                                Produced. Winner of BoliviaLab. Supported by IMCINE & FONCA.</li>
+                            <li><strong>ATL: Inundar la Ciudad (2025):</strong> 2nd Place Professional Alternative
+                                Techniques (FINI).</li>
+                            <li><strong>Doc Society:</strong> Impact Producers Stimulus 2020.</li>
+                        </ul>
+                        <ul class="list-clean lang-es">
+                            <li><strong>La cuenca de los ríos de piedra (2016):</strong> Largometraje Documental.
+                                Dirigido y Producido. Ganador BoliviaLab. Apoyado por IMCINE y FONCA.</li>
+                            <li><strong>ATL: Inundar la Ciudad (2025):</strong> 2º Lugar Técnicas Alternativas (FINI).
+                            </li>
+                            <li><strong>Doc Society:</strong> Estímulo para Productores de Impacto 2020.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; border: 1px solid var(--sec-blue); padding: 15px;">
+                    <strong class="info lang-en">VALUE FOR EURODOC:</strong>
+                    <span class="lang-en">Brings the rigor of a FINTECH Systems Architect to the fluid world of
+                        independent cinema. Capable of leading technically complex projects and ensuring digital
+                        sovereignty.</span>
+                    <strong class="info lang-es">VALOR PARA EURODOC:</strong>
+                    <span class="lang-es">Aporta el rigor de un Arquitecto de Sistemas FINTECH al cine independiente.
+                        Capaz de liderar proyectos técnicamente complejos y asegurar soberanía digital.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 07 DIRECTOR PROFILE (EXPANDED) -->
+        <div id="director_bio" class="content-section">
+            <div class="header-status"><span>PROFILE: RODRIGO_JARDON</span><span>ROLE: DIRECTOR</span></div>
+            <h2 class="subtitle"><span class="lang-en">DIRECTOR PROFILE</span><span class="lang-es">PERFIL DEL
+                    DIRECTOR</span></h2>
+
+            <div class="text-body">
+                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                    <img src="rodrigo.jpg" alt="Rodrigo Jardon"
+                        style="border: 2px solid var(--alert-orange); width: 150px; height: 150px; object-fit: cover; filter: grayscale(100%);">
+                    <div>
+                        <h3 class="warning">JUAN RODRIGO JARDÓN GALEANA</h3>
+                        <p class="tag">DOCUMENTARY FILMMAKER</p>
+                        <p class="tag">PHOTOGRAPHER</p>
+                        <p class="tag">VISUAL RESEARCHER</p>
+                        <p class="lang-en" style="margin-top: 10px;">Professional photographer and filmmaker dedicated
+                            to the rigorous exploration of identity through "otherness," emotional landscapes, and
+                            subverted narratives.</p>
+                        <p class="lang-es" style="margin-top: 10px;">Fotógrafo y cineasta profesional dedicado a la
+                            exploración rigurosa de la identidad a través de la "otredad", paisajes emocionales y
+                            narrativas subvertidas.</p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <div>
+                        <h4 class="highlight lang-en">> EDUCATION & ACADEMIA</h4>
+                        <h4 class="highlight lang-es">> EDUCACIÓN Y ACADEMIA</h4>
+                        <ul class="list-clean lang-en">
+                            <li><strong>ESCAC (Barcelona):</strong> Master's in Film Studies and Visual Cultures
+                                (Current).</li>
+                            <li><strong>ICP (New York):</strong> International Center of Photography.</li>
+                            <li><strong>Aperture Foundation (NYC):</strong> Specialized workshops.</li>
+                            <li><strong>UNAM:</strong> Communications & Journalism.</li>
+                        </ul>
+                        <ul class="list-clean lang-es">
+                            <li><strong>ESCAC (Barcelona):</strong> Máster en Estudios de Cine y Culturas Visuales
+                                (Actual).</li>
+                            <li><strong>ICP (Nueva York):</strong> International Center of Photography.</li>
+                            <li><strong>Aperture Foundation (NYC):</strong> Talleres especializados.</li>
+                            <li><strong>UNAM:</strong> Comunicación y Periodismo.</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 class="highlight lang-en">> INDUSTRY & FILMOGRAPHY</h4>
+                        <h4 class="highlight lang-es">> INDUSTRIA Y FILMOGRAFÍA</h4>
+                        <ul class="list-clean lang-en">
+                            <li><strong>BARDO (Dir. Iñárritu):</strong> Stills Photographer for the Academy
+                                Award-nominated film.</li>
+                            <li><strong>SOMOS (Netflix):</strong> Stills Photographer for the hit series.</li>
+                            <li><strong>El camino del ruido (2023):</strong> Director. Screened in Serbia, Greece,
+                                Spain, USA, Colombia.</li>
+                        </ul>
+                        <ul class="list-clean lang-es">
+                            <li><strong>BARDO (Dir. Iñárritu):</strong> Fotógrafo Fijo (Stills) para la película
+                                nominada al Oscar.</li>
+                            <li><strong>SOMOS (Netflix):</strong> Fotógrafo Fijo para la serie.</li>
+                            <li><strong>El camino del ruido (2023):</strong> Director. Proyectado en Serbia, Grecia,
+                                España, EE.UU., Colombia.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 08 MELVIN RECORDS (EXPANDED) -->
+        <div id="company" class="content-section">
+            <div class="header-status"><span>ENTITY: MELVIN RECORDS</span><span>EST: 2008</span></div>
+            <h2 class="subtitle"><span class="lang-en">THE PRODUCTION COMPANY</span><span class="lang-es">LA CASA
+                    PRODUCTORA</span></h2>
+            <div class="text-body">
+                <p style="font-size: 1.4rem; color: #fff;"><strong>MELVIN RECORDS</strong></p>
+                <p class="lang-en">Pioneering Mexican collective and <span class="highlight">IMPACT TECHNOLOGY</span>
+                    production house.</p>
+                <p class="lang-es">Colectivo mexicano pionero y productora de <span class="highlight">TECNOLOGÍA DE
+                        IMPACTO</span>.</p>
+
+                <p class="lang-en">Founded in 2008 by Engineer Pablo Nieto, we are defined by our commitment to
+                    <strong>Digital Sovereignty</strong>, <strong>Open Source</strong> methodology, and <strong>Expanded
+                        Cinema</strong>.
+                </p>
+                <p class="lang-es">Fundada en 2008 por el ingeniero Pablo Nieto, nos definimos por nuestro compromiso
+                    con la <strong>Soberanía Digital</strong>, la metodología <strong>Open Source</strong> y el
+                    <strong>Cine Expandido</strong>.
+                </p>
+
+                <hr>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 30px;">
+                    <div style="background: rgba(0,0,0,0.4); padding: 15px; border-top: 3px solid var(--sec-blue);">
+                        <strong class="info" style="font-size: 1.1rem;">1. TECH R&D</strong>
+                        <p class="lang-en" style="font-size: 0.9rem;">We develop proprietary solutions securing
+                            technical independence. Deep architecture experience for corporate giants.</p>
+                        <p class="lang-es" style="font-size: 0.9rem;">Desarrollamos soluciones propietarias asegurando
+                            independencia técnica. Experiencia profunda en arquitectura para gigantes corporativos.</p>
+                        <p style="font-size: 0.8rem; color: #888;">CLIENTS: CFE, CorpoGas, FINTECH Switches.</p>
+                    </div>
+
+                    <div style="background: rgba(0,0,0,0.4); padding: 15px; border-top: 3px solid var(--alert-orange);">
+                        <strong class="warning" style="font-size: 1.1rem;">2. INTERACTIVE ART</strong>
+                        <p class="lang-en" style="font-size: 0.9rem;">Creating open-source installations and documenting
+                            community memory in cultural spaces. STEAM workshops leader.</p>
+                        <p class="lang-es" style="font-size: 0.9rem;">Creación de instalaciones open-source y
+                            documentación de memoria comunitaria en espacios culturales. Líder en talleres STEAM.</p>
+                        <p style="font-size: 0.8rem; color: #888;">PARTNERS: CONACULTA, CENART, Faro de Oriente.</p>
+                    </div>
+
+                    <div
+                        style="background: rgba(0,0,0,0.4); padding: 15px; border-top: 3px solid var(--terminal-green);">
+                        <strong class="highlight" style="font-size: 1.1rem;">3. PRODUCTION</strong>
+                        <p class="lang-en" style="font-size: 0.9rem;">High-impact output with transmedia narratives.
+                            Validated by international supports.</p>
+                        <p class="lang-es" style="font-size: 0.9rem;">Producción de alto impacto con narrativas
+                            transmedia. Validada por apoyos internacionales.</p>
+                        <p style="font-size: 0.8rem; color: #888;">OUTPUT: 20 Albums, 14 Installations, Award-winning
+                            Films.</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; border: 1px dashed #555; padding: 15px; text-align: center;">
+                    <span class="lang-en">SUPPORTS & AWARDS: Doc Society, IMCINE, FONCA, BoliviaLab Pitching
+                        Award.</span>
+                    <span class="lang-es">APOYOS Y PREMIOS: Doc Society, IMCINE, FONCA, Premio de Pitching
+                        BoliviaLab.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 09 LINKS -->
+        <div id="links" class="content-section">
+            <div class="header-status"><span>NETWORK: EXTERNAL</span><span>SECURITY: ENCRYPTED</span></div>
+            <h2 class="subtitle"><span class="lang-en">PROJECT LINKS</span><span class="lang-es">ENLACES DEL
+                    PROYECTO</span></h2>
+            <div class="text-body">
+                <p class="warning lang-en">NOTE: Please view the Project Prototype on a DESKTOP browser (Chrome/Edge)
+                    for WebGL performance.</p>
+                <p class="warning lang-es">NOTA: Por favor, visualice el Prototipo en un navegador de ESCRITORIO
+                    (Chrome/Edge) para el rendimiento WebGL.</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th><span class="lang-en">DESCRIPTION</span><span class="lang-es">DESCRIPCIÓN</span></th>
+                            <th><span class="lang-en">LINK</span><span class="lang-es">ENLACE</span></th>
+                            <th><span class="lang-en">CREDENTIALS</span><span class="lang-es">CREDENCIALES</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: rgba(51, 255, 0, 0.1);">
+                            <td class="lang-en"><strong>PROJECT PROTOTYPE (WEBGL)</strong></td>
+                            <td class="lang-es"><strong>PROTOTIPO DEL PROYECTO (WEBGL)</strong></td>
+                            <td><a href="https://melvinrecords.gt.tc/resistencia" target="_blank"
+                                    style="color:#fff;">LAUNCH >></a></td>
+                            <td style="font-family: 'Courier Prime'; color: var(--terminal-green);">User:
+                                ramboleon@gmail.com<br>Pass: 123456</td>
+                        </tr>
+                        <tr>
+                            <td>Project Teaser</td>
+                            <td><a href="https://youtu.be/ygx8IQ0Ajdo" target="_blank"
+                                    style="color: var(--sec-blue);">Watch on YouTube >></a></td>
+                            <td>Public</td>
+                        </tr>
+                        <tr>
+                            <td>Director's Work</td>
+                            <td><a href="https://youtu.be/lN_rca5zCDg" target="_blank"
+                                    style="color: var(--sec-blue);">Watch on YouTube >></a></td>
+                            <td>Public</td>
+                        </tr>
+                        <tr>
+                            <td>Producer's Work</td>
+                            <td><a href="https://youtu.be/BVo14dGLgjc" target="_blank"
+                                    style="color: var(--sec-blue);">Watch on YouTube >></a></td>
+                            <td>Public</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 10 LETTER -->
+        <div id="letter" class="content-section">
+            <div class="header-status"><span>MESSAGE: OUTGOING</span><span>TO: EURODOC_COMMITTEE</span></div>
+            <h2 class="subtitle"><span class="lang-en">LETTER OF MOTIVATION</span><span class="lang-es">CARTA DE
+                    MOTIVACIÓN</span></h2>
+            <div class="text-body">
+                <p class="lang-en"><strong>To the EURODOC Selection Committee:</strong></p>
+                <p class="lang-es"><strong>Al Comité de Selección de EURODOC:</strong></p>
+
+                <p class="lang-en">We apply to the EURODOC training program with "La Resistencia," a project that is
+                    more than a docu-game; it is a declaration of defiance and a vital exercise in digital sovereignty.
+                    We seek to bring an urgent story of urban displacement and community resilience from the industrial
+                    periphery of Mexico to the international market, and we believe EURODOC is the essential partner for
+                    this final leap.</p>
+                <p class="lang-es">Aplicamos al programa EURODOC con "La Resistencia", un proyecto que es más que un
+                    docu-juego; es una declaración de desafío y un ejercicio vital de soberanía digital. Buscamos llevar
+                    una historia urgente de desplazamiento urbano y resiliencia comunitaria desde la periferia
+                    industrial de México al mercado internacional, y creemos que EURODOC es el socio esencial para este
+                    salto final.</p>
+
+                <p>
+                    <span class="highlight lang-en">THE URGENCY OF THE NARRATIVE</span><span
+                        class="highlight lang-es">LA URGENCIA DE LA NARRATIVA</span><br>
+                    <span class="lang-en">"La Resistencia" is born from a personal and profound conflict: the internal
+                        migration of the producer (Pablo Nieto) himself, expelled from Mexico City by gentrification and
+                        forced to return to Tultitlán. The Hacklab—a garage converted into a sanctuary—is not a creative
+                        choice, but a necessary act of dignity. We are using the most advanced technology—WebGL,
+                        volumetric scanning, and AI—to archive and humanize a space that is physically being
+                        lost.</span>
+                    <span class="lang-es">"La Resistencia" nace de un conflicto personal y profundo: la migración
+                        interna del propio productor (Pablo Nieto), expulsado de la CDMX por la gentrificación y forzado
+                        a volver a Tultitlán. El Hacklab no es una elección creativa, sino un acto necesario de
+                        dignidad. Usamos la tecnología más avanzada —WebGL, escaneo volumétrico e IA— para archivar y
+                        humanizar un espacio que se está perdiendo físicamente.</span>
+                </p>
+
+                <p>
+                    <span class="highlight lang-en">A DE-RISKED PROJECT: THE POWER OF THE ENGINE</span><span
+                        class="highlight lang-es">UN PROYECTO DES-RIESGADO: EL PODER DEL MOTOR</span><br>
+                    <span class="lang-en">Our project is unique because the highest financial and technical risk has
+                        already been mitigated. As an engineer and full-stack programmer, I personally designed and
+                        built the proprietary <i>Resistencia Engine</i>. This ensures <strong>Technical
+                            Sovereignty</strong> and provides a <strong>Proven Concept</strong> validated by our track
+                        record.</span>
+                    <span class="lang-es">Nuestro proyecto es único porque el mayor riesgo financiero y técnico ya ha
+                        sido mitigado. Como ingeniero y programador full-stack, diseñé y construí personalmente el
+                        <i>Motor Resistencia</i> propietario. Esto asegura <strong>Soberanía Técnica</strong> y provee
+                        un <strong>Concepto Probado</strong> validado por nuestra trayectoria.</span>
+                </p>
+
+                <p class="warning lang-en">WHY EURODOC NOW?</p>
+                <p class="warning lang-es">¿POR QUÉ EURODOC AHORA?</p>
+                <p class="lang-en">We seek EURODOC's expertise to bridge the gap between technical viability and
+                    world-class distribution:</p>
+                <p class="lang-es">Buscamos la experiencia de EURODOC para cerrar la brecha entre la viabilidad técnica
+                    y la distribución de clase mundial:</p>
+
+                <ul class="lang-en">
+                    <li>> <strong>High-End Post-Production:</strong> Finalizing Ambisonic Sound and Color.</li>
+                    <li>> <strong>Legal Standardization:</strong> Navigating co-production agreements.</li>
+                    <li>> <strong>B2B Distribution:</strong> Refining the licensing model for museums and archives.</li>
+                </ul>
+                <ul class="lang-es">
+                    <li>> <strong>Postproducción High-End:</strong> Finalizar Sonido Ambisónico y Color.</li>
+                    <li>> <strong>Estandarización Legal:</strong> Navegar acuerdos de coproducción.</li>
+                    <li>> <strong>Distribución B2B:</strong> Refinar el modelo de licencia para museos y archivos.</li>
+                </ul>
+
+                <p class="lang-en">Our ultimate goal is to validate this model—where the producer is also the CTO—and
+                    use these resources to democratize technology for other marginalized communities.</p>
+                <p class="lang-es">Nuestra meta final es validar este modelo —donde el productor es también el CTO— y
+                    usar estos recursos para democratizar la tecnología para otras comunidades marginadas.</p>
+
+                <br>
+                <p style="font-family: 'Courier Prime'; color: var(--terminal-green);">Sincerely,</p>
+                <p><strong>Pablo Benjamin Nieto Mercado</strong><br>Producer & Applicant<br>Melvin Records</p>
+
+                <div style="margin-top: 30px; text-align: center;">
+                    <button class="lang-en"
+                        style="background: transparent; border: 2px solid var(--terminal-green); color: var(--terminal-green); padding: 15px 30px; font-family: 'VT323'; font-size: 1.5rem; cursor: pointer;">>
+                        TRANSMIT APPLICATION</button>
+                    <button class="lang-es"
+                        style="background: transparent; border: 2px solid var(--terminal-green); color: var(--terminal-green); padding: 15px 30px; font-family: 'VT323'; font-size: 1.5rem; cursor: pointer;">>
+                        TRANSMITIR APLICACIÓN</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function showSection(id) {
+            document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
+            // Remover active de todos los items de AMBOS menús
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(id).classList.add('active');
+
+            // Highlight active menu item (synchronize en/es menus)
+            // This simple logic highlights the clicked one. Since we hide the other menu, it's fine.
+            event.currentTarget.classList.add('active');
+        }
+
+        function toggleLanguage() {
+            document.body.classList.toggle('es-mode');
+        }
+    </script>
+</body>
+
+</html>

@@ -280,12 +280,13 @@ class GameServiceUser {
      * @param recompensaId El ID de la recompensa.
      * @param historiaId El ID de la historia que se está completando.
      */
-    async otorgarRecompensa(userId: string, recompensaId: number, historiaId: string, marcarComoVisitada: boolean = false) {
+    async otorgarRecompensa(userId: string, recompensaId: number, historiaId: string, marcarComoVisitada: boolean = false, skipXpUpdate: boolean = false) {
         try {
             console.log('🔵 [otorgarRecompensa] INICIO');
             console.log('🔵 [otorgarRecompensa] userId:', userId, 'tipo:', typeof userId);
             console.log('🔵 [otorgarRecompensa] recompensaId:', recompensaId, 'tipo:', typeof recompensaId);
             console.log('🔵 [otorgarRecompensa] historiaId:', historiaId, 'tipo:', typeof historiaId);
+            console.log('🔵 [otorgarRecompensa] skipXpUpdate:', skipXpUpdate);
 
             const { data: recompensa, error: recompensaError } = await supabase
                 .from('recompensa')
@@ -306,7 +307,14 @@ class GameServiceUser {
             console.log('🔵 [otorgarRecompensa] historias_visitadas actuales:', currentProfile.historias_visitadas);
             console.log('🔵 [otorgarRecompensa] historias_visitadas tipo:', typeof currentProfile.historias_visitadas);
 
-            const newXp = currentProfile.xp_total + (recompensa.valor || 0);
+            // ✅ FIX: Solo calcular nuevo XP si NO se debe saltar la actualización
+            const newXp = skipXpUpdate ? currentProfile.xp_total : (currentProfile.xp_total + (recompensa.valor || 0));
+
+            if (skipXpUpdate) {
+                console.log('🔵 [otorgarRecompensa] Saltando actualización de XP (ya fue aplicado por aplicarXPDirecto)');
+            } else {
+                console.log('🔵 [otorgarRecompensa] Aplicando XP de recompensa:', recompensa.valor);
+            }
 
             const inventarioActual: InventoryItem[] = currentProfile.inventario || [];
             const recompensaExistenteIndex = inventarioActual.findIndex(item => item.id === recompensaId);

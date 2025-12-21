@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Resistencia - Biblia de Producción</title>
+    <!-- Fuentes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;700;900&family=Roboto+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* =========================================
+           ESTILOS GENERALES (CYBER-INDUSTRIAL V2)
+           ========================================= */
+        :root {
+            --bg-color: #000000;
+            --card-bg: rgba(10, 10, 10, 0.9);
+            --neon-green: #39ff14;
+            --neon-red: #ff003c;
+            --cyber-blue: #00f2ff;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border-color: #333;
+            --scanline-color: rgba(0, 255, 0, 0.02);
+            --overlay-bg: url('https://grainy-gradients.vercel.app/noise.svg');
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Urbanist', sans-serif;
+            color: var(--text-main);
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* EFECTO CRT/SCANLINE GLOBAL */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.2));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0.6;
+        }
+
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: var(--overlay-bg);
+            opacity: 0.08;
+            z-index: 998;
+            pointer-events: none;
+        }
+
+        /* CONTENEDOR PRINCIPAL - ESCALABLE */
+        #viewport-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #deck-container {
+            width: 1440px;
+            height: 810px;
+            flex-shrink: 0;
+
+            /* Maximizando 16:9 */
+            background-color: #050505;
+            border: 1px solid var(--border-color);
+            position: relative;
+            box-shadow: 0 0 80px rgba(57, 255, 20, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transform-origin: center center;
+        }
+
+        /* MARCO DECORATIVO */
+        .frame-corner {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--neon-green);
+            z-index: 50;
+        }
+
+        .tl {
+            top: 20px;
+            left: 20px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .tr {
+            top: 20px;
+            right: 20px;
+            border-left: none;
+            border-bottom: none;
+        }
+
+        .bl {
+            bottom: 20px;
+            left: 20px;
+            border-right: none;
+            border-top: none;
+        }
+
+        .br {
+            bottom: 20px;
+            right: 20px;
+            border-left: none;
+            border-top: none;
+        }
+
+        /* HEADER SUPERIOR */
+        .system-header {
+            height: 50px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+            justify-content: space-between;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 12px;
+            color: var(--neon-green);
+            letter-spacing: 1px;
+            z-index: 20;
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        /* SLIDES */
+        .slide {
+            display: none;
+            flex: 1;
+            /* Occupy remaining space between header and footer */
+            padding: 40px 80px;
+            flex-direction: column;
+            justify-content: center;
+            /* Vertically center the content */
+            align-items: center;
+            /* Horizontally center */
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+            position: relative;
+            z-index: 10;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            animation: textFlicker 0.1s ease-in-out;
+        }
+
+        @keyframes textFlicker {
+            0% {
+                opacity: 0.1;
+            }
+
+            2% {
+                opacity: 1;
+            }
+
+            80% {
+                opacity: 1;
+            }
+
+            81% {
+                opacity: 0.1;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* TIPOGRAFÍA */
+        h1 {
+            font-size: 100px;
+            line-height: 0.85;
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            color: #fff;
+            text-shadow: 2px 2px 0px var(--neon-green);
+        }
+
+        h2 {
+            font-size: 56px;
+            line-height: 1;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+            color: #fff;
+            border-left: 8px solid var(--neon-green);
+            padding-left: 20px;
+        }
+
+        h3 {
+            font-family: 'Roboto Mono', monospace;
+            color: var(--cyber-blue);
+            font-size: 18px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        h4 {
+            color: var(--neon-green);
+            margin-bottom: 5px;
+            font-size: 20px;
+            text-transform: uppercase;
+        }
+
+        p {
+            font-size: 18px;
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .mono {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 14px;
+        }
+
+        .highlight {
+            color: #fff;
+            font-weight: bold;
+            background: rgba(57, 255, 20, 0.1);
+            padding: 0 5px;
+        }
+
+        /* LAYOUTS */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 60px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            width: 100%;
+        }
+
+        .title-slide {
+            text-align: center;
+        }
+
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            width: 100%;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            width: 100%;
+        }
+
+        /* COMPONENTES UI */
+        .card {
+            background: rgba(20, 20, 20, 0.6);
+            border: 1px solid #333;
+            padding: 25px;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            border-color: var(--neon-green);
+            transform: translateY(-2px);
+            background: rgba(20, 30, 20, 0.8);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        /* TECH LIST */
+        .tech-list li {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #333;
+            padding: 8px 0;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .tech-list span:last-child {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        /* IMAGENES / PLACEHOLDERS */
+        .img-box {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+            background: #111;
+            border: 1px dashed var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .img-box::before {
+            content: "NO SIGNAL";
+            font-family: 'Roboto Mono', monospace;
+            color: #333;
+            letter-spacing: 5px;
+            z-index: 10;
+        }
+
+        .img-box img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.7;
+            filter: grayscale(80%) contrast(120%);
+            transition: all 0.5s;
+        }
+
+        .img-box:hover img {
+            filter: grayscale(0%) contrast(100%);
+            opacity: 1;
+        }
+
+        .overlay-label {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: #000;
+            color: var(--neon-green);
+            padding: 5px 10px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 10px;
+            border: 1px solid var(--neon-green);
+            z-index: 20;
+        }
+
+        /* NAVIGATION FOOTER */
+        .nav-footer {
+            height: 60px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 30;
+        }
+
+        .btn-glitch {
+            background: transparent;
+            border: 1px solid var(--text-muted);
+            color: var(--text-main);
+            padding: 10px 25px;
+            font-family: 'Roboto Mono', monospace;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .btn-glitch:hover {
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+            background: rgba(57, 255, 20, 0.1);
+            text-shadow: 0 0 8px var(--neon-green);
+            box-shadow: 0 0 10px rgba(57, 255, 20, 0.2);
+        }
+
+        /* IMPRIMIR */
+        @media print {
+            @page {
+                size: landscape;
+                margin: 0;
+            }
+
+            body {
+                background: #000;
+                -webkit-print-color-adjust: exact;
+                height: auto;
+                width: 100%;
+                overflow: visible;
+            }
+
+            #viewport-container {
+                display: block;
+                height: auto;
+                width: 100%;
+                overflow: visible;
+            }
+
+            #deck-container {
+                transform: none !important;
+                width: 100% !important;
+                height: auto !important;
+                border: none;
+                box-shadow: none;
+            }
+
+            .scanlines,
+            .noise-overlay,
+            .nav-footer,
+            .frame-corner {
+                display: none !important;
+            }
+
+            .slide {
+                display: flex !important;
+                opacity: 1 !important;
+                page-break-after: always;
+                height: 100vh;
+                width: 100vw;
+                border-bottom: 2px solid #333;
+            }
+
+            h1,
+            h2,
+            h3,
+            p,
+            span,
+            div {
+                color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="scanlines"></div>
+    <div class="noise-overlay"></div>
+
+    <div id="viewport-container">
+        <div id="deck-container">
+            <!-- MARCO -->
+            <div class="frame-corner tl"></div>
+            <div class="frame-corner tr"></div>
+            <div class="frame-corner bl"></div>
+            <div class="frame-corner br"></div>
+
+            <!-- HEADER -->
+            <div class="system-header">
+                <span>// SYSTEM_READY: LA_RESISTENCIA_V1.0</span>
+                <span id="clock" class="mono">00:00:00</span>
+                <span>STATUS: <span style="color:var(--neon-green)">ONLINE</span></span>
+            </div>
+
+            <!-- =================================================================
+                 SLIDE 1: PORTADA
+                 ================================================================= -->
+            <div class="slide active title-slide" id="s1">
+                <h3 style="color: #fff; opacity: 0.7;">VOLUMEN 1: BIBLIA DE PRODUCCIÓN TRANSMEDIA</h3>
+                <h1>LA RESISTENCIA</h1>
+
+                <div
+                    style="display: flex; gap: 40px; margin-top: 40px; text-align: left; border: 1px solid #333; padding: 30px; background: rgba(0,0,0,0.5);">
+                    <div>
+                        <h4 class="mono" style="font-size: 14px; color: var(--text-muted);">GÉNERO</h4>
+                        <p style="margin:0; font-weight: bold; font-size: 20px;">DOCUMENTAL INTERACTIVO / DOCU-GAME /
+                            REALISMO SOCIAL</p>
+                    </div>
+                    <div style="width: 1px; background: #333;"></div>
+                    <div>
+                        <h4 class="mono" style="font-size: 14px; color: var(--text-muted);">FORMATO</h4>
+                        <p style="margin:0; font-weight: bold; font-size: 20px;">SERIE WEB INMERSIVA (9 CAPÍTULOS)</p>
+                    </div>
+                    <div style="width: 1px; background: #333;"></div>
+                    <div>
+                        <h4 class="mono" style="font-size: 14px; color: var(--text-muted);">DURACIÓN</h4>
+                        <p style="margin:0; font-weight: bold; font-size: 20px;">90 - 120 MINUTOS</p>
+                    </div>
+                </div>
+
+                <p class="mono"
+                    style="margin-top: 50px; color: var(--neon-green); font-size: 14px; animation: blink 1s infinite;">>
+                    INSERT COIN TO START_</p>
+            </div>
+
+            <!-- =================================================================
+                 SLIDE 2: LOGLINE
+                 ================================================================= -->
+            <div class="slide" id="s2">
+                <div class="two-col">
+                    <div>
+                        <h3>01. EL GANCHO</h3>
+                        <h2>LOGLINE</h2>
+                        <p>Expulsado por la gentrificación de la Ciudad de México, un ingeniero regresa a la periferia
+                            industrial para transformar un garaje en un refugio cultural.</p>
+                        <p><strong style="color:#fff;">"La Resistencia"</strong> es una experiencia inmersiva donde el
+                            usuario no solo observa, sino que debe gestionar la precariedad, reparar la memoria y
+                            construir
+                            comunidad para sobrevivir en un sistema diseñado para borrarte.</p>
+                    </div>
+                    <div class="img-box">
+                        <!-- Placeholder para imagen de ambiente cyberpunk/industrial -->
+                        <div class="overlay-label">IMG_REF: CONTEXTO_URBANO</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================================================
+                 SLIDE 3: SINOPSIS
+                 ================================================================= -->
+            <div class="slide" id="s3">
+                <div class="two-col">
+                    <div class="img-box">
+                        <!-- Placeholder para imagen de Pablo o el Taller -->
+                        <img src="https://images.unsplash.com/photo-1598550476439-6847785fcea6?q=80&w=1280"
+                            alt="Taller">
+                        <div class="overlay-label">IMG_REF: TALLER_INTERIOR</div>
+                    </div>
+                    <div>
+                        <h3>02. LA HISTORIA</h3>
+                        <h2>SINOPSIS GENERAL</h2>
+                        <p>Pablo, cineasta e ingeniero, ve cómo su vida en la Narvarte se desmorona. Sin ahorros, migra
+                            a
+                            Tultitlán. Allí, en la cochera de su madre, funda <span class="highlight">"Hacklab La
+                                Resistencia"</span>.</p>
+                        <p>La plataforma combina entornos 3D fotorrealistas y cine directo. El usuario habita los
+                            zapatos de
+                            Pablo, conociendo a personajes como <strong>Boni</strong>, <strong>Antigue</strong>,
+                            <strong>Bidek</strong> e <strong>Iván</strong>.
+                        </p>
+                        <p>Juntos transforman la precariedad en arte hasta que el sistema golpea con una clausura. Pero
+                            la
+                            resistencia digital permanece.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================================================
+                 SLIDE 4: VISIÓN
+                 ================================================================= -->
+            <div class="slide" id="s4">
+                <h3>03. VISIÓN ARTÍSTICA</h3>
+                <h2>NOTA DEL DIRECTOR</h2>
+                <div class="grid-cards">
+                    <div class="card" style="grid-column: span 2;">
+                        <p style="font-size: 24px; font-style: italic; color: #fff;">"El concepto central es la
+                            HABITABILIDAD DIGITAL."</p>
+                        <p>El cine documental tradicional es una ventana; nosotros queremos construir una puerta.
+                            Tenemos
+                            más de <strong>150 horas de material de archivo</strong>.</p>
+                    </div>
+                    <div class="card">
+                        <h4 class="mono"><i class="fa-solid fa-hand-holding-heart"></i> EMPATÍA PROCEDIMENTAL</h4>
+                        <p style="font-size: 16px;">Al gamificar la experiencia, no trivializamos la lucha. Cuando el
+                            usuario decide entre pagar la renta o materiales, entiende la ansiedad real.</p>
+                    </div>
+                    <div class="card">
+                        <h4 class="mono"><i class="fa-solid fa-cube"></i> REBELIÓN CONTRA EL OLVIDO</h4>
+                        <p style="font-size: 16px;">Usamos LiDAR para preservar espacios efímeros. Si nos quitan el
+                            espacio
+                            físico, construiremos uno virtual indestructible.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================================================
+                 SLIDE 5: PROPUESTA DE VALOR (RESTORED)
+                 ================================================================= -->
+            <div class="slide" id="s5">
+                <h3>04. PROPUESTA DE VALOR</h3>
+                <h2>PILARES DE LA EXPERIENCIA</h2>
+                <div class="grid-3" style="gap: 30px; margin-top: 20px;">
+                    <!-- Card 1 -->
+                    <div class="card">
+                        <div style="font-size: 30px; color: var(--neon-red); margin-bottom: 10px;"><i
+                                class="fa-solid fa-heart-pulse"></i></div>
+                        <h4>GAMIFICAR SIN TRIVIALIZAR</h4>
+                        <p style="font-size: 14px;">Usamos mecánicas de juego para transmitir ansiedad real.</p>
+                        <ul class="mono" style="font-size: 12px; color: var(--text-muted); padding-left: 20px;">
+                            <li>> MECÁNICA: BECA VS PULQUE</li>
+                            <li>> RIESGO: PÉRDIDA DE LUZ</li>
+                        </ul>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="card">
+                        <div style="font-size: 30px; color: var(--cyber-blue); margin-bottom: 10px;"><i
+                                class="fa-solid fa-database"></i></div>
+                        <h4>SOBERANÍA TECNOLÓGICA</h4>
+                        <p style="font-size: 14px;">Construimos nuestro propio <strong>Dashboard CMS</strong>.</p>
+                        <p style="font-size: 12px; color: var(--cyber-blue); margin-top:10px;">> INNOVACIÓN: Streaming
+                            HLS + 3D Three.js.</p>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="card">
+                        <div style="font-size: 30px; color: #fff; margin-bottom: 10px;"><i class="fa-solid fa-cube"></i>
+                        </div>
+                        <h4>PRESERVACIÓN LIDAR</h4>
+                        <p style="font-size: 14px;">Archivo digital de espacios borrados por gentrificación.</p>
+                        <p style="font-size: 12px; color: #fff; margin-top:10px;">> ESTADO: Garaje y Calle Escaneados.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================================================
+                 SLIDE 6: ESTRUCTURA - ACTO I
+                 ================================================================= -->
+            <div class="slide" id="s6">
+                <h3>05. ESTRUCTURA DE LA TEMPORADA</h3>
+                <h2>ACTO I: EL DESPLAZAMIENTO</h2>
+                <p class="mono" style="color: var(--cyber-blue); margin-bottom: 30px;">OBJETIVO: ENTENDER LAS REGLAS DEL
+                    SISTEMA Y FRACASAR EN ÉL.</p>
+
+                <div class="grid-cards">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="mono">CAPÍTULO 1</span>
+                            <span style="color: var(--neon-red);">ZONA DE RIESGO</span>
+                        </div>
+                        <p><strong>Entorno:</strong> Modelo 3D Colonia Narvarte.</p>
+                        <p><strong>Mecánica:</strong> Simulador de Mercado & La Renta.</p>
+                        <p style="font-size: 14px; color: var(--text-muted);">El usuario consulta IA de gentrificación.
+                            Gestiona ítems de estatus. El desalojo es inevitable.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="mono">CAPÍTULO 2</span>
+                            <span style="color: var(--neon-green);">RETORNO AL ORIGEN</span>
+                        </div>
+                        <p><strong>Entorno:</strong> Habitación en Tultitlán (Alta Fidelidad).</p>
+                        <p><strong>Mecánica:</strong> Taller de Reparación.</p>
+                        <p style="font-size: 14px; color: var(--text-muted);">Minijuego de inspección de objetos 3D.
+                            Reparar
+                            consolas desbloquea "archivos corruptos" (memorias).</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================================================
+                 SLIDE 7: ESTRUCTURA - ACTO II (HUB)
+                 ================================================================= -->
+            <div class="slide" id="s7">
+                <div class="two-col">
+                    <div>
+                        <h3>05. ESTRUCTURA - ACTO II</h3>
+                        <h2>CAPÍTULO 3: EL HACKLAB</h2>
+                        <p class="mono" style="color: var(--neon-green);">EL NUDO: LA COMUNIDAD</p>
+                        <p><strong>Entorno:</strong> El Garaje "La Resistencia". Lleno de vida, texturas y objetos.</p>
+                        <div class="card" style="margin-top: 20px; border-left: 4px solid var(--cyber-blue);">
+                            <h4>MECÁNICA: APP "BECA VS PULQUE"</h4>
+                            <p style="font-size: 16px;">Un simulador de estrés con energía limitada.</p>
+                            <ul class="mono" style="margin-left: 20px; font-size: 14px; color: var(--text-muted);">
+                                <li>> ¿Llenar formularios para beca incierta?</li>
+                                <li>> ¿Vender pulque para dinero inmediato?</li>
+                            </ul>
+                            <p style="font-size: 14px; margin-top: 10px;">META: Sostenibilidad para desbloquear
+                                historias.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="img-box">
+                        <div class="overlay-label">IMG_REF: HUB_HACKLAB</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================================================
+                 SLIDE 8: ESTRUCTURA - ACTO II (PERSONAJES)
+                 ================================================================= -->
+            <div class="slide" id="s8">
+                <h3>ACTO II: LOS PERSONAJES</h3>
+                <div class="grid-4" style="margin-top: 20px;">
+                    <!-- BONI -->
+                    <div class="card" style="padding: 15px;">
+                        <div style="height: 120px; background: #222; margin-bottom: 10px; overflow: hidden;">
+                            <img src="" alt="Boni img placeholder" style="width:100%; opacity: 0.5;">
+                        </div>
+                        <h4 style="font-size: 16px;">CAP 4: BONI</h4>
+                        <p class="mono" style="font-size: 10px; color: var(--neon-green);">EL ALBAÑIL FILÓSOFO</p>
+                        <p style="font-size: 12px; line-height: 1.3;">Historias de Coatzacoalcos y "El Diablo".</p>
+                        <div style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 5px;">
+                            <p class="mono" style="font-size: 10px; color: var(--cyber-blue);">MECÁNICA: FÍSICA DE
+                                SUELOS
+                            </p>
+                            <p style="font-size: 11px; color: #888;">Apilar materiales en terreno fangoso. Paciencia o
+                                colapso.</p>
+                        </div>
+                    </div>
+
+                    <!-- ANTIGUE -->
+                    <div class="card" style="padding: 15px;">
+                        <div style="height: 120px; background: #222; margin-bottom: 10px; overflow: hidden;">
+                            <img src="" alt="Antigue img placeholder" style="width:100%; opacity: 0.5;">
+                        </div>
+                        <h4 style="font-size: 16px;">CAP 5: ANTIGUE</h4>
+                        <p class="mono" style="font-size: 10px; color: var(--neon-green);">EL GUERRERO</p>
+                        <p style="font-size: 12px; line-height: 1.3;">Demonios de guerra y búsqueda de paz.</p>
+                        <div style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 5px;">
+                            <p class="mono" style="font-size: 10px; color: var(--cyber-blue);">MECÁNICA: BAILE EXTREMO
+                            </p>
+                            <p style="font-size: 11px; color: #888;">Ritmo complejo para "sudar" el trauma.</p>
+                        </div>
+                    </div>
+
+                    <!-- BIDEK -->
+                    <div class="card" style="padding: 15px;">
+                        <div style="height: 120px; background: #222; margin-bottom: 10px; overflow: hidden;">
+                            <img src="" alt="Bidek img placeholder" style="width:100%; opacity: 0.5;">
+                        </div>
+                        <h4 style="font-size: 16px;">CAP 6: BIDEK</h4>
+                        <p class="mono" style="font-size: 10px; color: var(--neon-green);">LA CALLE</p>
+                        <p style="font-size: 12px; line-height: 1.3;">Del camión a la pinta. Economía informal.</p>
+                        <div style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 5px;">
+                            <p class="mono" style="font-size: 10px; color: var(--cyber-blue);">MECÁNICA: GRAFFITI 3D</p>
+                            <p style="font-size: 11px; color: #888;">Pintar camioneta virtual. Galería comunitaria.</p>
+                        </div>
+                    </div>
+
+                    <!-- IVAN -->
+                    <div class="card" style="padding: 15px;">
+                        <div style="height: 120px; background: #222; margin-bottom: 10px; overflow: hidden;">
+                            <img src="" alt="Ivan img placeholder" style="width:100%; opacity: 0.5;">
+                        </div>
+                        <h4 style="font-size: 16px;">CAP 7: IVÁN</h4>
+                        <p class="mono" style="font-size: 10px; color: var(--neon-green);">LA ARMONÍA</p>
+                        <p style="font-size: 12px; line-height: 1.3;">Vida doméstica vs vida artística.</p>
+                        <div style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 5px;">
+                            <p class="mono" style="font-size: 10px; color: var(--cyber-blue);">MECÁNICA: SAMPLER MPC</p>
+                            <p style="font-size: 11px; color: #888;">Mezclar sonidos (ruido de calle, martillo) para
+                                crear
+                                track final.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================================================
+                 SLIDE 9: ACTO III
+                 ================================================================= -->
+            <div class="slide" id="s9">
+                <div class="two-col">
+                    <div>
+                        <h3>06. ESTRUCTURA - ACTO III</h3>
+                        <h2>EL DESENLACE</h2>
+
+                        <div class="card" style="margin-bottom: 20px;">
+                            <h4 style="color: var(--neon-red);">CAPÍTULO 8: LA CLAUSURA</h4>
+                            <p>Las autoridades ponen sellos. El fin del espacio físico.</p>
+                            <p class="mono" style="font-size: 14px; margin-top: 10px;">> MECÁNICA: GESTIÓN DE INVENTARIO
+                                FINAL. Trasladar comunidad a nuevo estado mental.</p>
+                        </div>
+
+                        <div class="card" style="border-color: var(--cyber-blue);">
+                            <h4 style="color: var(--cyber-blue);">CAPÍTULO 9: EPÍLOGO (LEGADO)</h4>
+                            <p>La Resistencia Digital.</p>
+                            <p class="mono" style="font-size: 14px; margin-top: 10px;">> INTERACCIÓN: FIRMA DE WALL
+                                VIRTUAL
+                                + ESTADÍSTICAS FINALES.</p>
+                        </div>
+                    </div>
+                    <div class="img-box">
+                        <div class="overlay-label">IMG_REF: CLAUSURA_SELLOS</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================================================
+                 SLIDE 10: TECH STACK (RESTORED)
+                 ================================================================= -->
+            <div class="slide" id="s10">
+                <div class="two-col">
+                    <div>
+                        <h3>07. INGENIERÍA</h3>
+                        <h2>ESTADO DEL PROYECTO</h2>
+                        <p>Actualmente en <strong>FASE ALPHA FUNCIONAL</strong>.</p>
+
+                        <div class="card" style="margin-bottom: 20px;">
+                            <h4 class="mono"
+                                style="font-size: 14px; border-bottom: 1px solid #333; padding-bottom: 5px;">LO
+                                QUE YA TENEMOS:</h4>
+                            <ul class="tech-list" style="list-style: none;">
+                                <li><span>SCANS 3D</span> <span style="color:var(--neon-green)">Reality Capture
+                                        (Completos)</span></li>
+                                <li><span>FRONTEND CORE</span> <span style="color:var(--cyber-blue)">React + R3F
+                                        (Funcional)</span></li>
+                                <li><span>BACKEND</span> <span>Supabase (Auth + DB listo)</span></li>
+                                <li><span>MATERIAL FÍLMICO</span> <span>150 horas de footage</span></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="img-box" style="border-color: var(--cyber-blue);">
+                        <!-- Placeholder Dashboard -->
+                        <div class="overlay-label" style="color: var(--cyber-blue); border-color: var(--cyber-blue);">
+                            CAPTURA REAL: DASHBOARD CMS V2.5
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================================================
+                 SLIDE 11: ROADMAP (RESTORED)
+                 ================================================================= -->
+            <div class="slide" id="s11">
+                <div style="text-align: center; max-width: 900px; margin: 0 auto; width: 100%;">
+                    <h3>08. ESTRATEGIA</h3>
+                    <h2>PLAN DE DESARROLLO</h2>
+
+                    <div class="grid-3" style="gap: 40px; margin: 40px 0;">
+                        <!-- Fase 1 -->
+                        <div class="card" style="text-align: center;">
+                            <i class="fa-solid fa-code"
+                                style="font-size: 30px; color: var(--text-muted); margin-bottom: 15px;"></i>
+                            <h4 style="font-size: 16px;">FASE 1: PRE-PRODUCCIÓN</h4>
+                            <p style="font-size: 24px; color: #fff; font-weight: bold; opacity: 0.5;">COMPLETADA</p>
+                            <p style="font-size: 12px;">Escritura de Biblia, Captura de Volumetría y Rodaje documental.
+                            </p>
+                        </div>
+
+                        <!-- Fase 2 (INGENIA) -->
+                        <div class="card"
+                            style="text-align: center; border-color: var(--neon-green); box-shadow: 0 0 20px rgba(57,255,20,0.1);">
+                            <i class="fa-solid fa-rocket"
+                                style="font-size: 30px; color: var(--neon-green); margin-bottom: 15px;"></i>
+                            <h4 style="font-size: 16px;">FASE 2: INGENIA PLAY LAB</h4>
+                            <p style="font-size: 24px; color: #fff; font-weight: bold;">OPTIMIZACIÓN UX</p>
+                            <p style="font-size: 12px;">Validación de mecánicas, optimización de assets 3D para web y
+                                Plan
+                                de Negocios.</p>
+                        </div>
+
+                        <!-- Fase 3 -->
+                        <div class="card" style="text-align: center;">
+                            <i class="fa-solid fa-globe"
+                                style="font-size: 30px; color: var(--neon-red); margin-bottom: 15px;"></i>
+                            <h4 style="font-size: 16px;">FASE 3: LANZAMIENTO</h4>
+                            <p style="font-size: 24px; color: #fff; font-weight: bold;">Q4 2026</p>
+                            <p style="font-size: 12px;">Estreno en circuito de festivales (IDFA, SXSW) y Web Abierta.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =================================================================
+                 SLIDE 12: CIERRE
+                 ================================================================= -->
+            <div class="slide" id="s12">
+                <div
+                    style="text-align: center; max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; align-items: center;">
+                    <h1 style="font-size: 80px;">LA RESISTENCIA</h1>
+                    <p style="font-size: 24px;">"Si nos quitan el espacio físico, construiremos uno virtual
+                        indestructible."
+                    </p>
+
+                    <div style="margin-top: 60px; width: 100%; border-top: 1px solid #333; padding-top: 40px;">
+                        <p class="mono" style="font-size: 18px; color: var(--neon-green); margin-bottom: 10px;">CONTACTO
+                        </p>
+                        <p class="mono" style="font-size: 20px; color: #fff;">pablo@melvinrecords.mx</p>
+                        <p class="mono" style="font-size: 20px; color: var(--cyber-blue);">
+                            melvinrecords.gt.tc/resistencia
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- FOOTER NAV -->
+            <div class="nav-footer">
+                <div class="mono" style="font-size: 12px; color: #555;">SLIDE <span id="current-ind">01</span> / 12
+                </div>
+
+                <div style="display: flex; gap: 20px;">
+                    <button class="btn-glitch" onclick="window.print()"
+                        style="border-color: var(--cyber-blue); color: var(--cyber-blue); margin-right: 20px;">
+                        <i class="fa-solid fa-file-pdf"></i> DESCARGAR PDF
+                    </button>
+                    <button class="btn-glitch" onclick="changeSlide(-1)">Anterior</button>
+                    <button class="btn-glitch" onclick="changeSlide(1)">Siguiente</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Lógica de Slides
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const indicator = document.getElementById('current-ind');
+        const clock = document.getElementById('clock');
+        const deckContainer = document.getElementById('deck-container');
+
+        // RESIZE LOGIC (NEW)
+        function handleResize() {
+            const scaleX = window.innerWidth / 1440;
+            const scaleY = window.innerHeight / 810;
+            const scale = Math.min(scaleX, scaleY);
+
+            deckContainer.style.transform = `scale(${scale})`;
+        }
+
+        window.addEventListener('resize', handleResize);
+        handleResize(); // Init
+
+        function updateSlide() {
+            slides.forEach((s, index) => {
+                s.classList.remove('active');
+                if (index === currentSlide) {
+                    s.classList.add('active');
+                }
+            });
+            // Update indicator with leading zero
+            indicator.innerText = (currentSlide + 1).toString().padStart(2, '0');
+        }
+
+        function changeSlide(dir) {
+            currentSlide += dir;
+            if (currentSlide < 0) currentSlide = slides.length - 1;
+            if (currentSlide >= slides.length) currentSlide = 0;
+            updateSlide();
+        }
+
+        // Teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+        });
+
+        // Reloj
+        setInterval(() => {
+            const now = new Date();
+            clock.innerText = now.toLocaleTimeString();
+        }, 1000);
+
+    </script>
+</body>
+
+</html>

@@ -1123,6 +1123,7 @@
                 if (status === 'success') {
                     recompensaId = successRecompensaId;
                     costoXP = costSuccess;
+
                     dom.result.title.innerText = t('successTitle');
                     dom.result.title.style.color = "#00ff00";
                     dom.result.xp.innerText = `+${costoXP} XP`;
@@ -1133,6 +1134,7 @@
                 } else {
                     recompensaId = failureRecompensaId;
                     costoXP = costFail;
+
                     dom.result.title.innerText = t('failureTitle');
                     dom.result.title.style.color = "#ff3333";
                     dom.result.xp.innerText = `${costoXP} XP`;
@@ -1142,17 +1144,22 @@
                     dom.timerProgress.style.backgroundColor = '#ff3333';
                 }
 
+                // UNIFIED PROTOCOL: Solo costos operacionales
+                const totalXpDelta = costoXP;
+
                 console.log("[ReparaApp] UI updated for result.");
 
                 // Setup finish button to actually close
                 dom.result.btn.onclick = () => {
                     console.log("[ReparaApp] Finish button clicked. Sending message.");
                     window.parent.postMessage({
-                        source: 'ReparaApp',
+                        source: 'ResistenciaApp',
+                        appName: 'ReparaApp',
                         type: 'app-result',
                         status: status,
                         recompensaId: recompensaId,
-                        costoXP: costoXP
+                        xpDelta: totalXpDelta, // Solo costos operacionales
+                        costoXP: totalXpDelta  // Legacy fallback
                     }, '*');
 
                     // Visual feedback of closing

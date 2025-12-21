@@ -5,11 +5,11 @@ import { flujoTranslations, getLocalizedContent } from './FlujoNarrativoUsuario/
 
 interface CharacterDossierProps {
     character: Personaje | null;
+    language: 'es' | 'en';
     onClose: () => void;
 }
 
-const CharacterDossier: React.FC<CharacterDossierProps> = ({ character, onClose }) => {
-    const { language } = useLanguage();
+const CharacterDossier: React.FC<CharacterDossierProps> = ({ character, language, onClose }) => {
     const t = flujoTranslations[language];
 
     if (!character) return null;

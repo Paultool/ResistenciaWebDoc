@@ -138,10 +138,10 @@ const UserDashboard: React.FC<{
   }, [user, initializarPerfilJugador]);
 
   return (
-    <div className="dashboard-container user-dashboard" style={{ background: '#000', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div className="dashboard-container user-dashboard">
 
-      {/* GRID LAYOUT PRINCIPAL (FLEX GROW) */}
-      <div className="dashboard-grid" style={{ flex: 1, overflow: 'hidden' }}>
+      {/* GRID LAYOUT PRINCIPAL */}
+      <div className="dashboard-grid">
 
         {/* PANEL IZQUIERDO: MAPA TÁCTICO */}
         <div className="map-panel">
@@ -149,40 +149,30 @@ const UserDashboard: React.FC<{
             historias={historias}
             historiasVisitadas={userProfile?.historias_visitadas || []}
             onStartNarrativeFromMap={(id) => onStartNarrative?.(id)}
-            onExit={undefined} // Undefined para ocultar botón cerrar
+            onExit={undefined}
           />
-          {/* Overlay sutil para integrarlo visualmente */}
-          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', boxShadow: 'inset 0 0 50px rgba(0,0,0,0.8)' }}></div>
+          <div className="map-overlay"></div>
         </div>
 
-        {/* PANEL DERECHO: LISTA DE OPERACIONES (RESTAURADO) */}
+        {/* PANEL DERECHO: LISTA DE OPERACIONES */}
         <div className="missions-panel">
-          <h3 className="section-title" style={{ position: 'sticky', top: 0, background: '#000', zIndex: 10, padding: '10px 0', borderBottom: '1px solid #333' }}>
+          <h3 className="section-title">
             {t.activeMissions} [{historias.length}]
           </h3>
 
-          {historias.map((historia, index) => {
+          {historias.map((historia) => {
             const historiaId = historia.id_historia || historia.id;
             const titulo = historia.titulo || 'OPERACIÓN DESCONOCIDA';
             const descripcion = historia.narrativa || historia.descripcion || '';
-
-            // RESTAURADO: Imágenes via Map
-            const imagenUrl = historia.id_imagen_historia
-              ? imagenesMap.get(historia.id_imagen_historia) || null
-              : null;
-
-            // RESTAURADO: Lógica de Estado y Favoritos
+            const imagenUrl = historia.id_imagen_historia ? imagenesMap.get(historia.id_imagen_historia) : null;
             const favoritas = userProfile?.historias_favoritas || [];
             const esFavorita = favoritas.includes(String(historiaId));
-
             const esCompletada = (userProfile?.historias_visitadas || []).map(String).includes(String(historiaId));
             const esBloqueada = historia.id_historia_dependencia
               ? !(userProfile?.historias_visitadas || []).map(String).includes(String(historia.id_historia_dependencia))
               : false;
-
             const progreso = esCompletada ? 100 : 0;
 
-            // Handler para Favoritos (Copiado de original)
             const handleToggleFavorite = async (e: React.MouseEvent) => {
               e.stopPropagation();
               if (!user?.id) return;
@@ -192,12 +182,9 @@ const UserDashboard: React.FC<{
               if (idx > -1) favs.splice(idx, 1);
               else favs.push(historiaIdStr);
 
-              // Optimistic update local
               const newProfile = { ...userProfile, historias_favoritas: favs };
               setUserProfile(newProfile);
-
               await supabase.from('perfiles_jugador').update({ historias_favoritas: favs }).eq('user_id', user.id);
-              // Background refresh
               const perfil = await gameService.getPlayerStats(user.id);
               setUserProfile(perfil);
             };
@@ -205,67 +192,54 @@ const UserDashboard: React.FC<{
             return (
               <div
                 key={historiaId}
-                className="operation-row"
-                style={{ opacity: esBloqueada ? 0.6 : 1, padding: '10px', display: 'grid', gridTemplateColumns: '80px 1fr', gap: '15px', alignItems: 'start' }}
+                className={`operation-row ${esBloqueada ? 'locked' : ''}`}
                 onClick={() => !esBloqueada && onStartNarrative?.(historiaId)}
               >
                 {/* IMAGEN THUMBNAIL */}
-                <div style={{ width: '80px', height: '80px', background: '#111', borderRadius: '4px', overflow: 'hidden', border: '1px solid #333' }}>
+                <div className="operation-thumbnail">
                   {imagenUrl ? (
-                    <img src={imagenUrl} alt={titulo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={imagenUrl} alt={titulo} />
                   ) : (
-                    <div className="flex items-center justify-center h-full text-2xl">📂</div>
+                    <div className="operation-placeholder">📂</div>
                   )}
                 </div>
 
                 {/* CONTENIDO */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', width: '100%' }}>
-
-                  <div className="operation-header" style={{ padding: 0, border: 'none', marginBottom: 0 }}>
-                    <span className="operation-title" style={{ fontSize: '0.85rem' }}>{titulo}</span>
-                    <div className="flex gap-2">
+                <div className="operation-content">
+                  <div className="operation-header">
+                    <span className="operation-title">{titulo}</span>
+                    <div className="operation-badges">
                       {esCompletada && <span className="operation-status status-completed">{t.badgeCompleted}</span>}
                       {esBloqueada && <span className="operation-status status-locked">{t.badgeLocked}</span>}
                     </div>
                   </div>
 
-                  {/* Descripción Corta */}
-                  <div style={{ fontSize: '0.7rem', color: '#aaa', lineHeight: '1.2', height: '2.4em', overflow: 'hidden' }}>
+                  <div className="operation-description">
                     {descripcion.substring(0, 80)}{descripcion.length > 80 ? '...' : ''}
                   </div>
 
-                  {/* Barra Progreso */}
-                  <div className="operation-progress-bar" style={{ marginTop: 'auto' }}>
+                  <div className="operation-progress-bar">
                     <div className="operation-progress-fill" style={{ width: `${progreso}%` }}></div>
                   </div>
 
-                  {/* Footer Card: Botones */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '5px' }}>
-                    {/* Botón Favorito */}
+                  <div className="operation-footer">
                     {!esBloqueada && (
-                      <button
-                        onClick={handleToggleFavorite}
-                        style={{ background: 'none', border: 'none', color: esFavorita ? '#dc2626' : '#555', fontSize: '1.2rem', cursor: 'pointer', padding: 0 }}
-                      >
+                      <button onClick={handleToggleFavorite} className={`favorite-btn ${esFavorita ? 'active' : ''}`}>
                         {esFavorita ? '♥' : '♡'}
                       </button>
                     )}
-
                     {!esBloqueada && (
-                      <button className="operation-execute-btn" style={{ padding: '2px 8px', fontSize: '0.7rem' }}>
-                        EJECUTAR &gt;
+                      <button className="operation-execute-btn">
+                        {language === 'es' ? 'EJECUTAR >' : 'EXECUTE >'}
                       </button>
                     )}
                   </div>
-
                 </div>
               </div>
             );
           })}
         </div>
-
       </div>
-
     </div>
   )
 }

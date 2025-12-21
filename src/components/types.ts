@@ -126,11 +126,4 @@ export interface AppResult {
 // 5. UI Y COMPONENTES VISUALES
 // =========================================
 
-export interface MapaViewProps {
-    historias: HistoriaData[];
-    historiasVisitadas: number[];
-    onStartNarrativeFromMap: (historiaId: number) => void;
-    onBack: () => void;
-    initialCenter: [number, number];
-    recursos: RecursoMultimediaData[];
-}
+// MapaViewProps removed - MapaViewS.tsx defines its own interface locally

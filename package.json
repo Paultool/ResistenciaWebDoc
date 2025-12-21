@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "pnpm install && vite",
     "build": "pnpm install && vite build",
-    "build:prod": "pnpm install && rm -rf node_modules/.vite-temp && tsc -b && BUILD_MODE=prod vite build",
+    "build:prod": "pnpm install && node -e \"try { require('fs').rmSync('node_modules/.vite-temp', { recursive: true, force: true }); } catch (e) { console.log(e); }\" && tsc -b && vite build",
     "lint": "pnpm install && eslint .",
     "preview": " pnpm install && vite preview"
   },
