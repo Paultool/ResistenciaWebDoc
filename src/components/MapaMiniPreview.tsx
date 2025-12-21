@@ -31,7 +31,7 @@ const MapaMiniPreview: React.FC<MapaMiniPreviewProps> = ({ historias, userProfil
 
         if (!mapInstanceRef.current) {
             // Coordenadas default (CDMX)
-            const defaultCenter: [number, number] = [19.4326, -99.1332];
+            const defaultCenter: [number, number] = [19.5150782476539, -99.15488030551825];
 
             const map = L.map(mapRef.current, {
                 zoomControl: false,
@@ -41,7 +41,7 @@ const MapaMiniPreview: React.FC<MapaMiniPreviewProps> = ({ historias, userProfil
                 doubleClickZoom: false,
                 boxZoom: false,
                 keyboard: false
-            }).setView(defaultCenter, 13);
+            }).setView(defaultCenter, 11); // Ajustado a 11 para vista general de CDMX
 
             // Capa Oscura (Dark/Night mode)
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -78,7 +78,10 @@ const MapaMiniPreview: React.FC<MapaMiniPreviewProps> = ({ historias, userProfil
         // Marcadores de historias
         if (historias && Array.isArray(historias)) {
             historias.forEach(h => {
-                if (h.latitud && h.longitud) {
+                const hLat = h.latitud || (h.id_ubicacion?.coordenadas?.split(',')[0]);
+                const hLon = h.longitud || (h.id_ubicacion?.coordenadas?.split(',')[1]);
+
+                if (hLat && hLon) {
                     let iconUrl = null;
                     if (h.id_imagen_historia && recursosInternos.length > 0) {
                         const rec = recursosInternos.find(r => r.id_recurso === h.id_imagen_historia);
@@ -86,7 +89,7 @@ const MapaMiniPreview: React.FC<MapaMiniPreviewProps> = ({ historias, userProfil
                     }
 
                     const markerHtml = `<div class="mini-story-marker" style="border-color: ${(userProfile?.historias_visitadas || []).map(String).includes(String(h.id_historia || h.id))
-                            ? '#33ff00' : '#dc2626'
+                        ? '#33ff00' : '#dc2626'
                         }"></div>`;
 
                     const miniIcon = L.divIcon({
@@ -96,18 +99,19 @@ const MapaMiniPreview: React.FC<MapaMiniPreviewProps> = ({ historias, userProfil
                         iconAnchor: [5, 5]
                     });
 
-                    L.marker([h.latitud, h.longitud], { icon: miniIcon }).addTo(map);
+                    L.marker([Number(hLat), Number(hLon)], { icon: miniIcon }).addTo(map);
                 }
             });
         }
 
-        // Obtener ubicación real del usuario
+        /* 
+        // DESACTIVADO: No solicitar GPS automáticamente para el mini-mapa
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     const { latitude, longitude } = position.coords;
                     // Actualizar vista
-                    map.setView([latitude, longitude], 14);
+                    // map.setView([latitude, longitude], 14); // Mantenemos la vista general CDMX
                     L.marker([latitude, longitude], { icon: userIcon }).addTo(map);
                 },
                 () => {
@@ -115,6 +119,7 @@ const MapaMiniPreview: React.FC<MapaMiniPreviewProps> = ({ historias, userProfil
                 }
             );
         }
+        */
 
         // Cleanup
         return () => {

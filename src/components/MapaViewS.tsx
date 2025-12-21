@@ -95,13 +95,13 @@ const MapaViewS: React.FC<MapaViewSProps> = ({
 
   // --- 3. Inicialización Mapa y GPS Inteligente ---
   useEffect(() => {
-    const defaultCenter: [number, number] = [19.4326, -99.1332];
+    const defaultCenter: [number, number] = [19.5150782476539, -99.15488030551825];
 
     if (!mapInstanceRef.current && mapRef.current) {
       const map = L.map(mapRef.current, {
         zoomControl: false,
         attributionControl: false
-      }).setView(defaultCenter, 13);
+      }).setView(defaultCenter, 11); // Nivel de zoom ajustado a 11 para ver CDMX y EdoMex
 
       // USAR OpenStreetMap para permitir el "hack" de inversion de colores por CSS y que sea igual al Flujo Narrativo
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -111,6 +111,8 @@ const MapaViewS: React.FC<MapaViewSProps> = ({
       mapInstanceRef.current = map;
     }
 
+    /* 
+    // DESACTIVADO: No solicitar GPS automáticamente al abrir el dashboard
     if (navigator.geolocation) {
       const watchId = navigator.geolocation.watchPosition(
         (position) => {
@@ -118,41 +120,10 @@ const MapaViewS: React.FC<MapaViewSProps> = ({
           setUserLocation([latitude, longitude]);
 
           if (mapInstanceRef.current) {
-            // Actualizar marcador usuario
             if (!userMarkerRef.current) {
               userMarkerRef.current = L.marker([latitude, longitude], { icon: userIcon }).addTo(mapInstanceRef.current);
             } else {
               userMarkerRef.current.setLatLng([latitude, longitude]);
-            }
-
-            // --- LÓGICA: VOLAR A HISTORIA MÁS CERCANA ---
-            if (!hasCenteredRef.current && historias.length > 0) {
-              let nearestCoords: [number, number] | null = null;
-              let minDistance = Infinity;
-
-              historias.forEach(h => {
-                // Adaptamos para leer 'id_ubicacion' (objeto) o 'ubicacion' (si viene plano)
-                const coordsStr = h.id_ubicacion?.coordenadas || h.ubicacion?.coordenadas;
-
-                if (coordsStr) {
-                  const [hLat, hLon] = coordsStr.split(',').map(Number);
-                  if (!isNaN(hLat) && !isNaN(hLon)) {
-                    const dist = calcularDistancia(latitude, longitude, hLat, hLon);
-                    if (dist < minDistance) {
-                      minDistance = dist;
-                      nearestCoords = [hLat, hLon];
-                    }
-                  }
-                }
-              });
-
-              if (nearestCoords) {
-                console.log(`🎯 Volando a la historia más cercana (${minDistance.toFixed(2)}km)`);
-                mapInstanceRef.current.flyTo(nearestCoords, 16, { duration: 2 });
-              } else {
-                mapInstanceRef.current.flyTo([latitude, longitude], 16);
-              }
-              hasCenteredRef.current = true; // Ya no centramos más automáticamente
             }
           }
         },
@@ -161,6 +132,7 @@ const MapaViewS: React.FC<MapaViewSProps> = ({
       );
       return () => navigator.geolocation.clearWatch(watchId);
     }
+    */
   }, [historias]);
 
   // --- 4. Pintar Pines ---

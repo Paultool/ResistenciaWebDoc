@@ -82,8 +82,9 @@ const dashboardTranslations = {
 const UserDashboard: React.FC<{
   onNavigate?: (view: string) => void;
   onStartNarrative?: (id: number) => void;
+  onViewDetail?: (id: number) => void;
   historias?: any[];  // Array of available stories
-}> = ({ onNavigate, onStartNarrative, historias = [] }) => {
+}> = ({ onNavigate, onStartNarrative, onViewDetail, historias = [] }) => {
   const { user, signOut } = useAuth()
   const { language } = useLanguage()
   const t = dashboardTranslations[language] || dashboardTranslations.es
@@ -195,8 +196,15 @@ const UserDashboard: React.FC<{
                 className={`operation-row ${esBloqueada ? 'locked' : ''}`}
                 onClick={() => !esBloqueada && onStartNarrative?.(historiaId)}
               >
-                {/* IMAGEN THUMBNAIL */}
-                <div className="operation-thumbnail">
+                {/* IMAGEN THUMBNAIL (Clickable to show details) */}
+                <div
+                  className="operation-thumbnail cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewDetail?.(historiaId);
+                  }}
+                  title="Ver detalles del nodo"
+                >
                   {imagenUrl ? (
                     <img src={imagenUrl} alt={titulo} />
                   ) : (
@@ -224,8 +232,8 @@ const UserDashboard: React.FC<{
 
                   <div className="operation-footer">
                     {!esBloqueada && (
-                      <button onClick={handleToggleFavorite} className={`favorite-btn ${esFavorita ? 'active' : ''}`}>
-                        {esFavorita ? '♥' : '♡'}
+                      <button onClick={handleToggleFavorite} className={`favorite-btn ${esFavorita ? 'active' : ''}`} title={esFavorita ? 'Remover de prioritarios' : 'Marcar prioritario'}>
+                        <i className={`${esFavorita ? 'fas' : 'far'} fa-heart`}></i>
                       </button>
                     )}
                     {!esBloqueada && (

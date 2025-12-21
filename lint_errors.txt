@@ -1,0 +1,355 @@
+﻿
+> react_repo@0.0.0 lint
+> pnpm install && eslint .
+
+Lockfile is up to date, resolution step is skipped
+Already up to date
+
+Γò¡ Warning ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓò«
+Γöé                   Γöé
+Γöé   Ignored build   Γöé
+Γöé   scripts:        Γöé
+Γöé   esbuild.        Γöé
+Γöé   Run "pnpm app   Γöé
+Γöé   rove-builds"    Γöé
+Γöé   to pick which   Γöé
+Γöé   dependencies    Γöé
+Γöé   should be       Γöé
+Γöé   allowed to      Γöé
+Γöé   run scripts.    Γöé
+Γöé                   Γöé
+Γò░ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓò»
+
+Done in 843ms using pnpm v10.17.0
+
+C:\Users\pault\Desktop\LA RESISTENCIA RESERVORIO\Resistencia Spartane 2\agent_workspace\resistencia-app 101025\resistencia-app\src\components\AdminCanvas.tsx
+   55:44  warning  React Hook useEffect has a missing dependency: 'loadGlobalAssets'. Either include it or remove the dependency array                   react-hooks/exhaustive-deps
+   56:80  warning  React Hook useEffect has a missing dependency: 'loadStoryGraph'. Either include it or remove the dependency array                     react-hooks/exhaustive-deps
+  124:96  error    Empty block statement                                                                                                                 no-empty
+  254:13  error    'finalDbData' is never reassigned. Use 'const' instead                                                                                prefer-const
+  362:6   warning  React Hook useCallback has missing dependencies: 'loadStoryGraph' and 'setEdges'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  387:6   warning  React Hook useCallback has a missing dependency: 'setNodes'. Either include it or remove the dependency array                         react-hooks/exhaustive-deps
+
+C:\Users\pault\Desktop\LA RESISTENCIA RESERVORIO\Resistencia Spartane 2\agent_workspace\resistencia-app 101025\resistencia-app\src\components\AdminFlujoNarrativo.tsx
+  20:11  error  An empty interface declaration allows any non-nullish value, including literals like `0` and `""`.
+- If that's what you want, disable this lint rule with an inline comment or configure the 'allowInterfaces' rule option.
+- If you want a type meaning "any object", you probably want `object` instead.
+- If you want a type meaning "any value", you probably want `unknown` instead  @typescript-eslint/no-empty-object-type
+
+C:\Users\pault\Desktop\LA RESISTENCIA RESERVORIO\Resistencia Spartane 2\agent_workspace\resistencia-app 101025\resistencia-app\src\components\AdminRecursosMultimedia.tsx
+  14:11  error  An empty interface declaration allows any non-nullish value, including literals like `0` and `""`.
+- If that's what you want, disable this lint rule with an inline comment or configure the 'allowInterfaces' rule option.
+- If you want a type meaning "any object", you probably want `object` instead.
+- If you want a type meaning "any value", you probably want `unknown` instead  @typescript-eslint/no-empty-object-type
+
+C:\Users\pault\Desktop\LA RESISTENCIA RESERVORIO\Resistencia Spartane 2\agent_workspace\resistencia-app 101025\resistencia-app\src\components\HistoriaDetail.tsx
+  145:44   error  Unnecessary escape character: \/  no-useless-escape
+  145:102  error  Unnecessary escape character: \/  no-useless-escape
+
+C:\Users\pault\Desktop\LA RESISTENCIA RESERVORIO\Resistencia Spartane 2\agent_workspace\resistencia-app 101025\resistencia-app\src\components\InventarioView.tsx
+  31:6   warning  React Hook useEffect has a missing dependency: 'cargarInventario'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  37:54  error    Optional chain expressions can return undefined by design - using a non-null assertion is unsafe and wrong           @typescript-eslint/no-non-null-asserted-optional-chain
+
+C:\Users\pault\Desktop\LA RESISTENCIA RESERVORIO\Resistencia Spartane 2\agent_workspace\resistencia-app 101025\resistencia-app\src\contexts\AuthContext.tsx
+  20:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\pault\Desktop\LA RESISTENCIA RESERVORIO\Resistencia Spartane 2\agent_workspace\resistencia-app 101025\resistencia-app\src\contexts\LanguageContext.tsx
+  14:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\pault\Desktop\LA RESISTENCIA RESERVORIO\Resistencia Spartane 2\agent_workspace\resistencia-app 101025\resistencia-app\src\hooks\useAdmin.tsx
+    6:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+    7:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+    8:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+    9:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   10:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   14:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   15:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   16:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   17:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   19:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   20:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   20:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   21:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   21:6   warning  React Hook useEffect has a missing dependency: 'checkAdminStatus'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   23:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   24:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   24:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   25:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   25:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   25:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   26:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   26:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   26:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   27:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   27:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   27:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   28:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   28:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   28:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   29:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   29:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   31:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   31:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   32:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   32:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   32:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   33:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   33:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   33:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   33:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   34:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   34:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   34:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   34:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   35:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   35:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   35:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   35:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   36:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   36:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   36:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   36:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   38:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   38:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   38:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   39:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   39:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   39:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   39:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   40:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   40:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   40:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   40:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   41:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   41:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   41:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   41:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   41:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   42:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   42:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   42:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   42:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   42:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   43:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   43:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   43:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   43:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   43:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   43:11  error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   44:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   44:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   44:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   44:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   44:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   44:11  error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   45:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   45:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   45:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   45:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   45:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   45:11  error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   46:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   46:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   46:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   46:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   46:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   46:11  error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   47:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   47:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   47:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   47:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   47:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   48:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   48:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   48:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   48:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   48:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   49:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   49:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   49:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   49:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   49:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   51:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   51:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   51:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   51:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   52:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   52:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   52:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   52:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   52:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   53:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   53:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   53:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   53:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   53:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   54:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   54:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   54:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   54:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   54:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   54:11  error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   55:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   55:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   55:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   55:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   55:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   55:11  error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   56:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   56:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   56:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   56:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   56:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   56:11  error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   57:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   57:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   57:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   57:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   57:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   57:11  error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   58:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   58:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   58:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   58:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   58:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   59:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   59:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   59:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   59:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   60:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   60:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   60:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   61:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   61:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   61:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   61:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   62:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   62:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   62:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   62:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   63:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   63:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   63:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   63:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   64:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   64:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   64:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   64:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   64:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   65:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   65:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   65:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   65:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   65:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   66:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   66:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   66:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   66:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   66:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   67:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   67:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   67:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   67:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   67:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   68:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   68:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   68:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   68:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   68:9   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   69:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   69:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   69:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   69:7   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   70:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   70:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   70:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   71:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   71:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   72:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   72:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   72:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   73:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   73:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   73:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   74:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   74:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   74:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   75:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   75:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   76:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   76:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   76:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   77:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   77:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   78:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   80:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   81:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   81:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   82:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   82:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   83:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   83:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   84:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   84:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   84:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   85:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   85:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   85:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   86:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   86:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   86:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   87:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   87:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   88:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   88:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   89:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   89:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   90:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   92:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   93:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   93:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   95:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   95:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   97:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   97:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   98:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   98:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   98:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   99:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+   99:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  101:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  101:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  102:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  102:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  102:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  103:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  103:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  103:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  104:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  104:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  104:5   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  105:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  105:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  106:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  106:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  107:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  107:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  108:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  110:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  111:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  111:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  112:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  112:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  113:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  113:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  114:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  114:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  115:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  115:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  116:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  116:3   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+  117:1   error    Irregular whitespace not allowed                                                                                     no-irregular-whitespace
+
+Γ£û 306 problems (298 errors, 8 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
+

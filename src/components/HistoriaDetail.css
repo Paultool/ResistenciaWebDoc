@@ -14,7 +14,8 @@
 /* Reset local */
 .hd-overlay * {
   box-sizing: border-box;
-  font-family: 'Courier Prime', 'Courier New', monospace; /* Fuente Hacker */
+  font-family: 'Courier Prime', 'Courier New', monospace;
+  /* Fuente Hacker */
 }
 
 /* Overlay: Fondo oscuro con blur */
@@ -44,7 +45,8 @@
 .hd-modal {
   background-color: var(--hd-black);
   width: 100%;
-  max-width: 900px; /* Un poco más ancho para que respire */
+  max-width: 900px;
+  /* Un poco más ancho para que respire */
   height: 100%;
   max-height: 90vh;
   display: flex;
@@ -61,16 +63,21 @@
   content: " ";
   display: block;
   position: absolute;
-  top: 0; left: 0; bottom: 0; right: 0;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-              linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
   z-index: 0;
   background-size: 100% 2px, 3px 100%;
   pointer-events: none;
 }
 
 /* Contenido por encima de scanlines */
-.hd-header, .hd-tabs, .hd-content {
+.hd-header,
+.hd-tabs,
+.hd-content {
   position: relative;
   z-index: 1;
 }
@@ -146,10 +153,26 @@
   color: #888;
 }
 
-.hd-badge-main { border-color: var(--hd-green); color: var(--hd-green); }
-.hd-badge-sec { border-color: #555; color: #aaa; }
-.hd-badge-lvl { border-color: var(--hd-red); color: var(--hd-red); }
-.hd-badge-date { border: none; padding-left: 0; color: #555; }
+.hd-badge-main {
+  border-color: var(--hd-green);
+  color: var(--hd-green);
+}
+
+.hd-badge-sec {
+  border-color: #555;
+  color: #aaa;
+}
+
+.hd-badge-lvl {
+  border-color: var(--hd-red);
+  color: var(--hd-red);
+}
+
+.hd-badge-date {
+  border: none;
+  padding-left: 0;
+  color: #555;
+}
 
 /* =========================================
    TABS (PESTAÑAS)
@@ -200,9 +223,18 @@
 }
 
 /* Scrollbar Hacker */
-.hd-content::-webkit-scrollbar { width: 8px; }
-.hd-content::-webkit-scrollbar-track { background: #000; }
-.hd-content::-webkit-scrollbar-thumb { background: var(--hd-green); border: 1px solid #000; }
+.hd-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.hd-content::-webkit-scrollbar-track {
+  background: #000;
+}
+
+.hd-content::-webkit-scrollbar-thumb {
+  background: var(--hd-green);
+  border: 1px solid #000;
+}
 
 .hd-section-title {
   font-size: 0.9rem;
@@ -222,7 +254,7 @@
   margin-bottom: 30px;
   border-left: 2px solid var(--hd-green);
   padding-left: 20px;
-  background: linear-gradient(90deg, rgba(51,255,0,0.05) 0%, transparent 100%);
+  background: linear-gradient(90deg, rgba(51, 255, 0, 0.05) 0%, transparent 100%);
 }
 
 /* =========================================
@@ -258,10 +290,11 @@
   box-shadow: 0 0 20px rgba(51, 255, 0, 0.4);
 }
 
-.hd-btn-sec { 
-  border-color: #555; 
-  color: #888; 
+.hd-btn-sec {
+  border-color: #555;
+  color: #888;
 }
+
 .hd-btn-sec:hover {
   border-color: #fff;
   color: #fff;
@@ -269,10 +302,10 @@
   box-shadow: none;
 }
 
-.hd-btn-disabled { 
-  border-color: #333; 
-  color: #444; 
-  cursor: not-allowed; 
+.hd-btn-disabled {
+  border-color: #333;
+  color: #444;
+  cursor: not-allowed;
 }
 
 .hd-access-msg {
@@ -285,6 +318,32 @@
   text-transform: uppercase;
 }
 
+.favorite-btn-detail {
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 1.6rem;
+  cursor: pointer;
+  padding: 5px;
+  transition: all 0.3s ease;
+  width: fit-content;
+  align-self: center;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.favorite-btn-detail.active {
+  color: #dc2626;
+  text-shadow: 0 0 15px rgba(220, 38, 38, 0.6);
+}
+
+.favorite-btn-detail:hover {
+  transform: scale(1.2);
+  color: #ff4d4d;
+}
+
 /* =========================================
    GRIDS (PERSONAJES Y MULTIMEDIA)
    ========================================= */
@@ -292,6 +351,72 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 20px;
+}
+
+/* Grilla de Archivos Simplificada */
+.hd-grid-files {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 15px;
+}
+
+/* Tarjeta de Archivo */
+.hd-file-card {
+  background: rgba(51, 255, 0, 0.03);
+  border: 1px solid #333;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.hd-file-card:hover {
+  border-color: var(--hd-green);
+  background: rgba(51, 255, 0, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.hd-file-icon {
+  font-size: 2.5rem;
+  color: var(--hd-green);
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.hd-file-card:hover .hd-file-icon {
+  opacity: 1;
+  transform: scale(1.1);
+  text-shadow: 0 0 15px var(--hd-green);
+}
+
+.hd-file-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.hd-file-tipo {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--hd-green);
+  letter-spacing: 1px;
+}
+
+.hd-file-id {
+  font-size: 0.65rem;
+  color: #555;
+  font-family: monospace;
+}
+
+.hd-file-card:hover .hd-file-id {
+  color: #888;
 }
 
 /* Personajes Estilo Ficha */
@@ -316,15 +441,24 @@
   object-fit: cover;
   margin-bottom: 15px;
   border: 1px solid var(--hd-green);
-  filter: grayscale(100%); /* Estilo monitor viejo */
+  filter: grayscale(100%);
+  /* Estilo monitor viejo */
 }
-.hd-char-card:hover .hd-char-img { filter: grayscale(0%); }
+
+.hd-char-card:hover .hd-char-img {
+  filter: grayscale(0%);
+}
 
 .hd-char-placeholder {
-  width: 80px; height: 80px;
+  width: 80px;
+  height: 80px;
   border: 1px dashed #555;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 2rem; margin-bottom: 15px; color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 15px;
+  color: #555;
 }
 
 .hd-char-name {
@@ -352,44 +486,6 @@
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-/* Multimedia Estilo Archivo */
-.hd-media-card {
-  background: #000;
-  border: 1px solid #333;
-  display: flex;
-  flex-direction: column;
-}
-
-.hd-media-preview {
-  height: 100px;
-  background: #111;
-  position: relative;
-  border-bottom: 1px solid #333;
-}
-
-.hd-media-content {
-  width: 100%; height: 100%; object-fit: cover; opacity: 0.7;
-}
-
-.hd-media-info {
-  padding: 12px;
-}
-
-.hd-media-title {
-  font-size: 0.8rem;
-  margin: 0 0 5px 0;
-  color: #ddd;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-
-.hd-media-tag {
-  font-size: 0.65rem;
-  color: #000;
-  background: var(--hd-green);
-  padding: 2px 6px;
-  font-weight: bold;
 }
 
 /* Estados vacíos */

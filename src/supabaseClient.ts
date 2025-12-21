@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { Logger } from './services/LoggerService';
 
 // URL y clave pública de Supabase
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -104,7 +105,9 @@ export interface FlujoNarrativo {
   tipo_paso: string
   contenido: string
   recursomultimedia_id: number | null
-  id_personaje: number | null // <-- ¡Nuevo campo agregado!
+  id_personaje: number | null
+  id_recompensa: number | null // <-- AÑADIDO
+  id_siguiente_paso: number | null // <-- AÑADIDO
   opciones_decision: {
     opciones_siguientes_json: OpcionSiguiente[]
   }
@@ -1322,7 +1325,7 @@ class GameService {
     }
   }
 
- 
+
 
   // Obtener TODOS los pasos de flujo narrativo (Estilo Método de Clase)
   async obtenerFlujosNarrativos(): Promise<any[]> {
@@ -1420,6 +1423,48 @@ export const crearPaso = async (nuevoPaso: any) => {
 
 
 
+
+
+// ----------------------------------------------------
+// FUNCIONES PARA CONFIGURACIÓN Y LOGS
+// ----------------------------------------------------
+
+export const obtenerConfiguracionLogs = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('configuración')
+      .select('valor')
+      .eq('clave', 'log_config')
+      .single();
+
+    if (error) {
+      // Si la tabla no existe o el registro no está, devolvemos default
+      if (error.code === 'PGRST116') {
+        console.warn('⚠️ Registro log_config no encontrado en tabla configuración');
+      }
+      return null;
+    }
+    return data.valor;
+  } catch (err) {
+    console.error('❌ Error obteniendo configuración de logs:', err);
+    return null;
+  }
+};
+
+export const actualizarConfiguracionLogs = async (config: any) => {
+  try {
+    const { data, error } = await supabase
+      .from('configuración')
+      .upsert({ clave: 'log_config', valor: config, descripción: 'Configuración de logs de la aplicación', fecha_actualización: new Date().toISOString() })
+      .select();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (err: any) {
+    console.error('❌ Error actualizando configuración de logs:', err);
+    return { data: null, error: err };
+  }
+};
 
 // Exportar instancia singleton
 export const gameService = GameService.getInstance();

@@ -11,9 +11,8 @@ import './AdminPanel.css';
 import Editor from '@monaco-editor/react';
 import { getSchemaForResource, FormField } from '../schemas/appSchemas'; // Ajusta la ruta
 
-interface AdminRecursosMultimediaProps { }
-
-const AdminRecursosMultimedia: React.FC<AdminRecursosMultimediaProps> = () => {
+const AdminRecursosMultimedia: React.FC = () => {
+  const MonacoEditor = Editor as any;
   const [recursos, setRecursos] = useState<RecursoMultimedia[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -165,15 +164,17 @@ const AdminRecursosMultimedia: React.FC<AdminRecursosMultimediaProps> = () => {
 
       if (editingRecurso) {
         await actualizarRecursoMultimedia({
+          ...editingRecurso,
           ...formData,
-          id_recurso: editingRecurso.id_recurso,
           metadatos: metadatosParaGuardar,
-        });
+        } as RecursoMultimedia);
       } else {
         await crearRecursoMultimedia({
           ...formData,
           metadatos: metadatosParaGuardar,
-        });
+          id_historia: null,
+          id_personaje: null,
+        } as any);
       }
       setShowForm(false);
       cargarRecursos();
@@ -230,7 +231,7 @@ const AdminRecursosMultimedia: React.FC<AdminRecursosMultimediaProps> = () => {
                 />
               )}
               {field.type === 'json' && (
-                <Editor
+                <MonacoEditor
                   height="150px"
                   language="json"
                   theme="vs-dark"
@@ -249,7 +250,7 @@ const AdminRecursosMultimedia: React.FC<AdminRecursosMultimediaProps> = () => {
     return (
       <div className="form-group">
         <label htmlFor="recursoMetadatos">Metadatos (JSON Genérico)</label>
-        <Editor
+        <MonacoEditor
           height="200px"
           language="json"
           theme="vs-dark"

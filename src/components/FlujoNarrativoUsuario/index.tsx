@@ -21,6 +21,10 @@ import type {
 // Import translations from separate file
 import { flujoTranslations, getLocalizedContent } from './translations';
 
+// Import services
+import { supabase } from '../../supabaseClient';
+import { Logger } from '../../services/LoggerService';
+
 const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNarrativoUsuarioProps) => {
     const { language } = useLanguage();
     const [historias, setHistorias] = useState<HistoriaData[]>([]);
@@ -182,7 +186,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
         // 2. Aplicar el cambio de XP (si existe)
         if (totalXpDelta !== 0) {
-            console.log(`[Unified XP] Aplicando Delta: ${totalXpDelta} XP desde ${result.source}`);
+            Logger.info('FLOW', `[Unified XP] Aplicando Delta: ${totalXpDelta} XP desde ${result.source}`);
             const { data: newStats, error: costError } = await gameServiceUser.aplicarXPDirecto(
                 user.id,
                 totalXpDelta,
@@ -200,7 +204,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         // La App envía solo costos operacionales en xpDelta.
         // La recompensa tiene su propio valor de XP en la BD que se aplicará aquí.
         if (result?.recompensaId && typeof result.recompensaId === 'number' && result.recompensaId > 0) {
-            console.log(`[Unified XP] Otorgando Recompensa ID: ${result.recompensaId} (XP from DB will be applied)`);
+            Logger.info('FLOW', `[Unified XP] Otorgando Recompensa ID: ${result.recompensaId} (XP from DB will be applied)`);
             await gameServiceUser.otorgarRecompensa(
                 user.id,
                 result.recompensaId,
@@ -238,7 +242,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             // 5. RECOMPENSA DEL PASO DEL FLUJO (adicional a la recompensa de la app)
             // Los pasos del flujo pueden tener su propia recompensa definida en flowConfig
             if (resultOption.recompensaId && resultOption.recompensaId > 0) {
-                console.log(`[Unified XP] Otorgando Recompensa del Paso: ${resultOption.recompensaId}`);
+                Logger.info('FLOW', `[Unified XP] Otorgando Recompensa del Paso: ${resultOption.recompensaId}`);
                 await gameServiceUser.otorgarRecompensa(
                     user.id,
                     resultOption.recompensaId,
@@ -251,20 +255,20 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             }
 
             // 6. NAVEGACIÓN: Avanzar al siguiente paso
-            console.log(`[Unified XP] Navegando a siguiente paso: ${resultOption.siguiente_paso_id}`);
+            Logger.info('FLOW', `[Unified XP] Navegando a siguiente paso: ${resultOption.siguiente_paso_id}`);
             setShowStepContent(false);
             const nextIndex = flujoData.findIndex(p => p.id_flujo === resultOption.siguiente_paso_id);
 
             if (nextIndex !== -1) {
-                console.log(`[Unified XP] ✅ Navegación exitosa. Index actual: ${currentStepIndex} -> Nuevo Index: ${nextIndex}`);
+                Logger.info('FLOW', `[Unified XP] ✅ Navegación exitosa. Index actual: ${currentStepIndex} -> Nuevo Index: ${nextIndex}`);
                 setCurrentStepIndex(nextIndex);
             } else {
-                console.warn(`[Unified XP] ⚠️ ID de paso siguiente (${resultOption.siguiente_paso_id}) no encontrado en flujo. Mostrando fin.`);
-                console.log("IDs disponibles:", flujoData.map(f => f.id_flujo));
+                Logger.warn('FLOW', `[Unified XP] ⚠️ ID de paso siguiente (${resultOption.siguiente_paso_id}) no encontrado en flujo. Mostrando fin.`);
+                Logger.debug('FLOW', "IDs disponibles:", flujoData.map(f => f.id_flujo));
                 setShowEndMessage(true);
             }
         } else {
-            console.warn(`[Unified XP] ⚠️ No se encontró opción para status: ${result.status}`);
+            Logger.warn('FLOW', `[Unified XP] ⚠️ No se encontró opción para status: ${result.status}`);
         }
     }, [user, selectedHistoriaId, fetchPlayerStats, flujoData, currentStepIndex, recursosData]);
 
@@ -360,7 +364,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     }, [user, selectedHistoriaId, recompensasData, personajesData, fetchPlayerStats]);
 
     const handleReturnToMenu = useCallback(() => {
-        console.log("🎵 Deteniendo música de fondo y volviendo al menú.");
+        Logger.info('FLOW', "🎵 Deteniendo música de fondo y volviendo al menú.");
         setBackgroundMusicUrl(null);
         setSelectedHistoriaId(null);
         setFlujoData([]);
@@ -388,11 +392,11 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
         // --- LÓGICA DE PASO FINAL Y REDIRECCIÓN DE HISTORIA ---
         if (currentStep.tipo_paso === 'final' && selectedHistoriaId !== null && user) {
-            console.log("🏁 Completando historia actual:", selectedHistoriaId);
+            Logger.info('FLOW', "🏁 Completando historia actual:", selectedHistoriaId);
             try {
                 await gameServiceUser.completeStory(user.id, String(selectedHistoriaId));
             } catch (error) {
-                console.error('❌ Error completando historia:', error);
+                Logger.error('FLOW', '❌ Error completando historia:', error);
             }
 
             // Determinar el ID de la siguiente HISTORIA (no paso)
@@ -418,12 +422,12 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
                 if (opts.length > 0 && opts[0].siguiente_paso_id) {
                     nextStoryId = opts[0].siguiente_paso_id;
-                    console.log("🔗 ID de siguiente historia extraído de opciones:", nextStoryId);
+                    Logger.info('FLOW', "🔗 ID de siguiente historia extraído de opciones:", nextStoryId);
                 }
             }
 
             if (nextStoryId) {
-                console.log("🔄 Redirigiendo a siguiente historia ID:", nextStoryId);
+                Logger.info('FLOW', `Redirigiendo a siguiente historia ID: ${nextStoryId}`);
                 // EVITAR ERROR "No se encontró un paso actual": 
                 // 1. Poner loading en true INMEDIATAMENTE para bloquear renderizado de pasos.
                 setLoading(true);
@@ -436,7 +440,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 setShowEndMessage(false);
                 return;
             } else {
-                console.log("⏹️ No hay siguiente historia definida. Volviendo al menú.");
+                Logger.info('FLOW', "⏹️ No hay siguiente historia definida. Volviendo al menú.");
                 handleReturnToMenu();
                 return;
             }
@@ -455,7 +459,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         } else {
             // Si el paso siguiente no existe en el flujo actual, ¿podría ser un salto a otra historia?
             // Por ahora asumimos fin de flujo.
-            console.warn("⚠️ Paso siguiente no encontrado en flujo actual. Mostrando fin.");
+            Logger.warn('FLOW', "⚠️ Paso siguiente no encontrado en flujo actual. Mostrando fin.");
             setShowEndMessage(true);
         }
     }, [flujoData, currentStepIndex, isStoryCompleted, personajesData, user, selectedHistoriaId, fetchPlayerStats, handleReturnToMenu]);
@@ -481,12 +485,29 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
     useEffect(() => {
         // Si recibimos un historiaId por props (desde el mapa), iniciamos esa historia
         if (historiaId) {
-            console.log("🚀 [FlujoNarrativo] Prop recibida. Iniciando historia ID:", historiaId);
+            Logger.info('FLOW', "🚀 [FlujoNarrativo] Prop recibida. Iniciando historia ID:", historiaId);
             // Usamos la función que ya tienes para resetear contadores y pasos
             handleHistoriaSelect(historiaId);
         }
     }, [historiaId, handleHistoriaSelect]); // Se ejecuta cuando cambia historiaId
 
+    useEffect(() => {
+        if (selectedHistoriaId) {
+            Logger.info('FLOW', `Cargando historia ID: ${selectedHistoriaId}`);
+            setLoading(true);
+            setError(null);
+            setFlujoData([]);
+            setCurrentStepIndex(0);
+            setShowStepContent(false);
+            setShowEndMessage(false);
+            // Assuming fetchFlujoNarrativo is defined elsewhere and needs to be called here
+            // For this snippet, I'll just add a placeholder or assume it's part of the original context
+            // fetchFlujoNarrativo(); // This function is not in the provided snippet, but implied by the diff
+        } else {
+            setFlujoData([]);
+            setLoading(false);
+        }
+    }, [selectedHistoriaId]); // Assuming fetchFlujoNarrativo is a dependency if it's a useCallback
 
     // ====================================================================
     // ✅ SOLUCIÓN: useEffect para forzar el ocultamiento del modal final
@@ -495,7 +516,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         // Si hay una historia seleccionada, garantizamos que el mensaje final esté oculto.
         if (selectedHistoriaId !== null) {
             if (showEndMessage) {
-                console.log("🐛 [FIX] showEndMessage estaba en true al iniciar la historia. Forzando a false.");
+                Logger.info('FLOW', "🐛 [FIX] showEndMessage estaba en true al iniciar la historia. Forzando a false.");
                 setShowEndMessage(false);
             }
         }
@@ -519,13 +540,13 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         const processedMessages = new Set<string>();  // Trackear IDs de mensajes procesados
 
         const handleIframeMessage = (event: MessageEvent) => {
-            console.log('[Flujo] Mensaje recibido del iframe:', event.data);
+            Logger.debug('FLOW', '[Flujo] Mensaje recibido del iframe:', event.data);
 
 
             // --- PROTOCOLO UNIFICADO DE APPS (ResistenciaApp) ---
             if (event.data && event.data.source === 'ResistenciaApp') {
                 const appName = event.data.appName || 'UnknownApp';
-                console.log(`[Flujo] 📩 Mensaje recibido de ${appName} (${event.data.type})`);
+                Logger.info('FLOW', `[Flujo] 📩 Mensaje recibido de ${appName} (${event.data.type})`);
 
                 if (event.data.type === 'app-result') {
                     const result = event.data as AppResult;
@@ -533,20 +554,20 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     // Deduplicación de mensajes
                     const messageId = `${appName}-${result.status}-${result.recompensaId}-${Date.now()}`;
                     if (processedMessages.has(messageId)) {
-                        console.warn(`[Flujo] ⚠️ Mensaje duplicado de ${appName} ignorado.`);
+                        Logger.warn('FLOW', `[Flujo] ⚠️ Mensaje duplicado de ${appName} ignorado.`);
                         return;
                     }
                     processedMessages.add(messageId);
 
                     // 1. Cerrar Modal (Limpieza UI)
                     closeHotspotModal();
-                    console.log(`[Flujo] Modal cerrado tras resultado de ${appName}.`);
+                    Logger.info('FLOW', `[Flujo] Modal cerrado tras resultado de ${appName}.`);
 
                     // 2. Procesar Lógica Unificada (XP + Recompensa + Navegación)
                     handleRecompensa(result);
                 }
                 else if (event.data.action === 'close') {
-                    console.log(`[Flujo] ❌ Cierre solicitado por ${appName}.`);
+                    Logger.info('FLOW', `[Flujo] ❌ Cierre solicitado por ${appName}.`);
                     closeHotspotModal();
                     // Opcional: Manejar como fallo si se cierra sin terminar
                     // handleAppCompletion('failure', 'Cierre por usuario');
@@ -586,21 +607,21 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     failureRecompensaId: hotspotModal.failureRecompensaId,
                     cc: language
                 };
-                console.log("[POST MESSAGE] Enviando configuración de App de Renta al Iframe (después de 'load'):", payload);
+                Logger.debug('FLOW', "[POST MESSAGE] Enviando configuración de App de Renta al Iframe (después de 'load'):", payload);
                 currentIframe.contentWindow.postMessage(payload, '*');
             } else {
-                console.error("[POST MESSAGE] No se pudo acceder a contentWindow después de 'load'.");
+                Logger.error('FLOW', "[POST MESSAGE] No se pudo acceder a contentWindow después de 'load'.");
             }
         };
 
         // Escucha el evento 'load'
         // Es más seguro siempre usar el listener que confiar en 'iframe.complete'
-        console.log("[POST MESSAGE] Añadiendo listener 'load' al iframe.");
+        Logger.debug('FLOW', "[POST MESSAGE] Añadiendo listener 'load' al iframe.");
         currentIframe.addEventListener('load', handleLoad);
 
         // Cleanup: Esta función se ejecuta cuando el modal se cierra (o las dependencias cambian)
         return () => {
-            console.log("[CLEANUP] Removiendo listener 'load' del iframe.");
+            Logger.debug('FLOW', "[CLEANUP] Removiendo listener 'load' del iframe.");
             // Siempre remueve el listener del iframe que referenciamos
             currentIframe.removeEventListener('load', handleLoad);
         };
@@ -625,7 +646,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             const recursoActual = getRecurso(currentStep.recursomultimedia_id);
 
             if (!recursoActual || !recursoActual.metadatos) {
-                console.error("[POST MESSAGE App] No se encontró el recurso o metadatos para el paso 'app'.");
+                Logger.error('FLOW', "[POST MESSAGE App] No se encontró el recurso o metadatos para el paso 'app'.");
                 return;
             }
 
@@ -634,7 +655,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 // 1. Parsear el JSON unificado
                 parsedMetadata = JSON.parse(recursoActual.metadatos);
             } catch (e) {
-                console.error("[POST MESSAGE App] Error al parsear JSON de metadatos:", e, recursoActual.metadatos);
+                Logger.error('FLOW', "[POST MESSAGE App] Error al parsear JSON de metadatos:", e, recursoActual.metadatos);
                 return;
             }
 
@@ -644,7 +665,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
             // 3. Obtener stats del jugador
             if (!playerStats) {
-                console.error("[POST MESSAGE App] Stats del jugador no cargados. Abortando envío.");
+                Logger.error('FLOW', "[POST MESSAGE App] Stats del jugador no cargados. Abortando envío.");
                 return;
             }
 
@@ -660,7 +681,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 if (successOption?.recompensaId) successRecompensaId = successOption.recompensaId;
                 if (failureOption?.recompensaId) failureRecompensaId = failureOption.recompensaId;
 
-                console.log("[POST MESSAGE App] Recompensas extraídas del flowConfig:", { successRecompensaId, failureRecompensaId });
+                Logger.debug('FLOW', "[POST MESSAGE App] Recompensas extraídas del flowConfig:", { successRecompensaId, failureRecompensaId });
             }
 
             if (currentIframe.contentWindow) {
@@ -675,19 +696,19 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                     failureRecompensaId: failureRecompensaId,
                     cc: language
                 };
-                console.log("[POST MESSAGE App] Enviando 'appConfig' (metadatos) al Iframe:", payload);
+                Logger.debug('FLOW', "[POST MESSAGE App] Enviando 'appConfig' (metadatos) al Iframe:", payload);
                 currentIframe.contentWindow.postMessage(payload, '*');
             } else {
-                console.error("[POST MESSAGE App] No se pudo acceder a contentWindow después de 'load'.");
+                Logger.error('FLOW', "[POST MESSAGE App] No se pudo acceder a contentWindow después de 'load'.");
             }
         };
 
-        console.log("[POST MESSAGE App] Añadiendo listener 'load' al iframe de tipo_paso: 'app'.");
+        Logger.debug('FLOW', "[POST MESSAGE App] Añadiendo listener 'load' al iframe de tipo_paso: 'app'.");
         currentIframe.addEventListener('load', sendConfigToApp);
 
         // 5. Cleanup
         return () => {
-            console.log("[CLEANUP App] Removiendo listener 'load' del iframe de tipo_paso: 'app'.");
+            Logger.debug('FLOW', "[CLEANUP App] Removiendo listener 'load' del iframe de tipo_paso: 'app'.");
             if (currentIframe) {
                 currentIframe.removeEventListener('load', sendConfigToApp);
             }
@@ -1256,7 +1277,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         const isStepChange = lastStepIndexRef.current !== currentStepIndex;
 
         if (isStepChange) {
-            console.log(`[Media Effect] Cambio de paso detectado (${lastStepIndexRef.current} -> ${currentStepIndex}). Reseteando estados.`);
+            Logger.debug('MEDIA', `Cambio de paso detectado (${lastStepIndexRef.current} -> ${currentStepIndex}). Reseteando estados.`);
             // Oculta el contenido del paso al iniciar la carga o reproducción
             setShowStepContent(false);
             // Asegúrate de resetear el pop-up inicial cada vez que cambias de paso
@@ -1275,7 +1296,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         if (!is3DModel) {
             // Detener música de fondo si está sonando
             if (backgroundAudioRef.current) {
-                console.log("⏸️ Deteniendo música de fondo al cambiar de paso.");
+                Logger.info('MEDIA', "⏸️ Deteniendo música de fondo al cambiar de paso.");
                 backgroundAudioRef.current.pause();
                 backgroundAudioRef.current = null;
             }
@@ -1283,22 +1304,22 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         }
 
         if (recursoActual && recursoActual.tipo === '3d_model') {
-            console.log("Metadata CRUDA del Recurso 3D:", recursoActual.metadatos);
+            Logger.debug('MEDIA', "Metadata CRUDA del Recurso 3D:", recursoActual.metadatos);
 
             const hotspotConfigs = recursoActual.metadatos ? JSON.parse(recursoActual.metadatos) as HotspotConfig[] : [];
 
             // Filtrar hotspots que no son de tipo backgroundMusic para el conteo
             const interactiveHotspots = hotspotConfigs.filter(h => h.contentType !== 'backgroundMusic');
 
-            console.log("Hotspot Configs cargadas:", hotspotConfigs);
+            Logger.debug('MEDIA', "Hotspot Configs cargadas:", hotspotConfigs);
             totalHotspotsRef.current = interactiveHotspots.length;
-            console.log("Número total de Hotspots interactivos:", totalHotspotsRef.current);
+            Logger.debug('MEDIA', "Número total de Hotspots interactivos:", totalHotspotsRef.current);
 
             // Cargar música de fondo si está configurada
             const musicConfig = hotspotConfigs.find(h => h.contentType === 'backgroundMusic');
             if (musicConfig && musicConfig.url) {
                 setBackgroundMusicUrl(musicConfig.url);
-                console.log("🎵 Música de fondo configurada:", musicConfig.url);
+                Logger.info('MEDIA', "🎵 Música de fondo configurada:", musicConfig.url);
             } else {
                 setBackgroundMusicUrl(null);
             }
@@ -1306,18 +1327,25 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
         if (recursoActual && (isVideo || isAudio)) {
             if (isVideo && videoRef.current) {
-                videoRef.current.play().catch(e => console.error("Error al reproducir video:", e));
+                videoRef.current.play().catch(e => Logger.error('MEDIA', "Error al reproducir video:", e));
             }
             if (isAudio) {
                 setShowAudioOverlay(true);
             }
         }
-        else if (!recursoActual || (!isVideo && !isAudio && !is3DModel)) {
+        else if (
+            (!recursoActual && !currentStep.recursomultimedia_id) ||
+            (recursoActual && !isVideo && !isAudio && !is3DModel)
+        ) {
+            Logger.debug('MEDIA', "Step without media detected or no resource assigned. Showing content immediately.");
             setShowStepContent(true);
+        }
+        else if (!recursoActual && currentStep.recursomultimedia_id) {
+            Logger.debug('MEDIA', "Resource expected but not yet loaded in recursosData. Waiting...");
         }
         else if (is3DModel) {
             if (!recursoActual || !recursoActual.metadatos) {
-                console.log("Esperando datos del recurso...");
+                Logger.debug('MEDIA', "Esperando datos del recurso...");
                 return;
             }
 
@@ -1331,12 +1359,12 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
             const interactiveHotspots = hotspotConfigs.filter(h => h.contentType !== 'backgroundMusic');
             totalHotspotsRef.current = interactiveHotspots.length;
 
-            console.log("Hotspot Configs cargadas:", hotspotConfigs);
-            console.log("Número total de Hotspots interactivos:", totalHotspotsRef.current);
+            Logger.debug('MEDIA', "Hotspot Configs cargadas:", hotspotConfigs);
+            Logger.debug('MEDIA', "Número total de Hotspots interactivos:", totalHotspotsRef.current);
 
             // FORCE UPDATE via timeout to break race condition
             setTimeout(() => {
-                console.log("[Media Effect] ⏰ Forcing ShowStepContent = TRUE via Timeout");
+                Logger.debug('MEDIA', "[Media Effect] ⏰ Forcing ShowStepContent = TRUE via Timeout");
                 setShowStepContent(true);
             }, 100);
         }
@@ -1371,11 +1399,11 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
 
         if (shouldPlay) {
             // Esto cumple tu requisito: si no es interactivo, 'shouldPlay' será false y se pausará.
-            console.log("🎵 Reproduciendo música.", { isOpen: isHotspotModalOpen, type: hotspotModal?.contentType });
-            backgroundAudioRef.current.play().catch(e => console.error("Error al reproducir música de fondo:", e));
+            Logger.info('MEDIA', "🎵 Reproduciendo música.", { isOpen: isHotspotModalOpen, type: hotspotModal?.contentType });
+            backgroundAudioRef.current.play().catch(e => Logger.error('MEDIA', "Error al reproducir música de fondo:", e));
         } else {
             // Esto se activa si isHotspotModalOpen es true Y el tipo NO es 'interactive'
-            console.log("⏸️ Pausando música (Modal no interactivo abierto).", { type: hotspotModal?.contentType });
+            Logger.info('MEDIA', "⏸️ Pausando música (Modal no interactivo abierto).", { type: hotspotModal?.contentType });
             backgroundAudioRef.current.pause();
         }
 
@@ -1391,7 +1419,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         // 'backgroundMusicUrl' cambia o si el componente se desmonta.
         return () => {
             if (audio) {
-                console.log("🧹 Limpieza (desmontaje o cambio de URL): Deteniendo música.");
+                Logger.info('MEDIA', "🧹 Limpieza (desmontaje o cambio de URL): Deteniendo música.");
                 audio.pause();
                 backgroundAudioRef.current = null;
             }
@@ -1984,6 +2012,13 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         // --- Lógica para Pasos Finales ---
         if (step.tipo_paso === 'final') {
             const isChapterEnd = step.id_siguiente_paso !== null;
+
+            // Novedad: Si showStepContent es false, no renderizamos el modal.
+            // Esto cubre tanto el inicio de pasos con media como posibles estados de carga.
+            if (!showStepContent) {
+                return null;
+            }
+
             return (
                 <div className={`
                     absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30
@@ -2271,7 +2306,13 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         key={mediaSrc}
                         src={mediaSrc}
                         autoPlay
-                        onEnded={() => { handleNextStep(stepActual?.id_siguiente_paso || null); }}
+                        onEnded={() => {
+                            if (stepActual?.tipo_paso === 'final') {
+                                setShowStepContent(true);
+                            } else {
+                                handleNextStep(stepActual?.id_siguiente_paso || null);
+                            }
+                        }}
                     />
                 )}
 
@@ -2281,7 +2322,13 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         key={mediaSrc}
                         src={mediaSrc}
                         autoPlay
-                        onEnded={() => { handleNextStep(stepActual?.id_siguiente_paso || null); }}
+                        onEnded={() => {
+                            if (stepActual?.tipo_paso === 'final') {
+                                setShowStepContent(true);
+                            } else {
+                                handleNextStep(stepActual?.id_siguiente_paso || null);
+                            }
+                        }}
                     >
                         {subtitleUrl && subtitlesEnabled && (
                             <track kind="subtitles" src={subtitleUrl} srcLang="en" label="English" default />

@@ -12,8 +12,9 @@ import AdminPanel from './components/AdminPanel';
 import FlujoNarrativoUsuario from './components/FlujoNarrativoUsuario';
 import CharacterDossier from './components/CharacterDossier';
 
-import { supabase, testConnection, obtenerHistorias, Historia, obtenerFichaPersonajePorId, Personaje } from './supabaseClient';
+import { supabase, testConnection, obtenerHistorias, Historia, obtenerFichaPersonajePorId, Personaje, obtenerConfiguracionLogs } from './supabaseClient';
 import { gameServiceUser as gameService } from './services/GameServiceUser';
+import { Logger } from './services/LoggerService';
 import StatsModal from './components/StatsModal';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -732,6 +733,7 @@ const MainContent: React.FC<MainContentProps> = ({ onRequestFullscreen }) => {
 
   const handleStartNarrative = (historia: Historia) => {
     setFlujoNarrativoHistoriaId(historia.id);
+    setSelectedHistoriaId(null);
     setCurrentView('historias');
   };
 
@@ -773,7 +775,7 @@ const MainContent: React.FC<MainContentProps> = ({ onRequestFullscreen }) => {
       return <HistoriaDetail historiaId={selectedHistoriaId} onClose={() => setSelectedHistoriaId(null)} onStartNarrative={() => handleStartNarrative(historias.find(h => h.id === selectedHistoriaId)!)} />;
     }
     switch (currentView) {
-      case 'dashboard': return <UserDashboard onNavigate={(v) => setCurrentView(v as any)} onStartNarrative={handleStartNarrativeFromMap} historias={historias} />;
+      case 'dashboard': return <UserDashboard onNavigate={(v) => setCurrentView(v as any)} onStartNarrative={handleStartNarrativeFromMap} onViewDetail={setSelectedHistoriaId} historias={historias} />;
       case 'personajes': return <PersonajesView onBack={() => setCurrentView('dashboard')} />;
       case 'mapa': return <MapaView historias={historias} historiasVisitadas={userProfile?.historias_visitadas || []} onStartNarrativeFromMap={handleStartNarrativeFromMap} />;
       case 'inventario': return <InventarioView onBack={() => setCurrentView('dashboard')} />;
@@ -963,6 +965,20 @@ const AppContent: React.FC = () => {
       else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
     }
   };
+
+  // Inicializar configuración de logs
+  useEffect(() => {
+    const initLogs = async () => {
+      const config = await obtenerConfiguracionLogs();
+      if (config) {
+        Logger.setConfig(config);
+        Logger.info('SYSTEM', 'Configuración de logs cargada desde Supabase', config);
+      } else {
+        Logger.warn('SYSTEM', 'No se pudo cargar la configuración de logs. Usando valores por defecto.');
+      }
+    };
+    initLogs();
+  }, []);
 
   if (loading) return (
     <div className="app-loading">

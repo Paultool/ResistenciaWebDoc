@@ -29,7 +29,7 @@ interface Personaje {
 
 interface RecursoMultimedia {
   id_recurso: number;
-  tipo: 'imagen' | 'video' | 'audio' | 'transcripcion' | 'subtitulo';
+  tipo: 'imagen' | 'video' | 'audio' | '3d_model' | 'transcripcion' | 'subtitulo';
   archivo: string;
   metadatos: string | null;
   descripcion: string;
@@ -142,7 +142,7 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
 
     // ... Lógica de YouTube igual ... 
     const getYouTubeId = (url: string) => {
-      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+      const regex = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i;
       const match = url.match(regex);
       return match ? match[1] : null;
     };
@@ -265,7 +265,7 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
                     ) : hasStarted ? (
                       '[ SECUENCIA INICIADA ]'
                     ) : canAccess ? (
-                      `[ INICIAR SIMULACIÓN ]`
+                      'EJECUTAR →'
                     ) : (
                       `BLOQUEADO: NIVEL ${historia.nivel_acceso_requerido} REQUERIDO`
                     )}
@@ -278,11 +278,12 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
                   )}
 
                   <button
-                    className="hd-btn hd-btn-sec"
+                    className={`favorite-btn-detail ${isFavorited ? 'active' : ''}`}
                     onClick={handleToggleFavorite}
                     disabled={isFavoritingLoading}
+                    title={isFavorited ? 'Remover de prioritarios' : 'Marcar como prioritario'}
                   >
-                    {isFavoritingLoading ? '...' : isFavorited ? '[-] REMOVER DE PRIORITARIOS' : '[+] MARCAR PRIORITARIO'}
+                    <i className={`${isFavorited ? 'fas' : 'far'} fa-heart`}></i>
                   </button>
                 </div>
               )}
@@ -317,20 +318,30 @@ const HistoriaDetail: React.FC<HistoriaDetailProps> = ({ historiaId, onClose, on
           {activeTab === 'multimedia' && (
             <div>
               {(multimedia && multimedia.length > 0) ? (
-                <div className="hd-grid">
-                  {multimedia.map(recurso => (
-                    <div key={recurso.id_recurso} className="hd-media-card">
-                      <div className="hd-media-preview">
-                        {renderRecurso(recurso)}
+                <div className="hd-grid-files">
+                  {multimedia.map(recurso => {
+                    const getIcon = (tipo: string) => {
+                      switch (tipo) {
+                        case 'imagen': return 'fa-file-image';
+                        case 'video': return 'fa-file-video';
+                        case 'audio': return 'fa-file-audio';
+                        case '3d_model': return 'fa-cube';
+                        default: return 'fa-file-alt';
+                      }
+                    };
+
+                    return (
+                      <div key={recurso.id_recurso} className="hd-file-card">
+                        <div className="hd-file-icon">
+                          <i className={`fas ${getIcon(recurso.tipo)}`}></i>
+                        </div>
+                        <div className="hd-file-info">
+                          <span className="hd-file-tipo">[{recurso.tipo.toUpperCase()}]</span>
+                          <span className="hd-file-id">ID: {recurso.id_recurso}</span>
+                        </div>
                       </div>
-                      <div className="hd-media-info">
-                        <h4 className="hd-media-title">
-                          {recurso.titulo || (recurso.descripcion?.length > 30 ? recurso.descripcion.substring(0, 30) + '...' : 'ARCHIVO_SIN_NOMBRE')}
-                        </h4>
-                        <span className="hd-media-tag">{recurso.tipo.toUpperCase()}</span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="hd-status-msg">

@@ -17,9 +17,7 @@ import {
 import PasoForm from './PasoForm';
 import './AdminPanel.css';
 
-interface AdminFlujoNarrativoProps {}
-
-const AdminFlujoNarrativo: React.FC<AdminFlujoNarrativoProps> = () => {
+const AdminFlujoNarrativo: React.FC = () => {
   const [pasos, setPasos] = useState<FlujoNarrativo[]>([]);
   const [historias, setHistorias] = useState<Historia[]>([]);
   const [recursosMultimedia, setRecursosMultimedia] = useState<RecursoMultimedia[]>([]);
@@ -52,14 +50,14 @@ const AdminFlujoNarrativo: React.FC<AdminFlujoNarrativoProps> = () => {
           obtenerPersonajes(),
           obtenerRecompensas(),
         ]);
-        
+
         console.log("Personajes cargados:", personajesData);
 
         setHistorias(historiasData);
         setRecursosMultimedia(recursosData);
         setPersonajes(personajesData);
         setRecompensas(recompensasData);
-        
+
       } catch (err: any) {
         console.error("Error en la carga inicial:", err);
         setError('Error al cargar la lista de historias, recursos, personajes o recompensas: ' + err.message);
@@ -202,7 +200,7 @@ const AdminFlujoNarrativo: React.FC<AdminFlujoNarrativoProps> = () => {
           </button>
         </div>
       </div>
-      
+
       {showForm && (
         <PasoForm
           editingPaso={editingPaso}
@@ -256,17 +254,17 @@ const AdminFlujoNarrativo: React.FC<AdminFlujoNarrativoProps> = () => {
                     <td>
                       {paso.id_recompensa ?
                         recompensas.find(r => r.id_recompensa === paso.id_recompensa)?.nombre || 'Desconocida'
-                      : 'Ninguna'}
+                        : 'Ninguna'}
                     </td>
                     <td className="actions">
-                      <button 
+                      <button
                         onClick={() => handleEditPaso(paso)}
                         className="btn btn-sm btn-info"
                         title="Editar"
                       >
                         ✏️
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDeletePaso(paso.id_flujo)}
                         className="btn btn-sm btn-danger"
                         title="Eliminar"

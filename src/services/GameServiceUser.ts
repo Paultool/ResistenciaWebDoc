@@ -1,4 +1,5 @@
 import { supabase } from '../supabaseClient';
+import { Logger } from './LoggerService';
 
 export interface InventoryItem {
     id: string | number;
