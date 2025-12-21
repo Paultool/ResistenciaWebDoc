@@ -150,6 +150,7 @@ const UserDashboard: React.FC<{
             historias={historias}
             historiasVisitadas={userProfile?.historias_visitadas || []}
             onStartNarrativeFromMap={(id) => onStartNarrative?.(id)}
+            onViewDetail={(id) => onViewDetail?.(id)}
             onExit={undefined}
           />
           <div className="map-overlay"></div>

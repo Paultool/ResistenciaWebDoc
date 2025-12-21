@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './MapaViewS.css'; // Asegúrate de tener el CSS full screen que te pasé antes
-import HistoriaDetail from './HistoriaDetail';
 import { gameServiceUser } from '../services/GameServiceUser';
 
 // --- Interfaces ---
@@ -22,8 +21,8 @@ interface RecursoMultimedia {
 interface MapaViewSProps {
   historias: any[]; // Usamos any[] para evitar conflictos de tipos 'id' vs 'id_historia'
   historiasVisitadas: number[];
-  // 👇 Esta es la función clave que llama al padre
   onStartNarrativeFromMap: (historiaId: number) => void;
+  onViewDetail: (historiaId: number) => void; // Para abrir el detalle global
   onExit?: () => void; // Prop opcional para cerrar el mapa
 }
 
@@ -38,6 +37,7 @@ const MapaViewS: React.FC<MapaViewSProps> = ({
   historias,
   historiasVisitadas,
   onStartNarrativeFromMap,
+  onViewDetail,
   onExit
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -45,7 +45,6 @@ const MapaViewS: React.FC<MapaViewSProps> = ({
   const userMarkerRef = useRef<L.Marker | null>(null);
   const hasCenteredRef = useRef(false); // Para centrar solo la primera vez
 
-  const [selectedHistoriaId, setSelectedHistoriaId] = useState<number | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [recursosInternos, setRecursosInternos] = useState<RecursoMultimedia[]>([]);
 
@@ -162,11 +161,11 @@ const MapaViewS: React.FC<MapaViewSProps> = ({
             icon: createStoryIcon(recursoEncontrado?.archivo, isLocked)
           }).addTo(map);
 
-          marker.on('click', () => setSelectedHistoriaId(hId));
+          marker.on('click', () => onViewDetail(hId)); // <--- LLAMA AL PADRE
         }
       }
     });
-  }, [historias, historiasVisitadas, recursosInternos]);
+  }, [historias, historiasVisitadas, recursosInternos, onViewDetail]);
 
   const handleCenterOnUser = () => {
     if (userLocation && mapInstanceRef.current) mapInstanceRef.current.flyTo(userLocation, 17);
@@ -178,8 +177,6 @@ const MapaViewS: React.FC<MapaViewSProps> = ({
     const idParaIniciar = historiaData.id || historiaData.id_historia;
 
     if (idParaIniciar) {
-      // 1. Cerrar modal local
-      setSelectedHistoriaId(null);
       // 2. Mandar señal al PADRE (App.tsx)
       onStartNarrativeFromMap(Number(idParaIniciar));
     } else {
@@ -259,36 +256,6 @@ const MapaViewS: React.FC<MapaViewSProps> = ({
           </button>
         )}
       </div>
-
-      {/* MODAL DE DETALLE */}
-      {selectedHistoriaId && (
-        <div className="absolute inset-0 z-[1000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md border border-[#33ff00] shadow-[0_0_50px_rgba(51,255,0,0.2)] bg-black relative">
-            {/* Decoración Modal */}
-            <div className="absolute top-0 left-0 w-2 h-2 bg-[#33ff00]"></div>
-            <div className="absolute top-0 right-0 w-2 h-2 bg-[#33ff00]"></div>
-            <div className="absolute bottom-0 left-0 w-2 h-2 bg-[#33ff00]"></div>
-            <div className="absolute bottom-0 right-0 w-2 h-2 bg-[#33ff00]"></div>
-
-            {/* LÓGICA PARA CALCULAR BLOQUEO ANTES DE RENDERIZAR */}
-            {(() => {
-              const selectedStory = historias.find(h => (h.id_historia || h.id) === selectedHistoriaId);
-              const isLocked = selectedStory?.id_historia_dependencia
-                ? !historiasVisitadas.includes(selectedStory.id_historia_dependencia)
-                : false;
-
-              return (
-                <HistoriaDetail
-                  historiaId={selectedHistoriaId}
-                  onClose={() => setSelectedHistoriaId(null)}
-                  onStartNarrative={handleStartStorySafe}
-                  isLocked={isLocked} // <--- PASAMOS EL ESTADO DE BLOQUEO
-                />
-              );
-            })()}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
