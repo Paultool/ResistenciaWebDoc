@@ -1,18 +1,54 @@
 {
     "appConfig": {
         "metadata": {
-            "title": "Benito Juárez — Diagnóstico de Desplazamiento",
-            "version": "1.0.0",
-            "description": "Explora las colonias de Benito Juárez para entender el desplazamiento urbano sistemático."
+            "title": "BÚSQUEDA DE VIVIENDA — BENITO JUÁREZ",
+            "version": "1.2.0",
+            "description": "Pablo busca un nuevo hogar tras ser desplazado de Narvarte. El mercado es cruel y burocrático."
         },
         "narrative": {
-            "contextMessage": "Tras intentar rentar en Narvarte, Pablo debe explorar toda la delegación Benito Juárez. Cada visita tiene costos reales: transporte, comidas, trámites...",
+            "contextMessage": "Narvarte ya no es una opción. Pablo debe encontrar un departamento en el resto de la Benito Juárez. El tiempo corre y los recursos se agotan. Las inmobiliarias piden depósitos absurdos y documentos que Pablo apenas puede conseguir.",
             "previousRent": 5000,
-            "currentSituation": "Desalojado de Narvarte — Renta subió a $20,000",
-            "objective": "Explorar 6+ colonias para obtener un diagnóstico completo del desplazamiento"
+            "currentSituation": "DESPLAZADO — Buscando refugio en zona hostil",
+            "objective": "Encontrar un departamento habitable y cubrir el DEPOSITO + RENTA + DOCUMENTACION."
         },
         "gameplay": {
             "coloniasToVisitGoal": 6,
+            "allowNegativeXP": true,
+            "rentalRequirements": [
+                {
+                    "rentThreshold": 22000,
+                    "depositMonths": 6,
+                    "requiredItems": [
+                        "Aval con Propiedad",
+                        "Comprobante de Ingresos",
+                        "Identificación Oficial"
+                    ],
+                    "successProb": 0.1,
+                    "desc": "Elite: Depósito de 6 meses + Aval en CDMX."
+                },
+                {
+                    "rentThreshold": 18000,
+                    "depositMonths": 3,
+                    "requiredItems": [
+                        "Garante de Alquiler",
+                        "Comprobante de Ingresos",
+                        "Identificación Oficial"
+                    ],
+                    "successProb": 0.4,
+                    "desc": "Estándar: Depósito de 3 meses + Garante."
+                },
+                {
+                    "rentThreshold": 0,
+                    "depositMonths": 1,
+                    "requiredItems": [
+                        "Referencia Laboral",
+                        "Comprobante de Ingresos",
+                        "Identificación Oficial"
+                    ],
+                    "successProb": 0.7,
+                    "desc": "Accesible: Depósito de 1 mes + Referencias."
+                }
+            ],
             "maxColoniasToVisit": 24,
             "allowRevisit": false,
             "showCostPreview": true,
@@ -186,21 +222,27 @@
         "opciones_siguientes_json": [
             {
                 "texto": "success",
-                "siguiente_paso_id": 39,
-                "recompensaId": 14,
-                "comment": "Exploración normal (6-9 colonias) - Obtiene 'Memoria del Desplazamiento' + flag 'BJDeny'"
+                "siguiente_paso_id": 27,
+                "recompensaId": 10,
+                "comment": "LOGRO: Contrato de arrendamiento obtenido."
             },
             {
-                "texto": "success",
-                "siguiente_paso_id": 39,
+                "texto": "failure_normal",
+                "siguiente_paso_id": 27,
+                "recompensaId": 14,
+                "comment": "FIN: Exploración normal (6-9 colonias) sin contrato."
+            },
+            {
+                "texto": "failure_exhaustive",
+                "siguiente_paso_id": 27,
                 "recompensaId": 15,
-                "comment": "Exploración exhaustiva (10+ colonias) - Obtiene 'Mapa de Gentrificación BJ 2024' + flag 'BJ_complete_survey'"
+                "comment": "FIN: Exploración exhaustiva (10+ colonias) sin contrato."
             },
             {
                 "texto": "failure",
-                "siguiente_paso_id": 58,
+                "siguiente_paso_id": 27,
                 "recompensaId": 16,
-                "comment": "Exploración abandonada (<6 colonias) - Pierde -100 XP adicional"
+                "comment": "ABANDONO: Exploración inacabada (<6 colonias)."
             }
         ]
     }

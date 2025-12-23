@@ -1,0 +1,29 @@
+{
+    "appConfig": {
+        "title": "Graffiti Digital",
+        "description": "Deja tu marca en el muro virtual de La Resistencia",
+        "cost": -50,
+        "reward": 100,
+        "personajeId": 6,
+        "difficulty": 1,
+        "requiredItems": [
+            "Spray de Pintura"
+        ]
+    },
+    "flowConfig": {
+        "opciones_siguientes_json": [
+            {
+                "texto": "success",
+                "siguiente_paso_id": 27,
+                "recompensaId": 19,
+                "comment": "Graffiti pintado exitosamente"
+            },
+            {
+                "texto": "failure",
+                "siguiente_paso_id": 27,
+                "recompensaId": null,
+                "comment": "Usuario canceló o no tenía spray"
+            }
+        ]
+    }
+}

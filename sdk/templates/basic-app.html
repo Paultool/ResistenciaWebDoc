@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi App - La Resistencia</title>
+
+    <!-- SDK CSS -->
+    <link rel="stylesheet" href="../sdk/resistencia.css">
+
+    <style>
+        /* Estilos específicos de tu app aquí */
+        .app-container {
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body class="resistencia-app">
+    <!-- Scanlines Effect -->
+    <div class="resistencia-scanlines"></div>
+
+    <!-- Header -->
+    <div class="resistencia-header">
+        <h1 class="resistencia-title" id="app-title">Cargando...</h1>
+    </div>
+
+    <!-- Content -->
+    <div class="resistencia-content">
+        <!-- Loading State -->
+        <div id="app-loading" class="resistencia-loading" style="display: flex;">
+            <div class="resistencia-spinner"></div>
+        </div>
+
+        <!-- Messages -->
+        <div id="app-message" style="display: none;"></div>
+
+        <!-- Main App Content -->
+        <div id="app-content" style="display: none;">
+            <p>Contenido de tu app aquí...</p>
+
+            <button class="resistencia-btn" onclick="handleSuccess()">
+                Completar con Éxito
+            </button>
+
+            <button class="resistencia-btn resistencia-btn-error" onclick="handleFailure()">
+                Fallar
+            </button>
+        </div>
+    </div>
+
+    <!-- SDK JavaScript -->
+    <script src="../sdk/resistencia.js"></script>
+
+    <!-- Tu código de app -->
+    <script>
+        // Configuración de la app
+        const app = new ResistenciaApp({
+            appName: 'MiApp',
+            requiredItems: ['Identificación Oficial'], // Items requeridos (opcional)
+            debug: true, // Activar logs en consola
+
+            // Callback cuando se recibe configuración del padre
+            onInit: (appData, playerStats) => {
+                console.log('App inicializada con:', appData, playerStats);
+
+                // Actualizar UI con datos recibidos
+                document.getElementById('app-title').textContent = appData.title || 'Mi App';
+
+                // Validar inventario
+                const validation = app.validateInventory();
+                if (!validation.valid) {
+                    app.helpers.showError(
+                        `${app.translate('missingItems')}: ${validation.missing.join(', ')}`
+                    );
+                    return;
+                }
+
+                // Ocultar loading, mostrar contenido
+                document.getElementById('app-loading').style.display = 'none';
+                document.getElementById('app-content').style.display = 'block';
+            },
+
+            // Callback cuando la app se completa
+            onComplete: (success) => {
+                console.log('App completada:', success ? 'Éxito' : 'Fallo');
+            }
+        });
+
+        // Iniciar la app
+        app.init();
+
+        // Funciones de ejemplo
+        function handleSuccess() {
+            app.sendResult('success', 100, 'Misión completada con éxito');
+        }
+
+        function handleFailure() {
+            app.sendResult('failure', -50, 'Misión fallida');
+        }
+    </script>
+</body>
+
+</html>

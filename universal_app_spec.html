@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Especificación Universal - La Resistencia</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #00ff00;
+            background: #000;
+            padding: 20px;
+            margin: -40px -40px 30px -40px;
+            font-family: 'Courier New', monospace;
+            border-bottom: 3px solid #00ff00;
+        }
+
+        h2 {
+            color: #00ff00;
+            background: #1a1a1a;
+            padding: 15px 20px;
+            margin: 40px -40px 20px -40px;
+            font-family: 'Courier New', monospace;
+            border-left: 5px solid #00ff00;
+        }
+
+        h3 {
+            color: #333;
+            margin: 25px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #00ff00;
+        }
+
+        h4 {
+            color: #555;
+            margin: 20px 0 10px 0;
+        }
+
+        p {
+            margin: 10px 0;
+        }
+
+        ul,
+        ol {
+            margin: 10px 0 10px 30px;
+        }
+
+        li {
+            margin: 5px 0;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #e83e8c;
+        }
+
+        pre {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        pre code {
+            background: none;
+            color: #00ff00;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #00ff00;
+            color: #000;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .mermaid {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .checklist {
+            background: #e7f3ff;
+            border-left: 4px solid #0066cc;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+
+            h2 {
+                page-break-before: always;
+            }
+
+            .mermaid {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📡 Especificación Universal: Aplicaciones "La Resistencia"</h1>
+
+        <p>Esta guía define el estándar técnico para crear e integrar mini-aplicaciones (Rental, Simulador, Benito
+            Juárez, Repara) dentro del ecosistema de <strong>La Resistencia</strong>.</p>
+
+        <h2>1. Arquitectura de Integración</h2>
+
+        <p>Las aplicaciones funcionan como <strong>iframes aislados</strong> cargados por el motor principal
+            (<code>FlujoNarrativoUsuario</code>).</p>
+
+        <div class="mermaid">
+            graph TD
+            A["Orquestador<br />(FlujoNarrativoUsuario)"] -- "1. Envía Contexto<br />(XP, Inventario)" -->
+            B["Mini-App<br />(Iframe)"]
+            C["Archivo JSON<br />(Config + Flow)"] -- "2. Define Lógica" --> B
+            B -- "3. Ejecución" --> B
+            B -- "4. postMessage<br />(status, xpDelta)" --> A
+            A -- "5. Procesa Recompensa" --> D["GameService"]
+            D -- "6. Actualiza DB" --> E["Supabase<br />(perfiles_jugador)"]
+            A -- "7. Avanza Flujo" --> F["Siguiente Paso"]
+        </div>
+
+        <h2>2. Tipos de Implementación</h2>
+
+        <h3>A. Paso de Flujo (App de Pantalla Completa)</h3>
+        <p>La app es el contenido principal de un paso en la historia.</p>
+        <ul>
+            <li><strong>Archivo</strong>: <code>benitojuarez.json</code>, <code>simulador.json</code></li>
+            <li><strong>Estructura</strong>: Un solo objeto JSON con <code>appConfig</code> y <code>flowConfig</code>
+            </li>
+            <li><strong>Uso</strong>: Misiones narrativas que requieren toda la pantalla</li>
+        </ul>
+
+        <h3>B. Hotspots 3D (Interacciones Locales)</h3>
+        <p>La app se abre en un modal tras tocar un objeto en el mundo 3D.</p>
+        <ul>
+            <li><strong>Archivo</strong>: <code>rental.json</code></li>
+            <li><strong>Estructura</strong>: Una lista (Array) de objetos, donde cada uno define un "Hotspot"</li>
+            <li><strong>Uso</strong>: Interacciones contextuales en el entorno 3D (edificios, objetos)</li>
+        </ul>
+
+        <h2>3. Guía de Configuración JSON</h2>
+
+        <h3>3.1. El Cerebro: appConfig</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Campo</th>
+                    <th>Tipo</th>
+                    <th>Ubicación</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>title</code></td>
+                    <td>String</td>
+                    <td>Raíz o appConfig</td>
+                    <td>Título que aparecerá en la cabecera de la app</td>
+                </tr>
+                <tr>
+                    <td><code>personajeId</code></td>
+                    <td>Int</td>
+                    <td>Raíz o appConfig</td>
+                    <td>⚠️ <strong>CRÍTICO:</strong> ID del personaje que "habla" (Ej: 6 = Pablo)</td>
+                </tr>
+                <tr>
+                    <td><code>difficulty</code></td>
+                    <td>Int/String</td>
+                    <td>appConfig</td>
+                    <td>Nivel de reto (0-10 o "fácil", "medio")</td>
+                </tr>
+                <tr>
+                    <td><code>price</code> / <code>cost</code></td>
+                    <td>Int</td>
+                    <td>appConfig</td>
+                    <td>Costo en XP de la operación</td>
+                </tr>
+                <tr>
+                    <td><code>requiredItems</code></td>
+                    <td>Array</td>
+                    <td>appConfig</td>
+                    <td>Lista de items necesarios (ej: ["Identificación Oficial"])</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Ejemplo Standalone (Simulador):</h4>
+        <pre><code>{
+  "appConfig": {
+    "title": "Gestor de Financiamiento v3.0",
+    "goal": 20000,
+    "days": 30,
+    "grants": [ ... ]
+  },
+  "flowConfig": { ... }
+}</code></pre>
+
+        <h4>Ejemplo Hotspot (Rental):</h4>
+        <pre><code>{
+  "meshName": "BuildingMesh-00093",
+  "contentType": "interactive",
+  "personajeId": 6,
+  "successRecompensaId": 10,
+  "failureRecompensaId": 7,
+  "rentalAppConfig": {
+    "titulo": "Unidad Familiar",
+    "price": 60000,
+    "requiredItems": ["Identificación Oficial", "Garante de Alquiler"]
+  }
+}</code></pre>
+
+        <h3>3.2. La Salida: flowConfig</h3>
+
+        <div class="warning">
+            <strong>⚠️ CRÍTICO:</strong> Sin <code>flowConfig</code>, el jugador se queda atrapado en la app.
+        </div>
+
+        <pre><code>"flowConfig": {
+    "opciones_siguientes_json": [
+        {
+            "texto": "success", 
+            "siguiente_paso_id": 27, 
+            "recompensaId": 10 
+        },
+        {
+            "texto": "failure", 
+            "siguiente_paso_id": 28,
+            "recompensaId": 7
+        }
+    ]
+}</code></pre>
+
+        <ul>
+            <li><code>texto</code>: Debe coincidir exactamente con el <code>status</code> enviado por la app vía
+                <code>postMessage</code></li>
+            <li><code>siguiente_paso_id</code>: El ID del paso narrativo al que saltará el jugador</li>
+            <li><code>recompensaId</code>: (Opcional) ID de la recompensa en la base de datos Supabase</li>
+        </ul>
+
+        <h2>4. Protocolo de Comunicación (postMessage)</h2>
+
+        <h3>Del Padre a la App (Inicialización)</h3>
+        <pre><code>{
+  "source": "FlujoNarrativoUsuario",
+  "appData": "{\"title\":\"...\",\"price\":5000}",
+  "playerStats": { 
+    "xp": 5000, 
+    "inventario": [{"nombre": "Identificación Oficial"}] 
+  },
+  "successRecompensaId": 10,
+  "failureRecompensaId": 7,
+  "cc": "es"
+}</code></pre>
+
+        <h3>De la App al Padre (Resultado)</h3>
+        <pre><code>window.parent.postMessage({
+  source: 'ResistenciaApp',
+  appName: 'BenitoJuarez',
+  type: 'app-result',
+  status: 'success', // Debe existir en flowConfig
+  xpDelta: -500,     // Cambio en XP (negativo = costo)
+  message: 'Texto para consola'
+}, '*');</code></pre>
+
+        <h2>5. Sistema de Recompensas</h2>
+
+        <h3>Flujo de Otorgamiento</h3>
+
+        <div class="mermaid">
+            sequenceDiagram
+            participant A as App/Hotspot
+            participant O as Orquestador
+            participant G as GameService
+            participant DB as Supabase
+
+            A->>O: postMessage(status, recompensaId)
+            O->>G: otorgarRecompensa(userId, recompensaId)
+            G->>DB: SELECT * FROM recompensa WHERE id=X
+            DB-->>G: {nombre, tipo, valor}
+            G->>DB: SELECT inventario, xp_total FROM perfiles_jugador
+            DB-->>G: {inventario: [...], xp_total: 5000}
+            G->>G: Calcula nuevo XP<br />Actualiza inventario
+            G->>DB: UPDATE perfiles_jugador SET xp_total, inventario
+            DB-->>G: Success
+            G-->>O: {data, error: null}
+            O->>O: Actualiza UI
+        </div>
+
+        <h3>Tipos de Recompensas</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                    <th>Ejemplo</th>
+                    <th>Efecto en DB</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>XP Puro</strong></td>
+                    <td>Solo otorga puntos de experiencia</td>
+                    <td><code>{valor: 100, tipo: null}</code></td>
+                    <td><code>xp_total += 100</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Item</strong></td>
+                    <td>Añade un objeto al inventario</td>
+                    <td><code>{nombre: "Portafolio", tipo: "documento"}</code></td>
+                    <td><code>inventario.push({...})</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Mixto</strong></td>
+                    <td>XP + Item</td>
+                    <td><code>{valor: 50, nombre: "Foto", tipo: "evidencia"}</code></td>
+                    <td>Ambos</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>6. Sistema de Personajes</h2>
+
+        <h3>Flujo de Conocimiento de Personaje</h3>
+
+        <div class="mermaid">
+            sequenceDiagram
+            participant U as Usuario
+            participant O as Orquestador
+            participant G as GameService
+            participant DB as Supabase
+
+            U->>O: Click en Hotspot
+            O->>O: Verifica personajeId
+            Note over O: handleHotspotClick()<br />Línea 364-374
+            O->>G: knowCharacter(userId, nombre)
+            G->>DB: SELECT personajes_conocidos
+            DB-->>G: ["Pablo", "Edith"]
+            G->>G: Verifica si ya conoce
+            alt Personaje Nuevo
+            G->>DB: UPDATE personajes_conocidos<br />+ 25 XP
+            DB-->>G: Success
+            G-->>O: {error: null}
+            O->>U: Notificación: "Ficha: [Nombre]"
+            else Ya Conocido
+            G-->>O: {error: null} (sin cambios)
+            end
+        </div>
+
+        <h3>Cuándo se Registra un Personaje</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Escenario</th>
+                    <th>Trigger</th>
+                    <th>Persistencia</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Hotspot 3D con personajeId</strong></td>
+                    <td>Click en edificio/objeto</td>
+                    <td>✅ Inmediato (línea 364)</td>
+                </tr>
+                <tr>
+                    <td><strong>Paso narrativo con id_personaje</strong></td>
+                    <td>Avanzar paso con recompensa</td>
+                    <td>✅ En handleNextStep (línea 397)</td>
+                </tr>
+                <tr>
+                    <td><strong>App interactiva</strong></td>
+                    <td>Completar app (success/failure)</td>
+                    <td>❌ No automático*</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p><small>*Para apps interactivas, el <code>personajeId</code> se usa para contexto visual, pero la persistencia
+                ocurre al hacer click en el hotspot que abrió la app, NO al terminar la app.</small></p>
+
+        <h2>7. Sistema de Ubicaciones</h2>
+
+        <h3>Registro de Visitas</h3>
+
+        <div class="mermaid">
+            graph LR
+            A[Usuario completa Historia] --> B{Historia tiene<br />id_ubicacion?}
+            B -->|Sí| C[GameService.completeStory]
+            B -->|No| D[Solo XP]
+            C --> E[Añade ubicacionId a<br />ubicaciones_visitadas]
+            E --> F[+50 XP adicional]
+        </div>
+
+        <h3>Tabla de Ubicaciones</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Coordenadas</th>
+                    <th>Historias Asociadas</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>5</td>
+                    <td>Narvarte</td>
+                    <td>19.3907,-99.1592</td>
+                    <td>Historia 1, 2, 3</td>
+                </tr>
+                <tr>
+                    <td>7</td>
+                    <td>Roma Norte</td>
+                    <td>19.4167,-99.1667</td>
+                    <td>Historia 4</td>
+                </tr>
+                <tr>
+                    <td>12</td>
+                    <td>Condesa</td>
+                    <td>19.4100,-99.1700</td>
+                    <td>Historia 5, 6</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>8. Flujos Micro y Macro</h2>
+
+        <h3>Flujo Micro (Interacción Individual)</h3>
+
+        <div class="mermaid">
+            graph TD
+            A[Usuario inicia App] --> B[App valida inventario]
+            B -->|Tiene items| C[Ejecuta lógica]
+            B -->|Falta item| D[Muestra error]
+            C --> E{Resultado}
+            E -->|Success| F[postMessage: success]
+            E -->|Failure| G[postMessage: failure]
+            F --> H[Orquestador procesa recompensa]
+            G --> H
+            H --> I[Actualiza XP/Inventario]
+            I --> J[Avanza a siguiente paso]
+        </div>
+
+        <p><strong>Duración:</strong> 30 segundos - 5 minutos<br>
+            <strong>Persistencia:</strong> XP, Items, Personajes conocidos
+        </p>
+
+        <h3>Flujo Macro (Progresión del Jugador)</h3>
+
+        <div class="mermaid">
+            graph TD
+            A[Jugador inicia sesión] --> B[Carga perfil desde DB]
+            B --> C[Selecciona Historia]
+            C --> D{Historia desbloqueada?}
+            D -->|No| E[Muestra requisitos]
+            D -->|Sí| F[Inicia flujo narrativo]
+            F --> G[Paso 1: Video intro]
+            G --> H[Paso 2: Diálogo]
+            H --> I[Paso 3: App interactiva]
+            I --> J[Paso 4: Modelo 3D]
+            J --> K[Paso 5: Final]
+            K --> L{Hay siguiente historia?}
+            L -->|Sí| M[Carga nueva historia]
+            L -->|No| N[Vuelve al dashboard]
+            M --> F
+        </div>
+
+        <p><strong>Duración:</strong> 10-30 minutos por historia<br>
+            <strong>Persistencia:</strong> Historias completadas, Nivel, Ubicaciones visitadas, Logros
+        </p>
+
+        <h3>Elementos del Sistema</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Elemento</th>
+                    <th>Micro-Flow</th>
+                    <th>Macro-Flow</th>
+                    <th>Persistencia</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>XP</strong></td>
+                    <td>✅ Por app/hotspot</td>
+                    <td>✅ Por historia completa</td>
+                    <td><code>perfiles_jugador.xp_total</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Inventario</strong></td>
+                    <td>✅ Por recompensa</td>
+                    <td>❌</td>
+                    <td><code>perfiles_jugador.inventario</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Personajes</strong></td>
+                    <td>✅ Por hotspot</td>
+                    <td>✅ Por paso narrativo</td>
+                    <td><code>perfiles_jugador.personajes_conocidos</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Ubicaciones</strong></td>
+                    <td>❌</td>
+                    <td>✅ Por historia</td>
+                    <td><code>perfiles_jugador.ubicaciones_visitadas</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Nivel</strong></td>
+                    <td>❌</td>
+                    <td>✅ Calculado por XP</td>
+                    <td><code>perfiles_jugador.nivel</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>9. Tabla de Errores Comunes</h2>
+
+        <div class="error">
+            <h3>⚠️ NO HAGAS ESTO</h3>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Error</th>
+                    <th>Consecuencia</th>
+                    <th>Solución</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Enviar <code>xp</code> en vez de <code>xpDelta</code></td>
+                    <td>Se borra el progreso del usuario</td>
+                    <td>Solo envía el <strong>cambio</strong> (ej: -100)</td>
+                </tr>
+                <tr>
+                    <td><code>status</code> no existe en JSON</td>
+                    <td>Se queda en pantalla negra</td>
+                    <td>Asegúrate que "success" o "failure" estén en el JSON</td>
+                </tr>
+                <tr>
+                    <td>Olvidar <code>source: 'ResistenciaApp'</code></td>
+                    <td>El padre ignora el mensaje</td>
+                    <td>El padre solo escucha si el source es correcto</td>
+                </tr>
+                <tr>
+                    <td>Usar <code>px</code> fijos en UI</td>
+                    <td>Se ve mal en móviles</td>
+                    <td>Usa %, vh, vw y flexbox</td>
+                </tr>
+                <tr>
+                    <td><code>personajeId</code> como String</td>
+                    <td>No encuentra el personaje</td>
+                    <td>Siempre debe ser number (ej: 6, no "6")</td>
+                </tr>
+                <tr>
+                    <td>Duplicar <code>recompensaId</code> en JSON</td>
+                    <td>Otorga recompensa 2 veces</td>
+                    <td>Solo define en flowConfig O en hotspot, no ambos</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>10. Estética Hacker</h2>
+
+        <ul>
+            <li><strong>Overlay</strong>: Todas las apps deben incluir una capa de scanlines CRT</li>
+            <li><strong>Fuentes</strong>: Solo fuentes monoespaciadas (Courier New, Consolas)</li>
+            <li><strong>Estados</strong>:
+                <ul>
+                    <li><strong>Éxito</strong>: Verde neón brillante (#00ff00), animaciones suaves</li>
+                    <li><strong>Error</strong>: Rojo neón (#ff3333), efectos de glitch</li>
+                </ul>
+            </li>
+            <li><strong>Responsive</strong>: Diseño mobile-first, máximo 400px de ancho para UI crítica</li>
+        </ul>
+
+        <h2>11. Checklist de Integración</h2>
+
+        <div class="checklist">
+            <h3>✅ Antes de integrar una nueva app, verifica:</h3>
+            <ul>
+                <li>☐ El JSON tiene <code>appConfig</code> y <code>flowConfig</code> completos</li>
+                <li>☐ Todos los <code>status</code> en <code>postMessage</code> existen en <code>flowConfig</code></li>
+                <li>☐ El <code>personajeId</code> es un número válido de la tabla <code>personaje</code></li>
+                <li>☐ La app envía <code>source: 'ResistenciaApp'</code> en el mensaje</li>
+                <li>☐ El <code>xpDelta</code> es negativo para costos, positivo para ganancias</li>
+                <li>☐ La UI usa variables CSS para colores (no hardcoded)</li>
+                <li>☐ Probado en móvil (400px de ancho)</li>
+                <li>☐ El <code>siguiente_paso_id</code> apunta a un paso válido en <code>flujo_narrativo</code></li>
+                <li>☐ Las recompensas existen en la tabla <code>recompensa</code> de Supabase</li>
+                <li>☐ El inventario requerido usa nombres exactos (case-sensitive)</li>
+            </ul>
+        </div>
+
+        <div class="success" style="margin-top: 40px;">
+            <p><strong>📡 Documento generado:</strong>
+                <?php echo date('Y-m-d H:i:s'); ?>
+            </p>
+            <p><strong>Versión:</strong> 1.0.0</p>
+            <p><strong>Proyecto:</strong> La Resistencia - Ecosistema de Aplicaciones</p>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#00ff00',
+                primaryTextColor: '#000',
+                primaryBorderColor: '#00ff00',
+                lineColor: '#00ff00',
+                secondaryColor: '#1a1a1a',
+                tertiaryColor: '#f5f5f5'
+            }
+        });
+    </script>
+</body>
+
+</html>

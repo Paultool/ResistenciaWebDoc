@@ -4,13 +4,9 @@ import { Logger } from './LoggerService';
 export interface InventoryItem {
     id: string | number;
     nombre: string;
-    descripcion: string;
     tipo: string;
-    rareza?: string;
+    cantidad: number;
     fecha_obtencion: string;
-    historia_origen?: string | number | null;
-    cantidad?: number;
-    valor?: number;
 }
 
 export interface PlayerStats {
@@ -240,7 +236,10 @@ class GameServiceUser {
             if (!stats) throw new Error('No se pudo obtener el perfil del jugador');
 
             const newItem: InventoryItem = {
-                ...item,
+                id: item.id,
+                nombre: item.nombre,
+                tipo: item.tipo,
+                cantidad: item.cantidad || 1,
                 fecha_obtencion: new Date().toISOString()
             };
 
@@ -328,13 +327,9 @@ class GameServiceUser {
                 const nuevoItem: InventoryItem = {
                     id: recompensa.id_recompensa,
                     nombre: recompensa.nombre,
-                    descripcion: recompensa.descripcion,
-                    valor: recompensa.valor,
-                    cantidad: 1,
                     tipo: recompensa.tipo,
-                    historia_origen: historiaId, // ✅ FIX: Usar el parámetro historiaId en lugar de recompensa.historia_origen
-                    fecha_obtencion: new Date().toISOString(),
-                    rareza: 'común' // Asumiendo que la rareza no está en la tabla de recompensas                        
+                    cantidad: 1,
+                    fecha_obtencion: new Date().toISOString()
                 };
                 nuevoInventario.push(nuevoItem);
             }

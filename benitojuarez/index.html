@@ -600,6 +600,14 @@
 
 <body>
     <div class="scanlines"></div>
+    <!-- Hacker Mesh Pattern Definition -->
+    <svg width="0" height="0" style="position:absolute;z-index:-1;">
+        <defs>
+            <pattern id="hackerPattern" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#00ff00" stroke-width="0.5" opacity="0.6" />
+            </pattern>
+        </defs>
+    </svg>
 
     <div id="app-container">
         <!-- Map Section - 60% -->
@@ -696,7 +704,7 @@
 
         const translations = {
             es: {
-                title: "BENITO JUAREZ — DIAGNOSTICO",
+                title: "BÚSQUEDA DE VIVIENDA — BENITO JUÁREZ",
                 stats: { xp: "XP ACTUAL", visited: "VISITADAS", spent: "XP GASTADO", goal: "OBJETIVO" },
                 btnQuit: "ABANDONAR BÚSQUEDA",
                 btnFinish: "CONCLUIR BÚSQUEDA",
@@ -719,10 +727,23 @@
                     event4: "Podrías aplicar, pero requieren aval. Gastos de exploración: transporte, comida, copias.",
                     eventSpecial: "Regresas a Narvarte. Los recuerdos pesan. Gastos en transporte y comida mientras recorres tu antigua colonia."
                 },
+                completion: {
+                    successExhaustive: "Documentaste el desplazamiento completo de Benito Juárez.",
+                    successNormal: "Benito Juárez ya no es viable para Pablo.",
+                    successRental: "¡LOGRADO! Conseguiste un contrato. Pablo tiene un nuevo hogar.",
+                    failure: "Abandonaste la exploración."
+                },
                 popup: {
+                    submitBtn: "SOMETER SOLICITUD",
+                    submitSuccess: "Solicitud Aceptada: Firma contrato.",
+                    submitFailure: "Solicitud Rechazada: Perfil no compatible.",
+                    missingItem: "Falta: {item}",
+                    noFunds: "XP Insuficientes para el ingreso.",
                     plusvalia: "Plusvalía:",
                     gentrification: "Gentrificación:",
                     rent: "Renta Promedio",
+                    deposit: "Depósito ({n}m)",
+                    totalEntry: "Costo de Entrada",
                     xp: "Tus XP (Artista)",
                     engineer: "Ingeniero (Ref)",
                     footer: "Datos 2024-2025 via IA.",
@@ -741,17 +762,11 @@
                     abandonMsg: "¿Seguro que quieres abandonar la exploración? Esto tendrá penalizaciones.",
                     cancel: "CANCELAR",
                     abandon: "ABANDONAR"
-                },
-                completion: {
-                    successExhaustive: "Documentaste el desplazamiento completo de Benito Juárez.",
-                    successNormal: "Benito Juárez ya no es viable para Pablo.",
-                    failure: "Abandonaste la exploración."
                 }
             },
             en: {
-                title: "BENITO JUAREZ — DIAGNOSIS",
+                title: "SEARCHING FOR HOUSING — BENITO JUÁREZ",
                 stats: { xp: "CURRENT XP", visited: "VISITED", spent: "XP SPENT", goal: "GOAL" },
-                btnQuit: "ABANDON BÚSQUEDA", /* Keeping BÚSQUEDA for flavor or translate? Let's translate fully for clarity */
                 btnQuit: "ABANDON SEARCH",
                 btnFinish: "CONCLUDE SEARCH",
                 headers: { console: "CONSOLE LOG:", visited: "VISITED COLONIES:" },
@@ -773,10 +788,23 @@
                     event4: "Could apply, but guarantor needed. Exploration costs: transport, food, copies.",
                     eventSpecial: "You return to Narvarte. Memories weigh heavy. Costs on transport and food while touring your old hood."
                 },
+                completion: {
+                    successExhaustive: "You documented the complete displacement of Benito Juarez.",
+                    successNormal: "Benito Juarez is no longer viable for Pablo.",
+                    successRental: "SUCCESS! You secured a contract. Pablo has a new home.",
+                    failure: "You abandoned the exploration."
+                },
                 popup: {
+                    submitBtn: "SUBMIT APPLICATION",
+                    submitSuccess: "Application Accepted: Sign contract.",
+                    submitFailure: "Application Rejected: Incompatible profile.",
+                    missingItem: "Missing: {item}",
+                    noFunds: "Insufficient XP for entry costs.",
                     plusvalia: "Appreciation:",
                     gentrification: "Gentrification:",
                     rent: "Avg Rent",
+                    deposit: "Deposit ({n}m)",
+                    totalEntry: "Total Entry Cost",
                     xp: "Your XP (Artist)",
                     engineer: "Engineer (Ref)",
                     footer: "Data 2024-2025 via AI.",
@@ -795,11 +823,6 @@
                     abandonMsg: "Are you sure you want to abandon exploration? This will have penalties.",
                     cancel: "CANCEL",
                     abandon: "ABANDON"
-                },
-                completion: {
-                    successExhaustive: "You documented the complete displacement of Benito Juarez.",
-                    successNormal: "Benito Juarez is no longer viable for Pablo.",
-                    failure: "You abandoned the exploration."
                 }
             }
         };
@@ -827,23 +850,28 @@
         const FALLBACK_POLYGONS = [
             { name: 'Narvarte Poniente', coords: [[19.400, -99.170], [19.400, -99.165], [19.395, -99.165], [19.395, -99.170], [19.400, -99.170]] },
             { name: 'Narvarte Oriente', coords: [[19.402, -99.165], [19.402, -99.160], [19.397, -99.160], [19.397, -99.165], [19.402, -99.165]] },
-            { name: 'Del Valle Centro', coords: [[19.390, -99.160], [19.390, -99.155], [19.385, -99.155], [19.385, -99.160], [19.390, -99.160]] },
+            { name: 'Del Valle Centro', coords: [[19.390, -99.160], [19.390, -99.155], [19.385, -99.155], [19.385, -99.160], [19.390, -99.160]] }
         ];
 
         // Sanitizador (Sin cambios)
         function sanitizeKML(xmlText) {
-            if (!xmlText.trim().startsWith('<?xml') && !xmlText.includes('<kml')) return xmlText;
-            xmlText = xmlText.replace(/>([^<]+)</g, (match, content) => {
+            if (!xmlText || typeof xmlText !== 'string') return '';
+            let s = xmlText.trim();
+            if (!s.startsWith('<?xml') && !s.includes('<kml')) return s;
+
+            s = s.replace(/>([^<]+)</g, function (match, content) {
                 return '>' + content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;') + '<';
             });
-            xmlText = xmlText.replace(/<name>(.*?)<\/name>/gs, (m, c) => `<name>${c.replace(/<[^>]*>/g, '').trim()}</name>`);
-            xmlText = xmlText.replace(/<description>(.*?)<\/description>/gs, (m, c) => `<description>${c.replace(/<[^>]*>/g, '').trim()}</description>`);
-            xmlText = xmlText.replace(/(\w+)=([^\s"'>]+)/g, (m, attr, val) => {
-                if (!val.startsWith('"') && !val.startsWith("'")) return `${attr}="${val.replace(/"/g, '&quot;')}"`;
+            s = s.replace(/<name>(.*?)<\/name>/gs, function (m, c) { return '<name>' + c.replace(/<[^>]*>/g, '').trim() + '</name>'; });
+            s = s.replace(/<description>(.*?)<\/description>/gs, function (m, c) { return '<description>' + c.replace(/<[^>]*>/g, '').trim() + '</description>'; });
+            s = s.replace(/(\w+)=([^\s"'>]+)/g, function (m, attr, val) {
+                if (!val.startsWith('"') && !val.startsWith("'")) {
+                    return attr + '="' + val.replace(/"/g, '&quot;') + '"';
+                }
                 return m;
             });
-            xmlText = xmlText.replace(/<!--[\s\S]*?--\>/g, '');
-            return xmlText.trim();
+            s = s.replace(/<!--[\s\S]*?-->/g, '');
+            return s.trim();
         }
 
         // ═══════════════════════════════════════
@@ -854,6 +882,40 @@
             if (renta >= 21000) return 600;
             if (renta >= 18000) return 450;
             return 350;
+        }
+
+        let lastColoniaEvent = { message: '', breakdown: '' };
+
+        function getEconomyDetails(name, renta) {
+            // Priority for special narrative
+            if (name === 'NARVARTE ORIENTE' || name === 'NARVARTE PONIENTE') {
+                return {
+                    message: t('logs.eventSpecial'),
+                    breakdown: "Costo emocional + transporte y café.",
+                    cost: 200
+                };
+            }
+
+            const economy = appConfig.economy || {};
+            const costRanges = economy.costByRentRange || {};
+
+            let rangeKey = '';
+            if (renta >= 24000) rangeKey = '24000+';
+            else if (renta >= 21000) rangeKey = '21000-23999';
+            else if (renta >= 18000) rangeKey = '18000-20999';
+            else rangeKey = '15000-17999';
+
+            const rangeData = costRanges[rangeKey] || { breakdown: 'Gastos de transporte y tiempo.' };
+
+            const events = appConfig.events?.byRentRange || [];
+            const eventRange = events.find(e => renta >= e.rentMin && (e.rentMax ? renta <= e.rentMax : true)) || events[0];
+            const message = eventRange ? eventRange.messages[Math.floor(Math.random() * eventRange.messages.length)] : t('logs.event1');
+
+            return {
+                message: message,
+                breakdown: rangeData.breakdown,
+                cost: rangeData.totalCost || calculateCost(renta)
+            };
         }
 
         // ═══════════════════════════════════════
@@ -971,37 +1033,38 @@
             isGameActive = false;
 
             let recompensaId;
-            if (status === 'success') {
-                // Success puede ser normal (14) o exhaustive (15)
-                recompensaId = isExhaustive ? 15 : 14;
+            let finalStatus = status;
+
+            if (status === 'success_rental') {
+                recompensaId = 7;
+                finalStatus = 'success';
+            } else if (status === 'success') {
+                if (isExhaustive) {
+                    recompensaId = 15;
+                    finalStatus = 'failure_exhaustive';
+                } else {
+                    recompensaId = 14;
+                    finalStatus = 'failure_normal';
+                }
             } else {
                 recompensaId = 16;
+                finalStatus = 'failure';
             }
 
-            // UNIFIED PROTOCOL: Solo enviar costos operacionales
-            // El XP de la recompensa vendrá de la BD
             const totalXpDelta = -totalXPSpent;
+            console.log('[DEBUG sendResult] Final Status:', finalStatus, 'Reward:', recompensaId, 'XP Delta:', totalXpDelta);
 
-            const result = {
+            window.parent.postMessage({
                 source: 'ResistenciaApp',
                 appName: 'BenitoJuarez',
                 type: 'app-result',
-                status: status,
+                status: finalStatus,
                 recompensaId: recompensaId,
-                xpDelta: totalXpDelta, // Solo costos de viaje
-                costoXP: totalXpDelta,  // Legacy support
-                metadata: {
-                    visited_colonies: visitedColonies.map(v => v.name),
-                    total_rejections: rejectionCount,
-                    avg_rent: visitedColonies.length > 0 ? Math.floor(visitedColonies.reduce((sum, v) => sum + v.renta, 0) / visitedColonies.length) : 0
-                },
+                xpDelta: totalXpDelta,
                 message: getCompletionMessage(status, isExhaustive)
-            };
+            }, '*');
 
-            console.log('[BJ] Sending result:', result);
-            window.parent.postMessage(result, '*');
-
-            log(`> Exploración ${status}. Total gastado: ${totalXPSpent} XP`, 'success');
+            log(`> Exploración Finalizada. Estatus: ${finalStatus}. Total gastado: ${totalXPSpent} XP`, 'success');
         }
 
         function getCompletionMessage(status, isExhaustive = false) {
@@ -1022,8 +1085,8 @@
                 map.remove();
             }
             map = L.map('map').setView([19.37, -99.16], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap contributors © CARTO'
             }).addTo(map);
 
             let polygonCount = 0;
@@ -1119,6 +1182,17 @@
                         const center = poly.getBounds().getCenter();
                         poly.on('click', () => {
                             map.panTo(center);
+
+                            // Apply hacker mesh style if not already visited
+                            if (!visitedColonies.some(v => v.name === name)) {
+                                poly.setStyle({
+                                    fillColor: 'url(#hackerPattern)',
+                                    fillOpacity: 0.8,
+                                    color: '#00ff00',
+                                    weight: 3
+                                });
+                            }
+
                             loadColoniaData(name, center);
                         });
 
@@ -1227,9 +1301,10 @@
 
             const renta = coloniaData.graficaData.renta;
             const cost = calculateCost(renta);
+            const allowNegative = appConfig.gameplay?.allowNegativeXP || false;
 
-            // Check if has enough XP
-            if (playerXP < cost) {
+            // Check if has enough XP (only if not allowed to go negative)
+            if (!allowNegative && playerXP < cost) {
                 log(t('logs.noXP') + `${name}. (${cost} XP).`, 'error');
                 showNotification(
                     t('notifications.xpTitle'),
@@ -1250,39 +1325,92 @@
                 cost: cost
             });
 
+            // Determine event data
+            const eventData = getEconomyDetails(name, renta);
+            lastColoniaEvent = eventData;
+
+            if (renta >= 21000) {
+                rejectionCount++;
+            }
+
+            log(eventData.message);
+
             // Update UI
             updateUI();
             addVisitedItem(name, cost, renta);
 
-            // Determine event message
-            let eventMessage = '';
-            if (renta >= 24000) {
-                eventMessage = t('logs.event1');
-                rejectionCount++;
-            } else if (renta >= 21000) {
-                eventMessage = t('logs.event2');
-                rejectionCount++;
-            } else if (renta >= 18000) {
-                eventMessage = t('logs.event3');
-                rejectionCount++;
-            } else {
-                eventMessage = t('logs.event4');
-            }
-
-            // Special events
-            if ((name === 'NARVARTE PONIENTE' || name === 'NARVARTE ORIENTE') && visitedColonies.length === 1) {
-                eventMessage = t('logs.eventSpecial');
-            }
-
-            // Log event
-            log(`> ${name}: ${eventMessage}`, 'normal');
-            log(`> Costo: -${cost} XP | XP: ${playerXP}`, 'normal');
 
             // Show popup with data
             showColoniaPopup(name, coloniaData, center);
 
             // Check completion
             checkCompletion();
+        }
+
+        function hasItem(itemName) {
+            if (!playerInventory) return false;
+            return playerInventory.some(item =>
+                (item.nombre && item.nombre.toLowerCase() === itemName.toLowerCase()) ||
+                (item.name && item.name.toLowerCase() === itemName.toLowerCase())
+            );
+        }
+
+        async function submitApplication(name, renta) {
+            if (!isGameActive) return;
+
+            const requirements = appConfig.gameplay?.rentalRequirements || [];
+            const req = requirements.find(r => renta >= r.rentThreshold) || requirements[requirements.length - 1];
+
+            // Check XP (Deposit based on user's 6m * 20k = 120k logic)
+            const depositMonths = req ? req.depositMonths : 1;
+            const totalRequired = renta * depositMonths;
+
+            if (playerXP < totalRequired) {
+                log(`> RECHAZO: No tienes ${totalRequired.toLocaleString()} XP para entrar a ${name}.`, 'error');
+                showNotification(
+                    t('notifications.visitedTitle'),
+                    t('popup.noFunds'),
+                    'error'
+                );
+                return;
+            }
+
+            // Check Items
+            const items = req ? req.requiredItems : [];
+            const missing = items.filter(item => !hasItem(item));
+
+            if (missing.length > 0) {
+                log(`> RECHAZO: Documentación incompleta en ${name}: ${missing.join(', ')}.`, 'error');
+                showNotification(
+                    t('notifications.visitedTitle'),
+                    t('popup.missingItem').replace('{item}', missing[0]),
+                    'error'
+                );
+                return;
+            }
+
+            const successProb = req ? req.successProb : 0.5;
+            const isSuccess = Math.random() < successProb;
+
+            if (isSuccess) {
+                log(`> ¡CONTRATO FIRMADO en ${name}! Pablo se muda.`, 'success');
+                await showNotification(
+                    t('popup.submitSuccess'),
+                    t('completion.successRental'),
+                    'success'
+                );
+                sendResult('success_rental');
+            } else {
+                log(`> RECHAZO en ${name}: El dueño eligió a otro perfil con "mejor historial".`, 'error');
+                rejectionCount++;
+                updateUI();
+                showNotification(
+                    t('popup.submitFailure'),
+                    t('logs.event1'),
+                    'error'
+                );
+                if (currentPopup) currentPopup.remove();
+            }
         }
 
         function checkCompletion() {
@@ -1343,44 +1471,66 @@
             const percentArtista = (graficaData.artista / maxRef) * 100;
             const percentIngeniero = (graficaData.ingeniero / maxRef) * 100;
 
+            const isAffordable = playerXP >= graficaData.renta;
+
+            // Requirements calc
+            const requirements = appConfig.gameplay?.rentalRequirements || [];
+            const req = requirements.find(r => graficaData.renta >= r.rentThreshold) || requirements[requirements.length - 1];
+            const depositMonths = req ? req.depositMonths : 1;
+            const totalRequired = graficaData.renta * depositMonths;
+            const canEnter = playerXP >= totalRequired;
+
+            const items = req ? req.requiredItems : [];
+            const itemsHtml = items.map(item => {
+                const ok = hasItem(item);
+                return `<div class="flex justify-between ${ok ? 'text-green-500' : 'text-red-500'}">
+                    <span>${item}</span>
+                    <span>${ok ? '✓' : '✗'}</span>
+                </div>`;
+            }).join('');
+
             const popupContent = `
-                <div class="p-2 max-w-xs">
-                    <h4 class="font-bold text-lg mb-2 text-center text-purple-300">${coloniaName}</h4>
-                    <div class="flex justify-between text-sm mb-2">
-                        <div>
-                            <span class="text-gray-400">${t('popup.plusvalia')}</span>
-                            <span class="font-bold text-green-400 ml-1">${mapaData.valor}</span>
+                <div class="p-2 max-w-xs bg-gray-900 border border-purple-900 rounded shadow-2xl">
+                    <h4 class="font-bold text-lg mb-1 text-center text-purple-300 tracking-tighter">${coloniaName}</h4>
+                    
+                    <div class="bg-black/40 p-2 rounded border border-gray-800 mb-2 text-[10px]">
+                        <div class="flex justify-between mb-1">
+                            <span class="text-gray-500">${t('popup.rent')}</span>
+                            <span class="text-white">$${graficaData.renta.toLocaleString()}</span>
                         </div>
-                        <div>
-                            <span class="text-gray-400">${t('popup.gentrification')}</span>
-                            <span class="font-bold ml-1 gentrificacion-badge ${censoData.valor.toLowerCase()}">${censoData.valor}</span>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-gray-500">${t('popup.deposit').replace('{n}', depositMonths)}</span>
+                            <span class="text-white">$${(graficaData.renta * depositMonths).toLocaleString()}</span>
                         </div>
-                    </div>
-                    <hr class="border-gray-600 mb-2">
-                    <div class="space-y-1 text-sm">
-                        <div>
-                            <div class="flex justify-between">
-                                <span class="font-semibold text-red-400">${t('popup.rent')}</span>
-                                <span class="font-bold text-red-300">$${graficaData.renta.toLocaleString('es-MX')}</span>
-                            </div>
-                            <div class="bar-container mb-1"><div class="bar-fill bg-red-500" style="width: ${percentRenta}%"></div></div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between">
-                                <span class="font-semibold text-blue-400">${t('popup.xp')}</span>
-                                <span class="font-bold text-blue-300">${graficaData.artista.toLocaleString('es-MX')} XP</span>
-                            </div>
-                            <div class="bar-container mb-1"><div class="bar-fill bg-blue-500" style="width: ${percentArtista}%"></div></div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between">
-                                <span class="font-semibold text-green-400">${t('popup.engineer')}</span>
-                                <span class="font-bold text-green-300">$${graficaData.ingeniero.toLocaleString('es-MX')}</span>
-                            </div>
-                            <div class="bar-container"><div class="bar-fill bg-green-500" style="width: ${percentIngeniero}%"></div></div>
+                        <div class="flex justify-between pt-1 border-t border-gray-700 font-bold">
+                            <span class="${canEnter ? 'text-purple-400' : 'text-red-500'}">${t('popup.totalEntry')}</span>
+                            <span class="${canEnter ? 'text-purple-300' : 'text-red-400'}">${totalRequired.toLocaleString()} XP</span>
                         </div>
                     </div>
-                    <p class="text-xs text-center mt-2 text-gray-400">${t('popup.footer')}</p>
+
+                    <div class="bg-black/20 p-2 rounded border border-gray-800 mb-2 text-[9px] uppercase tracking-tighter">
+                        <p class="text-gray-600 mb-1">REQUISITOS DOCUMENTALES:</p>
+                        ${itemsHtml}
+                    </div>
+
+                    <div class="bg-black/40 p-2 rounded border border-gray-800 mb-3">
+                        <p class="text-[11px] leading-tight text-gray-300 italic mb-2">"${lastColoniaEvent.message}"</p>
+                        <div class="flex items-start gap-2 text-[9px] text-gray-500">
+                            <span class="text-purple-500 font-bold">[!]</span>
+                            <span>${lastColoniaEvent.breakdown}</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <button class="w-full bg-purple-900/50 border border-purple-500/50 text-purple-100 py-1.5 text-[10px] font-bold hover:bg-purple-700 transition uppercase tracking-widest shadow-lg" onclick="submitApplication('${coloniaName}', ${graficaData.renta})">
+                            ${t('popup.submitBtn')}
+                        </button>
+                    </div>
+                    
+                    <div class="mt-3 pt-2 border-t border-gray-800 flex justify-between items-center text-[8px] text-gray-600 uppercase">
+                         <span>Delta XP Exploración: -${lastColoniaEvent.cost}</span>
+                         <span>${t('popup.footer')}</span>
+                    </div>
                 </div>
             `;
 
@@ -1426,7 +1576,11 @@
                 goalVal.textContent = appConfig.gameplay?.coloniasToVisitGoal || 6;
                 updateUI(true); // Force full UI update
                 checkCompletion(); // Initialize button state
-                log(t('logs.start'), 'success');
+
+                log("> Narvarte agotada. Pablo no encontró nada habitable en su ex-colonia.", 'error');
+                log("> Iniciando rastreo en el resto de la Delegación Benito Juárez...", 'success');
+                log(t('logs.start'), 'normal');
+
                 document.getElementById('log-init').textContent = t('logs.init');
                 document.getElementById('log-wait').textContent = t('logs.sync'); // Sync usually means data loaded or ready
 

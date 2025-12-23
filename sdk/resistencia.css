@@ -1,0 +1,254 @@
+/* Resistencia SDK Styles v1.0.0 */
+
+:root {
+    --resistencia-bg: #050505;
+    --resistencia-primary: #00ff00;
+    --resistencia-error: #ff3333;
+    --resistencia-accent: #CD853F;
+    --resistencia-text: #00ff00;
+}
+
+/* Base App Container */
+.resistencia-app {
+    font-family: 'Courier New', 'Consolas', monospace;
+    background: var(--resistencia-bg);
+    color: var(--resistencia-text);
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Scanlines Effect */
+.resistencia-scanlines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1000;
+    background: repeating-linear-gradient(0deg,
+            rgba(0, 0, 0, 0.15),
+            rgba(0, 0, 0, 0.15) 1px,
+            transparent 1px,
+            transparent 2px);
+}
+
+/* Messages */
+.resistencia-message {
+    padding: 20px;
+    margin: 20px 0;
+    border: 2px solid;
+    border-radius: 4px;
+    font-size: 1.1rem;
+}
+
+.resistencia-error {
+    background: rgba(255, 51, 51, 0.1);
+    border-color: var(--resistencia-error);
+    color: var(--resistencia-error);
+}
+
+.resistencia-success {
+    background: rgba(0, 255, 0, 0.1);
+    border-color: var(--resistencia-primary);
+    color: var(--resistencia-primary);
+}
+
+/* Glitch Effect */
+.resistencia-glitch {
+    position: relative;
+    animation: glitch-skew 1s infinite;
+}
+
+.resistencia-glitch-active {
+    animation: glitch-anim 0.5s infinite;
+}
+
+@keyframes glitch-anim {
+    0% {
+        clip-path: inset(40% 0 61% 0);
+        transform: translate(0);
+    }
+
+    20% {
+        clip-path: inset(92% 0 1% 0);
+        transform: translate(-2px, 2px);
+    }
+
+    40% {
+        clip-path: inset(43% 0 1% 0);
+        transform: translate(2px, -2px);
+    }
+
+    60% {
+        clip-path: inset(25% 0 58% 0);
+        transform: translate(-2px, 2px);
+    }
+
+    80% {
+        clip-path: inset(54% 0 7% 0);
+        transform: translate(2px, -2px);
+    }
+
+    100% {
+        clip-path: inset(58% 0 43% 0);
+        transform: translate(0);
+    }
+}
+
+@keyframes glitch-skew {
+    0% {
+        transform: skew(0deg);
+    }
+
+    10% {
+        transform: skew(-2deg);
+    }
+
+    20% {
+        transform: skew(2deg);
+    }
+
+    30% {
+        transform: skew(0deg);
+    }
+}
+
+/* Pulse Effect */
+.resistencia-pulse {
+    animation: pulse 1s ease-in-out;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: scale(1.05);
+    }
+}
+
+/* Loading Spinner */
+.resistencia-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+.resistencia-spinner {
+    border: 4px solid rgba(0, 255, 0, 0.1);
+    border-top: 4px solid var(--resistencia-primary);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Buttons */
+.resistencia-btn {
+    background: transparent;
+    border: 2px solid var(--resistencia-primary);
+    color: var(--resistencia-primary);
+    padding: 12px 24px;
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.resistencia-btn:hover {
+    background: var(--resistencia-primary);
+    color: var(--resistencia-bg);
+    box-shadow: 0 0 20px var(--resistencia-primary);
+}
+
+.resistencia-btn:active {
+    transform: scale(0.95);
+}
+
+.resistencia-btn-error {
+    border-color: var(--resistencia-error);
+    color: var(--resistencia-error);
+}
+
+.resistencia-btn-error:hover {
+    background: var(--resistencia-error);
+    color: white;
+    box-shadow: 0 0 20px var(--resistencia-error);
+}
+
+/* Input Fields */
+.resistencia-input {
+    background: rgba(0, 255, 0, 0.05);
+    border: 2px solid var(--resistencia-primary);
+    color: var(--resistencia-primary);
+    padding: 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.resistencia-input:focus {
+    outline: none;
+    box-shadow: 0 0 10px var(--resistencia-primary);
+}
+
+/* Headers */
+.resistencia-header {
+    background: var(--resistencia-bg);
+    border-bottom: 3px solid var(--resistencia-primary);
+    padding: 20px;
+    text-align: center;
+}
+
+.resistencia-title {
+    color: var(--resistencia-primary);
+    font-size: 2rem;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+}
+
+/* Content Container */
+.resistencia-content {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .resistencia-content {
+        padding: 15px;
+    }
+
+    .resistencia-title {
+        font-size: 1.5rem;
+        letter-spacing: 2px;
+    }
+
+    .resistencia-btn {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+    }
+}

@@ -18,11 +18,14 @@ const AdminRecursosMultimedia: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingRecurso, setEditingRecurso] = useState<RecursoMultimedia | null>(null);
+  // NUEVO: Estado para el filtro
+  const [filterType, setFilterType] = useState('todos');
 
   // ACTUALIZADO: El estado base
   const [formData, setFormData] = useState({
     tipo: 'imagen',
     archivo: '',
+    Nombre: '', // Nuevo campo
   });
 
   // NUEVO: Estado para el constructor dinámico
@@ -108,7 +111,7 @@ const AdminRecursosMultimedia: React.FC = () => {
 
   const handleAddRecurso = () => {
     setEditingRecurso(null);
-    setFormData({ tipo: 'imagen', archivo: '' });
+    setFormData({ tipo: 'imagen', archivo: '', Nombre: '' });
     setMetadatosString('');
     setDynamicData({});
     setCurrentSchema(null);
@@ -119,8 +122,9 @@ const AdminRecursosMultimedia: React.FC = () => {
     setEditingRecurso(recurso);
     // Poblar el estado base
     setFormData({
-      tipo: recurso.tipo,
-      archivo: recurso.archivo,
+      tipo: recurso.tipo || 'imagen',
+      archivo: recurso.archivo || '',
+      Nombre: recurso.Nombre || '',
     });
     // Poblar los dos estados de metadatos
     const prettyJson = JSON.stringify(recurso.metadatos, null, 2);
@@ -172,8 +176,7 @@ const AdminRecursosMultimedia: React.FC = () => {
         await crearRecursoMultimedia({
           ...formData,
           metadatos: metadatosParaGuardar,
-          id_historia: null,
-          id_personaje: null,
+          // Corregido: Ya no enviamos id_historia ni id_personaje
         } as any);
       }
       setShowForm(false);
@@ -268,9 +271,24 @@ const AdminRecursosMultimedia: React.FC = () => {
     <div className="admin-view">
       <div className="view-header">
         <h2>🖼️ Gestión de Recursos Multimedia</h2>
-        <button className="btn btn-primary" onClick={handleAddRecurso}>
-          ➕ Añadir Nuevo Recurso
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <select
+            className="form-control"
+            style={{ width: 'auto' }}
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+          >
+            <option value="todos">Todos los tipos</option>
+            <option value="imagen">Imagen</option>
+            <option value="audio">Audio</option>
+            <option value="video">Video</option>
+            <option value="3d_model">Modelo 3D</option>
+            <option value="app">App</option>
+          </select>
+          <button className="btn btn-primary" onClick={handleAddRecurso}>
+            ➕ Añadir Nuevo Recurso
+          </button>
+        </div>
       </div>
 
       {showForm && (
@@ -296,6 +314,18 @@ const AdminRecursosMultimedia: React.FC = () => {
                   <option value="transcripcion">Transcripción</option>
                   <option value="subtitulo">Subtítulo</option>
                 </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="recursoNombre">Nombre (Identificador)</label>
+                <input
+                  id="recursoNombre"
+                  type="text"
+                  name="Nombre"
+                  value={formData.Nombre}
+                  onChange={handleChange}
+                  className="form-control"
+                  placeholder="Ej: mapa_base, audio_intro..."
+                />
               </div>
               <div className="form-group">
                 <label htmlFor="recursoArchivo">Archivo (URL)</label>
@@ -341,33 +371,63 @@ const AdminRecursosMultimedia: React.FC = () => {
             <thead>
               <tr>
                 <th>Tipo</th>
-                <th>Archivo</th>
+                <th>Nombre</th>
                 <th className="actions-header">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {recursos.map((recurso) => (
-                <tr key={recurso.id_recurso}>
-                  <td><span className={`type-badge ${recurso.tipo}`}>{recurso.tipo}</span></td>
-                  <td>{recurso.archivo}</td>
-                  <td className="actions">
-                    <button
-                      onClick={() => handleEditRecurso(recurso)}
-                      className="btn btn-sm btn-info"
-                      title="Editar"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      onClick={() => handleDeleteRecurso(recurso.id_recurso)}
-                      className="btn btn-sm btn-danger"
-                      title="Eliminar"
-                    >
-                      🗑️
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {recursos
+                .filter(r => filterType === 'todos' || r.tipo === filterType)
+                .map((recurso) => (
+                  <tr key={recurso.id_recurso}>
+                    <td>
+                      <span className={`type-badge ${recurso.tipo}`} style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        backgroundColor:
+                          recurso.tipo === 'imagen' ? '#e3f2fd' :
+                            recurso.tipo === 'audio' ? '#fbe9e7' :
+                              recurso.tipo === 'video' ? '#f3e5f5' :
+                                recurso.tipo === '3d_model' ? '#e8f5e9' :
+                                  recurso.tipo === 'app' ? '#fff3e0' : '#f5f5f5',
+                        color:
+                          recurso.tipo === 'imagen' ? '#1565c0' :
+                            recurso.tipo === 'audio' ? '#d84315' :
+                              recurso.tipo === 'video' ? '#7b1fa2' :
+                                recurso.tipo === '3d_model' ? '#2e7d32' :
+                                  recurso.tipo === 'app' ? '#ef6c00' : '#424242',
+                        border: '1px solid currentColor'
+                      }}>
+                        {recurso.tipo === 'imagen' ? '🖼️' :
+                          recurso.tipo === 'audio' ? '🎵' :
+                            recurso.tipo === 'video' ? '🎬' :
+                              recurso.tipo === '3d_model' ? '🧊' :
+                                recurso.tipo === 'app' ? '📱' : '📄'}
+                        {recurso.tipo?.toUpperCase()}
+                      </span>
+                    </td>
+                    <td><strong>{recurso.Nombre || '(Sin nombre)'}</strong></td>
+                    <td className="actions">
+                      <button
+                        onClick={() => handleEditRecurso(recurso)}
+                        className="btn btn-sm btn-info"
+                        title="Editar"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDeleteRecurso(recurso.id_recurso)}
+                        className="btn btn-sm btn-danger"
+                        title="Eliminar"
+                      >
+                        🗑️
+                      </button>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>

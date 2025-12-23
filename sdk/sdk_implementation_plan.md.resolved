@@ -1,0 +1,294 @@
+# Plan de Implementación: SDK para Apps "La Resistencia"
+
+## Objetivo
+
+Crear un SDK JavaScript que simplifique el desarrollo de mini-aplicaciones, eliminando código repetitivo y estandarizando la comunicación con el orquestador.
+
+---
+
+## Análisis de Patrones Comunes
+
+### Código Repetido en Apps Actuales
+
+Todas las apps (`rental`, `simulador`, `benitojuarez`) repiten:
+
+1. **Listener de `postMessage`** para recibir configuración del padre
+2. **Validación de inventario** del jugador
+3. **Envío de resultado** al padre con protocolo específico
+4. **Gestión de idioma** (español/inglés)
+5. **Estilos CSS** (scanlines, fuentes, colores)
+
+### Puntos de Dolor Identificados
+
+- ❌ Cada app reimplementa la lógica de comunicación
+- ❌ Validación de inventario con código duplicado
+- ❌ Manejo de errores inconsistente
+- ❌ Difícil debuggear mensajes `postMessage`
+
+---
+
+## Propuesta de SDK
+
+### Arquitectura del SDK
+
+```
+resistencia-sdk/
+├── resistencia.js          # SDK principal (UMD)
+├── resistencia.min.js      # Versión minificada
+├── resistencia.css         # Estilos base
+├── templates/
+│   ├── basic-app.html      # Template mínimo
+│   ├── inventory-app.html  # Template con validación de inventario
+│   └── timed-app.html      # Template con temporizador
+└── docs/
+    └── api.md              # Documentación de API
+```
+
+---
+
+## Componentes del SDK
+
+### 1. Core: `ResistenciaApp` Class
+
+```javascript
+class ResistenciaApp {
+  constructor(config) {
+    this.appName = config.appName;
+    this.onInit = config.onInit;
+    this.onComplete = config.onComplete;
+    this.requiredItems = config.requiredItems || [];
+    this.language = 'es';
+    this.playerStats = null;
+    this.appData = null;
+    
+    this._setupMessageListener();
+  }
+
+  // Métodos públicos
+  init() { ... }
+  sendResult(status, xpDelta, message) { ... }
+  validateInventory() { ... }
+  translate(key) { ... }
+  log(message, type) { ... }
+}
+```
+
+**Beneficios:**
+- ✅ Encapsula toda la lógica de comunicación
+- ✅ API simple y consistente
+- ✅ Manejo automático de errores
+
+### 2. Helpers: Utilidades Comunes
+
+```javascript
+ResistenciaApp.helpers = {
+  // Validación
+  hasItem(inventory, itemName) { ... },
+  hasAllItems(inventory, itemList) { ... },
+  
+  // UI
+  showError(message) { ... },
+  showSuccess(message) { ... },
+  showLoading(show) { ... },
+  
+  // Formateo
+  formatCurrency(amount) { ... },
+  formatXP(xp) { ... },
+  
+  // Animaciones
+  glitchEffect(element) { ... },
+  pulseEffect(element) { ... }
+}
+```
+
+### 3. Translations: Sistema de i18n
+
+```javascript
+ResistenciaApp.translations = {
+  es: {
+    success: 'Éxito',
+    failure: 'Fallo',
+    missingItems: 'Te faltan items',
+    // ...
+  },
+  en: {
+    success: 'Success',
+    failure: 'Failure',
+    missingItems: 'Missing items',
+    // ...
+  }
+}
+```
+
+### 4. Styles: CSS Base
+
+```css
+/* resistencia.css */
+:root {
+  --resistencia-bg: #050505;
+  --resistencia-primary: #00ff00;
+  --resistencia-error: #ff3333;
+  --resistencia-accent: #CD853F;
+}
+
+.resistencia-app {
+  font-family: 'Courier New', monospace;
+  background: var(--resistencia-bg);
+  color: var(--resistencia-primary);
+}
+
+.resistencia-scanlines { ... }
+.resistencia-glitch { ... }
+```
+
+---
+
+## Ejemplo de Uso
+
+### Antes (Sin SDK) - ~200 líneas
+
+```javascript
+// rental/index.html (fragmento)
+let playerStats = null;
+let appConfig = null;
+
+window.addEventListener('message', (event) => {
+  if (event.data && event.data.source === 'FlujoNarrativoUsuario') {
+    playerStats = event.data.playerStats;
+    appConfig = JSON.parse(event.data.appData);
+    init();
+  }
+});
+
+function sendResult(status) {
+  window.parent.postMessage({
+    source: 'ResistenciaApp',
+    appName: 'Rental',
+    type: 'app-result',
+    status: status,
+    xpDelta: -appConfig.price
+  }, '*');
+}
+
+function validateInventory() {
+  const required = appConfig.requiredItems;
+  const inventory = playerStats.inventario;
+  // ... 20 líneas de validación
+}
+```
+
+### Después (Con SDK) - ~50 líneas
+
+```javascript
+// rental/index.html (con SDK)
+const app = new ResistenciaApp({
+  appName: 'Rental',
+  requiredItems: ['Identificación Oficial', 'Garante de Alquiler'],
+  
+  onInit: (appData, playerStats) => {
+    const config = JSON.parse(appData);
+    document.getElementById('price').textContent = config.price;
+    
+    // Validación automática
+    if (!app.validateInventory()) {
+      app.helpers.showError(app.translate('missingItems'));
+      return;
+    }
+    
+    startApp(config);
+  },
+  
+  onComplete: (success) => {
+    const xpDelta = success ? 100 : -50;
+    app.sendResult(success ? 'success' : 'failure', xpDelta);
+  }
+});
+
+app.init();
+```
+
+**Reducción:** 75% menos código boilerplate
+
+---
+
+## Plan de Implementación
+
+### Fase 1: Core SDK (Semana 1)
+- [ ] Crear clase `ResistenciaApp`
+- [ ] Implementar sistema de mensajería
+- [ ] Añadir validación de inventario
+- [ ] Sistema de traducciones básico
+- [ ] Logging y debugging
+
+### Fase 2: Helpers & Utilities (Semana 2)
+- [ ] Helpers de UI (showError, showSuccess, etc.)
+- [ ] Helpers de formateo (currency, XP)
+- [ ] Animaciones (glitch, pulse)
+- [ ] Validadores adicionales
+
+### Fase 3: Templates & Styles (Semana 3)
+- [ ] CSS base con variables
+- [ ] Template básico
+- [ ] Template con inventario
+- [ ] Template con timer
+- [ ] Documentación de templates
+
+### Fase 4: Testing & Docs (Semana 4)
+- [ ] Migrar app existente (Rental) al SDK
+- [ ] Crear app de ejemplo desde cero
+- [ ] Documentación completa de API
+- [ ] Guía de migración
+
+---
+
+## Estructura de Archivos Propuesta
+
+```
+resistencia-app/
+├── sdk/
+│   ├── resistencia.js
+│   ├── resistencia.min.js
+│   ├── resistencia.css
+│   └── templates/
+│       ├── basic-app.html
+│       ├── inventory-app.html
+│       └── timed-app.html
+├── rental/          # App existente (migrada)
+├── simulador/       # App existente (migrada)
+├── benitojuarez/    # App existente (migrada)
+└── nueva-app/       # Ejemplo de nueva app con SDK
+```
+
+---
+
+## Beneficios Esperados
+
+| Métrica | Antes | Después | Mejora |
+|:--------|:------|:--------|:-------|
+| Líneas de código por app | ~300 | ~80 | 73% ↓ |
+| Tiempo de desarrollo | 2-3 días | 4-6 horas | 75% ↓ |
+| Bugs de comunicación | Frecuentes | Raros | 90% ↓ |
+| Consistencia de UI | Baja | Alta | 100% ↑ |
+
+---
+
+## Riesgos y Mitigaciones
+
+### Riesgo 1: Breaking Changes en Apps Existentes
+**Mitigación:** Mantener compatibilidad retroactiva. El SDK es opt-in, no reemplaza el código existente hasta que se migre explícitamente.
+
+### Riesgo 2: Overhead de Carga
+**Mitigación:** SDK minificado < 15KB. Versión modular permite cargar solo lo necesario.
+
+### Riesgo 3: Curva de Aprendizaje
+**Mitigación:** Templates listos para usar. Documentación con ejemplos paso a paso.
+
+---
+
+## Próximos Pasos
+
+1. **Revisar y aprobar** este plan
+2. **Crear prototipo** del SDK core
+3. **Migrar una app** (Rental) como prueba de concepto
+4. **Iterar** basado en feedback
+5. **Documentar** y distribuir

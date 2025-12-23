@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graffiti - La Resistencia</title>
+
+    <!-- SDK CSS -->
+    <link rel="stylesheet" href="../sdk/resistencia.css">
+
+    <style>
+        .graffiti-wall {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border: 3px solid var(--resistencia-primary);
+            padding: 40px;
+            margin: 30px 0;
+            min-height: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .graffiti-wall::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(90deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(0, 255, 0, 0.03) 10px,
+                    rgba(0, 255, 0, 0.03) 20px);
+            pointer-events: none;
+        }
+
+        .graffiti-input {
+            width: 100%;
+            min-height: 120px;
+            resize: vertical;
+            margin-bottom: 20px;
+        }
+
+        .graffiti-preview {
+            font-size: 2rem;
+            color: var(--resistencia-primary);
+            text-shadow: 0 0 10px var(--resistencia-primary);
+            word-wrap: break-word;
+            animation: flicker 2s infinite;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes flicker {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.95;
+            }
+        }
+
+        .spray-can {
+            font-size: 3rem;
+            margin: 20px 0;
+            animation: spray 1.5s ease-in-out infinite;
+        }
+
+        @keyframes spray {
+
+            0%,
+            100% {
+                transform: rotate(-5deg);
+            }
+
+            50% {
+                transform: rotate(5deg);
+            }
+        }
+
+        .character-count {
+            text-align: right;
+            color: var(--resistencia-accent);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .stats-box {
+            background: rgba(0, 255, 0, 0.05);
+            border: 1px solid var(--resistencia-primary);
+            padding: 15px;
+            margin: 20px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            color: var(--resistencia-primary);
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="resistencia-app">
+    <!-- Scanlines Effect -->
+    <div class="resistencia-scanlines"></div>
+
+    <!-- Header -->
+    <div class="resistencia-header">
+        <h1 class="resistencia-title">🎨 GRAFFITI DIGITAL</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.7;">Deja tu marca en el muro de La Resistencia</p>
+    </div>
+
+    <!-- Content -->
+    <div class="resistencia-content">
+        <!-- Loading State -->
+        <div id="app-loading" class="resistencia-loading" style="display: flex;">
+            <div class="resistencia-spinner"></div>
+        </div>
+
+        <!-- Messages -->
+        <div id="app-message" style="display: none;"></div>
+
+        <!-- Main App Content -->
+        <div id="app-content" style="display: none;">
+            <!-- Stats -->
+            <div class="stats-box">
+                <div class="stat-item">
+                    <div class="stat-label">Tu XP</div>
+                    <div class="stat-value" id="player-xp">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Costo</div>
+                    <div class="stat-value" style="color: var(--resistencia-error);" id="app-cost">-50</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Recompensa</div>
+                    <div class="stat-value" id="app-reward">+100</div>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div
+                style="margin: 20px 0; padding: 15px; background: rgba(205, 133, 63, 0.1); border-left: 4px solid var(--resistencia-accent);">
+                <p style="margin: 0;">
+                    <strong>INSTRUCCIONES:</strong> Escribe tu mensaje de resistencia.
+                    Usa tu spray para dejar una marca permanente en el muro digital.
+                    Máximo 200 caracteres.
+                </p>
+            </div>
+
+            <!-- Graffiti Input -->
+            <div>
+                <label for="graffiti-text" style="display: block; margin-bottom: 10px; font-weight: bold;">
+                    TU MENSAJE:
+                </label>
+                <textarea id="graffiti-text" class="resistencia-input graffiti-input"
+                    placeholder="Escribe tu mensaje aquí... (ej: 'La gentrificación no pasará')" maxlength="200"
+                    oninput="updatePreview()"></textarea>
+                <div class="character-count">
+                    <span id="char-count">0</span> / 200 caracteres
+                </div>
+            </div>
+
+            <!-- Preview Wall -->
+            <div class="graffiti-wall">
+                <div class="spray-can">🎨</div>
+                <div class="graffiti-preview" id="graffiti-preview">
+                    Tu mensaje aparecerá aquí...
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button class="resistencia-btn" onclick="handlePaint()" style="flex: 1;">
+                    ✅ PINTAR MURO (-50 XP)
+                </button>
+
+                <button class="resistencia-btn resistencia-btn-error" onclick="handleCancel()" style="flex: 1;">
+                    ❌ CANCELAR
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SDK JavaScript -->
+    <script src="../sdk/resistencia.js"></script>
+
+    <!-- App Logic -->
+    <script>
+        let appConfig = null;
+
+        // Configuración de la app
+        const app = new ResistenciaApp({
+            appName: 'Graffiti',
+            requiredItems: ['Spray de Pintura'], // Item requerido
+            debug: true,
+
+            onInit: (appData, playerStats) => {
+                console.log('🎨 Graffiti App inicializada');
+                appConfig = appData;
+
+                // Actualizar stats en UI
+                document.getElementById('player-xp').textContent = playerStats.xp || 0;
+                document.getElementById('app-cost').textContent = appConfig.cost || '-50';
+                document.getElementById('app-reward').textContent = '+' + (appConfig.reward || 100);
+
+                // Validar inventario
+                const validation = app.validateInventory();
+                if (!validation.valid) {
+                    app.helpers.showError(
+                        `❌ ${app.translate('missingItems')}: ${validation.missing.join(', ')}<br><br>` +
+                        `<small>Necesitas conseguir un spray de pintura para poder dejar tu marca.</small>`
+                    );
+
+                    // Mostrar botón de cancelar solamente
+                    document.getElementById('app-content').style.display = 'block';
+                    document.getElementById('graffiti-text').disabled = true;
+                    return;
+                }
+
+                // Todo OK, mostrar app
+                document.getElementById('app-loading').style.display = 'none';
+                document.getElementById('app-content').style.display = 'block';
+            },
+
+            onComplete: (success) => {
+                console.log('🎨 Graffiti completado:', success ? 'Éxito' : 'Cancelado');
+            }
+        });
+
+        // Iniciar la app
+        app.init();
+
+        // Actualizar preview en tiempo real
+        function updatePreview() {
+            const text = document.getElementById('graffiti-text').value;
+            const preview = document.getElementById('graffiti-preview');
+            const charCount = document.getElementById('char-count');
+
+            charCount.textContent = text.length;
+
+            if (text.trim()) {
+                preview.textContent = text;
+                preview.style.fontSize = text.length > 50 ? '1.5rem' : '2rem';
+            } else {
+                preview.textContent = 'Tu mensaje aparecerá aquí...';
+                preview.style.fontSize = '2rem';
+            }
+        }
+
+        // Pintar el muro
+        function handlePaint() {
+            const text = document.getElementById('graffiti-text').value.trim();
+
+            if (!text) {
+                app.helpers.showError('⚠️ Escribe un mensaje antes de pintar');
+                app.helpers.glitchEffect('graffiti-text');
+                return;
+            }
+
+            if (text.length < 10) {
+                app.helpers.showError('⚠️ El mensaje debe tener al menos 10 caracteres');
+                app.helpers.glitchEffect('graffiti-text');
+                return;
+            }
+
+            // Efecto visual
+            app.helpers.pulseEffect('graffiti-preview');
+
+            // Mostrar éxito
+            setTimeout(() => {
+                app.helpers.showSuccess(
+                    `✅ ¡Graffiti pintado con éxito!<br><br>` +
+                    `<strong>"${text}"</strong><br><br>` +
+                    `Tu mensaje ha sido grabado en el muro digital de La Resistencia.`
+                );
+
+                // Enviar resultado al padre
+                const cost = parseInt(appConfig.cost) || -50;
+                const reward = parseInt(appConfig.reward) || 100;
+                const totalXP = cost + reward; // -50 + 100 = +50 neto
+
+                setTimeout(() => {
+                    app.sendResult('success', totalXP, `Graffiti: "${text}"`);
+                }, 2000);
+            }, 500);
+        }
+
+        // Cancelar
+        function handleCancel() {
+            if (confirm('¿Seguro que quieres cancelar? No se guardará tu mensaje.')) {
+                app.sendResult('failure', 0, 'Graffiti cancelado por el usuario');
+            }
+        }
+    </script>
+</body>
+
+</html>

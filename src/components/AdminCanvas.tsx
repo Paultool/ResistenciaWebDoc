@@ -137,7 +137,7 @@ const AdminCanvasContent: React.FC = () => {
                     if (m) {
                         const mId = `med-${m.id_recurso}-step-${paso.id_flujo}`;
                         const mPos = assetPositions.multimedia || { x: finalPos.x - 350, y: finalPos.y + 150 };
-                        newNodes.push({ id: mId, type: 'multimedia', position: mPos, data: { tipo: m.tipo, archivo: m.archivo, originalData: m } });
+                        newNodes.push({ id: mId, type: 'multimedia', position: mPos, data: { label: m.Nombre || m.archivo, tipo: m.tipo, archivo: m.archivo, originalData: m } });
                         newEdges.push({ id: `e-m-${paso.id_flujo}`, source: mId, target: stepId, targetHandle: 'media-in', style: { stroke: '#17a2b8' } });
                     }
                 }
@@ -346,7 +346,7 @@ const AdminCanvasContent: React.FC = () => {
         const type = e.dataTransfer.getData('application/reactflow');
         const data = JSON.parse(e.dataTransfer.getData('application/json-data'));
         const position = reactFlowInstance?.screenToFlowPosition({ x: e.clientX, y: e.clientY }) || { x: 0, y: 0 };
-        setNodes(nds => nds.concat({ id: `${type}-${Date.now()}`, type, position, data: { label: data.nombre || data.archivo, originalData: data, ...data } }));
+        setNodes(nds => nds.concat({ id: `${type}-${Date.now()}`, type, position, data: { label: data.Nombre || data.nombre || data.archivo, originalData: data, ...data } }));
     }, [reactFlowInstance, setNodes]);
 
     // --- 5. CREAR NUEVOS ACTIVOS ---

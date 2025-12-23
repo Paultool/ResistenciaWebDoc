@@ -1,0 +1,42 @@
+Configuración Base (Global Style)
+Para todos los prompts, Nanobanana obtendrá mejores resultados si mantienes este estilo:
+
+Cinematic photography, realistic Mexico City architecture (Narvarte style), urban grit, dim natural light with amber and cyan neon accents, wide angle 24mm, shallow depth of field, shot on 35mm film, grainy texture, highly detailed.
+
+Lista de Prompts
+UNIDAD HABITACIONAL MINIMA
+Interior of a tiny, cramped 1-bedroom unit in Narvarte. Bare concrete walls with peeling gray paint. A single small bed with worn linens. Shared bathroom visible through a cracked door. Dim light from a single flickering bulb. 1970s brutalist architecture vibes. Realistic, gritty.
+
+DEPTO BAJO NIVEL (BALCÓN EXT. SIN SEGURIDAD)
+Apartment interior at street level in Narvarte. Through an open window, an external balcony with rusty metal railings is visible, facing a dark alley. No security bars. Shadows of power lines across the walls. Low-angle shot, 1950s modernist facade outside. Cinematic, moody.
+
+CUARTO SERVICIO RENOVADO
+Small renovated service room on a rooftop in Narvarte. Basic modern furniture: a simple desk and a narrow bed. Exposed brick painted white. A single laptop glowing on the desk. View of surrounding water tanks (tinacos) through a small window. Clean but industrial aesthetic.
+
+ESTANDAR HABITACIONAL (ZONA TRÁNSITO)
+Standard 2-bedroom apartment in a busy Narvarte street. Motion blur of car lights visible through high windows. 1960s tiled floors. Functional but aged furniture. Ambient noise represented by light streaks. Realistic real estate photography but with a dystopian edge.
+
+DEPTO MEDIO (VIGILANCIA PARCIAL)
+Mid-tier 2-bedroom apartment. Elevator doors visible in the hallway with a flickering "7" segment display. A small CCTV camera with a blinking red light mounted in the corner. Polished terrazzo floors. Mid-century modern windows. Warm interior lighting vs cold hallway light.
+
+UNIDAD FAMILIAR (TERRAZA)
+Family unit with a large terrace. View of purple Jacaranda trees at dusk. Controlled access keypad near the door. Comfortable but slightly worn sofas. Large glass sliding doors. Realistic lighting, high contrast, cinematic Narvarte atmosphere.
+
+RESIDENCIA ALTA (UBICACIÓN CENTRAL)
+High-end 3-bedroom residence. Wide shot of a spacious living room. High ceilings, modernist architecture. Central location view: neon signs of "Glorieta de Etiopía" visible in the distance. Luxury materials mixed with industrial concrete.
+
+PISO EJECUTIVO (VISTA PANORAMICA)
+Executive floor, 15th floor view of Mexico City skyline. Panoramic windows covering the entire wall. Two reserved parking spots seen far below. Minimalist workspace. Blue hour lighting, high-tech vibe. Professional and sharp.
+
+LOFT PREMIUM (SMART HOME)
+Premium 3-bedroom loft. Smart home interface glowing on a glass wall (HUD). Integrated LED strips in the ceiling changing to magenta. Designer furniture. Industrial pipes exposed. High-end hacker aesthetic. Realistic, futuristic Narvarte.
+
+PENTHOUSE (ROOF GARDEN)
+Luxury Penthouse. Stairs leading to a private roof garden with lush plants and a view of the "Torre Latinoamericana" far away. Biometric scanner glowing green at the entrance. Sunset light, golden hour, premium textures.
+
+SKY SUITE (HELIPUERTO)
+Ultra-luxury Sky Suite. Total privacy, no visible neighbors. Interior view with a private helipad visible through the window. Sleek black marble floors. Cyberpunk luxury. Cinematic lighting, deep shadows, volumetric fog.
+
+ELITE BUNKER (SEGURIDAD MILITAR)
+Elite 4-bedroom bunker. Heavy reinforced metal doors with electronic locks. Bulletproof glass windows. Tactical lighting (red and white). High-end furniture mixed with server racks in the corner. Extreme luxury meets military fortification. "La Resistencia" flagship style.
+

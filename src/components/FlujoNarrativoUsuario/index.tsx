@@ -132,19 +132,35 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         }
     }, [currentStepIndex, flujoData.length]);
 
+
     // --- CALLBACKS & LOGIC (UNCONDITIONAL HOOKS) ---
 
     // Move hooks up here to avoid conditional calls
     const closeHotspotModal = React.useCallback(() => {
+        // --- MEMORY OPTIMIZATION: Manually kill media before closing ---
+        const modalEl = document.getElementById('hotspotModal');
+        if (modalEl) {
+            const mediaElements = modalEl.querySelectorAll('video, audio');
+            mediaElements.forEach((el: any) => {
+                try {
+                    el.pause();
+                    el.src = "";
+                    el.load(); // Force release
+                } catch (e) {
+                    console.warn("Error cleaning up media:", e);
+                }
+            });
+        }
+
         setHotspotModal(null);
         setIsHotspotModalOpen(false);
         if (iframeRef.current) {
             iframeRef.current.src = '';  // Reset iframe para prevenir mensajes residuales
         }
 
-        const modelEl = document.querySelector('[gltf-hotspot-interaction]');
-        if (modelEl) {
-            const obj = (modelEl as any).getObject3D('mesh');
+        const sceneModelEl = document.querySelector('[gltf-hotspot-interaction]');
+        if (sceneModelEl) {
+            const obj = (sceneModelEl as any).getObject3D('mesh');
             if (obj) {
                 obj.traverse((child: any) => {
                     if (child.isMesh && child.userData && child.userData.isHotspot && child.userData.isClicked) {
@@ -167,7 +183,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                 (cameraEl as any).play();
             }
         }
-    }, []);
+    }, [iframeRef]);
 
     const handleRecompensa = useCallback(async (result: AppResult) => {
         if (!user?.id) return;
@@ -1370,6 +1386,33 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
         }
 
     }, [currentStepIndex, flujoData, recursosData, selectedHistoriaId, getRecurso]); // <-- AÑADIR selectedHistoriaId
+
+    // --- MEMORY OPTIMIZATION: Limpieza de Media (Solo al cambiar historia o desmontar) ---
+    useEffect(() => {
+        const currentVideo = videoRef.current;
+        const currentAudio = audioRef.current;
+
+        return () => {
+            // Solo limpiamos agresivamente al desmontar el componente o cambiar de historia
+            // NOTA: En pasos individuales, React maneja la remoción vía el 'key' prop
+            if (currentVideo) {
+                try {
+                    Logger.info('MEDIA', "🧹 Limpiando recurso de vídeo (Unmount/Story Change)...");
+                    currentVideo.pause();
+                    currentVideo.src = "";
+                    currentVideo.load();
+                } catch (e) { }
+            }
+            if (currentAudio) {
+                try {
+                    Logger.info('MEDIA', "🧹 Limpiando recurso de audio (Unmount/Story Change)...");
+                    currentAudio.pause();
+                    currentAudio.src = "";
+                    currentAudio.load();
+                } catch (e) { }
+            }
+        };
+    }, [selectedHistoriaId]); // REMOVED currentStepIndex from dependencies
 
     // --- Efecto 1: Maneja la lógica de Play/Pause ---
     useEffect(() => {
@@ -2666,6 +2709,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                         {hotspotModal?.contentType === 'video' && (
                             <div className="relative w-full h-full">
                                 <video
+                                    key={hotspotModal.url}
                                     src={hotspotModal.url}
                                     controls
                                     autoPlay
@@ -2700,6 +2744,7 @@ const FlujoNarrativoUsuario = ({ historiaId, onBack, onUpdateProfile }: FlujoNar
                                     ))}
                                 </div>
                                 <audio
+                                    key={hotspotModal.url}
                                     src={hotspotModal.url}
                                     controls
                                     autoPlay

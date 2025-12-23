@@ -91,11 +91,10 @@ export interface Recompensa {
 
 export interface RecursoMultimedia {
   id_recurso: number
-  tipo: 'audio' | 'video' | 'imagen' | 'transcripcion' | 'subtitulo' | null
+  tipo: 'audio' | 'video' | 'imagen' | 'transcripcion' | 'subtitulo' | 'interactive' | 'app' | '3d_model' | null
   archivo: string | null
   metadatos: any | null
-  id_historia: number | null
-  id_personaje: number | null
+  Nombre: string | null
 }
 
 export interface FlujoNarrativo {
@@ -593,7 +592,8 @@ export const obtenerRecursosMultimedia = async (): Promise<RecursoMultimedia[]> 
   try {
     const { data, error } = await supabase
       .from('recursomultimedia')
-      .select('id_recurso, tipo, archivo, metadatos');
+      .select('id_recurso, tipo, archivo, metadatos, Nombre')
+      .order('id_recurso', { ascending: false });
 
     if (error) throw error;
 

@@ -76,6 +76,10 @@ export const schemaMap: Record<string, FormField[]> = {
  * Función helper para identificar qué esquema usar.
  */
 export const getSchemaForResource = (tipo: string, archivoUrl: string): FormField[] | null => {
+  // Se solicitaron eliminar los constructores visuales y dejar solo el JSON.
+  // Por lo tanto, devolvemos null para que se use el fallback (Editor JSON).
+
+  /* 
   if (tipo === '3d_model') {
     return model3DSchema;
   }
@@ -87,6 +91,7 @@ export const getSchemaForResource = (tipo: string, archivoUrl: string): FormFiel
       return simuladorSchema;
     }
   }
-  // No hay un esquema dinámico para 'imagen', 'video', etc.
+  */
+
   return null;
 };

@@ -1,0 +1,55 @@
+{
+    "appConfig": {
+        "title": "Graffiti 3D: Intervención Urbana",
+        "description": "Pinta la camioneta con graffiti antes de que se acabe el tiempo y la pintura",
+        "personajeId": 6,
+        "difficulty": 3,
+        "timeLimit": 90,
+        "winCondition": 60,
+        "sprayCanCost": 50,
+        "sprayCanCapacity": 500,
+        "requiredItems": [
+            "Lata de Spray"
+        ]
+    },
+    "flowConfig": {
+        "opciones_siguientes_json": [
+            {
+                "texto": "success",
+                "siguiente_paso_id": 27,
+                "recompensaId": 26,
+                "comment": "Graffiti completado exitosamente (>60% pintado) - Graffiti Bomber Master +150 XP"
+            },
+            {
+                "texto": "failure",
+                "siguiente_paso_id": 27,
+                "recompensaId": 27,
+                "comment": "Tiempo agotado, pintura agotada o <60% - Graffiti Toy -30 XP"
+            }
+        ]
+    },
+    "gameRules": {
+        "description": "Sistema de latas de spray con capacidad limitada",
+        "mechanics": {
+            "spraySystem": {
+                "initialCans": 1,
+                "canCapacity": 500,
+                "paintCostPerStroke": 1,
+                "canBuyMore": true,
+                "canCost": 50
+            },
+            "victory": {
+                "condition": "progress >= 60% AND time > 0 AND paint > 0",
+                "reward": "Graffiti Bomber Master (+150 XP)"
+            },
+            "defeat": {
+                "conditions": [
+                    "time <= 0",
+                    "paint <= 0 AND progress < 60%",
+                    "progress < 60% when time ends"
+                ],
+                "penalty": "Graffiti Toy (-30 XP)"
+            }
+        }
+    }
+}

@@ -147,8 +147,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 255, 0, 0.1);
-            /* Green tint */
+            background: transparent;
             pointer-events: none;
         }
 
@@ -156,7 +155,6 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            filter: grayscale(100%) contrast(1.2);
         }
 
         .ad-details {
@@ -182,6 +180,14 @@
         .value {
             color: var(--text-primary);
             font-weight: bold;
+        }
+
+        .req-ok {
+            color: var(--text-primary);
+        }
+
+        .req-fail {
+            color: var(--text-error);
         }
 
         /* Timer */
@@ -366,18 +372,18 @@
             // --- DATA ---
             // Lista de 12 inmuebles con imagenes generadas
             const inmuebles = [
-                { description: 'UNIDAD HABITACIONAL MINIMA. 1 REC. SANITARIO COMPARTIDO.', description_en: 'MINIMAL HOUSING UNIT. 1 BDR. SHARED BATH.', imageUrl: '../public/images/rental/unit_01.png' },
-                { description: 'DEPTO BAJO NIVEL. 1 REC. BALCON EXT. SIN SEGURIDAD.', description_en: 'LOW LEVEL APT. 1 BDR. EXT BALCONY. NO SECURITY.', imageUrl: '../public/images/rental/unit_02.png' },
-                { description: 'CUARTO SERVICIO RENOVADO. 1 REC. MUEBLES BASICOS.', description_en: 'RENOVATED SERVICE ROOM. 1 BDR. BASIC FURNITURE.', imageUrl: '../public/images/rental/unit_03.png' },
-                { description: 'ESTANDAR HABITACIONAL. 2 REC. 1 BAÑO. ZONA TRANSITO.', description_en: 'STANDARD HOUSING. 2 BDR. 1 BATH. TRANSIT ZONE.', imageUrl: '../public/images/rental/unit_01.png' },
-                { description: 'DEPTO MEDIO. 2 REC. ELEVADOR. VIGILANCIA PARCIAL.', description_en: 'MID-TIER APT. 2 BDR. ELEVATOR. PARTIAL SURVEILLANCE.', imageUrl: '../public/images/rental/unit_02.png' },
-                { description: 'UNIDAD FAMILIAR. 2 REC. TERRAZA. ACCESO CONTROLADO.', description_en: 'FAMILY UNIT. 2 BDR. TERRACE. CONTROLLED ACCESS.', imageUrl: '../public/images/rental/unit_03.png' },
-                { description: 'RESIDENCIA ALTA. 3 REC. UBICACION CENTRAL.', description_en: 'HIGH END RESIDENCE. 3 BDR. CENTRAL LOCATION.', imageUrl: '../public/images/rental/unit_01.png' },
-                { description: 'PISO EJECUTIVO. 3 REC. VISTA PANORAMICA. 2 EST.', description_en: 'EXECUTIVE FLOOR. 3 BDR. PANORAMIC VIEW. 2 PARKING.', imageUrl: '../public/images/rental/unit_02.png' },
-                { description: 'LOFT PREMIUM. 3 REC. AMUEBLADO. SMART HOME.', description_en: 'PREMIUM LOFT. 3 BDR. FURNISHED. SMART HOME.', imageUrl: '../public/images/rental/unit_03.png' },
-                { description: 'PENTHOUSE. 4 REC. ROOF GARDEN. ACCESO BIOMETRICO.', description_en: 'PENTHOUSE. 4 BDR. ROOF GARDEN. BIOMETRIC ACCESS.', imageUrl: '../public/images/rental/unit_01.png' },
-                { description: 'SKY SUITE. 4 REC. PRIVACIDAD TOTAL. HELIPUERTO.', description_en: 'SKY SUITE. 4 BDR. TOTAL PRIVACY. HELIPAD.', imageUrl: '../public/images/rental/unit_02.png' },
-                { description: 'ELITE BUNKER. 4 REC. SEGURIDAD MILITAR. LUJO.', description_en: 'ELITE BUNKER. 4 BDR. MILITARY SECURITY. LUXURY.', imageUrl: '../public/images/rental/unit_03.png' }
+                { description: 'UNIDAD HABITACIONAL MINIMA. 1 REC. SANITARIO COMPARTIDO.', description_en: 'MINIMAL HOUSING UNIT. 1 BDR. SHARED BATH.', imageUrl: 'images/1.webp' },
+                { description: 'DEPTO BAJO NIVEL. 1 REC. BALCON EXT. SIN SEGURIDAD.', description_en: 'LOW LEVEL APT. 1 BDR. EXT BALCONY. NO SECURITY.', imageUrl: 'images/2.webp' },
+                { description: 'CUARTO SERVICIO RENOVADO. 1 REC. MUEBLES BASICOS.', description_en: 'RENOVATED SERVICE ROOM. 1 BDR. BASIC FURNITURE.', imageUrl: 'images/3.webp' },
+                { description: 'ESTANDAR HABITACIONAL. 2 REC. 1 BAÑO. ZONA TRANSITO.', description_en: 'STANDARD HOUSING. 2 BDR. 1 BATH. TRANSIT ZONE.', imageUrl: 'images/4.webp' },
+                { description: 'DEPTO MEDIO. 2 REC. ELEVADOR. VIGILANCIA PARCIAL.', description_en: 'MID-TIER APT. 2 BDR. ELEVATOR. PARTIAL SURVEILLANCE.', imageUrl: 'images/5.webp' },
+                { description: 'UNIDAD FAMILIAR. 2 REC. TERRAZA. ACCESO CONTROLADO.', description_en: 'FAMILY UNIT. 2 BDR. TERRACE. CONTROLLED ACCESS.', imageUrl: 'images/6.webp' },
+                { description: 'RESIDENCIA ALTA. 3 REC. UBICACION CENTRAL.', description_en: 'HIGH END RESIDENCE. 3 BDR. CENTRAL LOCATION.', imageUrl: 'images/7.webp' },
+                { description: 'PISO EJECUTIVO. 3 REC. VISTA PANORAMICA. 2 EST.', description_en: 'EXECUTIVE FLOOR. 3 BDR. PANORAMIC VIEW. 2 PARKING.', imageUrl: 'images/8.webp' },
+                { description: 'LOFT PREMIUM. 3 REC. AMUEBLADO. SMART HOME.', description_en: 'PREMIUM LOFT. 3 BDR. FURNISHED. SMART HOME.', imageUrl: 'images/9.webp' },
+                { description: 'PENTHOUSE. 4 REC. ROOF GARDEN. ACCESO BIOMETRICO.', description_en: 'PENTHOUSE. 4 BDR. ROOF GARDEN. BIOMETRIC ACCESS.', imageUrl: 'images/10.webp' },
+                { description: 'SKY SUITE. 4 REC. PRIVACIDAD TOTAL. HELIPUERTO.', description_en: 'SKY SUITE. 4 BDR. TOTAL PRIVACY. HELIPAD.', imageUrl: 'images/11.webp' },
+                { description: 'ELITE BUNKER. 4 REC. SEGURIDAD MILITAR. LUJO.', description_en: 'ELITE BUNKER. 4 BDR. MILITARY SECURITY. LUXURY.', imageUrl: 'images/12.webp' }
             ];
 
             // --- STATE ---
@@ -398,7 +404,7 @@
                     btnAction: "INICIAR NEGOCIACION",
                     btnCancel: "CANCELAR OP",
                     cost: "COSTO",
-                    req: "REQUISITO",
+                    reqs: "REQUISITOS DOCUMENTALES",
                     xp: "DISPONIBLE",
                     loc: "UBICACION",
                     successTitle: "CONTRATO APROBADO",
@@ -423,7 +429,7 @@
                     btnAction: "START NEGOTIATION",
                     btnCancel: "CANCEL OP",
                     cost: "COST",
-                    req: "REQUIREMENT",
+                    reqs: "DOCUMENTARY REQUIREMENTS",
                     xp: "AVAILABLE",
                     loc: "LOCATION",
                     successTitle: "CONTRACT APPROVED",
@@ -484,18 +490,43 @@
                 // Looking at HTML structure above (not visible here but standard):
                 // Let's assume we update them by finding them:
                 document.querySelectorAll('.label').forEach((el, index) => {
-                    if (index === 0) el.textContent = t('cost');
-                    if (index === 1) el.textContent = t('req');
-                    if (index === 2) el.textContent = t('xp');
+                    if (index === 0) el.textContent = t('loc') + ":";
+                    if (index === 1) el.textContent = t('cost') + ":";
+                    if (index === 2) el.textContent = t('reqs') + ":";
+                    if (index === 3) el.textContent = t('xp') + ":";
                 });
                 // LOCATION label is inside #ad-details probably? No, distinct.
                 // Wait, I should view labels.
                 // Just updating buttons for now as labels modification requires DOM verification.
                 // I will target explicit IDs if I can or text content update.
 
+                function hasItem(requiredName) {
+                    const req = requiredName.toLowerCase();
+                    return playerInventory.some(item =>
+                        (item.nombre && item.nombre.toLowerCase() === req) ||
+                        (item.name && item.name.toLowerCase() === req)
+                    );
+                }
+
                 // Populate Values
+                if (appConfig.titulo) {
+                    titleEl.textContent = appConfig.titulo.toUpperCase();
+                }
                 valCost.textContent = `${rentaAbsoluta.toLocaleString()} XP`; // Format price
-                valReq.textContent = appConfig.requiredItem || "N/A";
+
+                // Support both legacy single 'requiredItem' and new 'requiredItems' array
+                const reqArray = appConfig.requiredItems || (appConfig.requiredItem ? [appConfig.requiredItem] : []);
+
+                // Build items HTML with checkmarks
+                const itemsHtml = reqArray.map(item => {
+                    const ok = hasItem(item);
+                    return `<div class="${ok ? 'req-ok' : 'req-fail'}" style="display:flex; justify-content:space-between; width:100%; margin-top:1px;">
+                        <span>${item.toUpperCase()}</span>
+                        <span>${ok ? '✓' : '✗'}</span>
+                    </div>`;
+                }).join('');
+
+                valReq.innerHTML = itemsHtml || "N/A";
                 valXp.textContent = `${playerXP.toLocaleString()} XP`; // Format XP
 
                 // Select Property
@@ -527,16 +558,21 @@
                     return;
                 }
 
-                // 2. CHECK ITEM
-                // Normalizar string para comparación (opcional pero recomendado)
-                const required = (appConfig.requiredItem || "").toLowerCase();
-                const hasRequiredItem = playerInventory.some(item => (item.nombre || "").toLowerCase() === required);
+                // 2. CHECK ITEMS (ALL REQUIRED)
+                const reqArray = appConfig.requiredItems || (appConfig.requiredItem ? [appConfig.requiredItem] : []);
+                const missingItems = reqArray.filter(reqName => {
+                    const required = reqName.toLowerCase();
+                    return !playerInventory.some(item =>
+                        (item.nombre && item.nombre.toLowerCase() === required) ||
+                        (item.name && item.name.toLowerCase() === required)
+                    );
+                });
 
-                // Si no requiere item, pasa directo (aunque la config siempre trae uno)
-                if (!appConfig.requiredItem || hasRequiredItem) {
+                if (missingItems.length === 0) {
                     setupSuccess(rentaXP);
                 } else {
-                    setupFailureItem();
+                    // Update error message to show missing items specifically
+                    setupFailureItem(missingItems);
                 }
             }
 
@@ -547,6 +583,10 @@
                 document.body.classList.add('error-mode');
                 titleEl.textContent = t('failFundsTitle');
                 titleEl.classList.add('glitch-text');
+
+                // HIDE AD LAYOUT TO PREVENT OVERFLOW
+                document.querySelector('.ad-layout').style.display = 'none';
+                document.getElementById('timer-box').style.display = 'none';
 
                 // REJECTED HOUSE ICON
                 msgArea.innerHTML = `
@@ -580,6 +620,10 @@
                 titleEl.textContent = t('successTitle');
                 titleEl.style.color = "var(--text-primary)";
                 titleEl.classList.remove('glitch-text'); // Ensure no glitch on title
+
+                // HIDE AD LAYOUT TO PREVENT OVERFLOW
+                document.querySelector('.ad-layout').style.display = 'none';
+                document.getElementById('timer-box').style.display = 'none';
 
                 // ACCEPTED HOUSE ICON
                 msgArea.innerHTML = `
@@ -615,16 +659,29 @@
                 gameContainer.style.boxShadow = "0 0 30px rgba(0, 255, 0, 0.4)";
             }
 
-            function setupFailureItem() {
+            function setupFailureItem(missingItems) {
                 titleEl.textContent = t('failItemTitle');
+
+                // HIDE AD LAYOUT TO PREVENT OVERFLOW
+                document.querySelector('.ad-layout').style.display = 'none';
+                document.getElementById('timer-box').style.display = 'none';
+
+                const itemsHtml = missingItems.map(item => {
+                    return `<div class="req-fail" style="display:flex; justify-content:space-between; width:100%; margin-top:2px; font-size:0.9rem;">
+                        <span>${item.toUpperCase()}</span>
+                        <span>✗</span>
+                    </div>`;
+                }).join('');
+
                 msgArea.innerHTML = `
-                <span style="color:var(--text-secondary); display:block; text-align:center;">
+                <div style="color:var(--text-secondary); text-align:center; width:100%;">
                     ${t('failItemMsg1')}
                     <br>
-                    ${t('failItemMsg2')}
-                    <br>
-                    <strong style="color:var(--text-primary); font-size:1.1rem;">[ ${appConfig.requiredItem} ]</strong>
-                </span>
+                    <span style="font-size:0.75rem;">${t('failItemMsg2')}</span>
+                    <div style="margin-top:10px; border-top:1px solid #333; padding-top:5px;">
+                        ${itemsHtml}
+                    </div>
+                </div>
             `;
 
                 btnAction.style.display = 'none';
